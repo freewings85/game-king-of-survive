@@ -132,6 +132,13 @@
   // stormZone: shrinking playable area to force PvP engagement
   var stormZone = { active: false, radius: WORLD_W, centerX: WORLD_W/2, centerY: WORLD_H/2, shrinkRate: 20 };
 
+  // killFeed: PvP kill announcements shown on screen
+  var killFeed = []; // { text, color, time }
+  function addKillFeed(killerName, victimName, killerColor) {
+    killFeed.push({ text: killerName + ' ⚔ ' + victimName, color: killerColor || '#ffd700', time: 4 });
+    if (killFeed.length > 5) killFeed.shift();
+  }
+
   // finalBoss (US-008): 魔山 - scales with game time
   var finalBossPhase = 0;
 
@@ -2387,8 +2394,8 @@
               // Credit kill to projectile owner
               var pvKiller = null;
               for (var ki = 0; ki < allPlayers.length; ki++) { if (allPlayers[ki].id === e.ownerId) { pvKiller = allPlayers[ki]; break; } }
-              if (pvKiller) pvKiller.kills++;
-              else player.kills++;
+              if (pvKiller) { pvKiller.kills++; addKillFeed(pvKiller.name, pvTarget.name, pvKiller.color); }
+              else { player.kills++; addKillFeed(player.name, pvTarget.name, player.color); }
               floatText(pvTarget.x, pvTarget.y, '击杀 ' + pvTarget.name + '!', '#ffd700', 22);
             }
             if (!e.pierce) { entities.splice(i, 1); break; }
@@ -2688,7 +2695,32 @@
       bot._timer = 0;
       var ax = target.x - bot.x, ay = target.y - bot.y;
       var ad = Math.sqrt(ax*ax+ay*ay) || 1;
-      entities.push({ x: bot.x, y: bot.y, vx: (ax/ad)*400, vy: (ay/ad)*400, damage: bot.attackDamage, radius: 5, pierce: false, ownerId: bot.id, _ownerFaction: bot.factionId, type: 'projectile', _life: 2 });
+      var projCount = bot.projectileCount || 1;
+      for (var bpi = 0; bpi < projCount; bpi++) {
+        var spread = projCount > 1 ? (bpi - (projCount - 1) / 2) * 0.15 : 0;
+        var cs = Math.cos(spread), ss = Math.sin(spread);
+        var nx = ax/ad, ny = ay/ad;
+        entities.push({ x: bot.x, y: bot.y, vx: (nx*cs-ny*ss)*400, vy: (nx*ss+ny*cs)*400, damage: bot.attackDamage, radius: 5, pierce: bot.pierce || false, ownerId: bot.id, _ownerFaction: bot.factionId, type: 'projectile', _life: 2 });
+      }
+    }
+    // Bot leveling: gain stats over time (simulates PvE leveling)
+    if (!bot._levelTimer) bot._levelTimer = 0;
+    bot._levelTimer += dt;
+    if (bot._levelTimer >= 15 && bot.level < 20) { // Level up every 15s
+      bot._levelTimer = 0;
+      bot.level++;
+      bot.attackDamage += 3;
+      bot.maxHp += 20;
+      bot.hp = Math.min(bot.hp + 20, bot.maxHp);
+      // Every 3 levels, gain a random upgrade
+      if (bot.level % 3 === 0) {
+        var upgrades = ['projectile', 'speed', 'pierce', 'damage'];
+        var upgrade = upgrades[Math.floor(Math.random() * upgrades.length)];
+        if (upgrade === 'projectile' && bot.projectileCount < 3) bot.projectileCount++;
+        else if (upgrade === 'speed') bot.speed += 15;
+        else if (upgrade === 'pierce') bot.pierce = true;
+        else bot.attackDamage += 5;
+      }
     }
   }
 
@@ -3536,6 +3568,20 @@
 
     // Minimap (US-204)
     drawMinimap();
+    // Kill feed display (top-right, under combo area)
+    for (var kfi = killFeed.length - 1; kfi >= 0; kfi--) {
+      killFeed[kfi].time -= 0.016;
+      if (killFeed[kfi].time <= 0) { killFeed.splice(kfi, 1); continue; }
+      var kfAlpha = Math.min(1, killFeed[kfi].time / 0.5);
+      var kfY = 60 + (killFeed.length - 1 - kfi) * 18;
+      ctx.save();
+      ctx.globalAlpha = kfAlpha * 0.85;
+      ctx.fillStyle = '#000'; ctx.fillRect(W - 180, kfY - 10, 170, 16);
+      ctx.globalAlpha = kfAlpha;
+      ctx.fillStyle = killFeed[kfi].color; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'right';
+      ctx.fillText(killFeed[kfi].text, W - 15, kfY + 2);
+      ctx.restore();
+    }
     } // end screenshotMode else block (US-306)
 
     // gameplayWatermark (US-324): semi-transparent brand name in bottom-right corner
@@ -3781,31 +3827,57 @@
     ctx.fillText(Math.round(hpPct * 100) + '%', W / 2, bossHpBar.y + 12);
   }
 
-  // Minimap (US-204)
+  // Minimap (US-204) — shows full 2400x2400 world with all players
   function drawMinimap() {
-    var mmW = 80, mmH = 60;
+    var mmW = 100, mmH = 100; // Square since world is square
     var mmX = W - mmW - 8, mmY = H - mmH - 20;
     ctx.save();
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = '#111';
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#0a0a12';
     ctx.fillRect(mmX, mmY, mmW, mmH);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1;
     ctx.strokeRect(mmX, mmY, mmW, mmH);
-    ctx.globalAlpha = 0.8;
-    // minimap enemy dots
-    for (var mi = 0; mi < entities.length; mi++) {
+    // Camera viewport indicator
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = '#fff';
+    ctx.strokeRect(mmX + (cameraX / WORLD_W) * mmW, mmY + (cameraY / WORLD_H) * mmH, (W / WORLD_W) * mmW, (H / WORLD_H) * mmH);
+    ctx.globalAlpha = 0.7;
+    // Storm zone on minimap
+    if (stormZone.active) {
+      ctx.strokeStyle = '#f44'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(mmX + (stormZone.centerX / WORLD_W) * mmW, mmY + (stormZone.centerY / WORLD_H) * mmH, (stormZone.radius / WORLD_W) * mmW, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Minimap enemy dots (sample every 3rd to save perf)
+    for (var mi = 0; mi < entities.length; mi += 3) {
       var me = entities[mi];
       if (me.type !== 'enemy' || me.hp <= 0) continue;
-      var mx = mmX + (me.x / W) * mmW;
-      var my = mmY + (me.y / H) * mmH;
-      ctx.fillStyle = me.treasureGoblin ? '#ffd700' : (me.enemyType === 'boss' ? '#f00' : '#f44');
-      ctx.beginPath(); ctx.arc(mx, my, me.enemyType === 'boss' ? 2.5 : 1.2, 0, Math.PI * 2); ctx.fill();
+      var mx = mmX + (me.x / WORLD_W) * mmW;
+      var my = mmY + (me.y / WORLD_H) * mmH;
+      ctx.fillStyle = me.treasureGoblin ? '#ffd700' : (me.enemyType === 'boss' ? '#f00' : '#822');
+      ctx.beginPath(); ctx.arc(mx, my, me.enemyType === 'boss' ? 2 : 0.8, 0, Math.PI * 2); ctx.fill();
     }
-    // minimap player dot
-    ctx.fillStyle = '#4488ff';
-    var px = mmX + (player.x / W) * mmW;
-    var py = mmY + (player.y / H) * mmH;
-    ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2); ctx.fill();
+    // All player dots on minimap
+    for (var mpi = 0; mpi < allPlayers.length; mpi++) {
+      var mp = allPlayers[mpi];
+      if (!mp.alive) continue;
+      var mpx = mmX + (mp.x / WORLD_W) * mmW;
+      var mpy = mmY + (mp.y / WORLD_H) * mmH;
+      ctx.fillStyle = mp.isLocal ? '#4af' : (mp.factionId === player.factionId ? '#0c0' : mp.color);
+      var dotSize = mp.isLocal ? 3 : 2;
+      ctx.beginPath(); ctx.arc(mpx, mpy, dotSize, 0, Math.PI * 2); ctx.fill();
+      // Pulse effect for local player
+      if (mp.isLocal) {
+        ctx.globalAlpha = 0.3 + 0.2 * Math.sin(Date.now() * 0.005);
+        ctx.beginPath(); ctx.arc(mpx, mpy, 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 0.7;
+      }
+    }
+    // Player count label
+    var aliveCount = allPlayers.filter(function(p) { return p.alive; }).length;
+    ctx.fillStyle = '#fff'; ctx.font = '9px Arial'; ctx.textAlign = 'left';
+    ctx.fillText('👥 ' + aliveCount + '/8', mmX + 2, mmY - 3);
     ctx.restore();
   }
 
