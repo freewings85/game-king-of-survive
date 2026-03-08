@@ -1,0 +1,12 @@
+[project]
+name = "game-king-of-survive"
+version = "0.1.0"
+description = "生存之王 - 多人联机竞技生存游戏"
+requires-python = ">=3.11"
+dependencies = [
+    "pytest>=8.0",
+    "playwright>=1.40",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

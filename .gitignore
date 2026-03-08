@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+node_modules/
+feedback/*.png
+feedback/*.json
+*.log
+.DS_Store
+server/target/

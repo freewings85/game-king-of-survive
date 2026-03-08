@@ -1,0 +1,111 @@
+{
+  "projectName": "生存之王 (King of Survive)",
+  "description": "多人联机竞技生存微信小游戏，打怪升级技能、消灭敌对玩家、挑战最终Boss魔山",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "多人房间系统：大厅创建/加入房间",
+      "description": "实现游戏大厅UI: 创建房间(选模式4v4/8x1)、房间列表、加入房间、准备/开始。房间内显示所有玩家名字和准备状态",
+      "acceptanceCriteria": "uv run pytest tests/test_us001_room_system.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-002",
+      "title": "地图选择系统：多地图+等级限制",
+      "description": "实现地图选择UI: 按段位等级展示可选地图(青铜/白银/黄金各3张), 每张地图有独特形状轮廓预览、名称、推荐等级。房主选地图后全房可见",
+      "acceptanceCriteria": "uv run pytest tests/test_us002_map_select.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-003",
+      "title": "阵营系统：友方免伤+敌方可攻击",
+      "description": "实现阵营划分: 4v4模式分红蓝两队, 8x1每人独立阵营。同阵营玩家碰撞不扣血、弹幕穿透友方。敌方阵营头顶红色标识, 友方绿色标识",
+      "acceptanceCriteria": "uv run pytest tests/test_us003_faction_system.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-004",
+      "title": "多玩家渲染：8人同屏+相机跟随",
+      "description": "支持8个玩家实体同屏渲染, 每人独立颜色/名字/血条。相机跟随本地玩家, 地图大于屏幕时视野滚动。小地图显示所有玩家位置",
+      "acceptanceCriteria": "uv run pytest tests/test_us004_multi_player_render.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-005",
+      "title": "刷怪点系统：地图区域差异化刷怪",
+      "description": "地图上设置多个刷怪点(spawnZone), 不同区域刷怪速度/怪物类型不同。中心区域刷高级怪(经验多但危险), 边缘区域刷低级怪(安全但经验少)",
+      "acceptanceCriteria": "uv run pytest tests/test_us005_spawn_zones.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-006",
+      "title": "PvP伤害系统：玩家间战斗+击杀奖励",
+      "description": "敌对玩家的弹幕可命中对方, 造成伤害+击退。击杀敌方玩家获得大量经验+金币+击杀播报。被击杀后淘汰(单排)或等待复活(组队30秒CD)",
+      "acceptanceCriteria": "uv run pytest tests/test_us006_pvp_combat.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-007",
+      "title": "胜利条件：消灭所有敌对玩家",
+      "description": "当所有敌对阵营玩家被淘汰, 触发胜利。全屏金色'VICTORY'动画+烟花粒子。胜利后进入自由模式: 可继续刷怪或挑战魔山",
+      "acceptanceCriteria": "uv run pytest tests/test_us007_victory_condition.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-008",
+      "title": "最终Boss魔山：随时间增强的终极挑战",
+      "description": "胜利后可召唤魔山Boss。魔山血量=基础值*游戏时长系数, 每分钟+10%攻击力和血量。有3个阶段(绿→黄→红)不同技能。击杀后概率掉落皮肤碎片",
+      "acceptanceCriteria": "uv run pytest tests/test_us008_final_boss.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-009",
+      "title": "积分结算系统：按表现计算积分",
+      "description": "游戏结束后计算积分: 存活时间*2 + 击杀数*10 + 等级*5 + 魔山击杀奖励100。显示结算页面(积分明细+排名变化+段位进度条)",
+      "acceptanceCriteria": "uv run pytest tests/test_us009_score_system.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-010",
+      "title": "段位排名系统：积分累计晋级",
+      "description": "实现段位系统(青铜→白银→黄金→铂金→钻石→大师), 积分累计自动晋升/降级。段位决定可进入的地图等级。个人主页显示段位徽章+历史战绩",
+      "acceptanceCriteria": "uv run pytest tests/test_us010_rank_system.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-011",
+      "title": "皮肤系统：收集+装备纯装饰皮肤",
+      "description": "实现皮肤收藏页: 展示已拥有皮肤(不同颜色/特效)。皮肤来源: 日常登录奖励、魔山皮肤碎片合成(10碎片=1皮肤)。装备后改变角色外观, 不影响数值",
+      "acceptanceCriteria": "uv run pytest tests/test_us011_skin_system.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-012",
+      "title": "每日登录奖励：连续登录领皮肤",
+      "description": "实现每日签到UI: 7天一个周期, 每天领取奖励(金币/经验加成/皮肤碎片), 第7天送完整皮肤。连续签到有额外加成。断签重置",
+      "acceptanceCriteria": "uv run pytest tests/test_us012_daily_reward.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-013",
+      "title": "WebSocket实时通信：多人同步协议",
+      "description": "实现WebSocket客户端: 连接服务器、发送玩家位置/操作、接收其他玩家状态。协议: JSON格式, 包含type(move/attack/skill/die)+data。30fps同步频率",
+      "acceptanceCriteria": "uv run pytest tests/test_us013_websocket.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-014",
+      "title": "Java Spring后端：匹配+房间+WebSocket服务",
+      "description": "实现Spring Boot后端: WebSocket端点接收/广播游戏状态, REST API(创建房间/加入/匹配), 内存中维护房间列表和玩家状态。先实现单机本地模式可切换",
+      "acceptanceCriteria": "uv run pytest tests/test_us014_spring_backend.py -v",
+      "passes": true
+    },
+    {
+      "id": "US-015",
+      "title": "地图生成器：不同形状+刷怪点配置",
+      "description": "实现地图数据结构: 地图边界多边形、刷怪区域列表(位置/半径/刷怪速度/怪物类型)、装饰物位置。预设9张地图(3个等级×3张), 渲染地图边界线和区域着色",
+      "acceptanceCriteria": "uv run pytest tests/test_us015_map_generator.py -v",
+      "passes": true
+    }
+  ]
+}
