@@ -42,7 +42,10 @@ PROFILES = [
     {'id': 7, 'name': '赵丽', 'gender': 'F', 'age': 38, 'group': '中年',   'style': 'explorer',    'aggression': 0.3, 'dodge_skill': 0.6, 'patience': 0.7, 'skill_pref': 'random'},
 ]
 
-AVAILABLE_SKINS = ['flame_red', 'ice_blue', 'forest_green', 'royal_gold', 'shadow_purple']
+AVAILABLE_SKINS = [
+    'flame_red', 'ice_blue', 'forest_green', 'royal_gold', 'shadow_purple',
+    'cherry_blossom', 'starlight', 'ocean_wave', 'neon_cyber', 'autumn_leaf',
+]
 
 
 # ─── Server API helpers ─────────────────────────────────────────────
@@ -399,8 +402,13 @@ def run_gameplay(profile, mode, duration=50):
 def phase_settle_scores(room_id, player_ids):
     """Calculate scores and get rank updates."""
     scores = api_post('/api/scores/calculate', {'roomId': room_id})
+    # Also fetch season leaderboard to verify the API works
+    season_data = api_get('/api/scores/season-leaderboard?limit=10')
     if isinstance(scores, list):
-        return {'success': True, 'scores': scores}
+        result = {'success': True, 'scores': scores}
+        if isinstance(season_data, dict):
+            result['season'] = season_data.get('season', {})
+        return result
     return {'success': False, 'error': str(scores)}
 
 
@@ -485,12 +493,23 @@ def generate_feedback(profile, gameplay_result, server_steps):
 
     # Gender-specific feedback
     if profile['gender'] == 'F':
-        feedback['suggestions'].append('希望有更多可爱的皮肤可以收集')
         if surv > 30:
             feedback['positive'].append('画面和特效很好看')
+            feedback['positive'].append('皮肤很多很好看，想多收集一些')
+        else:
+            feedback['suggestions'].append('希望加入好友系统，可以邀请朋友一起玩')
     else:
         if kills > 5:
-            feedback['suggestions'].append('加个击杀排行榜，想和朋友比')
+            feedback['positive'].append('击杀排行榜很有竞争感，想冲第一')
+        if kills > 50:
+            feedback['positive'].append('成就系统给了额外目标，很有动力')
+            feedback['positive'].append('赛季排行每周重置，有动力冲榜')
+            feedback['suggestions'].append('希望赛季结束有专属奖励，比如限定皮肤或称号')
+        elif kills > 20:
+            feedback['positive'].append('成就解锁的金币奖励很实在')
+            feedback['suggestions'].append('希望加入好友对战，可以1v1切磋')
+        else:
+            feedback['suggestions'].append('希望加入观战功能，可以看高手怎么玩')
 
     # Server experience feedback
     reg = server_steps.get('register', {})

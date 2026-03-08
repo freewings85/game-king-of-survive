@@ -18,7 +18,9 @@ import java.util.UUID;
 public class PlayerService {
 
     private static final List<String> CRAFTABLE_SKINS = Arrays.asList(
-            "warrior_red", "warrior_blue", "ninja_shadow", "knight_gold", "mage_purple"
+            "warrior_red", "warrior_blue", "ninja_shadow", "knight_gold", "mage_purple",
+            "flame_red", "ice_blue", "forest_green", "royal_gold", "shadow_purple",
+            "cherry_blossom", "starlight", "ocean_wave", "neon_cyber", "autumn_leaf"
     );
 
     private final Random random = new Random();
@@ -28,6 +30,9 @@ public class PlayerService {
 
     @Autowired
     private DailyRewardService dailyRewardService;
+
+    @Autowired
+    private SkinService skinService;
 
     public Player createPlayer(String nickname) {
         Player player = new Player();
@@ -97,9 +102,11 @@ public class PlayerService {
 
     public Player equipSkin(String playerId, String skinId) {
         Player player = getPlayer(playerId);
-        if (!player.getOwnedSkins().contains(skinId)) {
-            throw new RuntimeException("Player does not own skin: " + skinId);
+        if (!skinService.skinExists(skinId)) {
+            throw new RuntimeException("Unknown skin: " + skinId);
         }
+        // All skins are available to all players (no unlock requirement)
+        player.getOwnedSkins().add(skinId);
         player.setEquippedSkinId(skinId);
         return playerRepository.save(player);
     }
