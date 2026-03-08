@@ -36,10 +36,15 @@ def play_and_evaluate():
         page.screenshot(path=os.path.join(FEEDBACK_DIR, 'vp_01_menu.png'))
         screenshots.append(('menu', 'vp_01_menu.png'))
 
-        # Click start
+        # Get canvas dimensions (W=800, H=600)
         box = page.query_selector('canvas').bounding_box()
-        cx, cy = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
-        page.click('canvas', position={'x': box['width'] / 2, 'y': box['height'] / 2 + 37})
+        bw, bh = box['width'], box['height']
+        cx, cy = box['x'] + bw / 2, box['y'] + bh / 2
+
+        # Click Solo mode button: cx in [W/2-90, W/2-5], cy in [H/2+30, H/2+80]
+        # Center of solo button: x=352, y=355
+        page.click('canvas', position={'x': bw / 2 - 48, 'y': bh / 2 + 55})
+        page.wait_for_timeout(300)
 
         # Play for 35 seconds with mouse movement to simulate a real player
         start = time.time()
@@ -53,10 +58,26 @@ def play_and_evaluate():
             # Check game state via exposed accessor (window._survivorState)
             game_state = page.evaluate('() => window._survivorState ? window._survivorState() : null')
 
+            # Handle menu state (if initial click missed)
+            if game_state == 'menu':
+                page.click('canvas', position={'x': bw / 2 - 48, 'y': bh / 2 + 55})
+                page.wait_for_timeout(300)
+                continue
+
             # Handle character select screen — click first character (warrior)
             if game_state == 'charSelect':
                 # Warrior card at y = H/4 + 0*120 = 150, height 100, click center
-                page.click('canvas', position={'x': box['width'] / 2, 'y': 200})
+                page.click('canvas', position={'x': bw / 2, 'y': 200})
+                page.wait_for_timeout(300)
+                continue
+
+            # Handle map select screen — select first map then click "开始"
+            if game_state == 'mapSelect':
+                # Click first map entry (y=70, height=48, center y=94)
+                page.click('canvas', position={'x': bw / 2, 'y': 94})
+                page.wait_for_timeout(200)
+                # Click "开始" button: cx in [W/2-60, W/2+60], cy in [H-60, H-20]
+                page.click('canvas', position={'x': bw / 2, 'y': bh - 40})
                 page.wait_for_timeout(300)
                 continue
 

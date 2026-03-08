@@ -129,6 +129,9 @@
   // victoryCondition (US-007): check if all enemies eliminated
   var victoryState = { active: false };
 
+  // stormZone: shrinking playable area to force PvP engagement
+  var stormZone = { active: false, radius: WORLD_W, centerX: WORLD_W/2, centerY: WORLD_H/2, shrinkRate: 20 };
+
   // finalBoss (US-008): 魔山 - scales with game time
   var finalBossPhase = 0;
 
@@ -230,6 +233,11 @@
   }
 
   window._survivorState = function() { return state; };
+  // Debug helper for testing
+  window._debugKillBots = function() {
+    for (var i = 1; i < allPlayers.length; i++) { allPlayers[i].alive = false; allPlayers[i].hp = 0; }
+    return { playerFaction: player.factionId, victoryActive: victoryState.active, aliveCount: allPlayers.filter(function(p){return p.alive;}).length };
+  };
   window._survivorQuery = function() {
     if (!player) return null;
     var nearEnemies = [];
@@ -240,7 +248,13 @@
       var d = Math.sqrt(dx*dx + dy*dy);
       if (d < 400) nearEnemies.push({x: e.x, y: e.y, d: d});
     }
-    return {px: player.x, py: player.y, hp: player.hp, maxHp: player.maxHp, enemies: nearEnemies, wave: wave, kills: kills};
+    // Include allPlayers info for multiplayer testing
+    var playersInfo = [];
+    for (var pi = 0; pi < allPlayers.length; pi++) {
+      var ap = allPlayers[pi];
+      playersInfo.push({id: ap.id, name: ap.name || '', hp: ap.hp, maxHp: ap.maxHp, x: ap.x, y: ap.y, factionId: ap.factionId, eliminated: !ap.alive, kills: ap.kills || 0, level: ap.level || 1});
+    }
+    return {px: player.x, py: player.y, hp: player.hp, maxHp: player.maxHp, enemies: nearEnemies, wave: wave, kills: kills, gameMode: gameMode, totalEnemies: entities.filter(function(e){return e.type==='enemy'&&!e.dead;}).length, players: playersInfo, victoryTriggered: victoryState ? victoryState.active : false, gameTime: gameTime || 0, spawnZoneCount: spawnZones ? spawnZones.length : 0};
   };
   var player, entities = [], particles = [], floats = [], gems = [];
   var wave, waveTimer, gameTime, kills, killStreak, maxStreak;
@@ -1018,9 +1032,11 @@
     // Initialize allPlayers array based on game mode
     allPlayers = [];
     for (var pi = 0; pi < (gameMode === 'solo' ? 8 : 8); pi++) {
+      var botHp = pi === 0 ? 200 : 500; // Bots get 500 HP for longer PvP fights
       allPlayers.push({
         id: pi, name: 'Player ' + (pi+1), x: 200 + Math.random() * (WORLD_W-400), y: 200 + Math.random() * (WORLD_H-400),
-        hp: 200, maxHp: 200, radius: 14, speed: 160, attackDamage: 15, attackCooldown: 0.8, _timer: 0,
+        hp: botHp, maxHp: botHp, radius: 14, speed: 160, attackDamage: 15, attackCooldown: 0.8, _timer: 0,
+        hpRegen: pi === 0 ? 0 : 2, // Bots regenerate 2 HP/s
         factionId: gameMode === 'team' ? (pi < 4 ? 0 : 1) : pi, // factionSystem (US-003)
         color: gameMode === 'team' ? (pi < 4 ? '#4f4' : '#f44') : ['#4f4','#f44','#48f','#f80','#c4f','#ff0','#0ff','#f4a'][pi],
         alive: true, kills: 0, level: 1, isLocal: pi === 0, isBot: pi !== 0,
@@ -1322,7 +1338,10 @@
     }
     // swarmDensity (US-295): massive enemy counts for 'bullet hell sea' visual
     var MAX_ENTITIES = 60; // enemyBalanceCap (US-341): reduced from 120 for better gameplay feel
+    var currentEnemies = entities.filter(function(e) { return e.type === 'enemy' && !e.dead; }).length;
     var count = Math.min(8 + (w - 1) * 5, MAX_ENTITIES) + earlySpawnBoost;
+    count = Math.min(count, 80 - currentEnemies); // Global cap: never exceed 80 enemies total
+    if (count <= 0) return;
     if (w >= 10) count += (w - 10) * 2; // enemyBalanceCap: gentler density ramp after wave 10
     if (w >= 20) count += (w - 20) * 1; // enemyBalanceCap: slower growth past wave 20
     var isBoss = w % 5 === 0 && w > 0;
@@ -1642,10 +1661,28 @@
     gameTime += dt;
     if (killDisplayPulse > 0) killDisplayPulse -= dt;
     waveTimer += dt;
+    // Global enemy count for cap check
+    var _enemyCount = 0;
+    for (var _ei = 0; _ei < entities.length; _ei++) { if (entities[_ei].type === 'enemy' && !entities[_ei].dead) _enemyCount++; }
+    var GLOBAL_ENEMY_CAP = 80; // Prevent entity explosion on large maps
+    // Remove off-screen enemies far from any player if over cap
+    if (_enemyCount > GLOBAL_ENEMY_CAP) {
+      for (var _ri = entities.length - 1; _ri >= 0 && _enemyCount > GLOBAL_ENEMY_CAP; _ri--) {
+        var _re = entities[_ri];
+        if (_re.type !== 'enemy' || _re.dead) continue;
+        var _nearPlayer = false;
+        for (var _rp = 0; _rp < allPlayers.length; _rp++) {
+          if (!allPlayers[_rp].alive) continue;
+          var _rdx = _re.x - allPlayers[_rp].x, _rdy = _re.y - allPlayers[_rp].y;
+          if (Math.sqrt(_rdx*_rdx + _rdy*_rdy) < 500) { _nearPlayer = true; break; }
+        }
+        if (!_nearPlayer) { entities.splice(_ri, 1); _enemyCount--; }
+      }
+    }
     // Trickle spawn: keep enemies flowing between waves (1 every 2s, scaling with wave)
     trickleSpawnTimer += dt;
     var trickleInterval = Math.max(0.6, 2.5 - wave * 0.15); // swarmDensity: faster trickle, ramping with wave
-    if (trickleSpawnTimer >= trickleInterval && wave > 0) {
+    if (trickleSpawnTimer >= trickleInterval && wave > 0 && _enemyCount < GLOBAL_ENEMY_CAP) {
       trickleSpawnTimer = 0;
       var ts = randEdge();
       var tTypes = wave >= 7 ? ['normal','fast','tank'] : ['normal','fast'];
@@ -1797,19 +1834,80 @@
 
     // Update bot AI for all non-local players
     for (var bai = 1; bai < allPlayers.length; bai++) {
-      updateBotAI(allPlayers[bai], dt);
-      // Sync allPlayers[0] position from player
-      allPlayers[0].x = player.x;
-      allPlayers[0].y = player.y;
+      var bot = allPlayers[bai];
+      updateBotAI(bot, dt);
+      // Bot HP regen
+      if (bot.alive && bot.hpRegen > 0) {
+        bot.hp = Math.min(bot.maxHp, bot.hp + bot.hpRegen * dt);
+      }
+      // Bot takes PvE damage from nearby monsters
+      if (bot.alive) {
+        for (var bei = 0; bei < entities.length; bei++) {
+          var en = entities[bei];
+          if (en.type !== 'enemy' || en.dead || en.hp <= 0) continue;
+          var bdx = en.x - bot.x, bdy = en.y - bot.y;
+          var bdist = Math.sqrt(bdx*bdx + bdy*bdy);
+          if (bdist < en.radius + bot.radius) {
+            bot.hp -= en.damage * dt;
+            if (bot.hp <= 0) { bot.alive = false; bot.hp = 0; }
+          }
+        }
+      }
     }
+    // Sync allPlayers[0] position from player
+    allPlayers[0].x = player.x;
+    allPlayers[0].y = player.y;
 
     // victoryCondition (US-007): check if all enemies eliminated
-    var enemyPlayersAlive = allPlayers.filter(function(p) { return p.alive && p.factionId !== player.factionId; }).length;
-    if (enemyPlayersAlive === 0 && allPlayers.length > 1 && state === 'playing') {
-      // checkVictory: all enemy players eliminated
+    var alivePlayersList = allPlayers.filter(function(p) { return p.alive; });
+    var enemyPlayersAlive = alivePlayersList.filter(function(p) { return p.factionId !== player.factionId; }).length;
+    if (enemyPlayersAlive === 0 && allPlayers.length > 1 && state === 'playing' && !victoryState.active && alivePlayersList.length >= 1) {
+      // checkVictory: all enemy players eliminated — trigger once
       victoryState.active = true;
       floatText(WORLD_W/2, WORLD_H/2 - 100, 'VICTORY!', '#ffd700', 48);
       screenFlash.color = '#ffd700'; screenFlash.alpha = 0.5;
+    }
+    // Show remaining enemy count hint when few left
+    if (enemyPlayersAlive > 0 && enemyPlayersAlive <= 2 && !victoryState.active && gameTime > 30) {
+      if (!player._lastEnemyHint || gameTime - player._lastEnemyHint > 10) {
+        player._lastEnemyHint = gameTime;
+        var nearestFoe = null, nearFoeDist = Infinity;
+        for (var fi = 0; fi < allPlayers.length; fi++) {
+          if (!allPlayers[fi].alive || allPlayers[fi].factionId === player.factionId) continue;
+          var fdx = allPlayers[fi].x - player.x, fdy = allPlayers[fi].y - player.y;
+          var fd = Math.sqrt(fdx*fdx + fdy*fdy);
+          if (fd < nearFoeDist) { nearFoeDist = fd; nearestFoe = allPlayers[fi]; }
+        }
+        if (nearestFoe) {
+          var dir = nearFoeDist < 300 ? '附近!' : (nearestFoe.x > player.x ? '→' : '←') + (nearestFoe.y > player.y ? '↓' : '↑');
+          floatText(player.x, player.y - 60, '敌人剩余 ' + enemyPlayersAlive + ' ' + dir, '#f88', 14);
+        }
+      }
+    }
+
+    // stormZone: activate when few players remain after 40s — force PvP encounters
+    var totalAlive = allPlayers.filter(function(p) { return p.alive; }).length;
+    if (!stormZone.active && totalAlive <= 3 && gameTime > 40 && !victoryState.active) {
+      stormZone.active = true;
+      stormZone.radius = WORLD_W * 0.7;
+      floatText(WORLD_W/2, WORLD_H/2, '⚡ 风暴缩圈! ⚡', '#f44', 24);
+    }
+    if (stormZone.active && !victoryState.active) {
+      stormZone.radius = Math.max(200, stormZone.radius - stormZone.shrinkRate * dt);
+      // Damage players outside the zone
+      for (var szi = 0; szi < allPlayers.length; szi++) {
+        var szp = allPlayers[szi];
+        if (!szp.alive) continue;
+        var szdx = szp.x - stormZone.centerX, szdy = szp.y - stormZone.centerY;
+        var szDist = Math.sqrt(szdx*szdx + szdy*szdy);
+        if (szDist > stormZone.radius) {
+          szp.hp -= 30 * dt; // 30 DPS outside zone
+          if (szp.hp <= 0) { szp.alive = false; szp.hp = 0; }
+          // Push toward center slightly
+          szp.x -= (szdx / szDist) * 30 * dt;
+          szp.y -= (szdy / szDist) * 30 * dt;
+        }
+      }
     }
 
     // touchSkillButtons (US-343): dodge dash physics
@@ -2046,7 +2144,7 @@
             x: player.x, y: player.y,
             vx: (nx * cs - ny * ss) * 450, vy: (nx * ss + ny * cs) * 450,
             type: 'projectile', radius: 9, damage: Math.round(player.attackDamage * (player._furyBonus || 1)), // projSizeBoost: 6→9
-            hp: 1, _life: 1.8, pierce: player.pierce,
+            hp: 1, _life: 1.8, pierce: player.pierce, ownerId: localPlayerId, _ownerFaction: player.factionId,
             _chain: player._chainCount, _explosive: player._explosiveDmg
           });
         }
@@ -2272,11 +2370,12 @@
           }
         }
         // pvpCombat (US-006): player vs player damage
-        // Check if projectile hits enemy players
+        // Check if projectile hits enemy players — use projectile owner's faction
+        var projFaction = (typeof e._ownerFaction !== 'undefined') ? e._ownerFaction : allPlayers[localPlayerId].factionId;
         for (var pvi = 0; pvi < allPlayers.length; pvi++) {
           var pvTarget = allPlayers[pvi];
-          // factionSystem (US-003): allyCheck - skip friendly fire
-          if (!pvTarget.alive || pvTarget.factionId === allPlayers[localPlayerId].factionId) continue; // allyCheck
+          // factionSystem (US-003): allyCheck - skip self and same faction
+          if (!pvTarget.alive || pvTarget.id === e.ownerId || pvTarget.factionId === projFaction) continue; // allyCheck
           var pvdx = e.x - pvTarget.x, pvdy = e.y - pvTarget.y;
           var pvDist = Math.sqrt(pvdx*pvdx + pvdy*pvdy);
           if (pvDist < e.radius + pvTarget.radius) {
@@ -2284,7 +2383,12 @@
             pvTarget.hp -= pvpDamage; // pvpHit
             floatText(pvTarget.x, pvTarget.y - 20, '-' + pvpDamage, '#f44', 16);
             if (pvTarget.hp <= 0) {
-              pvTarget.alive = false; player.kills++;
+              pvTarget.alive = false;
+              // Credit kill to projectile owner
+              var pvKiller = null;
+              for (var ki = 0; ki < allPlayers.length; ki++) { if (allPlayers[ki].id === e.ownerId) { pvKiller = allPlayers[ki]; break; } }
+              if (pvKiller) pvKiller.kills++;
+              else player.kills++;
               floatText(pvTarget.x, pvTarget.y, '击杀 ' + pvTarget.name + '!', '#ffd700', 22);
             }
             if (!e.pierce) { entities.splice(i, 1); break; }
@@ -2533,35 +2637,58 @@
 
   function updateBotAI(bot, dt) {
     if (!bot.alive || bot.isLocal) return;
-    // Simple AI: move toward nearest enemy, avoid getting hit
+    // AI: target nearest monster OR enemy player
     var nearestEnemy = null, nearDist = Infinity;
+    var nearestPlayer = null, nearPlayerDist = Infinity;
+    // Find nearest monster
     for (var ei = 0; ei < entities.length; ei++) {
-      if (entities[ei].type === 'enemy') {
+      if (entities[ei].type === 'enemy' && !entities[ei].dead) {
         var dx = entities[ei].x - bot.x, dy = entities[ei].y - bot.y;
         var d = Math.sqrt(dx*dx + dy*dy);
         if (d < nearDist) { nearDist = d; nearestEnemy = entities[ei]; }
       }
     }
-    // Move toward nearest enemy or wander
-    if (nearestEnemy && nearDist < 400) {
-      var dx = nearestEnemy.x - bot.x, dy = nearestEnemy.y - bot.y;
+    // Find nearest enemy faction player
+    for (var pi = 0; pi < allPlayers.length; pi++) {
+      var ap = allPlayers[pi];
+      if (!ap.alive || ap.id === bot.id || ap.factionId === bot.factionId) continue;
+      var dx = ap.x - bot.x, dy = ap.y - bot.y;
+      var d = Math.sqrt(dx*dx + dy*dy);
+      if (d < nearPlayerDist) { nearPlayerDist = d; nearestPlayer = ap; }
+    }
+    // Prioritize enemy player if nearby (<500px), otherwise target monster
+    var target = null, targetDist = Infinity;
+    if (nearestPlayer && nearPlayerDist < 500) {
+      target = nearestPlayer; targetDist = nearPlayerDist;
+    } else if (nearestEnemy && nearDist < 400) {
+      target = nearestEnemy; targetDist = nearDist;
+    } else if (nearestPlayer) {
+      // Slowly move toward enemy player if no monster nearby
+      target = nearestPlayer; targetDist = nearPlayerDist;
+    }
+    // Move toward target or wander
+    if (target && targetDist < 600) {
+      var dx = target.x - bot.x, dy = target.y - bot.y;
       var d = Math.sqrt(dx*dx+dy*dy) || 1;
       bot.x += (dx/d) * bot.speed * dt * 0.6;
       bot.y += (dy/d) * bot.speed * dt * 0.6;
     } else {
-      // Wander
-      bot.x += (Math.random()-0.5) * bot.speed * dt;
-      bot.y += (Math.random()-0.5) * bot.speed * dt;
+      // Wander toward center
+      var cx = WORLD_W/2, cy = WORLD_H/2;
+      var dx = cx - bot.x + (Math.random()-0.5)*200, dy = cy - bot.y + (Math.random()-0.5)*200;
+      var d = Math.sqrt(dx*dx+dy*dy) || 1;
+      bot.x += (dx/d) * bot.speed * dt * 0.3;
+      bot.y += (dy/d) * bot.speed * dt * 0.3;
     }
     bot.x = Math.max(bot.radius, Math.min(WORLD_W - bot.radius, bot.x));
     bot.y = Math.max(bot.radius, Math.min(WORLD_H - bot.radius, bot.y));
-    // Bot auto-attack
+    // Bot auto-attack: target monsters or enemy players
     bot._timer += dt;
-    if (bot._timer >= bot.attackCooldown && nearestEnemy && nearDist < 350) {
+    if (bot._timer >= bot.attackCooldown && target && targetDist < 350) {
       bot._timer = 0;
-      var ax = nearestEnemy.x - bot.x, ay = nearestEnemy.y - bot.y;
+      var ax = target.x - bot.x, ay = target.y - bot.y;
       var ad = Math.sqrt(ax*ax+ay*ay) || 1;
-      entities.push({ x: bot.x, y: bot.y, vx: (ax/ad)*400, vy: (ay/ad)*400, damage: bot.attackDamage, radius: 5, pierce: false, ownerId: bot.id, type: 'projectile', _life: 2 });
+      entities.push({ x: bot.x, y: bot.y, vx: (ax/ad)*400, vy: (ay/ad)*400, damage: bot.attackDamage, radius: 5, pierce: false, ownerId: bot.id, _ownerFaction: bot.factionId, type: 'projectile', _life: 2 });
     }
   }
 
@@ -3295,6 +3422,25 @@
     var hpRatio = Math.max(0, player.hp / player.maxHp);
     ctx.fillStyle = hpRatio > 0.5 ? '#0c0' : hpRatio > 0.25 ? '#fa0' : '#f44';
     ctx.fillRect(player.x - barW / 2, barY, barW * hpRatio, barH);
+
+    // Draw storm zone visual
+    if (stormZone.active) {
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = '#f22';
+      // Draw the danger zone (outside the circle)
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(stormZone.centerX, stormZone.centerY, stormZone.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+      // Storm circle border
+      ctx.strokeStyle = '#f44'; ctx.lineWidth = 3; ctx.globalAlpha = 0.6;
+      ctx.beginPath(); ctx.arc(stormZone.centerX, stormZone.centerY, stormZone.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     ctx.restore(); // end camera transform
 
