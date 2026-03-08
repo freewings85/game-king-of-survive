@@ -20,18 +20,26 @@ def play_round(page, box, round_num):
     """Play one complete round, return stats."""
     cx, cy = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
 
-    # Click start from menu
+    bw, bh = box['width'], box['height']
+
+    # Navigate menu: menu → charSelect → mapSelect → playing
     game_state = page.evaluate('() => window._survivorState ? window._survivorState() : null')
     if game_state == 'menu':
-        page.click('canvas', position={'x': box['width'] / 2, 'y': box['height'] / 2 + 37})
-        page.wait_for_timeout(300)
+        page.click('canvas', position={'x': bw / 2 - 48, 'y': bh / 2 + 55})
+        page.wait_for_timeout(400)
 
-    # Handle character select — pick random character each round
     game_state = page.evaluate('() => window._survivorState ? window._survivorState() : null')
     if game_state == 'charSelect':
-        char_y = random.choice([150 + 50, 270 + 50, 390 + 50])  # H/4 + i*120 + 50
-        page.click('canvas', position={'x': box['width'] / 2, 'y': char_y})
-        page.wait_for_timeout(300)
+        char_y = random.choice([200, 320, 440])  # H/4 + i*120 + 50
+        page.click('canvas', position={'x': bw / 2, 'y': char_y})
+        page.wait_for_timeout(400)
+
+    game_state = page.evaluate('() => window._survivorState ? window._survivorState() : null')
+    if game_state == 'mapSelect':
+        page.click('canvas', position={'x': bw / 2, 'y': 94})
+        page.wait_for_timeout(200)
+        page.click('canvas', position={'x': bw / 2, 'y': bh - 40})
+        page.wait_for_timeout(400)
 
     start = time.time()
     skills_picked = 0
@@ -57,15 +65,27 @@ def play_round(page, box, round_num):
                 };
             }''')
 
-            # Click retry
-            page.click('canvas', position={'x': box['width'] / 2, 'y': box['height'] - 85})
+            # Click retry (再来一局 button at cy: H-110 to H-55, center ~H-82)
+            page.click('canvas', position={'x': bw / 2, 'y': bh - 82})
             page.wait_for_timeout(500)
             break
 
+        if game_state == 'menu':
+            page.click('canvas', position={'x': bw / 2 - 48, 'y': bh / 2 + 55})
+            page.wait_for_timeout(400)
+            continue
+
         if game_state == 'charSelect':
-            char_y = random.choice([150 + 50, 270 + 50, 390 + 50])
-            page.click('canvas', position={'x': box['width'] / 2, 'y': char_y})
-            page.wait_for_timeout(300)
+            char_y = random.choice([200, 320, 440])
+            page.click('canvas', position={'x': bw / 2, 'y': char_y})
+            page.wait_for_timeout(400)
+            continue
+
+        if game_state == 'mapSelect':
+            page.click('canvas', position={'x': bw / 2, 'y': 94})
+            page.wait_for_timeout(200)
+            page.click('canvas', position={'x': bw / 2, 'y': bh - 40})
+            page.wait_for_timeout(400)
             continue
 
         if game_state == 'levelUp':
