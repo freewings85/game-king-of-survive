@@ -130,7 +130,7 @@
   var victoryState = { active: false };
 
   // stormZone: shrinking playable area to force PvP engagement
-  var stormZone = { active: false, radius: WORLD_W, centerX: WORLD_W/2, centerY: WORLD_H/2, shrinkRate: 20 };
+  var stormZone = { active: false, radius: WORLD_W, centerX: WORLD_W/2, centerY: WORLD_H/2, shrinkRate: 60 };
 
   // killFeed: PvP kill announcements shown on screen
   var killFeed = []; // { text, color, time }
@@ -1892,27 +1892,29 @@
       }
     }
 
-    // stormZone: activate when few players remain after 40s — force PvP encounters
+    // stormZone: activate when few players remain after 30s — force PvP encounters
     var totalAlive = allPlayers.filter(function(p) { return p.alive; }).length;
-    if (!stormZone.active && totalAlive <= 3 && gameTime > 40 && !victoryState.active) {
+    if (!stormZone.active && totalAlive <= 3 && gameTime > 30 && !victoryState.active) {
       stormZone.active = true;
-      stormZone.radius = WORLD_W * 0.7;
+      stormZone.radius = WORLD_W * 0.4;
       floatText(WORLD_W/2, WORLD_H/2, '⚡ 风暴缩圈! ⚡', '#f44', 24);
     }
     if (stormZone.active && !victoryState.active) {
-      stormZone.radius = Math.max(200, stormZone.radius - stormZone.shrinkRate * dt);
-      // Damage players outside the zone
+      // Accelerating shrink: faster as radius gets smaller to force endgame
+      var shrinkSpeed = stormZone.radius < 500 ? 100 : 60;
+      stormZone.radius = Math.max(150, stormZone.radius - shrinkSpeed * dt);
+      // Damage players outside the zone — 50 DPS, lethal pressure
       for (var szi = 0; szi < allPlayers.length; szi++) {
         var szp = allPlayers[szi];
         if (!szp.alive) continue;
         var szdx = szp.x - stormZone.centerX, szdy = szp.y - stormZone.centerY;
         var szDist = Math.sqrt(szdx*szdx + szdy*szdy);
         if (szDist > stormZone.radius) {
-          szp.hp -= 30 * dt; // 30 DPS outside zone
+          szp.hp -= 50 * dt; // 50 DPS outside zone
           if (szp.hp <= 0) { szp.alive = false; szp.hp = 0; }
-          // Push toward center slightly
-          szp.x -= (szdx / szDist) * 30 * dt;
-          szp.y -= (szdy / szDist) * 30 * dt;
+          // Push toward center
+          szp.x -= (szdx / szDist) * 50 * dt;
+          szp.y -= (szdy / szDist) * 50 * dt;
         }
       }
     }
