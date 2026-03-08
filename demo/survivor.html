@@ -8,10 +8,175 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
   canvas { border: 1px solid #222; cursor: crosshair; }
+  #login-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 100; font-family: Arial, sans-serif; color: #fff;
+  }
+  #login-overlay.hidden { display: none; }
+  #login-overlay h1 { font-size: 48px; color: #ffd700; text-shadow: 0 0 20px #ff8c00; margin-bottom: 8px; }
+  #login-overlay .subtitle { font-size: 16px; color: #888; margin-bottom: 40px; }
+  #login-box { background: rgba(255,255,255,0.08); border: 1px solid #444; border-radius: 12px; padding: 32px 40px; text-align: center; min-width: 340px; }
+  #login-box label { display: block; font-size: 14px; color: #aaa; margin-bottom: 8px; text-align: left; }
+  #login-box input { width: 100%; padding: 12px 16px; font-size: 18px; border: 1px solid #555; border-radius: 8px; background: #1a1a2a; color: #fff; outline: none; margin-bottom: 16px; }
+  #login-box input:focus { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
+  #login-box button { width: 100%; padding: 14px; font-size: 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 8px; transition: all 0.2s; }
+  #btn-register { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
+  #btn-register:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
+  #btn-login { background: #2a2a4a; color: #ddd; border: 1px solid #555 !important; }
+  #btn-login:hover { background: #3a3a5a; }
+  #login-msg { font-size: 13px; color: #ff6b6b; margin-top: 8px; min-height: 20px; }
+  #login-info { font-size: 12px; color: #666; margin-top: 20px; }
+  #player-bar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 50;
+    background: rgba(0,0,0,0.7); border: 1px solid #333; border-radius: 8px; padding: 4px 16px;
+    font-family: Arial, sans-serif; color: #ddd; font-size: 13px; display: none; }
+  #player-bar span { margin: 0 8px; }
+  #player-bar .gold { color: #ffd700; }
+  #player-bar .rank { color: #4a9eff; }
+  #player-bar .nickname { color: #fff; font-weight: bold; }
 </style>
 </head>
 <body>
+<div id="login-overlay">
+  <h1>生存之王</h1>
+  <div class="subtitle">King of Survive</div>
+  <div id="login-box">
+    <label for="nickname-input">输入昵称</label>
+    <input type="text" id="nickname-input" placeholder="取个霸气的名字..." maxlength="12" autocomplete="off">
+    <button id="btn-register" onclick="doRegister()">注册并进入游戏</button>
+    <button id="btn-login" onclick="doLogin()">已有账号，直接登录</button>
+    <div id="login-msg"></div>
+  </div>
+  <div id="login-info">需要连接服务器 · 数据实时同步</div>
+</div>
+<div id="player-bar">
+  <span class="nickname" id="bar-name">-</span>
+  <span class="gold" id="bar-gold">0 金币</span>
+  <span class="rank" id="bar-rank">青铜</span>
+  <span id="bar-level">Lv.1</span>
+</div>
 <canvas id="c" width="800" height="600"></canvas>
+<script>
+// ─── Login/Register System ─────────────────────────────────────
+var _serverUrl = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
+var _currentPlayer = null; // { id, nickname, gold, level, rank, ... }
+
+function _apiRequest(method, path, data, cb) {
+  var xhr = new XMLHttpRequest();
+  xhr.open(method, _serverUrl + path);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      cb(null, JSON.parse(xhr.responseText));
+    } else {
+      cb(xhr.status + ': ' + xhr.responseText, null);
+    }
+  };
+  xhr.onerror = function() { cb('网络错误，无法连接服务器', null); };
+  xhr.timeout = 5000;
+  xhr.ontimeout = function() { cb('连接超时', null); };
+  xhr.send(data ? JSON.stringify(data) : null);
+}
+
+function _showMsg(msg, isError) {
+  var el = document.getElementById('login-msg');
+  el.textContent = msg;
+  el.style.color = isError ? '#ff6b6b' : '#4a9';
+}
+
+function _enterGame(playerData) {
+  _currentPlayer = playerData;
+  // Save to localStorage for quick re-login
+  try { localStorage.setItem('survivor_player_id', playerData.id); } catch(e) {}
+  // Hide login, show player bar
+  document.getElementById('login-overlay').classList.add('hidden');
+  var bar = document.getElementById('player-bar');
+  bar.style.display = 'block';
+  document.getElementById('bar-name').textContent = playerData.nickname;
+  document.getElementById('bar-gold').textContent = (playerData.gold || 0) + ' 金币';
+  document.getElementById('bar-rank').textContent = playerData.rank || '青铜';
+  document.getElementById('bar-level').textContent = 'Lv.' + (playerData.level || 1);
+  // Set gold in game
+  if (typeof window._setPlayerGold === 'function') window._setPlayerGold(playerData.gold || 0);
+  // Claim daily reward automatically
+  _apiRequest('POST', '/api/players/' + playerData.id + '/claim-daily-reward', null, function(err, reward) {
+    if (!err && reward && reward.description) {
+      document.getElementById('bar-gold').textContent = '签到: ' + reward.description;
+      setTimeout(function() {
+        // Refresh player data to get updated gold
+        _apiRequest('GET', '/api/players/' + playerData.id, null, function(e2, p2) {
+          if (!e2 && p2) {
+            _currentPlayer = p2;
+            document.getElementById('bar-gold').textContent = (p2.gold || 0) + ' 金币';
+            if (typeof window._setPlayerGold === 'function') window._setPlayerGold(p2.gold || 0);
+          }
+        });
+      }, 2000);
+    }
+  });
+}
+
+function doRegister() {
+  var nickname = document.getElementById('nickname-input').value.trim();
+  if (!nickname) { _showMsg('请输入昵称', true); return; }
+  if (nickname.length < 2) { _showMsg('昵称至少2个字符', true); return; }
+  _showMsg('注册中...', false);
+  _apiRequest('POST', '/api/players', { nickname: nickname }, function(err, data) {
+    if (err) { _showMsg('注册失败: ' + err, true); return; }
+    _showMsg('注册成功！', false);
+    _enterGame(data);
+  });
+}
+
+function doLogin() {
+  var nickname = document.getElementById('nickname-input').value.trim();
+  if (!nickname) {
+    // Try auto-login from localStorage
+    var savedId = null;
+    try { savedId = localStorage.getItem('survivor_player_id'); } catch(e) {}
+    if (savedId) {
+      _showMsg('登录中...', false);
+      _apiRequest('GET', '/api/players/' + savedId, null, function(err, data) {
+        if (err) { _showMsg('账号不存在，请重新注册', true); return; }
+        _showMsg('欢迎回来！', false);
+        _enterGame(data);
+      });
+      return;
+    }
+    _showMsg('请输入昵称或先注册', true);
+    return;
+  }
+  // Register as login (server uses in-memory, so always register)
+  _showMsg('登录中...', false);
+  _apiRequest('POST', '/api/players', { nickname: nickname }, function(err, data) {
+    if (err) { _showMsg('登录失败: ' + err, true); return; }
+    _enterGame(data);
+  });
+}
+
+// Auto-login on load if saved
+(function() {
+  // file:// protocol = local/simulator mode, skip login overlay
+  if (location.protocol === 'file:') {
+    document.getElementById('login-overlay').classList.add('hidden');
+    return;
+  }
+  var savedId = null;
+  try { savedId = localStorage.getItem('survivor_player_id'); } catch(e) {}
+  if (savedId) {
+    _apiRequest('GET', '/api/players/' + savedId, null, function(err, data) {
+      if (!err && data) {
+        document.getElementById('nickname-input').value = data.nickname;
+      }
+    });
+  }
+  // Enter key to register
+  document.getElementById('nickname-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doRegister();
+  });
+})();
+</script>
 <script>
 (function() {
   var canvas = document.getElementById('c');
@@ -227,17 +392,20 @@
   function socketSend(data) { if (gameSocket && gameSocket.readyState === 1) gameSocket.send(JSON.stringify(data)); }
 
   // springBackend (US-014): server connection config
-  var serverUrl = 'http://localhost:8080';
+  var serverUrl = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
   var apiEndpoint = serverUrl + '/api';
-  var localMode = true; // offlineMode: run without server
+  var localMode = !window._currentPlayer; // online if logged in via login screen
   function apiCall(path, data, cb) {
     if (localMode) { if (cb) cb({ success: true, data: {} }); return; }
     var xhr = new XMLHttpRequest();
     xhr.open('POST', apiEndpoint + path);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload = function() { if (cb) cb(JSON.parse(xhr.responseText)); };
+    xhr.onerror = function() { if (cb) cb({ success: false }); };
     xhr.send(JSON.stringify(data));
   }
+  // Bridge: login system sets gold
+  window._setPlayerGold = function(g) { gold = g; saveGold(); };
 
   window._survivorState = function() { return state; };
   // Debug helper for testing
@@ -1020,7 +1188,7 @@
       lifesteal: 0, _fireDmg: 0, _explosiveDmg: 0, _chainCount: 0,
       thornsDamage: cls.thornsDamage || 0, dodgeChance: cls.dodgeChance || 0,
       rangeBonus: cls.rangeBonus || 0, playerClass: selectedClass,
-      reviveUsed: false, _invincible: false, _reviveTimer: 0,
+      reviveUsed: false, _invincible: false, _reviveTimer: 0, _newbieShield: 5.0,
       _dodgeCooldown: 0, _dodgeTimer: 0, _isDodging: false,
       kills: 0, factionId: 0, name: 'Player 1', skinId: 'default'
     };
@@ -1337,7 +1505,7 @@
   function spawnWave(w) {
     // earlySpawnBoost: Wave 1-3 get bonus enemies for immediate action (US-276)
     // wave1DensityBoost (US-322): wave 1 gets 8 extra for dense opening
-    var earlySpawnBoost = w === 1 ? 8 : (w <= 3 ? 6 : 0);
+    var earlySpawnBoost = w === 1 ? 8 : (w === 2 ? 3 : (w === 3 ? 4 : 0)); // wave2-3 reduced for smoother mid-game ramp
     // wave1DensityBoost (US-322): Wave 1 spawns 12 close enemies for dense first impression
     if (w === 1 && player) {
       var initialDensity = 12; // wave1DensityBoost: doubled from 5→12
@@ -1875,8 +2043,15 @@
     if (enemyPlayersAlive === 0 && allPlayers.length > 1 && state === 'playing' && !victoryState.active && alivePlayersList.length >= 1) {
       // checkVictory: all enemy players eliminated — trigger once
       victoryState.active = true;
-      floatText(WORLD_W/2, WORLD_H/2 - 100, 'VICTORY!', '#ffd700', 48);
-      screenFlash.color = '#ffd700'; screenFlash.alpha = 0.5;
+      if (gameMode === 'team') {
+        // Team victory: spawn 魔山 boss for the winning team to fight together
+        floatText(WORLD_W/2, WORLD_H/2 - 100, '团队胜利! 准备迎战魔山!', '#ffd700', 36);
+        screenFlash.color = '#ffd700'; screenFlash.alpha = 0.5;
+        setTimeout(function() { spawnMoshan(); }, 2000);
+      } else {
+        floatText(WORLD_W/2, WORLD_H/2 - 100, '大吉大利，今晚吃鸡!', '#ffd700', 36);
+        screenFlash.color = '#ffd700'; screenFlash.alpha = 0.5;
+      }
     }
     // Show remaining enemy count hint when few left
     if (enemyPlayersAlive > 0 && enemyPlayersAlive <= 2 && !victoryState.active && gameTime > 30) {
@@ -1893,6 +2068,14 @@
           var dir = nearFoeDist < 300 ? '附近!' : (nearestFoe.x > player.x ? '→' : '←') + (nearestFoe.y > player.y ? '↓' : '↑');
           floatText(player.x, player.y - 60, '敌人剩余 ' + enemyPlayersAlive + ' ' + dir, '#f88', 14);
         }
+      }
+    }
+
+    // Team mode: if player is dead but spectating, check if whole team wiped
+    if (gameMode === 'team' && !player.alive && state === 'playing') {
+      var myTeamAlive = allPlayers.filter(function(p) { return p.alive && p.factionId === player.factionId; });
+      if (myTeamAlive.length === 0) {
+        state = 'gameOver';
       }
     }
 
@@ -2274,7 +2457,8 @@
               floatText(player.x, player.y - 25, '🛡 护盾碎裂! +' + shieldXpMelee + 'XP', '#88f', 14);
               emit(player.x, player.y, '#88f', 12, 100);
             } else if (!player._invincible) {
-              player.hp -= e.damage;
+              var _dmg = player._newbieShield > 0 ? Math.ceil(e.damage * 0.5) : e.damage;
+              player.hp -= _dmg;
               addDamageIndicator(e.x, e.y);
               screenShake(5, 120);
               emit(player.x, player.y, '#f44', 6, 60);
@@ -2528,11 +2712,12 @@
           floatText(player.x, player.y - 25, '🛡 挡住! +' + shieldXp + 'XP', '#88f', 14);
           emit(player.x, player.y, '#88f', 8, 80);
         } else if (!player._invincible) {
-          player.hp -= ep.damage;
+          var _epDmg = player._newbieShield > 0 ? Math.ceil(ep.damage * 0.5) : ep.damage;
+          player.hp -= _epDmg;
           addDamageIndicator(ep.x, ep.y);
           screenShake(3, 100);
           emit(player.x, player.y, '#f44', 4, 40);
-          floatText(player.x, player.y - 20, '-' + ep.damage, '#f88', 13);
+          floatText(player.x, player.y - 20, '-' + _epDmg, '#f88', 13);
         }
         enemyProjectiles.splice(epi, 1);
       }
@@ -2547,6 +2732,8 @@
       player._reviveTimer -= dt;
       if (player._reviveTimer <= 0) player._invincible = false;
     }
+    // Newbie shield: 50% damage reduction for first 5 seconds
+    if (player._newbieShield > 0) player._newbieShield -= dt;
 
     // Death check — with last stand revive
     if (player.hp <= 0) {
@@ -2575,7 +2762,19 @@
         floatText(player.x, player.y - 40, '💀 LAST STAND! 💀', '#ffd700', 26);
         floatText(player.x, player.y - 15, '-' + REVIVE_COST + ' gold', '#f88', 14);
       } else {
-        state = 'gameOver';
+        if (gameMode === 'team') {
+          // Team mode: check if any teammate is still alive
+          var teamAlive = allPlayers.filter(function(p) { return p.alive && p.factionId === player.factionId && p.id !== localPlayerId; });
+          if (teamAlive.length > 0) {
+            // Player dies but team continues — spectate a teammate
+            player.alive = false;
+            floatText(player.x, player.y - 40, '你已阵亡 — 观战队友', '#f88', 20);
+          } else {
+            state = 'gameOver';
+          }
+        } else {
+          state = 'gameOver';
+        }
       }
     }
     if (state === 'gameOver') {
@@ -2626,6 +2825,11 @@
       detectBuildName();
       // Finalize run recap (US-261)
       highlightMoment('streak', maxStreak);
+      // Server sync: update player bar and sync gold
+      if (window._currentPlayer) {
+        var bar = document.getElementById('bar-gold');
+        if (bar) bar.textContent = gold + ' 金币';
+      }
     }
   }
 
@@ -2759,6 +2963,16 @@
       autoHighlight.events.push({ type: 'boss_kill', time: gameTime, text: 'Boss击杀!' });
       // shareReplayData (US-315): record highlight frame data
       replayBuffer.push({ t: gameTime, x: player.x, y: player.y, kills: kills, event: 'boss_kill' });
+      // Team mode: killing 魔山 gives bonus gold + skin fragments
+      if (e.isMoshan && gameMode === 'team') {
+        var moshanGold = 500;
+        gold += moshanGold;
+        floatText(player.x, player.y - 80, '魔山已被击败! +' + moshanGold + ' 金币 + 皮肤碎片!', '#ffd700', 22);
+        floatText(player.x, player.y - 50, '团队胜利! 🏆', '#ffd700', 28);
+        screenFlash.color = '#ffd700'; screenFlash.alpha = 0.8;
+        screenShake(15, 1000);
+        saveGold();
+      }
     }
     if (comboKills === 25 || comboKills === 50 || comboKills === 100) {
       autoHighlight.events.push({ type: 'mega_combo', time: gameTime, text: comboKills + '连击!' });
