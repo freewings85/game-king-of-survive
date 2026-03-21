@@ -1,11 +1,36 @@
-__pycache__/
-*.pyc
-.venv/
-.pytest_cache/
-node_modules/
-feedback/*.png
-feedback/*.json
-*.log
+# Build
+server/target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.cursor/
+
+# OS
 .DS_Store
-server/target/
-server/target/
+Thumbs.db
+
+# Temp screenshots & evaluation results
+*.jpg
+review_screenshots/
+round*_eval/
+test-results/
+
+# Replay recordings
+server/replays/
+
+# Evaluation & test scripts (not part of game source)
+critic_evaluation.js
+r2_evaluation.js
+run_6_games.js
+test_three_classes.js
+scripts/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+.venv/
