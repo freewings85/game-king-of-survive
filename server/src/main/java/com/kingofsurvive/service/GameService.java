@@ -1,5 +1,10 @@
 package com.kingofsurvive.service;
 
+import com.kingofsurvive.engine.GameLoop;
+import com.kingofsurvive.engine.GameSimulation;
+import com.kingofsurvive.engine.data.DataLoader;
+import com.kingofsurvive.engine.data.MapData;
+import com.kingofsurvive.engine.entity.PlayerEntity;
 import com.kingofsurvive.model.GamePlayerState;
 import com.kingofsurvive.model.GameSession;
 import com.kingofsurvive.model.Room;
@@ -7,45 +12,177 @@ import com.kingofsurvive.model.RoomPlayer;
 import com.kingofsurvive.model.ScoreResult;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Service
 public class GameService {
+    private static final Logger LOG = Logger.getLogger(GameService.class.getName());
+    private static final String DATA_DIR = "../data";
 
-    private final ConcurrentHashMap<String, GameSession> sessions = new ConcurrentHashMap<String, GameSession>();
+    private final ConcurrentHashMap<String, GameSession> sessions =
+            new ConcurrentHashMap<String, GameSession>();
 
+    private GameLoop gameLoop;
+    private DataLoader dataLoader;
+
+    @PostConstruct
+    public void init() {
+        // Load game data
+        dataLoader = new DataLoader(DATA_DIR);
+        try {
+            dataLoader.loadAll();
+        } catch (IOException e) {
+            LOG.log(Level.SEVERE, "Failed to load game data from " + DATA_DIR, e);
+        }
+
+        // Initialize game loop
+        gameLoop = new GameLoop();
+        gameLoop.setGameEndHandler(this::onGameEnd);
+    }
+
+    public GameLoop getGameLoop() {
+        return gameLoop;
+    }
+
+    public DataLoader getDataLoader() {
+        return dataLoader;
+    }
+
+    public void reloadData() throws IOException {
+        dataLoader.loadAll();
+    }
+
+    /**
+     * Start a new authoritative game session with the game engine.
+     */
     public GameSession startSession(Room room) {
+        String matchId = room.getId();
+        String mode = room.getMode() != null ? room.getMode() : "solo";
+
+        // Determine map
+        String mapId = room.getMapId() != null ? room.getMapId() : "green_plains";
+        MapData mapData = dataLoader.getMap(mapId);
+        if (mapData == null) {
+            // Fallback to first available map
+            if (!dataLoader.getMaps().isEmpty()) {
+                mapData = dataLoader.getMaps().values().iterator().next();
+            } else {
+                LOG.warning("No map data available, creating default");
+                mapData = createDefaultMap();
+            }
+        }
+
+        // Create simulation
+        GameSimulation sim = new GameSimulation(matchId, mode, mapData, dataLoader);
+
+        // Add human players
+        List<String> humanPlayerIds = new ArrayList<String>();
+        for (RoomPlayer rp : room.getPlayers()) {
+            String charType = rp.getCharacterType() != null ? rp.getCharacterType() : "warrior";
+            int factionId = "team".equals(mode) ? rp.getFactionId() : rp.hashCode(); // unique faction in solo
+            sim.addPlayer(rp.getPlayerId(), rp.getNickname(), charType, factionId, false, dataLoader);
+            humanPlayerIds.add(rp.getPlayerId());
+        }
+
+        // Fill remaining slots with bots (up to 8 players total)
+        String[] botNames = {"Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf"};
+        String[] botClasses = {"warrior", "mage", "scout"};
+        int totalPlayers = 8;
+        for (int i = room.getPlayers().size(); i < totalPlayers; i++) {
+            String botId = "bot_" + UUID.randomUUID().toString().substring(0, 8);
+            String botName = botNames[i % botNames.length];
+            String botClass = botClasses[i % botClasses.length];
+            int botFaction;
+            if ("team".equals(mode)) {
+                botFaction = i % 2; // Alternate teams
+            } else {
+                botFaction = 100 + i; // Unique faction for solo
+            }
+            sim.addPlayer(botId, botName, botClass, botFaction, true, dataLoader);
+        }
+
+        // Create legacy GameSession for API compatibility
         GameSession session = new GameSession();
-        session.setRoomId(room.getId());
-        session.setMode(room.getMode());
+        session.setRoomId(matchId);
+        session.setMode(mode);
         session.setWave(1);
         session.setGameTime(0);
         session.setState("playing");
         session.setStartedAt(System.currentTimeMillis());
 
         List<GamePlayerState> playerStates = new ArrayList<GamePlayerState>();
-        for (RoomPlayer rp : room.getPlayers()) {
+        for (PlayerEntity pe : sim.getPlayers()) {
             GamePlayerState state = new GamePlayerState();
-            state.setPlayerId(rp.getPlayerId());
-            state.setHp(100.0);
-            state.setMaxHp(100.0);
-            state.setX(0);
-            state.setY(0);
+            state.setPlayerId(pe.getPlayerId());
+            state.setHp(pe.getHp());
+            state.setMaxHp(pe.getMaxHp());
+            state.setX(pe.getX());
+            state.setY(pe.getY());
             state.setKills(0);
             state.setLevel(1);
             state.setAlive(true);
-            state.setFactionId(rp.getFactionId());
+            state.setFactionId(pe.getFactionId());
             playerStates.add(state);
         }
         session.setPlayers(playerStates);
+        sessions.put(matchId, session);
 
-        sessions.put(room.getId(), session);
+        // Start the game loop
+        gameLoop.startGame(matchId, sim);
+
+        LOG.info("Game session started: " + matchId + " with " + sim.getPlayers().size()
+                + " players (" + humanPlayerIds.size() + " human)");
+
         return session;
     }
+
+    private void onGameEnd(String matchId, GameSimulation sim) {
+        LOG.info("Game ended: " + matchId + " after " + String.format("%.1f", sim.getGameTime()) + "s");
+
+        // Update session state
+        GameSession session = sessions.get(matchId);
+        if (session != null) {
+            session.setState("finished");
+            session.setGameTime(sim.getGameTime());
+
+            // Update player states from final simulation state
+            for (PlayerEntity pe : sim.getPlayers()) {
+                for (GamePlayerState ps : session.getPlayers()) {
+                    if (ps.getPlayerId().equals(pe.getPlayerId())) {
+                        ps.setHp(pe.getHp());
+                        ps.setMaxHp(pe.getMaxHp());
+                        ps.setX(pe.getX());
+                        ps.setY(pe.getY());
+                        ps.setKills(pe.getKills());
+                        ps.setLevel(pe.getLevel());
+                        ps.setAlive(pe.isAlive());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private MapData createDefaultMap() {
+        MapData map = new MapData();
+        map.setId("default");
+        map.setName("Default");
+        map.setWidth(1200);
+        map.setHeight(1200);
+        map.setShape("rect");
+        return map;
+    }
+
+    // Legacy methods (still functional for backwards compat)
 
     public GameSession getSession(String roomId) {
         GameSession session = sessions.get(roomId);

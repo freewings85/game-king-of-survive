@@ -31,7 +31,8 @@ public class RoomController {
             if (hostId == null || mode == null) {
                 return ResponseEntity.badRequest().build();
             }
-            Room room = roomService.createRoom(hostId, mode);
+            String characterType = request.get("characterType");
+            Room room = roomService.createRoom(hostId, mode, characterType);
             return ResponseEntity.ok(room);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -51,7 +52,8 @@ public class RoomController {
             if (playerId == null) {
                 return ResponseEntity.badRequest().build();
             }
-            Room room = roomService.joinRoom(id, playerId);
+            String characterType = request.get("characterType");
+            Room room = roomService.joinRoom(id, playerId, characterType);
             return ResponseEntity.ok(room);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();

@@ -1,0 +1,31 @@
+{
+  "id": "lava_canyon",
+  "name": "熔岩峡谷",
+  "width": 1600,
+  "height": 1600,
+  "shape": "circle",
+  "requiredRank": "BRONZE",
+  "color": "#2a1a1a",
+  "zones": [
+    {
+      "name": "峡谷入口",
+      "type": "safe",
+      "bounds": { "x": 600, "y": 600, "width": 400, "height": 400 },
+      "monsterLevel": [2, 4],
+      "spawnRate": 1.0
+    },
+    {
+      "name": "熔岩区",
+      "type": "hazard",
+      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
+      "monsterLevel": [3, 7],
+      "spawnRate": 1.3
+    }
+  ],
+  "spawnPoints": [
+    { "x": 800, "y": 800 },
+    { "x": 500, "y": 500 },
+    { "x": 1100, "y": 1100 }
+  ],
+  "obstacles": []
+}

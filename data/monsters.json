@@ -1,0 +1,93 @@
+{
+  "normal": {
+    "name": "普通怪",
+    "baseHP": 18,
+    "baseATK": 4,
+    "baseSpeed": 55,
+    "baseXP": 18,
+    "radius": 10,
+    "color": "#e55",
+    "levelScaling": { "hp": 0.15, "atk": 0.1, "speed": 0.02, "xp": 0.1 }
+  },
+  "fast": {
+    "name": "疾速怪",
+    "baseHP": 12,
+    "baseATK": 3,
+    "baseSpeed": 100,
+    "baseXP": 15,
+    "radius": 7,
+    "color": "#4cf",
+    "levelScaling": { "hp": 0.12, "atk": 0.08, "speed": 0.02, "xp": 0.08 }
+  },
+  "tank": {
+    "name": "坦克怪",
+    "baseHP": 50,
+    "baseATK": 6,
+    "baseSpeed": 40,
+    "baseXP": 30,
+    "radius": 18,
+    "color": "#f80",
+    "levelScaling": { "hp": 0.2, "atk": 0.12, "speed": 0.01, "xp": 0.08 }
+  },
+  "ranged": {
+    "name": "远程怪",
+    "baseHP": 20,
+    "baseATK": 6,
+    "baseSpeed": 50,
+    "baseXP": 15,
+    "radius": 9,
+    "color": "#c6f",
+    "levelScaling": { "hp": 0.13, "atk": 0.1, "speed": 0.02, "xp": 0.08 },
+    "special": { "rangedAttack": true, "attackRange": 200 }
+  },
+  "swarm": {
+    "name": "虫群",
+    "baseHP": 7,
+    "baseATK": 2,
+    "baseSpeed": 95,
+    "baseXP": 10,
+    "radius": 5,
+    "color": "#8f4",
+    "levelScaling": { "hp": 0.1, "atk": 0.08, "speed": 0.02, "xp": 0.06 }
+  },
+  "miniBoss": {
+    "name": "精英怪",
+    "baseHP": 150,
+    "baseATK": 18,
+    "baseSpeed": 65,
+    "baseXP": 60,
+    "radius": 20,
+    "color": "#f4a",
+    "levelScaling": { "hp": 0.25, "atk": 0.15, "speed": 0.02, "xp": 0.1 },
+    "special": { "abilities": true, "goldReward": 25 }
+  },
+  "boss": {
+    "name": "Boss",
+    "baseHP": 300,
+    "baseATK": 22,
+    "baseSpeed": 38,
+    "baseXP": 100,
+    "radius": 26,
+    "color": "#f22",
+    "levelScaling": { "hp": 0.3, "atk": 0.18, "speed": 0.02, "xp": 0.12 },
+    "special": { "phases": 3, "abilities": true, "goldReward": 50 }
+  },
+  "treasure": {
+    "name": "宝藏哥布林",
+    "baseHP": 30,
+    "baseATK": 0,
+    "baseSpeed": 190,
+    "baseXP": 60,
+    "radius": 10,
+    "color": "#ffd700",
+    "levelScaling": { "hp": 0.1, "atk": 0, "speed": 0.02, "xp": 0.12 },
+    "special": { "fleeFromPlayer": true, "escapeTimer": 8, "goldReward": 50 }
+  },
+  "levelDiffCorrection": {
+    "description": "经验奖励等级差修正",
+    "bonusPerHigherLevel": 0.1,
+    "penaltyPerLowerLevel": 0.15,
+    "minRewardRatio": 0.1,
+    "maxRewardRatio": 2.0
+  }
+}

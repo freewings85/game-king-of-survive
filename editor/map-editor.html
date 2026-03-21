@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>地图编辑器 - King of Survive</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #fff; display: flex; height: 100vh; }
+  .sidebar { width: 340px; padding: 15px; background: #111; overflow-y: auto; border-right: 1px solid #333; }
+  .sidebar h2 { color: #ffd700; margin-bottom: 10px; font-size: 16px; }
+  .sidebar label { display: block; margin: 6px 0 2px; color: #ddd; font-size: 13px; }
+  .sidebar input, .sidebar select { width: 100%; padding: 4px; background: #222; color: #fff; border: 1px solid #444; font-size: 13px; margin-bottom: 4px; }
+  .sidebar button { padding: 6px 12px; margin: 4px 2px; background: #2a2a4e; border: 1px solid #555; color: #fff; cursor: pointer; border-radius: 4px; font-size: 13px; }
+  .sidebar button:hover { background: #3a3a6e; }
+  .canvas-container { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+  .canvas-toolbar { margin-bottom: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .canvas-toolbar button { padding: 6px 12px; background: #2a2a4e; border: 1px solid #555; color: #fff; cursor: pointer; border-radius: 4px; font-size: 13px; }
+  .canvas-toolbar button:hover { background: #3a3a6e; }
+  .canvas-toolbar button.active { background: #4a4a8e; border-color: #ffd700; }
+  canvas { border: 1px solid #444; cursor: crosshair; }
+  .section { border: 1px solid #333; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+  .zone-item, .obstacle-item, .spawn-item { background: #1a1a2e; padding: 6px; margin: 4px 0; border-radius: 4px; border: 1px solid #333; font-size: 12px; }
+  .zone-item button, .obstacle-item button, .spawn-item button { padding: 2px 8px; font-size: 12px; }
+  .help-panel { background: #1a2a3a; border: 1px solid #446; border-radius: 6px; padding: 12px; margin-bottom: 10px; display: none; }
+  .help-panel p, .help-panel li { color: #ddd; font-size: 13px; line-height: 1.5; }
+  .help-panel ul { margin-left: 16px; }
+  .status-bar { color: #ddd; font-size: 13px; margin-top: 6px; min-height: 20px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <h2>地图编辑器 - Map Editor</h2>
+
+  <button onclick="toggleHelp()" title="显示帮助说明">帮助说明</button>
+  <div class="help-panel" id="help-panel">
+    <p><b>操作引导：</b></p>
+    <ul>
+      <li>点击"添加区域"创建新区域，在 Canvas 上显示</li>
+      <li>拖拽区域可移动位置，拖拽边缘可调整大小</li>
+      <li>点击"放置障碍物"后在 Canvas 上点击放置</li>
+      <li>点击"放置出生点"后在 Canvas 上点击设置</li>
+      <li>使用 Ctrl+Z 撤销、Ctrl+Y 重做</li>
+      <li>导出的 JSON 可直接用于游戏地图配置</li>
+    </ul>
+    <p><b>参数说明：</b></p>
+    <ul>
+      <li><b>Lv</b>: 区域内怪物等级范围(最小-最大)</li>
+      <li><b>Rate</b>: 怪物刷新速率(1.0=正常)</li>
+      <li><b>形状</b>: 地图边界形状(rect/circle/hex等)</li>
+      <li><b>段位要求</b>: 进入此地图所需的最低段位</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <label title="地图的显示名称">地图名称:</label>
+    <input id="map-name" value="新地图">
+    <label title="地图唯一标识符">地图 ID:</label>
+    <input id="map-id" value="new_map">
+    <label title="地图宽度(像素)">宽度:</label>
+    <input id="map-width" type="number" value="1600">
+    <label title="地图高度(像素)">高度:</label>
+    <input id="map-height" type="number" value="1600">
+    <label title="地图边界形状">形状:</label>
+    <select id="map-shape" onchange="draw()">
+      <option value="rect">矩形 rect</option>
+      <option value="circle">圆形 circle</option>
+      <option value="hex">六边形 hex</option>
+      <option value="diamond">菱形 diamond</option>
+      <option value="octagon">八边形 octagon</option>
+    </select>
+    <label title="进入此地图所需最低段位">段位要求:</label>
+    <select id="map-rank">
+      <option value="BRONZE">青铜 BRONZE</option>
+      <option value="SILVER">白银 SILVER</option>
+      <option value="GOLD">黄金 GOLD</option>
+      <option value="PLATINUM">铂金 PLATINUM</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <h2>怪物生成 Spawn Settings</h2>
+    <label title="第一波刷怪时，玩家周围的初始怪物数量">初始密度:</label>
+    <input id="map-initialDensity" type="number" value="6" min="1" max="20" step="1">
+    <label title="初始怪物最近刷新距离(px)">最近距离:</label>
+    <input id="map-spawnMinDist" type="number" value="120" min="50" max="400" step="10">
+    <label title="初始怪物最远刷新距离(px)">最远距离:</label>
+    <input id="map-spawnMaxDist" type="number" value="250" min="100" max="600" step="10">
+    <label title="波间涓流刷怪基础间隔(秒)，越小怪越密">涓流间隔:</label>
+    <input id="map-trickleInterval" type="number" value="1.8" min="0.3" max="5" step="0.1">
+    <label title="涓流刷怪最小间隔(秒)，高波次时的下限">涓流下限:</label>
+    <input id="map-trickleMin" type="number" value="0.5" min="0.2" max="2" step="0.1">
+    <label title="每波基础怪物数量（波次越高会在此基础上递增）">波次基数:</label>
+    <input id="map-waveBaseCount" type="number" value="10" min="3" max="30" step="1">
+    <label title="前4波的间隔时间(秒)">早期波间隔:</label>
+    <input id="map-waveIntervalEarly" type="number" value="12" min="5" max="30" step="1">
+    <label title="5-8波的间隔时间(秒)">中期波间隔:</label>
+    <input id="map-waveIntervalMid" type="number" value="10" min="4" max="25" step="1">
+    <label title="9波之后的间隔时间(秒)">后期波间隔:</label>
+    <input id="map-waveIntervalLate" type="number" value="8" min="3" max="20" step="1">
+  </div>
+
+  <div class="section">
+    <h2>缩圈/毒圈 Storm Settings</h2>
+    <label title="存活玩家≤此数时触发缩圈倒计时">触发人数阈值:</label>
+    <input id="map-stormTriggerCount" type="number" value="3" min="1" max="8" step="1">
+    <label title="存活人数≤阈值且游戏时间≥此值时触发">人数触发最低时间(s):</label>
+    <input id="map-stormTriggerTime" type="number" value="30" min="10" max="120" step="5">
+    <label title="强制缩圈时间(秒)，无论人数都会开始">强制触发时间:</label>
+    <input id="map-stormForceTime" type="number" value="60" min="30" max="180" step="5">
+    <label title="人数触发后的倒计时(秒)">倒计时(人数触发):</label>
+    <input id="map-stormDelay" type="number" value="30" min="5" max="60" step="5">
+    <label title="强制触发后的倒计时(秒)">倒计时(强制触发):</label>
+    <input id="map-stormForceDelay" type="number" value="5" min="1" max="30" step="1">
+    <label title="缩圈速度(px/s)">缩圈速度:</label>
+    <input id="map-stormShrinkSpeed" type="number" value="60" min="10" max="200" step="10">
+    <label title="圈外每秒伤害(HP/s)">圈外伤害:</label>
+    <input id="map-stormDamage" type="number" value="4" min="1" max="20" step="1">
+    <label title="毒圈最小半径(px)">最小半径:</label>
+    <input id="map-stormMinRadius" type="number" value="50" min="20" max="200" step="10">
+  </div>
+
+  <div class="section">
+    <h2>区域 Zones</h2>
+    <button onclick="addZone()" title="点击添加一个新的怪物区域">+ 添加区域</button>
+    <div id="zone-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>障碍物 Obstacles</h2>
+    <label>类型:</label>
+    <select id="obstacle-type">
+      <option value="rock">岩石 Rock</option>
+      <option value="bush">灌木 Bush</option>
+      <option value="water">水域 Water</option>
+      <option value="lava">岩浆 Lava</option>
+    </select>
+    <button onclick="setTool('obstacle')" title="点击后在画布上点击放置障碍物">放置障碍物</button>
+    <div id="obstacle-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>出生点 Spawn Points</h2>
+    <button onclick="setTool('spawn')" title="点击后在画布上点击设置出生点">放置出生点</button>
+    <div id="spawn-list"></div>
+  </div>
+
+  <div class="section">
+    <button onclick="exportMap()">导出 JSON</button>
+    <button onclick="downloadMap()">下载 JSON</button>
+    <button onclick="loadMapFile()">加载地图</button>
+    <button onclick="clearAll()">清空</button>
+  </div>
+</div>
+
+<div class="canvas-container">
+  <div class="canvas-toolbar">
+    <button onclick="setTool('select')" id="tool-select" title="选择/拖拽区域">选择</button>
+    <button onclick="undo()" title="撤销上一步操作 (Ctrl+Z)">撤销</button>
+    <button onclick="redo()" title="重做撤销的操作 (Ctrl+Y)">重做</button>
+    <button onclick="toggleGrid()" id="btn-grid" title="显示/隐藏网格线">显示网格</button>
+    <button onclick="toggleSnap()" id="btn-snap" title="开启/关闭对齐到网格">对齐网格</button>
+  </div>
+  <canvas id="editor-canvas" width="600" height="600"></canvas>
+  <div class="status-bar" id="status-bar">提示：点击"添加区域"开始编辑地图，拖拽区域移动位置</div>
+</div>
+
+<script>
+var canvas = document.getElementById('editor-canvas');
+var ctx = canvas.getContext('2d');
+var currentTool = 'select';
+var zones = [];
+var obstacles = [];
+var spawnPoints = [];
+var scale = 600 / 1600;
+
+// US-015: Default/fallback map data for file:// protocol
+var DEFAULT_MAP_DATA = {
+  id: 'default_map', name: '默认地图', width: 1600, height: 1600,
+  shape: 'rect', requiredRank: 'BRONZE', zones: [], spawnPoints: [], obstacles: []
+};
+
+// US-017: Undo/Redo history stack
+var undoStack = [];
+var redoStack = [];
+
+function saveState() {
+  undoStack.push(JSON.stringify({ zones: zones, obstacles: obstacles, spawnPoints: spawnPoints }));
+  redoStack = [];
+  if (undoStack.length > 50) undoStack.shift();
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  redoStack.push(JSON.stringify({ zones: zones, obstacles: obstacles, spawnPoints: spawnPoints }));
+  var state = JSON.parse(undoStack.pop());
+  zones = state.zones; obstacles = state.obstacles; spawnPoints = state.spawnPoints;
+  renderZoneList(); renderObstacleList(); renderSpawnList(); draw();
+}
+
+function redo() {
+  if (redoStack.length === 0) return;
+  undoStack.push(JSON.stringify({ zones: zones, obstacles: obstacles, spawnPoints: spawnPoints }));
+  var state = JSON.parse(redoStack.pop());
+  zones = state.zones; obstacles = state.obstacles; spawnPoints = state.spawnPoints;
+  renderZoneList(); renderObstacleList(); renderSpawnList(); draw();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+});
+
+// US-021: Grid
+var showGrid = false;
+var snapToGrid = false;
+var gridSize = 50;
+
+function toggleGrid() {
+  showGrid = !showGrid;
+  document.getElementById('btn-grid').textContent = showGrid ? '隐藏网格' : '显示网格';
+  draw();
+}
+
+function toggleSnap() {
+  snapToGrid = !snapToGrid;
+  document.getElementById('btn-snap').textContent = snapToGrid ? '取消对齐' : '对齐网格';
+}
+
+function snapValue(val) {
+  if (!snapToGrid) return val;
+  return Math.round(val / gridSize) * gridSize;
+}
+
+function drawGrid() {
+  if (!showGrid) return;
+  var w = getMapWidth(), h = getMapHeight();
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 0.5;
+  for (var x = 0; x <= w; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x * scale, 0);
+    ctx.lineTo(x * scale, h * scale);
+    ctx.stroke();
+  }
+  for (var y = 0; y <= h; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y * scale);
+    ctx.lineTo(w * scale, y * scale);
+    ctx.stroke();
+  }
+}
+
+// US-018: Drag & Resize state
+var isDragging = false;
+var isResizing = false;
+var dragStart = { x: 0, y: 0 };
+var selectedZone = -1;
+var resizeHandle = '';
+var HANDLE_SIZE = 8;
+
+function findZone(mx, my) {
+  for (var i = zones.length - 1; i >= 0; i--) {
+    var b = zones[i].bounds;
+    if (mx >= b.x && mx <= b.x + b.width && my >= b.y && my <= b.y + b.height) return i;
+  }
+  return -1;
+}
+
+function hitTestResize(mx, my, zone) {
+  var b = zone.bounds;
+  var t = 10;
+  var onLeft = Math.abs(mx - b.x) < t;
+  var onRight = Math.abs(mx - (b.x + b.width)) < t;
+  var onTop = Math.abs(my - b.y) < t;
+  var onBottom = Math.abs(my - (b.y + b.height)) < t;
+  if (onTop && onLeft) return 'nw';
+  if (onTop && onRight) return 'ne';
+  if (onBottom && onLeft) return 'sw';
+  if (onBottom && onRight) return 'se';
+  if (onTop) return 'n';
+  if (onBottom) return 's';
+  if (onLeft) return 'w';
+  if (onRight) return 'e';
+  return '';
+}
+
+function updateCursor(handle) {
+  if (handle === 'n' || handle === 's') canvas.style.cursor = 'ns-resize';
+  else if (handle === 'e' || handle === 'w') canvas.style.cursor = 'ew-resize';
+  else if (handle === 'nw' || handle === 'se') canvas.style.cursor = 'nwse-resize';
+  else if (handle === 'ne' || handle === 'sw') canvas.style.cursor = 'nesw-resize';
+  else canvas.style.cursor = 'move';
+}
+
+canvas.addEventListener('mousedown', function(e) {
+  var rect = canvas.getBoundingClientRect();
+  var mx = (e.clientX - rect.left) / scale;
+  var my = (e.clientY - rect.top) / scale;
+
+  if (currentTool === 'obstacle') {
+    saveState();
+    var type = document.getElementById('obstacle-type').value;
+    obstacles.push({ x: mx, y: my, radius: 30, type: type });
+    renderObstacleList(); draw();
+    setStatus('已放置 ' + type + ' 障碍物');
+    return;
+  }
+  if (currentTool === 'spawn') {
+    saveState();
+    spawnPoints.push({ x: Math.round(mx), y: Math.round(my) });
+    renderSpawnList(); draw();
+    setStatus('已放置出生点');
+    return;
+  }
+
+  // Select tool: try to select/drag/resize zone
+  var hitIdx = findZone(mx, my);
+  if (hitIdx >= 0) {
+    selectedZone = hitIdx;
+    var handle = hitTestResize(mx, my, zones[hitIdx]);
+    if (handle) {
+      isResizing = true;
+      resizeHandle = handle;
+    } else {
+      isDragging = true;
+    }
+    dragStart = { x: mx, y: my };
+    saveState();
+    draw();
+  } else {
+    selectedZone = -1;
+    draw();
+  }
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var rect = canvas.getBoundingClientRect();
+  var mx = (e.clientX - rect.left) / scale;
+  var my = (e.clientY - rect.top) / scale;
+
+  if (isDragging && selectedZone >= 0) {
+    var dx = mx - dragStart.x;
+    var dy = my - dragStart.y;
+    zones[selectedZone].bounds.x += dx;
+    zones[selectedZone].bounds.y += dy;
+    dragStart = { x: mx, y: my };
+    renderZoneList(); draw();
+    return;
+  }
+
+  if (isResizing && selectedZone >= 0) {
+    var b = zones[selectedZone].bounds;
+    var dx = mx - dragStart.x;
+    var dy = my - dragStart.y;
+    if (resizeHandle.indexOf('e') >= 0) b.width = Math.max(20, b.width + dx);
+    if (resizeHandle.indexOf('w') >= 0) { b.x += dx; b.width = Math.max(20, b.width - dx); }
+    if (resizeHandle.indexOf('s') >= 0) b.height = Math.max(20, b.height + dy);
+    if (resizeHandle.indexOf('n') >= 0) { b.y += dy; b.height = Math.max(20, b.height - dy); }
+    dragStart = { x: mx, y: my };
+    renderZoneList(); draw();
+    return;
+  }
+
+  // Update cursor based on hover
+  if (currentTool === 'select') {
+    var hi = findZone(mx, my);
+    if (hi >= 0) {
+      var h = hitTestResize(mx, my, zones[hi]);
+      updateCursor(h);
+    } else {
+      canvas.style.cursor = 'crosshair';
+    }
+  }
+});
+
+canvas.addEventListener('mouseup', function(e) {
+  isDragging = false;
+  isResizing = false;
+  resizeHandle = '';
+});
+
+function setTool(tool) {
+  currentTool = tool;
+  if (tool === 'obstacle') setStatus('点击画布放置障碍物');
+  else if (tool === 'spawn') setStatus('点击画布设置出生点');
+  else setStatus('点击区域选择，拖拽移动，边缘拖拽调整大小');
+}
+
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = '提示：' + msg;
+}
+
+function toggleHelp() {
+  var el = document.getElementById('help-panel');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function getMapWidth() { return +document.getElementById('map-width').value || 1600; }
+function getMapHeight() { return +document.getElementById('map-height').value || 1600; }
+
+function addZone() {
+  saveState();
+  var w = getMapWidth(), h = getMapHeight();
+  zones.push({
+    name: '区域 ' + (zones.length + 1),
+    bounds: { x: w * 0.25, y: h * 0.25, width: w * 0.5, height: h * 0.5 },
+    monsterLevel: [1, 5],
+    spawnRate: 1.0
+  });
+  renderZoneList(); draw();
+  setStatus('已添加区域，拖拽移动位置');
+}
+
+function removeZone(i) { saveState(); zones.splice(i, 1); renderZoneList(); draw(); }
+function removeObstacle(i) { saveState(); obstacles.splice(i, 1); renderObstacleList(); draw(); }
+function removeSpawn(i) { saveState(); spawnPoints.splice(i, 1); renderSpawnList(); draw(); }
+
+function renderZoneList() {
+  var list = document.getElementById('zone-list');
+  list.innerHTML = '';
+  for (var i = 0; i < zones.length; i++) {
+    var z = zones[i];
+    var div = document.createElement('div');
+    div.className = 'zone-item';
+    div.innerHTML =
+      '<input value="' + z.name + '" onchange="zones[' + i + '].name=this.value;draw()" style="width:100px">' +
+      ' Lv: <input type="number" value="' + z.monsterLevel[0] + '" style="width:35px" onchange="zones[' + i + '].monsterLevel[0]=+this.value">' +
+      '-<input type="number" value="' + z.monsterLevel[1] + '" style="width:35px" onchange="zones[' + i + '].monsterLevel[1]=+this.value">' +
+      ' Rate: <input type="number" step="0.1" value="' + z.spawnRate + '" style="width:45px" onchange="zones[' + i + '].spawnRate=+this.value">' +
+      ' <button onclick="removeZone(' + i + ')">X</button>';
+    list.appendChild(div);
+  }
+}
+
+function renderObstacleList() {
+  var list = document.getElementById('obstacle-list');
+  list.innerHTML = '';
+  for (var i = 0; i < obstacles.length; i++) {
+    var o = obstacles[i];
+    var div = document.createElement('div');
+    div.className = 'obstacle-item';
+    div.innerHTML = o.type + ' (' + Math.round(o.x) + ',' + Math.round(o.y) + ') r=' + o.radius +
+      ' <button onclick="removeObstacle(' + i + ')">X</button>';
+    list.appendChild(div);
+  }
+}
+
+function renderSpawnList() {
+  var list = document.getElementById('spawn-list');
+  list.innerHTML = '';
+  for (var i = 0; i < spawnPoints.length; i++) {
+    var sp = spawnPoints[i];
+    var div = document.createElement('div');
+    div.className = 'spawn-item';
+    div.innerHTML = '出生点 (' + Math.round(sp.x) + ',' + Math.round(sp.y) + ')' +
+      ' <button onclick="removeSpawn(' + i + ')">X</button>';
+    list.appendChild(div);
+  }
+}
+
+// US-020: Multi-shape rendering
+function drawShape(w, h) {
+  var shape = document.getElementById('map-shape').value;
+  var cw = w * scale, ch = h * scale;
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+
+  switch (shape) {
+    case 'circle':
+      ctx.beginPath();
+      ctx.arc(cw / 2, ch / 2, Math.min(cw, ch) / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+    case 'hex':
+      drawPolygon(cw / 2, ch / 2, Math.min(cw, ch) / 2, 6, Math.PI / 6);
+      break;
+    case 'diamond':
+      drawPolygon(cw / 2, ch / 2, Math.min(cw, ch) / 2, 4, 0);
+      break;
+    case 'octagon':
+      drawPolygon(cw / 2, ch / 2, Math.min(cw, ch) / 2, 8, Math.PI / 8);
+      break;
+    default:
+      ctx.strokeRect(0, 0, cw, ch);
+      break;
+  }
+}
+
+function drawPolygon(cx, cy, radius, sides, startAngle) {
+  ctx.beginPath();
+  for (var i = 0; i <= sides; i++) {
+    var angle = startAngle + (i * 2 * Math.PI / sides);
+    var x = cx + radius * Math.cos(angle);
+    var y = cy + radius * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+}
+
+function draw() {
+  var w = getMapWidth(), h = getMapHeight();
+  scale = Math.min(600 / w, 600 / h);
+  canvas.width = w * scale;
+  canvas.height = h * scale;
+  ctx.fillStyle = '#1a1a2a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw grid
+  drawGrid();
+
+  // Draw zones
+  for (var i = 0; i < zones.length; i++) {
+    var z = zones[i];
+    var b = z.bounds;
+    ctx.fillStyle = (i === selectedZone) ? 'rgba(100, 200, 100, 0.3)' : 'rgba(100, 150, 100, 0.2)';
+    ctx.fillRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
+    ctx.strokeStyle = (i === selectedZone) ? '#8f8' : '#4a4';
+    ctx.lineWidth = (i === selectedZone) ? 2 : 1;
+    ctx.strokeRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
+
+    // Draw resize handles for selected zone
+    if (i === selectedZone) {
+      drawResizeHandles(b);
+    }
+
+    ctx.fillStyle = '#8f8';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(z.name + ' Lv' + z.monsterLevel[0] + '-' + z.monsterLevel[1], b.x * scale + 4, b.y * scale + 14);
+  }
+
+  // Draw obstacles
+  var obstacleColors = { rock: '#666', bush: '#2a5a2a', water: '#2244aa', lava: '#cc3300' };
+  for (var i = 0; i < obstacles.length; i++) {
+    var o = obstacles[i];
+    ctx.beginPath();
+    ctx.arc(o.x * scale, o.y * scale, o.radius * scale, 0, Math.PI * 2);
+    ctx.fillStyle = obstacleColors[o.type] || '#666';
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#888';
+    ctx.stroke();
+  }
+
+  // Draw spawn points
+  for (var i = 0; i < spawnPoints.length; i++) {
+    var sp = spawnPoints[i];
+    ctx.beginPath();
+    ctx.arc(sp.x * scale, sp.y * scale, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('S', sp.x * scale, sp.y * scale + 4);
+  }
+
+  // Border / map shape
+  drawShape(w, h);
+}
+
+function drawResizeHandles(bounds) {
+  var b = bounds;
+  var handles = [
+    { x: b.x, y: b.y },
+    { x: b.x + b.width, y: b.y },
+    { x: b.x, y: b.y + b.height },
+    { x: b.x + b.width, y: b.y + b.height },
+    { x: b.x + b.width / 2, y: b.y },
+    { x: b.x + b.width / 2, y: b.y + b.height },
+    { x: b.x, y: b.y + b.height / 2 },
+    { x: b.x + b.width, y: b.y + b.height / 2 }
+  ];
+  ctx.fillStyle = '#fff';
+  for (var i = 0; i < handles.length; i++) {
+    ctx.fillRect(handles[i].x * scale - HANDLE_SIZE/2, handles[i].y * scale - HANDLE_SIZE/2, HANDLE_SIZE, HANDLE_SIZE);
+  }
+}
+
+function getMapData() {
+  return {
+    id: document.getElementById('map-id').value,
+    name: document.getElementById('map-name').value,
+    width: getMapWidth(),
+    height: getMapHeight(),
+    shape: document.getElementById('map-shape').value,
+    requiredRank: document.getElementById('map-rank').value,
+    initialDensity: +document.getElementById('map-initialDensity').value,
+    spawnMinDist: +document.getElementById('map-spawnMinDist').value,
+    spawnMaxDist: +document.getElementById('map-spawnMaxDist').value,
+    trickleInterval: +document.getElementById('map-trickleInterval').value,
+    trickleMin: +document.getElementById('map-trickleMin').value,
+    waveBaseCount: +document.getElementById('map-waveBaseCount').value,
+    waveIntervalEarly: +document.getElementById('map-waveIntervalEarly').value,
+    waveIntervalMid: +document.getElementById('map-waveIntervalMid').value,
+    waveIntervalLate: +document.getElementById('map-waveIntervalLate').value,
+    storm: {
+      triggerCount: +document.getElementById('map-stormTriggerCount').value,
+      triggerTime: +document.getElementById('map-stormTriggerTime').value,
+      forceTime: +document.getElementById('map-stormForceTime').value,
+      delay: +document.getElementById('map-stormDelay').value,
+      forceDelay: +document.getElementById('map-stormForceDelay').value,
+      shrinkSpeed: +document.getElementById('map-stormShrinkSpeed').value,
+      damage: +document.getElementById('map-stormDamage').value,
+      minRadius: +document.getElementById('map-stormMinRadius').value
+    },
+    zones: zones,
+    spawnPoints: spawnPoints,
+    obstacles: obstacles
+  };
+}
+
+function exportMap() {
+  var data = getMapData();
+  var json = JSON.stringify(data, null, 2);
+  var textarea = document.createElement('textarea');
+  textarea.value = json;
+  textarea.style.cssText = 'position:fixed;top:10%;left:10%;width:80%;height:80%;z-index:9999;background:#111;color:#fff;padding:10px;font-family:monospace;font-size:13px;';
+  var close = document.createElement('button');
+  close.textContent = '关闭';
+  close.style.cssText = 'position:fixed;top:5%;right:12%;z-index:10000;padding:8px 16px;background:#f44;color:#fff;border:none;cursor:pointer;font-size:14px;';
+  close.onclick = function() { document.body.removeChild(textarea); document.body.removeChild(close); };
+  document.body.appendChild(textarea);
+  document.body.appendChild(close);
+}
+
+function downloadMap() {
+  var data = getMapData();
+  var json = JSON.stringify(data, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = data.id + '.json';
+  a.click();
+}
+
+function loadMapFile() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(re) {
+      try {
+        var data = JSON.parse(re.target.result);
+        document.getElementById('map-id').value = data.id || '';
+        document.getElementById('map-name').value = data.name || '';
+        document.getElementById('map-width').value = data.width || 1600;
+        document.getElementById('map-height').value = data.height || 1600;
+        document.getElementById('map-shape').value = data.shape || 'rect';
+        document.getElementById('map-rank').value = data.requiredRank || 'BRONZE';
+        document.getElementById('map-initialDensity').value = data.initialDensity || 6;
+        document.getElementById('map-spawnMinDist').value = data.spawnMinDist || 120;
+        document.getElementById('map-spawnMaxDist').value = data.spawnMaxDist || 250;
+        document.getElementById('map-trickleInterval').value = data.trickleInterval || 1.8;
+        document.getElementById('map-trickleMin').value = data.trickleMin || 0.5;
+        document.getElementById('map-waveBaseCount').value = data.waveBaseCount || 10;
+        document.getElementById('map-waveIntervalEarly').value = data.waveIntervalEarly || 12;
+        document.getElementById('map-waveIntervalMid').value = data.waveIntervalMid || 10;
+        document.getElementById('map-waveIntervalLate').value = data.waveIntervalLate || 8;
+        var storm = data.storm || {};
+        document.getElementById('map-stormTriggerCount').value = storm.triggerCount || 3;
+        document.getElementById('map-stormTriggerTime').value = storm.triggerTime || 30;
+        document.getElementById('map-stormForceTime').value = storm.forceTime || 60;
+        document.getElementById('map-stormDelay').value = storm.delay || 30;
+        document.getElementById('map-stormForceDelay').value = storm.forceDelay || 5;
+        document.getElementById('map-stormShrinkSpeed').value = storm.shrinkSpeed || 60;
+        document.getElementById('map-stormDamage').value = storm.damage || 4;
+        document.getElementById('map-stormMinRadius').value = storm.minRadius || 50;
+        zones = data.zones || [];
+        obstacles = data.obstacles || [];
+        spawnPoints = data.spawnPoints || [];
+        renderZoneList(); renderObstacleList(); renderSpawnList(); draw();
+      } catch(err) {
+        // fallback: use default data on parse failure
+        alert('JSON 解析失败: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAll() {
+  saveState();
+  zones = [];
+  obstacles = [];
+  spawnPoints = [];
+  renderZoneList(); renderObstacleList(); renderSpawnList(); draw();
+}
+
+// Initial draw
+draw();
+</script>
+</body>
+</html>

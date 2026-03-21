@@ -1,0 +1,121 @@
+{
+  "evolutions": [
+    {
+      "id": "bullet_hell",
+      "name": "弹幕地狱",
+      "evolveFrom": ["scatter", "pierce"],
+      "description": "穿透+散射=无限弹幕风暴",
+      "bonusEffect": { "projectileCount": 4, "pierce": 1, "damageBonus": 0.6 },
+      "icon": "🌀",
+      "color": "#f0f"
+    },
+    {
+      "id": "ice_storm",
+      "name": "冰雷风暴",
+      "evolveFrom": ["chain_lightning", "frost_aura"],
+      "description": "冰冻+闪电=冰雷范围伤害",
+      "bonusEffect": { "aoeDamage": 45, "slowAmount": 0.6, "chainCount": 8 },
+      "icon": "🌩",
+      "color": "#0ff"
+    },
+    {
+      "id": "inferno",
+      "name": "地狱火焰",
+      "evolveFrom": ["fire_trail", "crit"],
+      "description": "火焰+暴击=持续暴击燃烧",
+      "bonusEffect": { "fireDamage": 30, "critBonus": 0.35 },
+      "icon": "🔥",
+      "color": "#f40"
+    },
+    {
+      "id": "berserker",
+      "name": "狂战士",
+      "evolveFrom": ["attack_up", "attack_speed"],
+      "description": "攻击+攻速=狂暴模式",
+      "bonusEffect": { "attackMultiplier": 1.35, "cooldownMultiplier": 0.75 },
+      "icon": "⚔",
+      "color": "#f00"
+    },
+    {
+      "id": "immortal",
+      "name": "不死之身",
+      "evolveFrom": ["lifesteal", "hp_regen"],
+      "description": "吸血+回血=极限续航",
+      "bonusEffect": { "hpRegen": 10, "lifesteal": 0.15 },
+      "icon": "💀",
+      "color": "#0f8"
+    },
+    {
+      "id": "iron_fortress",
+      "name": "铁壁堡垒",
+      "evolveFrom": ["shield", "thorns_aura"],
+      "description": "护盾+荆棘=铜墙铁壁",
+      "bonusEffect": { "thornsDamage": 50, "shieldRecharge": 2, "armor": 20, "damageReduction": 0.25 },
+      "icon": "🏰",
+      "color": "#88f"
+    },
+    {
+      "id": "speed_demon",
+      "name": "疾速恶魔",
+      "evolveFrom": ["move_speed", "time_warp"],
+      "description": "移速+时停=极速领域",
+      "bonusEffect": { "speedMultiplier": 1.5, "slowAura": 0.6, "dodgeChance": 0.1 },
+      "icon": "💨",
+      "color": "#0f0"
+    },
+    {
+      "id": "armageddon",
+      "name": "末日审判",
+      "evolveFrom": ["orbit", "explosive"],
+      "description": "环绕+爆炸=毁灭光环",
+      "bonusEffect": { "orbitCount": 2, "explosiveDamage": 15 },
+      "icon": "☄",
+      "color": "#f60"
+    },
+    {
+      "id": "death_spiral",
+      "name": "死亡旋涡",
+      "evolveFrom": ["orbit", "attack_up"],
+      "description": "环绕+攻击=致命旋涡",
+      "bonusEffect": { "orbitCount": 3, "orbitDamageMultiplier": 2.5, "attackMultiplier": 1.5 },
+      "icon": "🌀",
+      "color": "#f4a"
+    },
+    {
+      "id": "living_fortress",
+      "name": "活体堡垒",
+      "evolveFrom": ["thorns_aura", "hp_regen"],
+      "description": "荆棘+回血=不灭堡垒",
+      "bonusEffect": { "thornsDamage": 25, "hpRegen": 15, "maxHP": 60 },
+      "icon": "🏯",
+      "color": "#4a4"
+    },
+    {
+      "id": "chrono_burst",
+      "name": "时空爆发",
+      "evolveFrom": ["time_warp", "attack_speed"],
+      "description": "时停+极速=时间风暴",
+      "bonusEffect": { "timeWarp": 0.3, "cooldownMultiplier": 0.6, "critBonus": 0.15 },
+      "icon": "⏱",
+      "color": "#c4f"
+    },
+    {
+      "id": "gravity_well",
+      "name": "引力黑洞",
+      "evolveFrom": ["xp_magnet", "explosive"],
+      "description": "磁铁+爆炸=引力场吸取一切",
+      "bonusEffect": { "magnetRange": 200, "explosiveDamage": 20, "pullRadius": 150 },
+      "icon": "🕳",
+      "color": "#808"
+    },
+    {
+      "id": "titan",
+      "name": "泰坦之躯",
+      "evolveFrom": ["max_hp", "shield"],
+      "description": "血量+护盾=无敌巨人",
+      "bonusEffect": { "maxHP": 200, "shieldRecharge": 2, "damageReduction": 0.25 },
+      "icon": "🗿",
+      "color": "#a86"
+    }
+  ]
+}

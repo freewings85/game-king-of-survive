@@ -1,0 +1,457 @@
+{
+  "skills": [
+    {
+      "id": "attack_up",
+      "name": "攻击力↑",
+      "type": "buff",
+      "icon": "⚔",
+      "color": "#f44",
+      "description": "提升攻击力",
+      "visual": "none",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "attackBonus": 0.15, "desc": "攻击力+15%" },
+        "2":  { "attackBonus": 0.28, "desc": "攻击力+28%" },
+        "3":  { "attackBonus": 0.40, "desc": "攻击力+40%" },
+        "4":  { "attackBonus": 0.55, "desc": "攻击力+55%" },
+        "5":  { "attackBonus": 0.75, "desc": "攻击力+75% (里程碑)" },
+        "6":  { "attackBonus": 0.90, "desc": "攻击力+90%" },
+        "7":  { "attackBonus": 1.05, "desc": "攻击力+105%" },
+        "8":  { "attackBonus": 1.20, "desc": "攻击力+120%" },
+        "9":  { "attackBonus": 1.35, "desc": "攻击力+135%" },
+        "10": { "attackBonus": 1.50, "desc": "攻击力+150% (满级)" }
+      }
+    },
+    {
+      "id": "attack_speed",
+      "name": "攻速↑",
+      "type": "buff",
+      "icon": "⚡",
+      "color": "#fa0",
+      "description": "降低攻击冷却时间",
+      "visual": "speed_lines",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "cooldownReduction": 0.08, "desc": "冷却缩短8%" },
+        "2":  { "cooldownReduction": 0.14, "desc": "冷却缩短14%" },
+        "3":  { "cooldownReduction": 0.20, "desc": "冷却缩短20%" },
+        "4":  { "cooldownReduction": 0.25, "desc": "冷却缩短25%" },
+        "5":  { "cooldownReduction": 0.33, "desc": "冷却缩短33% (里程碑)" },
+        "6":  { "cooldownReduction": 0.38, "desc": "冷却缩短38%" },
+        "7":  { "cooldownReduction": 0.43, "desc": "冷却缩短43%" },
+        "8":  { "cooldownReduction": 0.48, "desc": "冷却缩短48%" },
+        "9":  { "cooldownReduction": 0.52, "desc": "冷却缩短52%" },
+        "10": { "cooldownReduction": 0.58, "desc": "冷却缩短58% (满级)" }
+      }
+    },
+    {
+      "id": "pierce",
+      "name": "穿透",
+      "type": "passive",
+      "icon": "→",
+      "color": "#ff0",
+      "description": "弹幕穿透敌人并增加伤害",
+      "visual": "bullet",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "pierceCount": 1, "damageBonus": 0.10, "desc": "穿透1个敌人, 伤害+10%" },
+        "2":  { "pierceCount": 1, "damageBonus": 0.18, "desc": "穿透1个敌人, 伤害+18%" },
+        "3":  { "pierceCount": 2, "damageBonus": 0.25, "desc": "穿透2个敌人, 伤害+25%" },
+        "4":  { "pierceCount": 2, "damageBonus": 0.35, "desc": "穿透2个敌人, 伤害+35%" },
+        "5":  { "pierceCount": 3, "damageBonus": 0.50, "desc": "穿透3个敌人, 伤害+50% (里程碑)" },
+        "6":  { "pierceCount": 3, "damageBonus": 0.60, "desc": "穿透3个敌人, 伤害+60%" },
+        "7":  { "pierceCount": 4, "damageBonus": 0.70, "desc": "穿透4个敌人, 伤害+70%" },
+        "8":  { "pierceCount": 4, "damageBonus": 0.85, "desc": "穿透4个敌人, 伤害+85%" },
+        "9":  { "pierceCount": 5, "damageBonus": 0.95, "desc": "穿透5个敌人, 伤害+95%" },
+        "10": { "pierceCount": 6, "damageBonus": 1.20, "desc": "穿透6个敌人, 伤害+120% (满级)" }
+      }
+    },
+    {
+      "id": "scatter",
+      "name": "散射",
+      "type": "projectile",
+      "icon": "✦",
+      "color": "#0ff",
+      "description": "增加弹幕数量",
+      "visual": "bullet",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "projectileCount": 1, "desc": "+1弹幕" },
+        "2":  { "projectileCount": 1, "desc": "+1弹幕 (强化稳定性)" },
+        "3":  { "projectileCount": 2, "desc": "+2弹幕" },
+        "4":  { "projectileCount": 2, "desc": "+2弹幕 (弹道优化)" },
+        "5":  { "projectileCount": 3, "desc": "+3弹幕 (里程碑)" },
+        "6":  { "projectileCount": 3, "desc": "+3弹幕 (扩散角优化)" },
+        "7":  { "projectileCount": 4, "desc": "+4弹幕" },
+        "8":  { "projectileCount": 5, "desc": "+5弹幕" },
+        "9":  { "projectileCount": 5, "desc": "+5弹幕 (弹道密度优化)" },
+        "10": { "projectileCount": 7, "desc": "+7弹幕 (满级弹幕风暴)" }
+      }
+    },
+    {
+      "id": "move_speed",
+      "name": "移速↑",
+      "type": "buff",
+      "icon": "🏃",
+      "color": "#0f0",
+      "description": "提升移动速度",
+      "visual": "speed_lines",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "speedBonus": 0.08, "desc": "移速+8%" },
+        "2":  { "speedBonus": 0.14, "desc": "移速+14%" },
+        "3":  { "speedBonus": 0.20, "desc": "移速+20%" },
+        "4":  { "speedBonus": 0.25, "desc": "移速+25%" },
+        "5":  { "speedBonus": 0.32, "desc": "移速+32% (里程碑)" },
+        "6":  { "speedBonus": 0.37, "desc": "移速+37%" },
+        "7":  { "speedBonus": 0.42, "desc": "移速+42%" },
+        "8":  { "speedBonus": 0.48, "desc": "移速+48%" },
+        "9":  { "speedBonus": 0.53, "desc": "移速+53%" },
+        "10": { "speedBonus": 0.60, "desc": "移速+60% (满级)" }
+      }
+    },
+    {
+      "id": "hp_regen",
+      "name": "回血",
+      "type": "passive",
+      "icon": "♥",
+      "color": "#0f8",
+      "description": "持续回复生命值",
+      "visual": "heal_glow",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "hpRegen": 3, "desc": "每秒回复3HP" },
+        "2":  { "hpRegen": 5, "desc": "每秒回复5HP" },
+        "3":  { "hpRegen": 8, "desc": "每秒回复8HP" },
+        "4":  { "hpRegen": 11, "desc": "每秒回复11HP" },
+        "5":  { "hpRegen": 16, "desc": "每秒回复16HP (里程碑)" },
+        "6":  { "hpRegen": 20, "desc": "每秒回复20HP" },
+        "7":  { "hpRegen": 25, "desc": "每秒回复25HP" },
+        "8":  { "hpRegen": 30, "desc": "每秒回复30HP" },
+        "9":  { "hpRegen": 36, "desc": "每秒回复36HP" },
+        "10": { "hpRegen": 45, "desc": "每秒回复45HP (满级强化再生)" }
+      }
+    },
+    {
+      "id": "shield",
+      "name": "护盾",
+      "type": "buff",
+      "icon": "🛡",
+      "color": "#88f",
+      "description": "生成能吸收伤害的护盾",
+      "visual": "shield_bubble",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "shieldHits": 1, "shieldCooldown": 12.0, "desc": "护盾挡1次攻击, 12秒充能" },
+        "2":  { "shieldHits": 1, "shieldCooldown": 10.0, "desc": "护盾挡1次攻击, 10秒充能" },
+        "3":  { "shieldHits": 2, "shieldCooldown": 10.0, "desc": "护盾挡2次攻击, 10秒充能" },
+        "4":  { "shieldHits": 2, "shieldCooldown": 8.5,  "desc": "护盾挡2次攻击, 8.5秒充能" },
+        "5":  { "shieldHits": 3, "shieldCooldown": 8.0,  "desc": "护盾挡3次攻击, 8秒充能 (里程碑)" },
+        "6":  { "shieldHits": 3, "shieldCooldown": 7.0,  "desc": "护盾挡3次攻击, 7秒充能" },
+        "7":  { "shieldHits": 3, "shieldCooldown": 6.0,  "desc": "护盾挡3次攻击, 6秒充能" },
+        "8":  { "shieldHits": 4, "shieldCooldown": 5.5,  "desc": "护盾挡4次攻击, 5.5秒充能" },
+        "9":  { "shieldHits": 4, "shieldCooldown": 4.5,  "desc": "护盾挡4次攻击, 4.5秒充能" },
+        "10": { "shieldHits": 5, "shieldCooldown": 4.0,  "desc": "护盾挡5次攻击, 4秒充能 (满级铁壁)" }
+      }
+    },
+    {
+      "id": "chain_lightning",
+      "name": "闪电链",
+      "type": "aoe",
+      "icon": "⚡",
+      "color": "#aaf",
+      "description": "释放连锁闪电攻击多个敌人",
+      "visual": "chain_lightning",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "damage": 18,  "cooldown": 1.8, "range": 180, "chainCount": 2,  "desc": "18伤害, 弹2次, 范围180" },
+        "2":  { "damage": 25,  "cooldown": 1.7, "range": 200, "chainCount": 3,  "desc": "25伤害, 弹3次, 范围200" },
+        "3":  { "damage": 33,  "cooldown": 1.5, "range": 220, "chainCount": 3,  "desc": "33伤害, 弹3次, 范围220" },
+        "4":  { "damage": 42,  "cooldown": 1.4, "range": 240, "chainCount": 4,  "desc": "42伤害, 弹4次, 范围240" },
+        "5":  { "damage": 55,  "cooldown": 1.2, "range": 270, "chainCount": 5,  "desc": "55伤害, 弹5次, 范围270 (里程碑)" },
+        "6":  { "damage": 65,  "cooldown": 1.1, "range": 290, "chainCount": 6,  "desc": "65伤害, 弹6次, 范围290" },
+        "7":  { "damage": 78,  "cooldown": 1.0, "range": 310, "chainCount": 7,  "desc": "78伤害, 弹7次, 范围310" },
+        "8":  { "damage": 90,  "cooldown": 0.9, "range": 330, "chainCount": 8,  "desc": "90伤害, 弹8次, 范围330" },
+        "9":  { "damage": 105, "cooldown": 0.8, "range": 350, "chainCount": 9,  "desc": "105伤害, 弹9次, 范围350" },
+        "10": { "damage": 130, "cooldown": 0.7, "range": 380, "chainCount": 10, "desc": "130伤害, 弹10次, 范围380 (满级雷神)" }
+      }
+    },
+    {
+      "id": "fire_trail",
+      "name": "火焰轨迹",
+      "type": "aoe",
+      "icon": "🔥",
+      "color": "#f80",
+      "description": "移动时留下燃烧的火焰轨迹",
+      "visual": "fire_trail",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "damage": 5,  "trailDuration": 1.5, "trailRadius": 30,  "desc": "火焰5伤害/跳, 半径30, 持续1.5秒" },
+        "2":  { "damage": 8,  "trailDuration": 1.8, "trailRadius": 33,  "desc": "火焰8伤害/跳, 半径33, 持续1.8秒" },
+        "3":  { "damage": 11, "trailDuration": 2.0, "trailRadius": 36,  "desc": "火焰11伤害/跳, 半径36, 持续2秒" },
+        "4":  { "damage": 15, "trailDuration": 2.3, "trailRadius": 40,  "desc": "火焰15伤害/跳, 半径40, 持续2.3秒" },
+        "5":  { "damage": 22, "trailDuration": 2.8, "trailRadius": 45,  "desc": "火焰22伤害/跳, 半径45, 持续2.8秒 (里程碑)" },
+        "6":  { "damage": 27, "trailDuration": 3.0, "trailRadius": 48,  "desc": "火焰27伤害/跳, 半径48, 持续3秒" },
+        "7":  { "damage": 33, "trailDuration": 3.3, "trailRadius": 52,  "desc": "火焰33伤害/跳, 半径52, 持续3.3秒" },
+        "8":  { "damage": 40, "trailDuration": 3.5, "trailRadius": 56,  "desc": "火焰40伤害/跳, 半径56, 持续3.5秒" },
+        "9":  { "damage": 48, "trailDuration": 3.8, "trailRadius": 60,  "desc": "火焰48伤害/跳, 半径60, 持续3.8秒" },
+        "10": { "damage": 60, "trailDuration": 4.5, "trailRadius": 70,  "desc": "火焰60伤害/跳, 半径70, 持续4.5秒 (满级炼狱之路)" }
+      }
+    },
+    {
+      "id": "frost_aura",
+      "name": "冰冻光环",
+      "type": "aoe",
+      "icon": "❄",
+      "color": "#8ef",
+      "description": "减速并伤害周围的敌人",
+      "visual": "frost_aura",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "slowAmount": 0.15, "range": 100, "damage": 2,  "desc": "减速15%, 范围100, 2伤害/跳" },
+        "2":  { "slowAmount": 0.20, "range": 110, "damage": 3,  "desc": "减速20%, 范围110, 3伤害/跳" },
+        "3":  { "slowAmount": 0.25, "range": 125, "damage": 5,  "desc": "减速25%, 范围125, 5伤害/跳" },
+        "4":  { "slowAmount": 0.28, "range": 140, "damage": 7,  "desc": "减速28%, 范围140, 7伤害/跳" },
+        "5":  { "slowAmount": 0.35, "range": 160, "damage": 10, "desc": "减速35%, 范围160, 10伤害/跳 (里程碑)" },
+        "6":  { "slowAmount": 0.38, "range": 175, "damage": 13, "desc": "减速38%, 范围175, 13伤害/跳" },
+        "7":  { "slowAmount": 0.42, "range": 190, "damage": 16, "desc": "减速42%, 范围190, 16伤害/跳" },
+        "8":  { "slowAmount": 0.45, "range": 210, "damage": 20, "desc": "减速45%, 范围210, 20伤害/跳" },
+        "9":  { "slowAmount": 0.48, "range": 225, "damage": 24, "desc": "减速48%, 范围225, 24伤害/跳" },
+        "10": { "slowAmount": 0.55, "range": 250, "damage": 30, "desc": "减速55%, 范围250, 30伤害/跳 (满级极寒领域)" }
+      }
+    },
+    {
+      "id": "crit",
+      "name": "暴击",
+      "type": "passive",
+      "icon": "💥",
+      "color": "#fd0",
+      "description": "提升暴击率和暴击伤害",
+      "visual": "none",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "critChance": 0.05, "critDamage": 1.50, "desc": "5%暴击率, 1.5倍暴伤" },
+        "2":  { "critChance": 0.08, "critDamage": 1.55, "desc": "8%暴击率, 1.55倍暴伤" },
+        "3":  { "critChance": 0.12, "critDamage": 1.65, "desc": "12%暴击率, 1.65倍暴伤" },
+        "4":  { "critChance": 0.15, "critDamage": 1.75, "desc": "15%暴击率, 1.75倍暴伤" },
+        "5":  { "critChance": 0.20, "critDamage": 1.90, "desc": "20%暴击率, 1.9倍暴伤 (里程碑)" },
+        "6":  { "critChance": 0.23, "critDamage": 2.00, "desc": "23%暴击率, 2倍暴伤" },
+        "7":  { "critChance": 0.27, "critDamage": 2.10, "desc": "27%暴击率, 2.1倍暴伤" },
+        "8":  { "critChance": 0.30, "critDamage": 2.25, "desc": "30%暴击率, 2.25倍暴伤" },
+        "9":  { "critChance": 0.34, "critDamage": 2.40, "desc": "34%暴击率, 2.4倍暴伤" },
+        "10": { "critChance": 0.40, "critDamage": 2.75, "desc": "40%暴击率, 2.75倍暴伤 (满级致命一击)" }
+      }
+    },
+    {
+      "id": "lifesteal",
+      "name": "吸血",
+      "type": "passive",
+      "icon": "🩸",
+      "color": "#d4f",
+      "description": "攻击命中时吸取生命",
+      "visual": "none",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "lifestealRate": 0.05, "desc": "5%伤害吸血" },
+        "2":  { "lifestealRate": 0.08, "desc": "8%伤害吸血" },
+        "3":  { "lifestealRate": 0.12, "desc": "12%伤害吸血" },
+        "4":  { "lifestealRate": 0.15, "desc": "15%伤害吸血" },
+        "5":  { "lifestealRate": 0.20, "desc": "20%伤害吸血 (里程碑)" },
+        "6":  { "lifestealRate": 0.24, "desc": "24%伤害吸血" },
+        "7":  { "lifestealRate": 0.28, "desc": "28%伤害吸血" },
+        "8":  { "lifestealRate": 0.33, "desc": "33%伤害吸血" },
+        "9":  { "lifestealRate": 0.37, "desc": "37%伤害吸血" },
+        "10": { "lifestealRate": 0.45, "desc": "45%伤害吸血 (满级血族之力)" }
+      }
+    },
+    {
+      "id": "xp_magnet",
+      "name": "经验磁铁",
+      "type": "passive",
+      "icon": "🧲",
+      "color": "#af0",
+      "description": "扩大经验吸收范围并增加经验获取",
+      "visual": "none",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "magnetRange": 60,  "xpBonus": 0.05, "desc": "吸收范围+60, 经验+5%" },
+        "2":  { "magnetRange": 100, "xpBonus": 0.08, "desc": "吸收范围+100, 经验+8%" },
+        "3":  { "magnetRange": 140, "xpBonus": 0.12, "desc": "吸收范围+140, 经验+12%" },
+        "4":  { "magnetRange": 180, "xpBonus": 0.16, "desc": "吸收范围+180, 经验+16%" },
+        "5":  { "magnetRange": 240, "xpBonus": 0.22, "desc": "吸收范围+240, 经验+22% (里程碑)" },
+        "6":  { "magnetRange": 280, "xpBonus": 0.26, "desc": "吸收范围+280, 经验+26%" },
+        "7":  { "magnetRange": 320, "xpBonus": 0.30, "desc": "吸收范围+320, 经验+30%" },
+        "8":  { "magnetRange": 370, "xpBonus": 0.35, "desc": "吸收范围+370, 经验+35%" },
+        "9":  { "magnetRange": 420, "xpBonus": 0.40, "desc": "吸收范围+420, 经验+40%" },
+        "10": { "magnetRange": 500, "xpBonus": 0.50, "desc": "吸收范围+500, 经验+50% (满级引力场)" }
+      }
+    },
+    {
+      "id": "explosive",
+      "name": "爆炸弹幕",
+      "type": "projectile",
+      "icon": "💣",
+      "color": "#f60",
+      "description": "弹幕命中后产生爆炸",
+      "visual": "explosion",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "damage": 8,   "explosionRadius": 50,  "desc": "爆炸8伤害, 半径50" },
+        "2":  { "damage": 12,  "explosionRadius": 58,  "desc": "爆炸12伤害, 半径58" },
+        "3":  { "damage": 18,  "explosionRadius": 65,  "desc": "爆炸18伤害, 半径65" },
+        "4":  { "damage": 24,  "explosionRadius": 73,  "desc": "爆炸24伤害, 半径73" },
+        "5":  { "damage": 35,  "explosionRadius": 85,  "desc": "爆炸35伤害, 半径85 (里程碑)" },
+        "6":  { "damage": 42,  "explosionRadius": 92,  "desc": "爆炸42伤害, 半径92" },
+        "7":  { "damage": 52,  "explosionRadius": 100, "desc": "爆炸52伤害, 半径100" },
+        "8":  { "damage": 63,  "explosionRadius": 110, "desc": "爆炸63伤害, 半径110" },
+        "9":  { "damage": 75,  "explosionRadius": 118, "desc": "爆炸75伤害, 半径118" },
+        "10": { "damage": 100, "explosionRadius": 135, "desc": "爆炸100伤害, 半径135 (满级核爆)" }
+      }
+    },
+    {
+      "id": "max_hp",
+      "name": "最大HP↑",
+      "type": "buff",
+      "icon": "❤",
+      "color": "#0a0",
+      "description": "增加最大生命值",
+      "visual": "none",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "maxHP": 30,  "desc": "最大HP+30" },
+        "2":  { "maxHP": 55,  "desc": "最大HP+55" },
+        "3":  { "maxHP": 80,  "desc": "最大HP+80" },
+        "4":  { "maxHP": 110, "desc": "最大HP+110" },
+        "5":  { "maxHP": 150, "desc": "最大HP+150 (里程碑)" },
+        "6":  { "maxHP": 185, "desc": "最大HP+185" },
+        "7":  { "maxHP": 225, "desc": "最大HP+225" },
+        "8":  { "maxHP": 270, "desc": "最大HP+270" },
+        "9":  { "maxHP": 320, "desc": "最大HP+320" },
+        "10": { "maxHP": 400, "desc": "最大HP+400 (满级生命堡垒)" }
+      }
+    },
+    {
+      "id": "orbit",
+      "name": "环绕护卫",
+      "type": "summon",
+      "icon": "🔄",
+      "color": "#4af",
+      "description": "召唤环绕弹幕自动攻击周围敌人",
+      "visual": "orbit",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "orbitCount": 1, "orbitDamage": 8,  "orbitRadius": 80,  "desc": "1个护卫, 8伤害, 半径80" },
+        "2":  { "orbitCount": 2, "orbitDamage": 10, "orbitRadius": 85,  "desc": "2个护卫, 10伤害, 半径85" },
+        "3":  { "orbitCount": 2, "orbitDamage": 14, "orbitRadius": 90,  "desc": "2个护卫, 14伤害, 半径90" },
+        "4":  { "orbitCount": 3, "orbitDamage": 17, "orbitRadius": 95,  "desc": "3个护卫, 17伤害, 半径95" },
+        "5":  { "orbitCount": 4, "orbitDamage": 22, "orbitRadius": 105, "desc": "4个护卫, 22伤害, 半径105 (里程碑)" },
+        "6":  { "orbitCount": 4, "orbitDamage": 27, "orbitRadius": 110, "desc": "4个护卫, 27伤害, 半径110" },
+        "7":  { "orbitCount": 5, "orbitDamage": 32, "orbitRadius": 115, "desc": "5个护卫, 32伤害, 半径115" },
+        "8":  { "orbitCount": 5, "orbitDamage": 38, "orbitRadius": 120, "desc": "5个护卫, 38伤害, 半径120" },
+        "9":  { "orbitCount": 6, "orbitDamage": 45, "orbitRadius": 128, "desc": "6个护卫, 45伤害, 半径128" },
+        "10": { "orbitCount": 8, "orbitDamage": 55, "orbitRadius": 140, "desc": "8个护卫, 55伤害, 半径140 (满级星环)" }
+      }
+    },
+    {
+      "id": "thorns_aura",
+      "name": "荆棘光环",
+      "type": "aoe",
+      "icon": "🌿",
+      "color": "#8a4",
+      "description": "反弹伤害给近身攻击的敌人",
+      "visual": "thorns",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "thornsDamage": 10, "thornsRange": 80,  "desc": "反弹10伤害, 范围80" },
+        "2":  { "thornsDamage": 16, "thornsRange": 90,  "desc": "反弹16伤害, 范围90" },
+        "3":  { "thornsDamage": 23, "thornsRange": 100, "desc": "反弹23伤害, 范围100" },
+        "4":  { "thornsDamage": 30, "thornsRange": 110, "desc": "反弹30伤害, 范围110" },
+        "5":  { "thornsDamage": 42, "thornsRange": 125, "desc": "反弹42伤害, 范围125 (里程碑)" },
+        "6":  { "thornsDamage": 52, "thornsRange": 135, "desc": "反弹52伤害, 范围135" },
+        "7":  { "thornsDamage": 63, "thornsRange": 145, "desc": "反弹63伤害, 范围145" },
+        "8":  { "thornsDamage": 78, "thornsRange": 158, "desc": "反弹78伤害, 范围158" },
+        "9":  { "thornsDamage": 92, "thornsRange": 170, "desc": "反弹92伤害, 范围170" },
+        "10": { "thornsDamage": 120, "thornsRange": 190, "desc": "反弹120伤害, 范围190 (满级荆棘之怒)" }
+      }
+    },
+    {
+      "id": "time_warp",
+      "name": "时间扭曲",
+      "type": "aoe",
+      "icon": "⏳",
+      "color": "#c8f",
+      "description": "减缓周围敌人并加速自身攻击",
+      "visual": "time_warp",
+      "maxLevel": 10,
+      "levels": {
+        "1":  { "slowAmount": 0.10, "attackSpeedBonus": 0.05, "range": 120, "desc": "敌人减速10%, 自身攻速+5%, 范围120" },
+        "2":  { "slowAmount": 0.14, "attackSpeedBonus": 0.08, "range": 135, "desc": "敌人减速14%, 自身攻速+8%, 范围135" },
+        "3":  { "slowAmount": 0.18, "attackSpeedBonus": 0.12, "range": 150, "desc": "敌人减速18%, 自身攻速+12%, 范围150" },
+        "4":  { "slowAmount": 0.22, "attackSpeedBonus": 0.15, "range": 165, "desc": "敌人减速22%, 自身攻速+15%, 范围165" },
+        "5":  { "slowAmount": 0.28, "attackSpeedBonus": 0.20, "range": 185, "desc": "敌人减速28%, 自身攻速+20%, 范围185 (里程碑)" },
+        "6":  { "slowAmount": 0.32, "attackSpeedBonus": 0.23, "range": 200, "desc": "敌人减速32%, 自身攻速+23%, 范围200" },
+        "7":  { "slowAmount": 0.36, "attackSpeedBonus": 0.27, "range": 215, "desc": "敌人减速36%, 自身攻速+27%, 范围215" },
+        "8":  { "slowAmount": 0.40, "attackSpeedBonus": 0.30, "range": 230, "desc": "敌人减速40%, 自身攻速+30%, 范围230" },
+        "9":  { "slowAmount": 0.44, "attackSpeedBonus": 0.34, "range": 245, "desc": "敌人减速44%, 自身攻速+34%, 范围245" },
+        "10": { "slowAmount": 0.50, "attackSpeedBonus": 0.40, "range": 270, "desc": "敌人减速50%, 自身攻速+40%, 范围270 (满级时空主宰)" }
+      }
+    },
+    {
+      "id": "warrior_slash",
+      "name": "攻击",
+      "type": "default_attack",
+      "icon": "⚔",
+      "color": "#f44",
+      "description": "远距离剑气攻击",
+      "maxLevel": 1,
+      "attackPattern": {
+        "range": 400,
+        "angle": 0.20,
+        "projectileSpeed": 350,
+        "projectileType": "projectile",
+        "visual": "sword_wave"
+      },
+      "levels": {
+        "1": { "desc": "远距离剑气攻击, 射程400, 飞行速度350" }
+      }
+    },
+    {
+      "id": "mage_fireball",
+      "name": "小火球术",
+      "type": "default_attack",
+      "icon": "🔥",
+      "color": "#f80",
+      "description": "远距离火球弹道",
+      "maxLevel": 1,
+      "attackPattern": {
+        "range": 400,
+        "angle": 0.17,
+        "projectileSpeed": 350,
+        "projectileType": "projectile",
+        "visual": "fireball"
+      },
+      "levels": {
+        "1": { "desc": "远距离火球弹道, 射程400, 飞行速度350" }
+      }
+    },
+    {
+      "id": "scout_shoot",
+      "name": "子弹射击",
+      "type": "default_attack",
+      "icon": "🏹",
+      "color": "#4f4",
+      "description": "中远距离精准射击",
+      "maxLevel": 1,
+      "attackPattern": {
+        "range": 400,
+        "angle": 0.10,
+        "projectileSpeed": 400,
+        "projectileType": "projectile",
+        "visual": "arrow"
+      },
+      "levels": {
+        "1": { "desc": "中远距离精准射击, 射程400, 飞行速度400" }
+      }
+    }
+  ]
+}

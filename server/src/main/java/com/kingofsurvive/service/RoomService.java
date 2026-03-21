@@ -25,6 +25,10 @@ public class RoomService {
     private GameService gameService;
 
     public Room createRoom(String hostId, String mode) {
+        return createRoom(hostId, mode, null);
+    }
+
+    public Room createRoom(String hostId, String mode, String characterType) {
         Player host = playerRepository.findById(hostId);
         if (host == null) {
             throw new RuntimeException("Host player not found: " + hostId);
@@ -40,6 +44,7 @@ public class RoomService {
         RoomPlayer roomPlayer = new RoomPlayer();
         roomPlayer.setPlayerId(hostId);
         roomPlayer.setNickname(host.getNickname());
+        roomPlayer.setCharacterType(characterType != null ? characterType : "warrior");
         roomPlayer.setReady(false);
         room.getPlayers().add(roomPlayer);
 
@@ -47,6 +52,10 @@ public class RoomService {
     }
 
     public Room joinRoom(String roomId, String playerId) {
+        return joinRoom(roomId, playerId, null);
+    }
+
+    public Room joinRoom(String roomId, String playerId, String characterType) {
         Room room = getRoom(roomId);
         Player player = playerRepository.findById(playerId);
         if (player == null) {
@@ -70,6 +79,7 @@ public class RoomService {
         RoomPlayer roomPlayer = new RoomPlayer();
         roomPlayer.setPlayerId(playerId);
         roomPlayer.setNickname(player.getNickname());
+        roomPlayer.setCharacterType(characterType != null ? characterType : "warrior");
         roomPlayer.setReady(false);
         room.getPlayers().add(roomPlayer);
 

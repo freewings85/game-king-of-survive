@@ -21,6 +21,14 @@ public class Player {
     private int totalGames;
     private int totalWins;
 
+    // RPG Attribute System (US-012)
+    private int intelligence = 5;
+    private int strength = 5;
+    private int agility = 5;
+    private int stamina = 5;
+    private int accountLevel = 1;
+    private long accountExp = 0;
+
     public Player() {
         this.ownedSkins.add("default");
     }
@@ -143,5 +151,54 @@ public class Player {
 
     public void setTotalWins(int totalWins) {
         this.totalWins = totalWins;
+    }
+
+    // RPG Attribute getters/setters (US-012)
+    public int getIntelligence() {
+        return intelligence;
+    }
+
+    public void setIntelligence(int intelligence) {
+        this.intelligence = intelligence;
+    }
+
+    public int getStrength() {
+        return strength;
+    }
+
+    public void setStrength(int strength) {
+        this.strength = strength;
+    }
+
+    public int getAgility() {
+        return agility;
+    }
+
+    public void setAgility(int agility) {
+        this.agility = agility;
+    }
+
+    public int getStamina() {
+        return stamina;
+    }
+
+    public void setStamina(int stamina) {
+        this.stamina = stamina;
+    }
+
+    public int getAccountLevel() {
+        return accountLevel;
+    }
+
+    public void setAccountLevel(int accountLevel) {
+        this.accountLevel = accountLevel;
+    }
+
+    public long getAccountExp() {
+        return accountExp;
+    }
+
+    public void setAccountExp(long accountExp) {
+        this.accountExp = accountExp;
     }
 }

@@ -1,0 +1,113 @@
+{
+  "attributes": {
+    "INT": {
+      "name": "智力",
+      "description": "提升技能伤害、冷却缩减",
+      "effects": [
+        { "stat": "skillPower", "scalingRatio": 0.008, "description": "+0.8%技能伤害/点" },
+        { "stat": "cooldownReduction", "scalingRatio": 0.003, "cap": 0.4, "description": "+0.3%冷却缩减/点, 上限40%" }
+      ]
+    },
+    "STR": {
+      "name": "力量",
+      "description": "提升物理伤害、HP、护甲",
+      "effects": [
+        { "stat": "physicalAttack", "scalingRatio": 0.01, "description": "+1%物理伤害/点" },
+        { "stat": "maxHP", "scalingRatio": 3, "description": "+3HP/点" },
+        { "stat": "armor", "scalingRatio": 0.5, "description": "+0.5护甲/点" }
+      ]
+    },
+    "AGI": {
+      "name": "敏捷",
+      "description": "提升移速、攻速、闪避",
+      "effects": [
+        { "stat": "moveSpeed", "scalingRatio": 0.005, "description": "+0.5%移速/点" },
+        { "stat": "attackSpeed", "scalingRatio": 0.004, "description": "+0.4%攻速/点" },
+        { "stat": "evasion", "scalingRatio": 0.0015, "cap": 0.3, "description": "+0.15%闪避/点, 上限30%" }
+      ]
+    },
+    "STA": {
+      "name": "耐力",
+      "description": "提升HP回复、抗性",
+      "effects": [
+        { "stat": "hpRegen", "scalingRatio": 0.1, "description": "+0.1HP/s/点" },
+        { "stat": "resistance", "scalingRatio": 0.004, "cap": 0.5, "description": "+0.4%抗性/点, 上限50%" }
+      ]
+    }
+  },
+  "derivedStats": {
+    "maxHP": {
+      "baseKey": "baseHP",
+      "formula": "baseHP + STR * 3",
+      "description": "最大生命值"
+    },
+    "physicalAttack": {
+      "baseKey": "baseATK",
+      "formula": "baseATK * (1 + STR * 0.01)",
+      "description": "物理攻击力"
+    },
+    "skillPower": {
+      "baseKey": "baseATK",
+      "formula": "baseATK * (1 + INT * 0.008)",
+      "description": "技能威力"
+    },
+    "attackSpeed": {
+      "baseValue": 1.0,
+      "formula": "1.0 * (1 + AGI * 0.004)",
+      "description": "攻击速度倍率"
+    },
+    "moveSpeed": {
+      "baseKey": "baseSpeed",
+      "formula": "baseSpeed * (1 + AGI * 0.005)",
+      "description": "移动速度"
+    },
+    "critRate": {
+      "baseValue": 0.05,
+      "formula": "0.05 + AGI * 0.001",
+      "description": "暴击率"
+    },
+    "critDamage": {
+      "baseValue": 1.5,
+      "formula": "1.5 + STR * 0.005",
+      "description": "暴击伤害倍率"
+    },
+    "armor": {
+      "baseValue": 0,
+      "formula": "STR * 0.5",
+      "description": "护甲值"
+    },
+    "resistance": {
+      "baseValue": 0,
+      "formula": "STA * 0.004",
+      "cap": 0.5,
+      "description": "魔法抗性"
+    },
+    "hpRegen": {
+      "baseValue": 0,
+      "formula": "STA * 0.1",
+      "description": "每秒生命回复"
+    },
+    "evasion": {
+      "baseValue": 0,
+      "formula": "AGI * 0.0015",
+      "cap": 0.3,
+      "description": "闪避率"
+    }
+  },
+  "damageFormula": {
+    "description": "最终伤害 = 基础伤害 × 属性加成 × (1 - 护甲/(护甲+armorConstant)) × (1 - 抗性) × 暴击倍率 × random(randomMin~randomMax)",
+    "armorConstant": 100,
+    "randomMin": 0.9,
+    "randomMax": 1.1
+  },
+  "levelCurve": {
+    "formula": "8 + level * 5 + level^1.6 * 2",
+    "attributePointsPerLevel": 3,
+    "tiers": [
+      { "minLevel": 1, "maxLevel": 5, "coefficient": 1.0, "description": "初期成长" },
+      { "minLevel": 6, "maxLevel": 10, "coefficient": 1.5, "description": "中期成长" },
+      { "minLevel": 11, "maxLevel": 20, "coefficient": 2.0, "description": "后期成长" },
+      { "minLevel": 21, "maxLevel": 50, "coefficient": 3.0, "description": "大后期" }
+    ]
+  }
+}

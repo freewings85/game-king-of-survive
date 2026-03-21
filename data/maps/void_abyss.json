@@ -1,0 +1,31 @@
+{
+  "id": "void_abyss",
+  "name": "虚空深渊",
+  "width": 1600,
+  "height": 1600,
+  "shape": "rect",
+  "requiredRank": "GOLD",
+  "color": "#0a0a1a",
+  "zones": [
+    {
+      "name": "虚空裂隙",
+      "type": "elite",
+      "bounds": { "x": 300, "y": 300, "width": 1000, "height": 1000 },
+      "monsterLevel": [12, 18],
+      "spawnRate": 1.8
+    },
+    {
+      "name": "深渊边缘",
+      "type": "hazard",
+      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
+      "monsterLevel": [15, 22],
+      "spawnRate": 2.2
+    }
+  ],
+  "spawnPoints": [
+    { "x": 800, "y": 800 },
+    { "x": 300, "y": 300 },
+    { "x": 1300, "y": 1300 }
+  ],
+  "obstacles": []
+}

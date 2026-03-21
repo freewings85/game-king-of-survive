@@ -1,0 +1,31 @@
+{
+  "id": "misty_swamp",
+  "name": "迷雾沼泽",
+  "width": 1600,
+  "height": 1600,
+  "shape": "diamond",
+  "requiredRank": "SILVER",
+  "color": "#2a2a1a",
+  "zones": [
+    {
+      "name": "浅沼区",
+      "type": "normal",
+      "bounds": { "x": 400, "y": 400, "width": 800, "height": 800 },
+      "monsterLevel": [5, 9],
+      "spawnRate": 1.3
+    },
+    {
+      "name": "深沼区",
+      "type": "hazard",
+      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
+      "monsterLevel": [8, 13],
+      "spawnRate": 1.6
+    }
+  ],
+  "spawnPoints": [
+    { "x": 800, "y": 800 },
+    { "x": 800, "y": 400 },
+    { "x": 400, "y": 800 }
+  ],
+  "obstacles": []
+}

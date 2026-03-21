@@ -1,0 +1,31 @@
+{
+  "id": "dragon_ridge",
+  "name": "龙脊山脉",
+  "width": 1600,
+  "height": 1600,
+  "shape": "rect",
+  "requiredRank": "SILVER",
+  "color": "#2a1a2a",
+  "zones": [
+    {
+      "name": "山脚",
+      "type": "normal",
+      "bounds": { "x": 200, "y": 200, "width": 1200, "height": 1200 },
+      "monsterLevel": [6, 10],
+      "spawnRate": 1.2
+    },
+    {
+      "name": "山顶龙巢",
+      "type": "elite",
+      "bounds": { "x": 600, "y": 600, "width": 400, "height": 400 },
+      "monsterLevel": [10, 15],
+      "spawnRate": 1.8
+    }
+  ],
+  "spawnPoints": [
+    { "x": 800, "y": 1400 },
+    { "x": 200, "y": 1400 },
+    { "x": 1400, "y": 1400 }
+  ],
+  "obstacles": []
+}

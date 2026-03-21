@@ -1,0 +1,83 @@
+{
+  "warrior": {
+    "name": "战士",
+    "icon": "🛡",
+    "baseHP": 350,
+    "baseATK": 22,
+    "baseSpeed": 168,
+    "initialAttributes": {
+      "INT": 2,
+      "STR": 10,
+      "AGI": 3,
+      "STA": 8
+    },
+    "growthCoefficients": {
+      "INT": 0.5,
+      "STR": 1.5,
+      "AGI": 0.8,
+      "STA": 1.1
+    },
+    "passive": {
+      "name": "荆棘护甲",
+      "description": "反弹5点伤害+12%减伤",
+      "effect": { "thornsDamage": 5, "damageReduction": 0.12 }
+    },
+    "color": "#f44",
+    "defaultSkill": "warrior_slash",
+    "availableSkills": ["attack_up", "attack_speed", "shield", "hp_regen", "max_hp", "lifesteal", "thorns_aura", "crit", "explosive", "move_speed"]
+  },
+  "mage": {
+    "name": "法师",
+    "icon": "🔮",
+    "baseHP": 310,
+    "baseATK": 30,
+    "baseSpeed": 195,
+    "initialAttributes": {
+      "INT": 12,
+      "STR": 2,
+      "AGI": 3,
+      "STA": 3
+    },
+    "growthCoefficients": {
+      "INT": 1.5,
+      "STR": 0.5,
+      "AGI": 0.8,
+      "STA": 1.0
+    },
+    "passive": {
+      "name": "奥术延伸",
+      "description": "射程+30%，减少15%受到的伤害",
+      "effect": { "rangeBonus": 0.3, "damageReduction": 0.15 }
+    },
+    "color": "#a4f",
+    "defaultSkill": "mage_fireball",
+    "availableSkills": ["attack_up", "attack_speed", "chain_lightning", "fire_trail", "frost_aura", "time_warp", "scatter", "pierce", "xp_magnet", "move_speed"]
+  },
+  "scout": {
+    "name": "斥候",
+    "icon": "🏹",
+    "baseHP": 305,
+    "baseATK": 29,
+    "baseSpeed": 220,
+    "initialAttributes": {
+      "INT": 3,
+      "STR": 5,
+      "AGI": 12,
+      "STA": 4
+    },
+    "growthCoefficients": {
+      "INT": 0.8,
+      "STR": 0.9,
+      "AGI": 1.5,
+      "STA": 1.0
+    },
+    "passive": {
+      "name": "闪避本能",
+      "description": "18%闪避率+15%暴击+10%减伤",
+      "effect": { "dodgeChance": 0.18, "critBonus": 0.20, "damageReduction": 0.10 }
+    },
+    "color": "#4f4",
+    "defaultSkill": "scout_shoot",
+    "availableSkills": ["attack_up", "attack_speed", "scatter", "pierce", "crit", "move_speed", "orbit", "xp_magnet", "lifesteal", "explosive"]
+  }
+}

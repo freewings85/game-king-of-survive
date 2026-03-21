@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -148,6 +150,106 @@ public class PlayerService {
         playerRepository.save(player);
 
         return reward;
+    }
+
+    // RPG Attribute System (US-012)
+
+    public Player allocatePoints(String playerId, Map<String, Integer> attributes) {
+        Player player = getPlayer(playerId);
+        int totalAvailable = (player.getAccountLevel() - 1) * 3 + 20; // initial 20 + 3 per level
+        int currentTotal = player.getIntelligence() + player.getStrength() + player.getAgility() + player.getStamina();
+        int requestedTotal = 0;
+        for (Integer v : attributes.values()) {
+            requestedTotal += v;
+        }
+        if (currentTotal + requestedTotal > totalAvailable) {
+            throw new RuntimeException("Not enough attribute points");
+        }
+        if (attributes.containsKey("intelligence")) {
+            player.setIntelligence(player.getIntelligence() + attributes.get("intelligence"));
+        }
+        if (attributes.containsKey("strength")) {
+            player.setStrength(player.getStrength() + attributes.get("strength"));
+        }
+        if (attributes.containsKey("agility")) {
+            player.setAgility(player.getAgility() + attributes.get("agility"));
+        }
+        if (attributes.containsKey("stamina")) {
+            player.setStamina(player.getStamina() + attributes.get("stamina"));
+        }
+        return playerRepository.save(player);
+    }
+
+    public Map<String, Object> getPlayerAttributes(String playerId) {
+        Player player = getPlayer(playerId);
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("intelligence", player.getIntelligence());
+        result.put("strength", player.getStrength());
+        result.put("agility", player.getAgility());
+        result.put("stamina", player.getStamina());
+        result.put("accountLevel", player.getAccountLevel());
+        result.put("accountExp", player.getAccountExp());
+
+        // Calculate derived stats
+        Map<String, Object> derivedStats = calculateDerivedStats(player);
+        result.put("derivedStats", derivedStats);
+
+        int totalAvailable = (player.getAccountLevel() - 1) * 3 + 20;
+        int currentTotal = player.getIntelligence() + player.getStrength() + player.getAgility() + player.getStamina();
+        result.put("attributePointsRemaining", totalAvailable - currentTotal);
+
+        return result;
+    }
+
+    private Map<String, Object> calculateDerivedStats(Player player) {
+        Map<String, Object> stats = new HashMap<String, Object>();
+        int INT = player.getIntelligence();
+        int STR = player.getStrength();
+        int AGI = player.getAgility();
+        int STA = player.getStamina();
+
+        stats.put("maxHP", 100 + STR * 3);
+        stats.put("physicalAttack", 10.0 * (1 + STR * 0.01));
+        stats.put("skillPower", 10.0 * (1 + INT * 0.008));
+        stats.put("moveSpeed", 150.0 * (1 + AGI * 0.005));
+        stats.put("armor", STR * 0.5);
+        stats.put("evasion", Math.min(0.3, AGI * 0.0015));
+        stats.put("hpRegen", STA * 0.1);
+
+        return stats;
+    }
+
+    public Player addExperience(String playerId, long experience) {
+        Player player = getPlayer(playerId);
+        player.setAccountExp(player.getAccountExp() + experience);
+        // Level up logic
+        long needed = 100L * player.getAccountLevel();
+        while (player.getAccountExp() >= needed) {
+            player.setAccountExp(player.getAccountExp() - needed);
+            player.setAccountLevel(player.getAccountLevel() + 1);
+            needed = 100L * player.getAccountLevel();
+        }
+        return playerRepository.save(player);
+    }
+
+    public Player applyGameResult(String playerId, Map<String, Object> result) {
+        Player player = getPlayer(playerId);
+        int goldEarned = 0;
+        if (result.get("goldEarned") instanceof Number) {
+            goldEarned = ((Number) result.get("goldEarned")).intValue();
+        }
+        if (goldEarned > 0) {
+            player.setGold(player.getGold() + goldEarned);
+        }
+        // Update total stats
+        if (result.get("kills") instanceof Number) {
+            player.setTotalKills(player.getTotalKills() + ((Number) result.get("kills")).intValue());
+        }
+        player.setTotalGames(player.getTotalGames() + 1);
+        if (result.get("victory") instanceof Boolean && (Boolean) result.get("victory")) {
+            player.setTotalWins(player.getTotalWins() + 1);
+        }
+        return playerRepository.save(player);
     }
 
     private void applyReward(Player player, DailyReward reward) {

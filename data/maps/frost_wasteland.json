@@ -1,0 +1,31 @@
+{
+  "id": "frost_wasteland",
+  "name": "冰霜荒原",
+  "width": 1600,
+  "height": 1600,
+  "shape": "rect",
+  "requiredRank": "SILVER",
+  "color": "#1a2a3a",
+  "zones": [
+    {
+      "name": "冻土中心",
+      "type": "normal",
+      "bounds": { "x": 400, "y": 400, "width": 800, "height": 800 },
+      "monsterLevel": [5, 8],
+      "spawnRate": 1.2
+    },
+    {
+      "name": "暴风雪区",
+      "type": "hazard",
+      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
+      "monsterLevel": [7, 12],
+      "spawnRate": 1.5
+    }
+  ],
+  "spawnPoints": [
+    { "x": 800, "y": 800 },
+    { "x": 200, "y": 200 },
+    { "x": 1400, "y": 1400 }
+  ],
+  "obstacles": []
+}

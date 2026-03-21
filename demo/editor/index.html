@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游戏编辑器 - King of Survive</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #fff; }
+  /* Nav */
+  .nav { display: flex; background: #0d0d1a; border-bottom: 2px solid #ffd700; padding: 0 20px; }
+  .nav-btn { padding: 12px 24px; background: none; border: none; color: #888; cursor: pointer; font-size: 15px; font-weight: bold; border-bottom: 3px solid transparent; }
+  .nav-btn:hover { color: #fff; background: #1a1a3e; }
+  .nav-btn.active { color: #ffd700; border-bottom-color: #ffd700; }
+  .nav-title { padding: 12px 20px; color: #ffd700; font-size: 16px; font-weight: bold; margin-right: auto; }
+  .nav-save { padding: 8px 16px; margin: 6px 0; background: #2a6a2a; border: 1px solid #4a4; color: #fff; cursor: pointer; border-radius: 4px; font-size: 13px; }
+  .nav-save:hover { background: #3a8a3a; }
+  /* Tab content */
+  .tab-content { display: none; padding: 20px; }
+  .tab-content.active { display: block; }
+  /* Common */
+  .toolbar { margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .toolbar button { padding: 6px 14px; background: #2a2a4e; border: 1px solid #555; color: #fff; cursor: pointer; border-radius: 4px; font-size: 13px; }
+  .toolbar button:hover { background: #3a3a6e; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  th, td { padding: 5px 6px; border: 1px solid #333; text-align: left; font-size: 12px; }
+  th { background: #2a2a4e; color: #ffd700; position: sticky; top: 0; z-index: 1; }
+  td input, td select { background: #111; color: #fff; border: 1px solid #444; padding: 3px; width: 100%; font-size: 11px; }
+  td input[type="color"] { width: 30px; height: 22px; padding: 0; }
+  .delete-btn { background: #a33; color: #fff; border: none; padding: 3px 8px; cursor: pointer; border-radius: 3px; font-size: 11px; }
+  .delete-btn:hover { background: #c44; }
+  /* Toast */
+  .toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 6px; color: #fff; font-size: 14px; z-index: 9999; display: none; }
+  .toast.success { background: #2a6a2a; border: 1px solid #4a4; }
+  .toast.error { background: #6a2a2a; border: 1px solid #a44; }
+  /* Panels */
+  .panel { background: #111; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; }
+  .panel h3 { color: #ffd700; margin-bottom: 10px; font-size: 14px; }
+  .form-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+  .form-row label { color: #aaa; font-size: 12px; min-width: 70px; }
+  .form-row input, .form-row select { background: #222; color: #fff; border: 1px solid #555; padding: 4px 6px; font-size: 12px; }
+  .form-row input[type="number"] { width: 80px; }
+  .form-row input[type="text"] { width: 150px; }
+  /* Map canvas */
+  #map-canvas { border: 1px solid #555; cursor: crosshair; display: block; margin-bottom: 10px; }
+  .map-layout { display: flex; gap: 15px; }
+  .map-sidebar { width: 350px; flex-shrink: 0; }
+  .map-main { flex: 1; }
+  .camp-item { padding: 6px 8px; background: #1a1a3e; margin-bottom: 4px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid transparent; }
+  .camp-item:hover, .camp-item.selected { border-color: #ffd700; }
+  .camp-monster-row { display: flex; gap: 5px; margin-bottom: 4px; align-items: center; }
+  .camp-monster-row select, .camp-monster-row input { background: #222; color: #fff; border: 1px solid #555; padding: 3px; font-size: 11px; }
+  /* Wave comp sliders */
+  .wave-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; font-size: 12px; }
+  .wave-row label { width: 60px; color: #aaa; }
+  .wave-row input[type="range"] { flex: 1; }
+  .wave-row .val { width: 35px; color: #ffd700; text-align: right; }
+  /* Skill cards */
+  .skill-card { background: #111; border: 1px solid #333; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+  .skill-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; user-select: none; background: #1a1a3e; border-bottom: 1px solid #333; }
+  .skill-header:hover { background: #222a4e; }
+  .skill-header .skill-icon { font-size: 20px; }
+  .skill-header .skill-name { font-size: 14px; font-weight: bold; color: #fff; }
+  .skill-header .skill-type { font-size: 11px; color: #aaa; background: #2a2a4e; padding: 2px 8px; border-radius: 10px; }
+  .skill-header .skill-color-swatch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #555; }
+  .skill-header .expand-arrow { margin-left: auto; color: #888; font-size: 14px; transition: transform 0.2s; }
+  .skill-header .expand-arrow.open { transform: rotate(90deg); }
+  .skill-body { display: none; padding: 12px 14px; }
+  .skill-body.open { display: block; }
+  .skill-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .skill-meta label { color: #aaa; font-size: 11px; }
+  .skill-meta input, .skill-meta select { background: #222; color: #fff; border: 1px solid #555; padding: 3px 5px; font-size: 11px; }
+  .skill-meta input[type="text"] { width: 100px; }
+  .skill-meta input[type="color"] { width: 30px; height: 22px; padding: 0; }
+  /* Level table */
+  .level-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .level-table th { background: #2a2a4e; color: #ffd700; padding: 4px 5px; font-size: 11px; border: 1px solid #333; }
+  .level-table td { padding: 3px 4px; border: 1px solid #333; }
+  .level-table td input { background: #111; color: #fff; border: 1px solid #444; padding: 2px 4px; width: 100%; font-size: 11px; }
+  .level-table tr:nth-child(even) { background: #0d0d1a; }
+  .level-table tr:nth-child(5) td { border-bottom: 2px solid #ffd700; }
+  /* Class card */
+  .class-card { background: #111; border: 1px solid #333; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .class-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .class-card-header .class-icon { font-size: 28px; }
+  .class-card-header .class-name { font-size: 18px; font-weight: bold; }
+  .class-section { margin-bottom: 14px; }
+  .class-section h4 { color: #ffd700; font-size: 13px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 4px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px; }
+  .stat-grid .form-row { margin-bottom: 0; }
+  /* Skill checkbox */
+  .skill-checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+  .skill-checkbox { display: flex; align-items: center; gap: 6px; padding: 5px 8px; background: #1a1a3e; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #333; }
+  .skill-checkbox:hover { border-color: #555; }
+  .skill-checkbox.checked { border-color: #ffd700; background: #2a2a3e; }
+  .skill-checkbox input[type="checkbox"] { accent-color: #ffd700; }
+  .skill-checkbox .cb-icon { font-size: 14px; }
+  .skill-checkbox .cb-name { color: #fff; }
+  .skill-checkbox .cb-type { color: #888; font-size: 10px; }
+  /* Attack preview */
+  .attack-preview { display: inline-block; margin-top: 8px; }
+  .attack-preview canvas { border: 1px solid #333; border-radius: 4px; background: #0a0a1a; }
+</style>
+</head>
+<body>
+<div class="nav">
+  <span class="nav-title">King of Survive 编辑器</span>
+  <button class="nav-btn active" onclick="switchTab('skills')">技能</button>
+  <button class="nav-btn" onclick="switchTab('classes')">职业</button>
+  <button class="nav-btn" onclick="switchTab('monsters')">怪物</button>
+  <button class="nav-btn" onclick="switchTab('maps')">地图</button>
+  <button class="nav-save" onclick="saveCurrentTab()">💾 保存 (Ctrl+S)</button>
+</div>
+<div id="toast" class="toast"></div>
+
+<!-- ====== SKILLS TAB ====== -->
+<div id="tab-skills" class="tab-content active">
+  <div class="toolbar">
+    <button onclick="addSkill()">+ 添加技能</button>
+    <button onclick="undo()">撤销</button>
+    <button onclick="redo()">重做</button>
+  </div>
+  <div id="skill-cards"></div>
+</div>
+
+<!-- ====== CLASSES TAB ====== -->
+<div id="tab-classes" class="tab-content">
+  <div id="class-cards"></div>
+</div>
+
+<!-- ====== MONSTERS TAB ====== -->
+<div id="tab-monsters" class="tab-content">
+  <div class="toolbar">
+    <button onclick="addMonster()">+ 添加怪物</button>
+  </div>
+  <table>
+    <thead><tr>
+      <th>类型ID</th><th>名称</th><th>阵营</th><th>HP</th><th>ATK</th><th>速度</th>
+      <th>XP</th><th>半径</th><th>颜色</th>
+      <th>HP缩放</th><th>ATK缩放</th><th>速缩放</th><th>XP缩放</th>
+      <th>特殊属性</th><th>操作</th>
+    </tr></thead>
+    <tbody id="monster-list"></tbody>
+  </table>
+</div>
+
+<!-- ====== MAPS TAB ====== -->
+<div id="tab-maps" class="tab-content">
+  <div class="toolbar">
+    <label style="color:#aaa;font-size:13px;line-height:30px;">选择地图：</label>
+    <select id="map-selector" onchange="loadSelectedMap()" style="background:#222;color:#fff;border:1px solid #555;padding:4px;font-size:13px;"></select>
+    <button onclick="createNewMap()">+ 新建地图</button>
+  </div>
+  <div class="map-layout">
+    <div class="map-main">
+      <canvas id="map-canvas" width="600" height="600"></canvas>
+      <div class="form-row">
+        <label>地图名称:</label><input type="text" id="map-name" onchange="currentMap.name=this.value">
+        <label>宽:</label><input type="number" id="map-width" onchange="currentMap.width=+this.value;renderMapCanvas()">
+        <label>高:</label><input type="number" id="map-height" onchange="currentMap.height=+this.value;renderMapCanvas()">
+      </div>
+    </div>
+    <div class="map-sidebar">
+      <!-- Spawn Camps -->
+      <div class="panel">
+        <h3>刷怪营地 <button onclick="addCamp()" style="float:right;font-size:11px;padding:2px 8px;background:#2a4a2a;color:#fff;border:1px solid #4a4;cursor:pointer;border-radius:3px;">+ 添加</button></h3>
+        <div id="camp-list"></div>
+      </div>
+      <!-- Camp detail -->
+      <div class="panel" id="camp-detail" style="display:none;">
+        <h3>营地详情</h3>
+        <div class="form-row"><label>ID:</label><input type="text" id="camp-id" onchange="updateCampField('id',this.value)"></div>
+        <div class="form-row"><label>名称:</label><input type="text" id="camp-name" onchange="updateCampField('name',this.value)"></div>
+        <div class="form-row"><label>X:</label><input type="number" id="camp-x" onchange="updateCampField('x',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>Y:</label><input type="number" id="camp-y" onchange="updateCampField('y',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>半径:</label><input type="number" id="camp-radius" onchange="updateCampField('radius',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>首刷时间:</label><input type="number" id="camp-first" onchange="updateCampField('firstSpawnTime',+this.value)">s</div>
+        <div class="form-row"><label>重生冷却:</label><input type="number" id="camp-respawn" onchange="updateCampField('respawnCooldown',+this.value)">s</div>
+        <div class="form-row"><label>最大次数:</label><input type="number" id="camp-maxresp" onchange="updateCampField('maxRespawns',+this.value)"></div>
+        <h3 style="margin-top:10px;">怪物组合 <button onclick="addCampMonster()" style="float:right;font-size:11px;padding:2px 8px;background:#2a4a2a;color:#fff;border:1px solid #4a4;cursor:pointer;border-radius:3px;">+</button></h3>
+        <div id="camp-monsters"></div>
+        <button class="delete-btn" style="margin-top:8px;" onclick="deleteCamp()">删除此营地</button>
+      </div>
+      <!-- Wave composition -->
+      <div class="panel">
+        <h3>波次配置</h3>
+        <div class="form-row"><label>Boss间隔:</label><input type="number" id="wave-boss-every" value="5" style="width:50px" onchange="updateWaveConfig('bossEvery',+this.value)">波</div>
+        <div class="form-row"><label>基础数量:</label><input type="number" id="wave-base-count" value="8" style="width:50px" onchange="updateWaveConfig('baseCount',+this.value)"></div>
+        <div id="wave-comp"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== STATE ======
+var skillsData = [], monstersRaw = {}, monsterTypes = [];
+var charactersData = {};
+var currentTab = 'skills';
+var undoStack = [], redoStack = [];
+var currentMap = null, selectedCampIdx = -1, mapList = [];
+var dragCamp = -1, mapScale = 1;
+var expandedSkills = {}; // track which skill cards are expanded
+
+// ====== NAV ======
+function switchTab(tab) {
+  currentTab = tab;
+  var btns = document.querySelectorAll('.nav-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].className = 'nav-btn';
+  document.querySelector('.nav-btn[onclick*="' + tab + '"]').className = 'nav-btn active';
+  var tabs = document.querySelectorAll('.tab-content');
+  for (var i = 0; i < tabs.length; i++) tabs[i].className = 'tab-content';
+  document.getElementById('tab-' + tab).className = 'tab-content active';
+  if (tab === 'classes') loadClasses();
+  if (tab === 'maps' && !currentMap) loadMapList();
+}
+
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || 'success');
+  el.style.display = 'block';
+  setTimeout(function() { el.style.display = 'none'; }, 2500);
+}
+
+// ====== UNDO/REDO ======
+function saveState() {
+  undoStack.push(JSON.stringify({ skills: skillsData }));
+  redoStack = [];
+  if (undoStack.length > 50) undoStack.shift();
+}
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify({ skills: skillsData }));
+  var s = JSON.parse(undoStack.pop());
+  skillsData = s.skills;
+  renderSkills();
+}
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify({ skills: skillsData }));
+  var s = JSON.parse(redoStack.pop());
+  skillsData = s.skills;
+  renderSkills();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+  if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveCurrentTab(); }
+});
+
+// ====== SAVE ======
+function saveCurrentTab() {
+  if (currentTab === 'skills') {
+    fetch('/api/editor/skills', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ skills: skillsData }) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, 'error'); return; }
+        toast('技能数据已保存');
+      })
+      .catch(function(e) { toast('保存失败: ' + e.message, 'error'); });
+  } else if (currentTab === 'classes') {
+    fetch('/api/editor/characters', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(charactersData) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, 'error'); return; }
+        toast('职业数据已保存');
+      })
+      .catch(function(e) { toast('保存失败: ' + e.message, 'error'); });
+  } else if (currentTab === 'monsters') {
+    var obj = {};
+    for (var i = 0; i < monsterTypes.length; i++) {
+      var m = monsterTypes[i];
+      obj[m._typeId] = {
+        name: m.name, baseHP: m.baseHP, baseATK: m.baseATK, baseSpeed: m.baseSpeed,
+        baseXP: m.baseXP, radius: m.radius, color: m.color,
+        levelScaling: m.levelScaling || {}
+      };
+      if (m.special && Object.keys(m.special).length > 0) obj[m._typeId].special = m.special;
+    }
+    if (monstersRaw.levelDiffCorrection) obj.levelDiffCorrection = monstersRaw.levelDiffCorrection;
+    fetch('/api/editor/monsters', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(obj) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, 'error'); return; }
+        toast('怪物数据已保存');
+      })
+      .catch(function(e) { toast('保存失败: ' + e.message, 'error'); });
+  } else if (currentTab === 'maps' && currentMap) {
+    var mapId = currentMap.id;
+    fetch('/api/editor/maps/' + mapId, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(currentMap) })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) { toast(d.error, 'error'); return; }
+        toast('地图 ' + mapId + ' 已保存');
+      })
+      .catch(function(e) { toast('保存失败: ' + e.message, 'error'); });
+  }
+}
+
+// ====== SKILLS TAB ======
+function loadSkills() {
+  fetch('/api/editor/skills')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      skillsData = data.skills || [];
+      renderSkills();
+    })
+    .catch(function(e) { toast('加载技能失败', 'error'); });
+}
+
+function toggleSkill(skillId) {
+  expandedSkills[skillId] = !expandedSkills[skillId];
+  var body = document.getElementById('skill-body-' + skillId);
+  var arrow = document.getElementById('skill-arrow-' + skillId);
+  if (body) {
+    if (expandedSkills[skillId]) {
+      body.className = 'skill-body open';
+      arrow.className = 'expand-arrow open';
+      // Start preview animation
+      var skill = null;
+      for (var si = 0; si < skillsData.length; si++) {
+        if (skillsData[si].id === skillId) { skill = skillsData[si]; break; }
+      }
+      if (skill && skill.visual && skill.visual !== 'none') {
+        setTimeout(function() { restartSkillPreview(skillId, skill.visual, skill.color); }, 50);
+      }
+    } else {
+      body.className = 'skill-body';
+      arrow.className = 'expand-arrow';
+      // Stop preview animation
+      if (skillPreviewAnims[skillId]) { cancelAnimationFrame(skillPreviewAnims[skillId]); delete skillPreviewAnims[skillId]; }
+    }
+  }
+}
+
+function renderSkills() {
+  var container = document.getElementById('skill-cards');
+  container.innerHTML = '';
+
+  for (var i = 0; i < skillsData.length; i++) {
+    var s = skillsData[i];
+    if (s.type === 'default_attack') continue;
+
+    var card = document.createElement('div');
+    card.className = 'skill-card';
+
+    var isOpen = expandedSkills[s.id];
+
+    // Header
+    var header = document.createElement('div');
+    header.className = 'skill-header';
+    header.setAttribute('onclick', 'toggleSkill("' + esc(s.id) + '")');
+    header.innerHTML =
+      '<span class="skill-icon">' + (s.icon || '?') + '</span>' +
+      '<span class="skill-name">' + esc(s.name) + '</span>' +
+      '<span class="skill-type">' + esc(s.type) + '</span>' +
+      '<span class="skill-color-swatch" style="background:' + (s.color || '#fff') + '"></span>' +
+      '<span id="skill-arrow-' + esc(s.id) + '" class="expand-arrow' + (isOpen ? ' open' : '') + '">&#9654;</span>';
+    card.appendChild(header);
+
+    // Body
+    var body = document.createElement('div');
+    body.id = 'skill-body-' + esc(s.id);
+    body.className = 'skill-body' + (isOpen ? ' open' : '');
+
+    // Meta editors
+    var meta = '<div class="skill-meta">' +
+      '<label>ID</label><input type="text" value="' + esc(s.id) + '" onchange="saveState();skillsData[' + i + '].id=this.value;renderSkills()">' +
+      '<label>名称</label><input type="text" value="' + esc(s.name) + '" onchange="saveState();skillsData[' + i + '].name=this.value;renderSkills()">' +
+      '<label>类型</label>' + selOpts(['buff','passive','projectile','aoe','summon'], s.type, 'saveState();skillsData[' + i + '].type=this.value;renderSkills()') +
+      '<label>图标</label><input type="text" value="' + esc(s.icon || '') + '" style="width:40px" onchange="saveState();skillsData[' + i + '].icon=this.value;renderSkills()">' +
+      '<label>颜色</label><input type="color" value="' + (s.color || '#ffffff') + '" onchange="saveState();skillsData[' + i + '].color=this.value;renderSkills()">' +
+      '<label>视觉效果</label>' + selOpts(['none','sword_wave','fireball','arrow','chain_lightning','frost_aura','fire_trail','explosion','orbit','thorns','time_warp','shield_bubble','speed_lines','heal_glow','bullet'], s.visual || 'none', 'saveState();skillsData[' + i + '].visual=this.value;restartSkillPreview("' + esc(s.id) + '",this.value,skillsData[' + i + '].color)') +
+      '<label>描述</label><input type="text" value="' + esc(s.description || '') + '" style="width:200px" onchange="saveState();skillsData[' + i + '].description=this.value">' +
+      '</div>';
+
+    // Per-level table
+    var levels = s.levels || {};
+    var levelKeys = [];
+    for (var lk = 1; lk <= 10; lk++) {
+      if (levels[String(lk)]) levelKeys.push(String(lk));
+    }
+
+    // Auto-detect attribute columns from first level's keys (excluding "desc")
+    var attrCols = [];
+    var attrColSet = {};
+    for (var lki = 0; lki < levelKeys.length; lki++) {
+      var lvlData = levels[levelKeys[lki]];
+      var dkeys = Object.keys(lvlData);
+      for (var dk = 0; dk < dkeys.length; dk++) {
+        if (dkeys[dk] !== 'desc' && !attrColSet[dkeys[dk]]) {
+          attrCols.push(dkeys[dk]);
+          attrColSet[dkeys[dk]] = true;
+        }
+      }
+    }
+
+    var tbl = '<table class="level-table"><thead><tr><th>Lv</th>';
+    for (var ac = 0; ac < attrCols.length; ac++) {
+      tbl += '<th>' + esc(attrCols[ac]) + '</th>';
+    }
+    tbl += '<th>desc</th></tr></thead><tbody>';
+
+    for (var lv = 1; lv <= 10; lv++) {
+      var lvStr = String(lv);
+      var lvData = levels[lvStr] || {};
+      tbl += '<tr><td style="color:#ffd700;font-weight:bold;text-align:center;width:30px">' + lv + '</td>';
+      for (var ac2 = 0; ac2 < attrCols.length; ac2++) {
+        var attrKey = attrCols[ac2];
+        var attrVal = lvData[attrKey] !== undefined ? lvData[attrKey] : '';
+        var inputType = typeof attrVal === 'number' ? 'number' : 'text';
+        tbl += '<td><input type="' + inputType + '"' + (inputType === 'number' ? ' step="any"' : '') + ' value="' + esc(String(attrVal)) + '" onchange="updateSkillLevel(' + i + ',' + lv + ',\'' + esc(attrKey) + '\',this.value,\'' + inputType + '\')"></td>';
+      }
+      // desc column
+      var descVal = lvData.desc || '';
+      tbl += '<td><input type="text" value="' + esc(descVal) + '" onchange="updateSkillLevel(' + i + ',' + lv + ',\'desc\',this.value,\'text\')"></td>';
+      tbl += '</tr>';
+    }
+    tbl += '</tbody></table>';
+
+    var deleteBtn = '<div style="margin-top:10px;"><button class="delete-btn" onclick="deleteSkill(' + i + ')">删除此技能</button></div>';
+
+    var previewHtml = '<div class="attack-preview" style="margin-bottom:10px;"><canvas id="skill-preview-' + esc(s.id) + '" width="160" height="120"></canvas></div>';
+
+    body.innerHTML = meta + previewHtml + tbl + deleteBtn;
+    card.appendChild(body);
+    container.appendChild(card);
+  }
+}
+
+function updateSkillLevel(skillIdx, level, key, value, inputType) {
+  saveState();
+  var lvStr = String(level);
+  if (!skillsData[skillIdx].levels) skillsData[skillIdx].levels = {};
+  if (!skillsData[skillIdx].levels[lvStr]) skillsData[skillIdx].levels[lvStr] = {};
+  if (inputType === 'number') {
+    skillsData[skillIdx].levels[lvStr][key] = value === '' ? 0 : +value;
+  } else {
+    skillsData[skillIdx].levels[lvStr][key] = value;
+  }
+}
+
+function addSkill() {
+  saveState();
+  var newId = 'new_skill_' + Date.now();
+  var newSkill = {
+    id: newId, name: '新技能', type: 'buff', icon: '?', color: '#ffffff',
+    description: '', maxLevel: 10, levels: {}
+  };
+  for (var lv = 1; lv <= 10; lv++) {
+    newSkill.levels[String(lv)] = { value: 0, desc: '等级' + lv };
+  }
+  skillsData.push(newSkill);
+  expandedSkills[newId] = true;
+  renderSkills();
+}
+
+function deleteSkill(i) {
+  if (!confirm('删除 "' + skillsData[i].name + '"？')) return;
+  saveState();
+  delete expandedSkills[skillsData[i].id];
+  skillsData.splice(i, 1);
+  renderSkills();
+}
+
+// ====== CLASSES TAB ======
+function loadClasses() {
+  Promise.all([
+    fetch('/api/editor/characters').then(function(r) { return r.json(); }),
+    fetch('/api/editor/skills').then(function(r) { return r.json(); })
+  ]).then(function(results) {
+    charactersData = results[0] || {};
+    // Update skillsData too if needed
+    var freshSkills = results[1].skills || [];
+    if (freshSkills.length > 0) skillsData = freshSkills;
+    renderClasses();
+  }).catch(function(e) { toast('加载职业失败', 'error'); });
+}
+
+function renderClasses() {
+  var container = document.getElementById('class-cards');
+  container.innerHTML = '';
+
+  var classIds = Object.keys(charactersData);
+  for (var ci = 0; ci < classIds.length; ci++) {
+    var clsId = classIds[ci];
+    var cls = charactersData[clsId];
+    var card = document.createElement('div');
+    card.className = 'class-card';
+    card.style.borderColor = cls.color || '#555';
+
+    // Header
+    var headerHtml = '<div class="class-card-header">' +
+      '<span class="class-icon">' + (cls.icon || '') + '</span>' +
+      '<span class="class-name" style="color:' + (cls.color || '#fff') + '">' + esc(cls.name || clsId) + '</span>' +
+      '<input type="color" value="' + (cls.color || '#ffffff') + '" onchange="charactersData[\'' + clsId + '\'].color=this.value;renderClasses()" style="margin-left:auto">' +
+      '</div>';
+
+    // Base stats section
+    var statsHtml = '<div class="class-section"><h4>基础属性</h4><div class="stat-grid">' +
+      '<div class="form-row"><label>HP</label><input type="number" value="' + (cls.baseHP || 0) + '" onchange="charactersData[\'' + clsId + '\'].baseHP=+this.value"></div>' +
+      '<div class="form-row"><label>ATK</label><input type="number" value="' + (cls.baseATK || 0) + '" onchange="charactersData[\'' + clsId + '\'].baseATK=+this.value"></div>' +
+      '<div class="form-row"><label>速度</label><input type="number" value="' + (cls.baseSpeed || 0) + '" onchange="charactersData[\'' + clsId + '\'].baseSpeed=+this.value"></div>' +
+      '</div></div>';
+
+    // Attributes section
+    var attrs = cls.initialAttributes || {};
+    var attrsHtml = '<div class="class-section"><h4>属性 (初始)</h4><div class="stat-grid">' +
+      '<div class="form-row"><label>INT</label><input type="number" value="' + (attrs.INT || 0) + '" onchange="ensureAttr(\'' + clsId + '\');charactersData[\'' + clsId + '\'].initialAttributes.INT=+this.value"></div>' +
+      '<div class="form-row"><label>STR</label><input type="number" value="' + (attrs.STR || 0) + '" onchange="ensureAttr(\'' + clsId + '\');charactersData[\'' + clsId + '\'].initialAttributes.STR=+this.value"></div>' +
+      '<div class="form-row"><label>AGI</label><input type="number" value="' + (attrs.AGI || 0) + '" onchange="ensureAttr(\'' + clsId + '\');charactersData[\'' + clsId + '\'].initialAttributes.AGI=+this.value"></div>' +
+      '<div class="form-row"><label>STA</label><input type="number" value="' + (attrs.STA || 0) + '" onchange="ensureAttr(\'' + clsId + '\');charactersData[\'' + clsId + '\'].initialAttributes.STA=+this.value"></div>' +
+      '</div></div>';
+
+    // Growth coefficients section
+    var growth = cls.growthCoefficients || {};
+    var growthHtml = '<div class="class-section"><h4>成长系数</h4><div class="stat-grid">' +
+      '<div class="form-row"><label>INT</label><input type="number" step="0.1" value="' + (growth.INT || 0) + '" onchange="ensureGrowth(\'' + clsId + '\');charactersData[\'' + clsId + '\'].growthCoefficients.INT=+this.value"></div>' +
+      '<div class="form-row"><label>STR</label><input type="number" step="0.1" value="' + (growth.STR || 0) + '" onchange="ensureGrowth(\'' + clsId + '\');charactersData[\'' + clsId + '\'].growthCoefficients.STR=+this.value"></div>' +
+      '<div class="form-row"><label>AGI</label><input type="number" step="0.1" value="' + (growth.AGI || 0) + '" onchange="ensureGrowth(\'' + clsId + '\');charactersData[\'' + clsId + '\'].growthCoefficients.AGI=+this.value"></div>' +
+      '<div class="form-row"><label>STA</label><input type="number" step="0.1" value="' + (growth.STA || 0) + '" onchange="ensureGrowth(\'' + clsId + '\');charactersData[\'' + clsId + '\'].growthCoefficients.STA=+this.value"></div>' +
+      '</div></div>';
+
+    // Passive info (display only)
+    var passive = cls.passive || {};
+    var passiveHtml = '<div class="class-section"><h4>被动技能</h4>' +
+      '<div style="font-size:12px;color:#aaa;padding:4px 0;">' +
+      '<span style="color:#ffd700">' + esc(passive.name || '无') + '</span> — ' + esc(passive.description || '') +
+      '</div></div>';
+
+    // Default attack skill info + Canvas preview
+    var defSkillId = cls.defaultSkill || '';
+    var defSkill = null;
+    var defIdx = -1;
+    for (var si = 0; si < skillsData.length; si++) {
+      if (skillsData[si].id === defSkillId) { defSkill = skillsData[si]; defIdx = si; break; }
+    }
+    var ap = defSkill && defSkill.attackPattern ? defSkill.attackPattern : {};
+
+    var attackHtml = '<div class="class-section"><h4>默认攻击: ' + (defSkill ? defSkill.icon + ' ' + esc(defSkill.name) : '未设置') + '</h4>';
+    if (defSkill) {
+      attackHtml +=
+        '<div class="stat-grid">' +
+        '<div class="form-row"><label>名称</label><input type="text" value="' + esc(defSkill.name) + '" onchange="skillsData[' + defIdx + '].name=this.value;renderClasses()"></div>' +
+        '<div class="form-row"><label>冷却</label><input type="number" step="0.1" value="' + (defSkill.cooldown || 0) + '" style="width:60px" onchange="skillsData[' + defIdx + '].cooldown=+this.value"></div>' +
+        '<div class="form-row"><label>范围(px)</label><input type="number" value="' + (ap.range || 0) + '" style="width:70px" onchange="ensureAP(' + defIdx + ');skillsData[' + defIdx + '].attackPattern.range=+this.value;drawAttackPreview(\'' + clsId + '\',' + defIdx + ')"></div>' +
+        '<div class="form-row"><label>角度(°)</label><input type="number" step="1" value="' + Math.round((ap.angle || 0) * 180 / Math.PI) + '" style="width:60px" onchange="ensureAP(' + defIdx + ');skillsData[' + defIdx + '].attackPattern.angle=+this.value*Math.PI/180;drawAttackPreview(\'' + clsId + '\',' + defIdx + ')"></div>' +
+        '<div class="form-row"><label>弹速</label><input type="number" value="' + (ap.projectileSpeed || 0) + '" style="width:70px" onchange="ensureAP(' + defIdx + ');skillsData[' + defIdx + '].attackPattern.projectileSpeed=+this.value"></div>' +
+        '<div class="form-row"><label>类型</label>' + selOpts(['projectile', 'melee_arc'], ap.projectileType || 'projectile', 'ensureAP(' + defIdx + ');skillsData[' + defIdx + '].attackPattern.projectileType=this.value') + '</div>' +
+        '<div class="form-row"><label>视觉</label>' + selOpts(['slash', 'sword_wave', 'fireball', 'arrow', 'bullet', 'chain_lightning'], ap.visual || 'bullet', 'ensureAP(' + defIdx + ');skillsData[' + defIdx + '].attackPattern.visual=this.value') + '</div>' +
+        '</div>' +
+        '<div class="attack-preview"><canvas id="preview-' + clsId + '" width="140" height="140"></canvas></div>';
+    } else {
+      attackHtml += '<div style="color:#f88;font-size:12px;">未找到默认攻击技能: ' + esc(defSkillId) + '</div>';
+    }
+    attackHtml += '</div>';
+
+    // Available Skills section
+    var availSkills = cls.availableSkills || [];
+    var skillCheckHtml = '<div class="class-section"><h4>可用技能 (最多10个, 当前: ' + availSkills.length + ')</h4><div class="skill-checkbox-grid">';
+
+    // Gather all level-up skills
+    for (var ski = 0; ski < skillsData.length; ski++) {
+      var sk = skillsData[ski];
+      if (sk.type === 'default_attack') continue;
+      var isChecked = availSkills.indexOf(sk.id) >= 0;
+      skillCheckHtml += '<label class="skill-checkbox' + (isChecked ? ' checked' : '') + '">' +
+        '<input type="checkbox"' + (isChecked ? ' checked' : '') + ' onchange="toggleClassSkill(\'' + clsId + '\',\'' + esc(sk.id) + '\',this.checked);renderClasses()">' +
+        '<span class="cb-icon">' + (sk.icon || '?') + '</span>' +
+        '<span class="cb-name">' + esc(sk.name) + '</span>' +
+        '<span class="cb-type">' + esc(sk.type) + '</span>' +
+        '</label>';
+    }
+    skillCheckHtml += '</div></div>';
+
+    card.innerHTML = headerHtml + statsHtml + attrsHtml + growthHtml + passiveHtml + attackHtml + skillCheckHtml;
+    container.appendChild(card);
+  }
+
+  // Draw attack previews after DOM update
+  setTimeout(function() {
+    var cids = Object.keys(charactersData);
+    for (var ci2 = 0; ci2 < cids.length; ci2++) {
+      var cid2 = cids[ci2];
+      var defId2 = charactersData[cid2].defaultSkill;
+      for (var si2 = 0; si2 < skillsData.length; si2++) {
+        if (skillsData[si2].id === defId2) { drawAttackPreview(cid2, si2); break; }
+      }
+    }
+  }, 50);
+}
+
+function ensureAttr(clsId) {
+  if (!charactersData[clsId].initialAttributes) charactersData[clsId].initialAttributes = { INT: 0, STR: 0, AGI: 0, STA: 0 };
+}
+
+function ensureGrowth(clsId) {
+  if (!charactersData[clsId].growthCoefficients) charactersData[clsId].growthCoefficients = { INT: 0, STR: 0, AGI: 0, STA: 0 };
+}
+
+function toggleClassSkill(clsId, skillId, checked) {
+  var cls = charactersData[clsId];
+  if (!cls.availableSkills) cls.availableSkills = [];
+  if (checked) {
+    if (cls.availableSkills.length >= 10) {
+      toast('最多10个可用技能', 'error');
+      return;
+    }
+    if (cls.availableSkills.indexOf(skillId) < 0) {
+      cls.availableSkills.push(skillId);
+    }
+  } else {
+    var idx = cls.availableSkills.indexOf(skillId);
+    if (idx >= 0) cls.availableSkills.splice(idx, 1);
+  }
+}
+
+function ensureAP(idx) {
+  if (!skillsData[idx].attackPattern) skillsData[idx].attackPattern = { range: 400, angle: 0.39, projectileSpeed: 300, projectileType: 'projectile', visual: 'bullet' };
+}
+
+function drawAttackPreview(clsId, skillIdx) {
+  var canvas = document.getElementById('preview-' + clsId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  var cx = w / 2, cy = h / 2;
+  ctx.clearRect(0, 0, w, h);
+
+  var s = skillsData[skillIdx];
+  var ap = s.attackPattern || {};
+  var range = ap.range || 100;
+  var angle = ap.angle || 0.39;
+  var maxR = Math.min(w, h) / 2 - 10;
+  var scale = maxR / Math.max(range, 100);
+  var r = range * scale;
+  var clsColor = charactersData[clsId] ? (charactersData[clsId].color || '#fff') : '#fff';
+
+  // Range circle
+  ctx.strokeStyle = '#333';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Attack arc
+  ctx.fillStyle = clsColor;
+  ctx.globalAlpha = 0.25;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, r, -angle / 2, angle / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 0.8;
+  ctx.strokeStyle = clsColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, r, -angle / 2, angle / 2);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Player dot
+  ctx.fillStyle = clsColor;
+  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+
+  // Label
+  ctx.fillStyle = '#888';
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(range + 'px / ' + Math.round(angle * 180 / Math.PI) + '°', cx, h - 4);
+}
+
+// ====== MONSTERS ======
+function loadMonsters() {
+  fetch('/api/editor/monsters')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      monstersRaw = data;
+      monsterTypes = [];
+      var keys = Object.keys(data);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i] === 'levelDiffCorrection') continue;
+        var m = JSON.parse(JSON.stringify(data[keys[i]]));
+        m._typeId = keys[i];
+        monsterTypes.push(m);
+      }
+      renderMonsters();
+    })
+    .catch(function(e) { toast('加载怪物失败', 'error'); });
+}
+
+function renderMonsters() {
+  var tbody = document.getElementById('monster-list');
+  tbody.innerHTML = '';
+  for (var i = 0; i < monsterTypes.length; i++) {
+    var m = monsterTypes[i];
+    var ls = m.levelScaling || {};
+    var hostile = !m.special || m.special.hostile !== false;
+    // Determine hostile from type defaults (matching SpawnSystem logic)
+    var greenTypes = ['normal', 'swarm', 'treasure'];
+    var isGreen = greenTypes.indexOf(m._typeId) >= 0;
+    if (m.special && m.special.hostile !== undefined) isGreen = !m.special.hostile;
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input value="' + esc(m._typeId) + '" onchange="monsterTypes[' + i + ']._typeId=this.value"></td>' +
+      '<td><input value="' + esc(m.name) + '" onchange="monsterTypes[' + i + '].name=this.value"></td>' +
+      '<td>' + selOpts(['红名(敌对)','绿名(友善)'], isGreen?'绿名(友善)':'红名(敌对)', 'setMonsterHostile(' + i + ',this.value)') + '</td>' +
+      '<td><input type="number" value="' + (m.baseHP||0) + '" onchange="monsterTypes[' + i + '].baseHP=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" value="' + (m.baseATK||0) + '" onchange="monsterTypes[' + i + '].baseATK=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" value="' + (m.baseSpeed||0) + '" onchange="monsterTypes[' + i + '].baseSpeed=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" value="' + (m.baseXP||0) + '" onchange="monsterTypes[' + i + '].baseXP=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" value="' + (m.radius||10) + '" onchange="monsterTypes[' + i + '].radius=+this.value" style="width:40px"></td>' +
+      '<td><input type="color" value="' + (m.color||'#fff') + '" onchange="monsterTypes[' + i + '].color=this.value"></td>' +
+      '<td><input type="number" step="0.01" value="' + (ls.hp||0) + '" onchange="ensureLS(' + i + ');monsterTypes[' + i + '].levelScaling.hp=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" step="0.01" value="' + (ls.atk||0) + '" onchange="ensureLS(' + i + ');monsterTypes[' + i + '].levelScaling.atk=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" step="0.01" value="' + (ls.speed||0) + '" onchange="ensureLS(' + i + ');monsterTypes[' + i + '].levelScaling.speed=+this.value" style="width:50px"></td>' +
+      '<td><input type="number" step="0.01" value="' + (ls.xp||0) + '" onchange="ensureLS(' + i + ');monsterTypes[' + i + '].levelScaling.xp=+this.value" style="width:50px"></td>' +
+      '<td><input value=\'' + esc(JSON.stringify(m.special||{})) + '\' onchange="try{monsterTypes[' + i + '].special=JSON.parse(this.value);this.style.borderColor=\'#444\'}catch(e){this.style.borderColor=\'red\'}" style="font-size:10px;width:120px"></td>' +
+      '<td><button class="delete-btn" onclick="deleteMonster(' + i + ')">删除</button></td>';
+    tbody.appendChild(tr);
+  }
+}
+
+function ensureLS(i) { if (!monsterTypes[i].levelScaling) monsterTypes[i].levelScaling = {}; }
+
+function setMonsterHostile(i, val) {
+  if (!monsterTypes[i].special) monsterTypes[i].special = {};
+  monsterTypes[i].special.hostile = val.indexOf('绿') < 0;
+}
+
+function addMonster() {
+  monsterTypes.push({ _typeId:'new_type', name:'新怪物', baseHP:20, baseATK:5, baseSpeed:60, baseXP:15, radius:10, color:'#ff5555', levelScaling:{hp:0.15,atk:0.1,speed:0.02,xp:0.1}, special:{} });
+  renderMonsters();
+}
+
+function deleteMonster(i) {
+  if (!confirm('删除 "' + monsterTypes[i].name + '"？')) return;
+  monsterTypes.splice(i, 1); renderMonsters();
+}
+
+// ====== MAPS ======
+function loadMapList() {
+  fetch('/api/editor/maps')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      mapList = data;
+      var sel = document.getElementById('map-selector');
+      sel.innerHTML = '<option value="">-- 选择地图 --</option>';
+      for (var i = 0; i < data.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = data[i].id;
+        opt.textContent = data[i].name + ' (' + data[i].id + ') ' + data[i].width + 'x' + data[i].height;
+        sel.appendChild(opt);
+      }
+    });
+}
+
+function loadSelectedMap() {
+  var sel = document.getElementById('map-selector');
+  if (!sel.value) return;
+  fetch('/api/editor/maps/' + sel.value)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      currentMap = data;
+      if (!currentMap.spawnCamps) currentMap.spawnCamps = [];
+      if (!currentMap.waves) currentMap.waves = {};
+      document.getElementById('map-name').value = currentMap.name || '';
+      document.getElementById('map-width').value = currentMap.width || 1200;
+      document.getElementById('map-height').value = currentMap.height || 1200;
+      var w = currentMap.waves || {};
+      document.getElementById('wave-boss-every').value = w.bossEvery || 5;
+      document.getElementById('wave-base-count').value = w.baseCount || 8;
+      selectedCampIdx = -1;
+      renderCampList();
+      renderWaveComp();
+      renderMapCanvas();
+    });
+}
+
+function createNewMap() {
+  var id = prompt('地图 ID (英文小写+下划线):');
+  if (!id || !/^[a-z0-9_]+$/.test(id)) { alert('无效 ID'); return; }
+  var newMap = { id: id, name: '新地图', width: 1200, height: 1200, shape: 'rect', zones: [], spawnCamps: [], spawnPoints: [], obstacles: [], waves: { bossEvery: 5, baseCount: 8, composition: [] }, trickle: { interval: 1.2 }, ambush: { enabled: true, interval: 20, chance: 0.25 } };
+  fetch('/api/editor/maps', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(newMap) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) { toast(d.error, 'error'); return; }
+      toast('地图已创建: ' + id);
+      loadMapList();
+    });
+}
+
+// Map Canvas
+function renderMapCanvas() {
+  var canvas = document.getElementById('map-canvas');
+  var ctx = canvas.getContext('2d');
+  if (!currentMap) { ctx.clearRect(0, 0, 600, 600); return; }
+  var w = currentMap.width || 1200, h = currentMap.height || 1200;
+  mapScale = Math.min(580 / w, 580 / h);
+  var ox = (600 - w * mapScale) / 2, oy = (600 - h * mapScale) / 2;
+
+  ctx.clearRect(0, 0, 600, 600);
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, 600, 600);
+
+  // Map border
+  ctx.strokeStyle = '#555';
+  ctx.strokeRect(ox, oy, w * mapScale, h * mapScale);
+
+  // Grid
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 0.5;
+  for (var gx = 0; gx <= w; gx += 200) {
+    ctx.beginPath(); ctx.moveTo(ox + gx * mapScale, oy); ctx.lineTo(ox + gx * mapScale, oy + h * mapScale); ctx.stroke();
+  }
+  for (var gy = 0; gy <= h; gy += 200) {
+    ctx.beginPath(); ctx.moveTo(ox, oy + gy * mapScale); ctx.lineTo(ox + w * mapScale, oy + gy * mapScale); ctx.stroke();
+  }
+  ctx.lineWidth = 1;
+
+  // Zones
+  var zones = currentMap.zones || [];
+  for (var zi = 0; zi < zones.length; zi++) {
+    var z = zones[zi];
+    var zx = ox + (z.x || 0) * mapScale, zy = oy + (z.y || 0) * mapScale;
+    var zw = (z.width || 200) * mapScale, zh = (z.height || 200) * mapScale;
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = z.type === 'safe' ? '#0f0' : (z.type === 'hazard' ? '#f00' : '#88f');
+    ctx.fillRect(zx, zy, zw, zh);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = z.type === 'safe' ? '#0f0' : (z.type === 'hazard' ? '#f00' : '#88f');
+    ctx.strokeRect(zx, zy, zw, zh);
+    ctx.fillStyle = '#fff'; ctx.font = '10px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(z.name || z.type, zx + zw / 2, zy + zh / 2);
+  }
+
+  // Spawn camps
+  var camps = currentMap.spawnCamps || [];
+  for (var ci = 0; ci < camps.length; ci++) {
+    var c = camps[ci];
+    var campX = c.position ? c.position.x : c.x; var campY = c.position ? c.position.y : c.y;
+    var cx = ox + (campX || 0) * mapScale, cy = oy + (campY || 0) * mapScale;
+    var cr = (c.radius || 60) * mapScale;
+    var selected = ci === selectedCampIdx;
+
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = selected ? '#ffd700' : '#f80';
+    ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = selected ? '#ffd700' : '#f80';
+    ctx.lineWidth = selected ? 2 : 1;
+    ctx.beginPath(); ctx.arc(cx, cy, cr, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 1;
+
+    // Label
+    ctx.fillStyle = '#fff'; ctx.font = selected ? 'bold 11px Arial' : '10px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(c.name || c.id || 'camp', cx, cy - 8);
+
+    // Monster summary
+    var mons = c.monsters || [];
+    var summary = '';
+    for (var mi = 0; mi < mons.length; mi++) summary += mons[mi].type + '×' + mons[mi].count + ' ';
+    if (summary) {
+      ctx.font = '9px Arial'; ctx.fillStyle = '#ffa';
+      ctx.fillText(summary.trim(), cx, cy + 8);
+    }
+  }
+}
+
+// Camp list
+function renderCampList() {
+  var div = document.getElementById('camp-list');
+  var camps = currentMap ? currentMap.spawnCamps || [] : [];
+  div.innerHTML = '';
+  for (var i = 0; i < camps.length; i++) {
+    var c = camps[i];
+    var el = document.createElement('div');
+    el.className = 'camp-item' + (i === selectedCampIdx ? ' selected' : '');
+    el.textContent = (c.name || c.id) + ' (' + (c.monsters || []).length + ' types)';
+    el.onclick = (function(idx) { return function() { selectCamp(idx); }; })(i);
+    div.appendChild(el);
+  }
+}
+
+function selectCamp(idx) {
+  selectedCampIdx = idx;
+  renderCampList();
+  renderMapCanvas();
+  var detail = document.getElementById('camp-detail');
+  if (idx < 0 || !currentMap || !currentMap.spawnCamps[idx]) { detail.style.display = 'none'; return; }
+  detail.style.display = 'block';
+  var c = currentMap.spawnCamps[idx];
+  document.getElementById('camp-id').value = c.id || '';
+  document.getElementById('camp-name').value = c.name || '';
+  document.getElementById('camp-x').value = c.position ? c.position.x : (c.x || 0);
+  document.getElementById('camp-y').value = c.position ? c.position.y : (c.y || 0);
+  document.getElementById('camp-radius').value = c.radius || 60;
+  document.getElementById('camp-first').value = c.firstSpawnTime || 0;
+  document.getElementById('camp-respawn').value = c.respawnCooldown || 15;
+  document.getElementById('camp-maxresp').value = c.maxRespawns !== undefined ? c.maxRespawns : -1;
+  renderCampMonsters();
+}
+
+function updateCampField(field, val) {
+  if (selectedCampIdx < 0 || !currentMap) return;
+  var c = currentMap.spawnCamps[selectedCampIdx];
+  if (field === 'x' || field === 'y') {
+    if (c.position) { c.position[field] = val; } else { c[field] = val; }
+  } else {
+    c[field] = val;
+  }
+  renderCampList();
+}
+
+function addCamp() {
+  if (!currentMap) return;
+  if (!currentMap.spawnCamps) currentMap.spawnCamps = [];
+  currentMap.spawnCamps.push({ id: 'camp_' + (currentMap.spawnCamps.length + 1), name: '新营地', position: { x: currentMap.width / 2, y: currentMap.height / 2 }, radius: 60, monsters: [{ type: 'normal', count: 3 }], firstSpawnTime: 5, respawnCooldown: 15, maxRespawns: -1 });
+  selectedCampIdx = currentMap.spawnCamps.length - 1;
+  renderCampList(); selectCamp(selectedCampIdx); renderMapCanvas();
+}
+
+function deleteCamp() {
+  if (selectedCampIdx < 0 || !currentMap) return;
+  if (!confirm('删除此营地？')) return;
+  currentMap.spawnCamps.splice(selectedCampIdx, 1);
+  selectedCampIdx = -1;
+  document.getElementById('camp-detail').style.display = 'none';
+  renderCampList(); renderMapCanvas();
+}
+
+// Camp monsters
+function renderCampMonsters() {
+  var div = document.getElementById('camp-monsters');
+  div.innerHTML = '';
+  if (selectedCampIdx < 0 || !currentMap) return;
+  var mons = currentMap.spawnCamps[selectedCampIdx].monsters || [];
+  for (var i = 0; i < mons.length; i++) {
+    var row = document.createElement('div');
+    row.className = 'camp-monster-row';
+    row.innerHTML = monsterSelectHtml(mons[i].type, 'updateCampMonster(' + i + ',\'type\',this.value)') +
+      '<input type="number" value="' + (mons[i].count || 1) + '" style="width:40px" onchange="updateCampMonster(' + i + ',\'count\',+this.value)">' +
+      '<button class="delete-btn" onclick="removeCampMonster(' + i + ')">×</button>';
+    div.appendChild(row);
+  }
+}
+
+function monsterSelectHtml(selected, onchange) {
+  var h = '<select onchange="' + onchange + '" style="width:100px">';
+  for (var i = 0; i < monsterTypes.length; i++) {
+    var t = monsterTypes[i]._typeId;
+    h += '<option value="' + t + '"' + (t === selected ? ' selected' : '') + '>' + t + '</option>';
+  }
+  return h + '</select>';
+}
+
+function updateCampMonster(idx, field, val) {
+  if (selectedCampIdx < 0) return;
+  currentMap.spawnCamps[selectedCampIdx].monsters[idx][field] = val;
+}
+
+function addCampMonster() {
+  if (selectedCampIdx < 0) return;
+  var mons = currentMap.spawnCamps[selectedCampIdx].monsters;
+  if (!mons) { currentMap.spawnCamps[selectedCampIdx].monsters = []; mons = currentMap.spawnCamps[selectedCampIdx].monsters; }
+  mons.push({ type: 'normal', count: 1 });
+  renderCampMonsters();
+}
+
+function removeCampMonster(idx) {
+  if (selectedCampIdx < 0) return;
+  currentMap.spawnCamps[selectedCampIdx].monsters.splice(idx, 1);
+  renderCampMonsters();
+}
+
+// Camp drag on canvas
+var mapCanvas = document.getElementById('map-canvas');
+mapCanvas.addEventListener('mousedown', function(e) {
+  if (!currentMap) return;
+  var rect = mapCanvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  var w = currentMap.width || 1200, h = currentMap.height || 1200;
+  var ox = (600 - w * mapScale) / 2, oy = (600 - h * mapScale) / 2;
+  var camps = currentMap.spawnCamps || [];
+  for (var i = 0; i < camps.length; i++) {
+    var dcx = camps[i].position ? camps[i].position.x : camps[i].x;
+    var dcy = camps[i].position ? camps[i].position.y : camps[i].y;
+    var cx = ox + (dcx || 0) * mapScale, cy = oy + (dcy || 0) * mapScale;
+    if (Math.sqrt((mx - cx) * (mx - cx) + (my - cy) * (my - cy)) < 15) {
+      dragCamp = i;
+      selectCamp(i);
+      return;
+    }
+  }
+});
+
+mapCanvas.addEventListener('mousemove', function(e) {
+  if (dragCamp < 0 || !currentMap) return;
+  var rect = mapCanvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  var w = currentMap.width || 1200, h = currentMap.height || 1200;
+  var ox = (600 - w * mapScale) / 2, oy = (600 - h * mapScale) / 2;
+  var newX = Math.round((mx - ox) / mapScale);
+  var newY = Math.round((my - oy) / mapScale);
+  newX = Math.max(0, Math.min(w, newX));
+  newY = Math.max(0, Math.min(h, newY));
+  var dc = currentMap.spawnCamps[dragCamp];
+  if (dc.position) { dc.position.x = newX; dc.position.y = newY; }
+  else { dc.x = newX; dc.y = newY; }
+  document.getElementById('camp-x').value = newX;
+  document.getElementById('camp-y').value = newY;
+  renderMapCanvas();
+});
+
+mapCanvas.addEventListener('mouseup', function() { dragCamp = -1; });
+
+// Wave composition
+function renderWaveComp() {
+  var div = document.getElementById('wave-comp');
+  if (!currentMap || !currentMap.waves) { div.innerHTML = ''; return; }
+  var comp = currentMap.waves.composition || [];
+  div.innerHTML = '<p style="color:#888;font-size:11px;margin-bottom:5px">每个波次阶段的怪物类型概率配置</p>';
+  if (comp.length === 0) {
+    div.innerHTML += '<p style="color:#666;font-size:11px">无配置。会使用默认概率。</p>';
+  }
+  for (var i = 0; i < comp.length; i++) {
+    var c = comp[i];
+    var sec = document.createElement('div');
+    sec.style.cssText = 'border:1px solid #333;padding:6px;margin-bottom:5px;border-radius:4px;';
+    var h = '<div style="font-size:11px;color:#ffd700;margin-bottom:4px">波 ' + (c.wave || '?') + '+ <input type="number" value="' + (c.wave||1) + '" style="width:40px;background:#222;color:#fff;border:1px solid #555;padding:2px;font-size:11px" onchange="currentMap.waves.composition[' + i + '].wave=+this.value;renderWaveComp()"></div>';
+    var types = c.types || {};
+    var tkeys = Object.keys(types);
+    for (var t = 0; t < tkeys.length; t++) {
+      var pct = Math.round((types[tkeys[t]] || 0) * 100);
+      h += '<div class="wave-row"><label>' + tkeys[t] + '</label><span class="val">' + pct + '%</span></div>';
+    }
+    sec.innerHTML = h;
+    div.appendChild(sec);
+  }
+}
+
+function updateWaveConfig(field, val) {
+  if (!currentMap) return;
+  if (!currentMap.waves) currentMap.waves = {};
+  currentMap.waves[field] = val;
+}
+
+// ====== SKILL PREVIEW ANIMATION ======
+var skillPreviewTimers = {};
+var skillPreviewAnims = {};
+
+function restartSkillPreview(skillId, visual, color) {
+  // Cancel old animation
+  if (skillPreviewAnims[skillId]) cancelAnimationFrame(skillPreviewAnims[skillId]);
+  if (visual === 'none') {
+    var c = document.getElementById('skill-preview-' + skillId);
+    if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+    return;
+  }
+  skillPreviewTimers[skillId] = 0;
+  animateSkillPreview(skillId, visual, color);
+}
+
+function animateSkillPreview(skillId, visual, color) {
+  var canvas = document.getElementById('skill-preview-' + skillId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  skillPreviewTimers[skillId] = (skillPreviewTimers[skillId] || 0) + 0.033;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Draw dark background label
+  ctx.fillStyle = '#444'; ctx.globalAlpha = 1; ctx.font = '9px Arial'; ctx.textAlign = 'left';
+  ctx.fillText(visual, 4, 12);
+  drawSkillEffect(ctx, canvas.width, canvas.height, visual, color, skillPreviewTimers[skillId]);
+  ctx.globalAlpha = 1;
+  skillPreviewAnims[skillId] = requestAnimationFrame(function() {
+    animateSkillPreview(skillId, visual, color);
+  });
+}
+
+function drawSkillEffect(ctx, w, h, visual, color, t) {
+  if (visual === 'sword_wave') {
+    var sx = 30 + ((t * 80) % (w - 40));
+    var angle = t * 3;
+    ctx.save(); ctx.translate(sx, h/2); ctx.rotate(angle);
+    ctx.fillStyle = '#f64'; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.arc(0, 0, 18, -0.8, 0.8); ctx.arc(0, 0, 10, 0.8, -0.8, true); ctx.fill();
+    ctx.globalAlpha = 0.3; ctx.fillStyle = '#fa8';
+    ctx.beginPath(); ctx.arc(0, 0, 24, -1, 1); ctx.arc(0, 0, 8, 1, -1, true); ctx.fill();
+    ctx.restore();
+  } else if (visual === 'fireball') {
+    var fx = 30 + ((t * 60) % (w - 40));
+    for (var fi = 0; fi < 8; fi++) {
+      var tx = fx - fi * 5 - Math.random() * 3;
+      ctx.globalAlpha = 0.4 - fi * 0.04;
+      ctx.fillStyle = fi < 3 ? '#fa0' : '#f60';
+      ctx.beginPath(); ctx.arc(tx, h/2 + (Math.random()-0.5)*6, 6 - fi*0.5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#f80'; ctx.beginPath(); ctx.arc(fx, h/2, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.arc(fx, h/2, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(fx, h/2, 2, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'arrow') {
+    var ax = 30 + ((t * 100) % (w - 40));
+    ctx.globalAlpha = 0.15; ctx.strokeStyle = '#4f4'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ax - 40, h/2); ctx.lineTo(ax - 3, h/2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#a86'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ax - 15, h/2); ctx.lineTo(ax + 3, h/2); ctx.stroke();
+    ctx.fillStyle = '#ddd';
+    ctx.beginPath(); ctx.moveTo(ax + 10, h/2); ctx.lineTo(ax + 2, h/2 - 4); ctx.lineTo(ax + 2, h/2 + 4); ctx.fill();
+    ctx.fillStyle = '#4f4';
+    ctx.beginPath(); ctx.moveTo(ax - 15, h/2); ctx.lineTo(ax - 19, h/2 - 5); ctx.lineTo(ax - 12, h/2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ax - 15, h/2); ctx.lineTo(ax - 19, h/2 + 5); ctx.lineTo(ax - 12, h/2); ctx.fill();
+  } else if (visual === 'chain_lightning') {
+    ctx.strokeStyle = color || '#88f'; ctx.lineWidth = 3; ctx.globalAlpha = 0.85;
+    var pts = [[20, 30], [55, 70], [95, 35], [130, 80]];
+    for (var li = 0; li < pts.length - 1; li++) {
+      ctx.beginPath(); ctx.moveTo(pts[li][0], pts[li][1]);
+      var mx = (pts[li][0] + pts[li+1][0])/2 + (Math.sin(t*5+li)*15);
+      var my = (pts[li][1] + pts[li+1][1])/2 + (Math.cos(t*7+li)*10);
+      ctx.lineTo(mx, my); ctx.lineTo(pts[li+1][0], pts[li+1][1]);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.15; ctx.lineWidth = 10;
+    for (var li2 = 0; li2 < pts.length - 1; li2++) {
+      ctx.beginPath(); ctx.moveTo(pts[li2][0], pts[li2][1]); ctx.lineTo(pts[li2+1][0], pts[li2+1][1]); ctx.stroke();
+    }
+    ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff';
+    for (var pi = 0; pi < pts.length; pi++) {
+      ctx.beginPath(); ctx.arc(pts[pi][0], pts[pi][1], 4 + Math.sin(t*8+pi)*2, 0, Math.PI*2); ctx.fill();
+    }
+  } else if (visual === 'frost_aura') {
+    var cx2 = w/2, cy2 = h/2, r = 35;
+    ctx.globalAlpha = 0.1; ctx.fillStyle = '#8ef';
+    ctx.beginPath(); ctx.arc(cx2, cy2, r * 1.3, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#aef';
+    ctx.beginPath(); ctx.arc(cx2, cy2, r, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.8; ctx.strokeStyle = '#cef'; ctx.lineWidth = 1.5;
+    for (var si = 0; si < 8; si++) {
+      var sa = t * 0.8 + si * Math.PI/4;
+      var sx2 = cx2 + Math.cos(sa) * r * 0.75;
+      var sy2 = cy2 + Math.sin(sa) * r * 0.75;
+      ctx.beginPath(); ctx.moveTo(sx2-4, sy2); ctx.lineTo(sx2+4, sy2); ctx.moveTo(sx2, sy2-4); ctx.lineTo(sx2, sy2+4); ctx.stroke();
+    }
+    ctx.globalAlpha = 0.25; ctx.setLineDash([4, 6]); ctx.strokeStyle = '#8ef'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx2, cy2, r, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx2, cy2, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'fire_trail') {
+    var px = 30 + ((t * 50) % (w - 40));
+    for (var fi2 = 0; fi2 < 12; fi2++) {
+      var tpx = px - fi2 * 8 + (Math.sin(t*3+fi2)*3);
+      var tpy = h/2 + (Math.sin(t*5+fi2*1.3)*5);
+      var life = 1 - fi2/12;
+      ctx.globalAlpha = life * 0.6;
+      ctx.fillStyle = fi2 < 4 ? '#ff0' : (fi2 < 8 ? '#fa0' : '#f60');
+      ctx.beginPath(); ctx.arc(tpx, tpy, 4 * life + 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(px, h/2, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'explosion') {
+    var phase = (t * 1.5) % 1.0;
+    var er = phase * 40 + 5;
+    ctx.globalAlpha = (1 - phase) * 0.5;
+    ctx.strokeStyle = '#f80'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(w/2, h/2, er, 0, Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = (1 - phase) * 0.3;
+    ctx.fillStyle = '#f80';
+    ctx.beginPath(); ctx.arc(w/2, h/2, er * 0.6, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = (1 - phase) * 0.6;
+    ctx.fillStyle = '#ff0';
+    ctx.beginPath(); ctx.arc(w/2, h/2, er * 0.3, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = color || '#f80';
+    ctx.beginPath(); ctx.arc(w/2, h/2, 4, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'orbit') {
+    var cx3 = w/2, cy3 = h/2, oR = 30;
+    ctx.globalAlpha = 0.12; ctx.strokeStyle = '#4af'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.arc(cx3, cy3, oR, 0, Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    for (var oi = 0; oi < 4; oi++) {
+      var oa = t * 2 + oi * Math.PI/2;
+      var ox2 = cx3 + Math.cos(oa) * oR;
+      var oy2 = cy3 + Math.sin(oa) * oR;
+      ctx.fillStyle = '#4af'; ctx.globalAlpha = 0.3;
+      ctx.beginPath(); ctx.arc(ox2, oy2, 10, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1; ctx.fillStyle = '#8cf';
+      ctx.beginPath(); ctx.arc(ox2, oy2, 5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(ox2, oy2, 2, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx3, cy3, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'thorns') {
+    var cx4 = w/2, cy4 = h/2, tR = 30;
+    ctx.globalAlpha = 0.1; ctx.fillStyle = '#4f4';
+    ctx.beginPath(); ctx.arc(cx4, cy4, tR, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.8; ctx.strokeStyle = '#6f6'; ctx.lineWidth = 2;
+    for (var ti = 0; ti < 8; ti++) {
+      var ta = t * 0.5 + ti * Math.PI/4;
+      var tx2 = cx4 + Math.cos(ta) * tR;
+      var ty2 = cy4 + Math.sin(ta) * tR;
+      ctx.fillStyle = '#4a2'; ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(tx2 + Math.cos(ta)*10, ty2 + Math.sin(ta)*10);
+      ctx.lineTo(tx2 + Math.cos(ta+0.4)*4, ty2 + Math.sin(ta+0.4)*4);
+      ctx.lineTo(tx2 + Math.cos(ta-0.4)*4, ty2 + Math.sin(ta-0.4)*4);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 0.2; ctx.strokeStyle = '#4f4'; ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.arc(cx4, cy4, tR, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx4, cy4, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'time_warp') {
+    var cx5 = w/2, cy5 = h/2, twR = 35;
+    ctx.globalAlpha = 0.08; ctx.fillStyle = '#a4f';
+    ctx.beginPath(); ctx.arc(cx5, cy5, twR * 1.4, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#c6f';
+    ctx.beginPath(); ctx.arc(cx5, cy5, twR, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#c8f'; ctx.lineWidth = 1.5;
+    for (var twi = 0; twi < 12; twi++) {
+      var twa = t * -1.5 + twi * Math.PI/6;
+      ctx.globalAlpha = 0.4 + Math.sin(t*3+twi)*0.2;
+      ctx.beginPath();
+      ctx.moveTo(cx5 + Math.cos(twa) * (twR-6), cy5 + Math.sin(twa) * (twR-6));
+      ctx.lineTo(cx5 + Math.cos(twa) * twR, cy5 + Math.sin(twa) * twR);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#c4f';
+    ctx.beginPath(); ctx.arc(cx5, cy5, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'shield_bubble') {
+    var cx6 = w/2, cy6 = h/2, sR = 25;
+    var pulse = 1 + Math.sin(t * 3) * 0.1;
+    ctx.globalAlpha = 0.15; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx6, cy6, sR * pulse, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.5; ctx.strokeStyle = '#6cf'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx6, cy6, sR * pulse, 0, Math.PI*2); ctx.stroke();
+    ctx.globalAlpha = 0.3; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx6, cy6, sR * pulse * 0.9, -0.6, 0.6); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx6, cy6, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'speed_lines') {
+    var px2 = w/2, py2 = h/2;
+    ctx.strokeStyle = color || '#4f4'; ctx.lineWidth = 1.5;
+    for (var sli = 0; sli < 6; sli++) {
+      var slx = px2 - 15 - sli * 8 - ((t * 40) % 20);
+      var sly = py2 + (sli - 2.5) * 8;
+      ctx.globalAlpha = 0.3 + Math.sin(t*4+sli)*0.15;
+      ctx.beginPath(); ctx.moveTo(slx, sly); ctx.lineTo(slx - 20, sly); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(px2, py2, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'heal_glow') {
+    ctx.globalAlpha = 0.1; ctx.fillStyle = '#4f4';
+    ctx.beginPath(); ctx.arc(w/2, h/2, 20, 0, Math.PI*2); ctx.fill();
+    for (var hi = 0; hi < 6; hi++) {
+      var hy = h/2 - ((t * 30 + hi * 15) % 40);
+      var hx = w/2 + Math.sin(t*2+hi*1.5) * 12;
+      var hlife = 1 - ((t * 30 + hi * 15) % 40) / 40;
+      ctx.globalAlpha = hlife * 0.7;
+      ctx.fillStyle = '#4f4';
+      ctx.font = (8 + hlife * 4) + 'px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('+', hx, hy);
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(w/2, h/2, 5, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'bullet') {
+    var bx = 30 + ((t * 70) % (w - 40));
+    ctx.globalAlpha = 0.2; ctx.fillStyle = color || '#4af';
+    ctx.beginPath(); ctx.arc(bx, h/2, 12, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.5; ctx.fillStyle = color || '#4af';
+    ctx.beginPath(); ctx.arc(bx, h/2, 7, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(bx, h/2, 3, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+// ====== HELPERS ======
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;'); }
+
+function selOpts(options, selected, onchange) {
+  var h = '<select onchange="' + onchange + '">';
+  for (var i = 0; i < options.length; i++) {
+    h += '<option' + (options[i] === selected ? ' selected' : '') + '>' + options[i] + '</option>';
+  }
+  return h + '</select>';
+}
+
+// ====== INIT ======
+loadSkills();
+loadMonsters();
+// Characters loaded on-demand when switching to classes tab
+fetch('/api/editor/characters')
+  .then(function(r) { return r.json(); })
+  .then(function(data) { charactersData = data || {}; })
+  .catch(function() {});
+</script>
+</body>
+</html>
