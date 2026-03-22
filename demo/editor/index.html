@@ -44,7 +44,7 @@
   /* Map canvas */
   #map-canvas { border: 1px solid #555; cursor: crosshair; display: block; margin-bottom: 10px; }
   .map-layout { display: flex; gap: 15px; }
-  .map-sidebar { width: 350px; flex-shrink: 0; }
+  .map-sidebar { width: 350px; flex-shrink: 0; max-height: calc(100vh - 100px); overflow-y: auto; }
   .map-main { flex: 1; }
   .camp-item { padding: 6px 8px; background: #1a1a3e; margin-bottom: 4px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid transparent; }
   .camp-item:hover, .camp-item.selected { border-color: #ffd700; }
@@ -209,7 +209,45 @@
         <h3>波次配置</h3>
         <div class="form-row"><label>Boss间隔:</label><input type="number" id="wave-boss-every" value="5" style="width:50px" onchange="updateWaveConfig('bossEvery',+this.value)">波</div>
         <div class="form-row"><label>基础数量:</label><input type="number" id="wave-base-count" value="8" style="width:50px" onchange="updateWaveConfig('baseCount',+this.value)"></div>
+        <div class="form-row"><label>早期间隔:</label><input type="number" id="wave-interval-early" step="1" style="width:50px" onchange="updateMapField('waveIntervalEarly',+this.value)">s</div>
+        <div class="form-row"><label>中期间隔:</label><input type="number" id="wave-interval-mid" step="1" style="width:50px" onchange="updateMapField('waveIntervalMid',+this.value)">s</div>
+        <div class="form-row"><label>后期间隔:</label><input type="number" id="wave-interval-late" step="1" style="width:50px" onchange="updateMapField('waveIntervalLate',+this.value)">s</div>
+        <div class="form-row"><label>精英概率:</label><input type="number" id="wave-elite-chance" step="0.05" min="0" max="1" style="width:50px" onchange="updateMapField('eliteAffixChance',+this.value)"></div>
         <div id="wave-comp"></div>
+      </div>
+      <!-- Spawn density -->
+      <div class="panel">
+        <h3>初始刷怪</h3>
+        <div class="form-row"><label>初始密度:</label><input type="number" id="spawn-density" min="0" step="1" style="width:50px" onchange="updateMapField('initialDensity',+this.value)"></div>
+        <div class="form-row"><label>最近距离:</label><input type="number" id="spawn-min-dist" min="0" step="10" style="width:50px" onchange="updateMapField('spawnMinDist',+this.value)">px</div>
+        <div class="form-row"><label>最远距离:</label><input type="number" id="spawn-max-dist" min="0" step="10" style="width:50px" onchange="updateMapField('spawnMaxDist',+this.value)">px</div>
+      </div>
+      <!-- Trickle spawn -->
+      <div class="panel">
+        <h3>涓流刷怪</h3>
+        <div class="form-row"><label>刷怪间隔:</label><input type="number" id="trickle-interval" step="0.1" min="0.1" style="width:50px" onchange="updateMapField('trickleInterval',+this.value)">s</div>
+        <div class="form-row"><label>最小间隔:</label><input type="number" id="trickle-min" step="0.1" min="0.1" style="width:50px" onchange="updateMapField('trickleMin',+this.value)">s</div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #333;">
+          <div style="color:#ffd700;font-size:12px;margin-bottom:6px;">早期加速（开局冲刺）</div>
+          <div class="form-row"><label>持续时间:</label><input type="number" id="trickle-boost-dur" step="1" min="0" style="width:50px" onchange="updateTrickleField('earlyBoostDuration',+this.value)">s</div>
+          <div class="form-row"><label>加速间隔:</label><input type="number" id="trickle-boost-int" step="0.1" min="0.1" style="width:50px" onchange="updateTrickleField('earlyBoostInterval',+this.value)">s</div>
+          <div class="form-row"><label>每次数量:</label><input type="number" id="trickle-boost-cnt" step="1" min="1" style="width:50px" onchange="updateTrickleField('earlyBoostCount',+this.value)"></div>
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid #333;">
+          <div style="color:#ffd700;font-size:12px;margin-bottom:6px;">怪物配比</div>
+          <div id="trickle-comp"></div>
+        </div>
+      </div>
+      <!-- Ambush -->
+      <div class="panel">
+        <h3>伏击配置</h3>
+        <div class="form-row"><label>启用:</label><input type="checkbox" id="ambush-enabled" onchange="updateAmbushField('enabled',this.checked)"></div>
+        <div class="form-row"><label>间隔:</label><input type="number" id="ambush-interval" step="1" min="1" style="width:50px" onchange="updateAmbushField('interval',+this.value)">s</div>
+        <div class="form-row"><label>触发概率:</label><input type="number" id="ambush-chance" step="0.05" min="0" max="1" style="width:50px" onchange="updateAmbushField('chance',+this.value)"></div>
+        <div class="form-row"><label>怪物类型:</label><select id="ambush-type" onchange="updateAmbushField('monsterType',this.value)" style="background:#222;color:#fff;border:1px solid #555;padding:3px;font-size:11px"><option value="normal">普通</option><option value="fast">疾速</option><option value="swarm">虫群</option><option value="tank">坦克</option><option value="ranged">远程</option></select></div>
+        <div class="form-row"><label>数量:</label><input type="number" id="ambush-count" step="1" min="1" style="width:50px" onchange="updateAmbushField('monsterCount',+this.value)"></div>
+        <div class="form-row"><label>最近距离:</label><input type="number" id="ambush-min-dist" step="10" min="0" style="width:50px" onchange="updateAmbushField('spawnMinDist',+this.value)">px</div>
+        <div class="form-row"><label>最远距离:</label><input type="number" id="ambush-max-dist" step="10" min="0" style="width:50px" onchange="updateAmbushField('spawnMaxDist',+this.value)">px</div>
       </div>
     </div>
   </div>
@@ -793,15 +831,39 @@ function loadSelectedMap() {
       currentMap = data;
       if (!currentMap.spawnCamps) currentMap.spawnCamps = [];
       if (!currentMap.waves) currentMap.waves = {};
+      if (!currentMap.trickle) currentMap.trickle = {};
+      if (!currentMap.ambush) currentMap.ambush = { enabled: true };
       document.getElementById('map-name').value = currentMap.name || '';
       document.getElementById('map-width').value = currentMap.width || 1200;
       document.getElementById('map-height').value = currentMap.height || 1200;
       var w = currentMap.waves || {};
-      document.getElementById('wave-boss-every').value = w.bossEvery || 5;
-      document.getElementById('wave-base-count').value = w.baseCount || 8;
+      document.getElementById('wave-boss-every').value = currentMap.bossEvery || w.bossEvery || 5;
+      document.getElementById('wave-base-count').value = currentMap.waveBaseCount || w.baseCount || 8;
+      document.getElementById('wave-interval-early').value = currentMap.waveIntervalEarly || 18;
+      document.getElementById('wave-interval-mid').value = currentMap.waveIntervalMid || 16;
+      document.getElementById('wave-interval-late').value = currentMap.waveIntervalLate || 12;
+      document.getElementById('wave-elite-chance').value = currentMap.eliteAffixChance || 0.2;
+      document.getElementById('spawn-density').value = currentMap.initialDensity || 12;
+      document.getElementById('spawn-min-dist').value = currentMap.spawnMinDist || 150;
+      document.getElementById('spawn-max-dist').value = currentMap.spawnMaxDist || 270;
+      var tr = currentMap.trickle || {};
+      document.getElementById('trickle-interval').value = currentMap.trickleInterval || 1.2;
+      document.getElementById('trickle-min').value = currentMap.trickleMin || 0.6;
+      document.getElementById('trickle-boost-dur').value = tr.earlyBoostDuration || 20;
+      document.getElementById('trickle-boost-int').value = tr.earlyBoostInterval || 0.4;
+      document.getElementById('trickle-boost-cnt').value = tr.earlyBoostCount || 2;
+      var amb = currentMap.ambush || {};
+      document.getElementById('ambush-enabled').checked = amb.enabled !== false;
+      document.getElementById('ambush-interval').value = amb.interval || 20;
+      document.getElementById('ambush-chance').value = amb.chance || 0.25;
+      document.getElementById('ambush-type').value = amb.monsterType || 'fast';
+      document.getElementById('ambush-count').value = amb.monsterCount || 3;
+      document.getElementById('ambush-min-dist').value = amb.spawnMinDist || 80;
+      document.getElementById('ambush-max-dist').value = amb.spawnMaxDist || 150;
       selectedCampIdx = -1;
       renderCampList();
       renderWaveComp();
+      renderTrickleComp();
       renderMapCanvas();
     });
 }
@@ -1073,6 +1135,49 @@ function updateWaveConfig(field, val) {
   if (!currentMap) return;
   if (!currentMap.waves) currentMap.waves = {};
   currentMap.waves[field] = val;
+  if (field === 'bossEvery') currentMap.bossEvery = val;
+  if (field === 'baseCount') currentMap.waveBaseCount = val;
+}
+
+function updateMapField(field, val) {
+  if (!currentMap) return;
+  currentMap[field] = val;
+}
+
+function updateTrickleField(field, val) {
+  if (!currentMap) return;
+  if (!currentMap.trickle) currentMap.trickle = {};
+  currentMap.trickle[field] = val;
+}
+
+function updateAmbushField(field, val) {
+  if (!currentMap) return;
+  if (!currentMap.ambush) currentMap.ambush = {};
+  currentMap.ambush[field] = val;
+}
+
+function renderTrickleComp() {
+  var div = document.getElementById('trickle-comp');
+  if (!div || !currentMap) return;
+  var comp = (currentMap.trickle && currentMap.trickle.composition) || {};
+  var types = ['normal', 'fast', 'swarm', 'tank', 'ranged'];
+  var names = { normal: '普通', fast: '疾速', swarm: '虫群', tank: '坦克', ranged: '远程' };
+  var h = '';
+  for (var i = 0; i < types.length; i++) {
+    var t = types[i];
+    var pct = Math.round((comp[t] || 0) * 100);
+    h += '<div class="wave-row"><label>' + names[t] + '</label>';
+    h += '<input type="range" min="0" max="100" value="' + pct + '" oninput="setTrickleComp(\'' + t + '\',+this.value);this.nextElementSibling.textContent=this.value+\'%\'">';
+    h += '<span class="val">' + pct + '%</span></div>';
+  }
+  div.innerHTML = h;
+}
+
+function setTrickleComp(type, pct) {
+  if (!currentMap) return;
+  if (!currentMap.trickle) currentMap.trickle = {};
+  if (!currentMap.trickle.composition) currentMap.trickle.composition = {};
+  currentMap.trickle.composition[type] = pct / 100;
 }
 
 // ====== SKILL PREVIEW ANIMATION ======

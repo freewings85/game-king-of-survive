@@ -5813,17 +5813,20 @@ function doLogin() {
   window._gameAPI = {
     get state() { return state; }, set state(v) { state = v; },
     get player() { return player; },
-    get enemies() { return enemies; },
+    get enemies() { return entities ? entities.filter(function(e) { return e.type === 'enemy' && !e.dead; }) : []; },
     get gold() { return gold; }, set gold(v) { gold = v; },
-    get waveNumber() { return waveNumber; },
+    get waveNumber() { return wave; },
     get pendingSkillPoints() { return pendingSkillPoints; }, set pendingSkillPoints(v) { pendingSkillPoints = v; },
     get selectedClass() { return selectedClass; },
     get selectedBuild() { return selectedBuild; },
     get gameMode() { return gameMode; },
-    get gameTimer() { return gameTimer; },
+    get gameTimer() { return gameTime; },
     get W() { return W; }, get H() { return H; },
     get allPlayers() { return allPlayers; },
     get isDailyMode() { return isDailyMode; },
+    get entities() { return entities; },
+    get playerLevel() { return playerLevel; },
+    get kills() { return kills; },
     startGame: function(daily) { startGame(daily); },
     finalizeGameRewards: typeof finalizeGameRewards === 'function' ? finalizeGameRewards : function() {}
   };
