@@ -84,6 +84,51 @@
     <tbody id="skill-list"></tbody>
   </table>
 
+  <!-- Skill Visual Preview -->
+  <div class="panel" id="skill-preview-panel" style="display:none;">
+    <h3>技能效果预览 <span id="preview-skill-name" style="color:#8af;font-size:12px;margin-left:10px;"></span>
+      <button onclick="closeSkillPreview()" style="float:right;font-size:11px;padding:2px 8px;background:#a33;color:#fff;border:none;cursor:pointer;border-radius:3px;">关闭</button>
+    </h3>
+    <div style="display:flex;gap:15px;">
+      <canvas id="skill-preview-canvas" width="400" height="300" style="border:1px solid #444;border-radius:6px;background:#0a0a1a;"></canvas>
+      <div style="flex:1;min-width:250px;">
+        <div class="form-row"><label>视觉类型:</label>
+          <select id="pv-visual" onchange="updatePreviewVisual(this.value)">
+            <option value="none">none (无效果)</option>
+            <option value="frost_aura">frost_aura (冰冻光环)</option>
+            <option value="fire_trail">fire_trail (火焰轨迹)</option>
+            <option value="chain_lightning">chain_lightning (闪电链)</option>
+            <option value="thorns">thorns (荆棘光环)</option>
+            <option value="time_warp">time_warp (时间扭曲)</option>
+            <option value="shield_bubble">shield_bubble (护盾)</option>
+            <option value="orbit">orbit (环绕弹幕)</option>
+            <option value="explosion">explosion (爆炸)</option>
+            <option value="heal_glow">heal_glow (治愈光环)</option>
+            <option value="speed_lines">speed_lines (速度线)</option>
+            <option value="bullet">bullet (弹幕)</option>
+            <option value="sword_wave">sword_wave (剑气波)</option>
+            <option value="fireball">fireball (火球)</option>
+            <option value="arrow">arrow (箭矢)</option>
+            <option value="meteor">meteor (流星火雨)</option>
+            <option value="poison_cloud">poison_cloud (毒雾)</option>
+            <option value="holy_light">holy_light (圣光)</option>
+            <option value="shadow_strike">shadow_strike (暗影突袭)</option>
+            <option value="tornado">tornado (龙卷风)</option>
+          </select>
+        </div>
+        <div class="form-row"><label>主颜色:</label><input type="color" id="pv-color" value="#8ef" onchange="pvColor=this.value"></div>
+        <div class="form-row"><label>范围:</label><input type="range" id="pv-range" min="30" max="250" value="120" oninput="pvRange=+this.value;document.getElementById('pv-range-val').textContent=this.value"><span id="pv-range-val" style="color:#ffd700;width:35px;">120</span></div>
+        <div class="form-row"><label>粒子数:</label><input type="range" id="pv-particles" min="3" max="30" value="12" oninput="pvParticles=+this.value;document.getElementById('pv-p-val').textContent=this.value"><span id="pv-p-val" style="color:#ffd700;width:35px;">12</span></div>
+        <div class="form-row"><label>速度:</label><input type="range" id="pv-speed" min="1" max="10" value="4" oninput="pvSpeed=+this.value"><span style="color:#888;font-size:10px;">旋转/移动速度</span></div>
+        <div class="form-row"><label>透明度:</label><input type="range" id="pv-alpha" min="10" max="100" value="60" oninput="pvAlpha=+this.value/100"></div>
+        <div style="margin-top:10px;">
+          <button onclick="applyPreviewToSkill()" style="padding:6px 16px;background:#2a6a2a;color:#fff;border:1px solid #4a4;cursor:pointer;border-radius:4px;">✅ 保存视觉参数到技能</button>
+        </div>
+        <p style="color:#666;font-size:10px;margin-top:8px;">提示：调整参数后可实时预览。点"保存"将写入 skills.json 的 visual 字段。</p>
+      </div>
+    </div>
+  </div>
+
   <div class="panel">
     <h3>进化组合</h3>
     <div class="toolbar">
@@ -327,7 +372,7 @@ function renderSkills() {
       '<td><input type="color" value="' + (s.color||'#fff') + '" onchange="saveState();skillsData[' + i + '].color=this.value"></td>' +
       '<td><input value="' + esc(s.description||'') + '" onchange="saveState();skillsData[' + i + '].description=this.value"></td>' +
       '<td><input value=\'' + esc(JSON.stringify(s.levelScaling||{})) + '\' onchange="saveState();try{skillsData[' + i + '].levelScaling=JSON.parse(this.value);this.style.borderColor=\'#444\'}catch(e){this.style.borderColor=\'red\'}" style="font-size:10px"></td>' +
-      '<td><button class="delete-btn" onclick="deleteSkill(' + i + ')">删除</button></td>';
+      '<td><button style="background:#2a4a6a;color:#fff;border:none;padding:3px 8px;cursor:pointer;border-radius:3px;font-size:11px;margin-right:4px;" onclick="openSkillPreview(' + i + ')">👁 预览</button><button class="delete-btn" onclick="deleteSkill(' + i + ')">删除</button></td>';
     tbody.appendChild(tr);
   }
 }
@@ -816,6 +861,412 @@ function selOpts(options, selected, onchange) {
     h += '<option' + (options[i] === selected ? ' selected' : '') + '>' + options[i] + '</option>';
   }
   return h + '</select>';
+}
+
+// ====== SKILL PREVIEW ENGINE ======
+var pvCanvas, pvCtx, pvAnimId = null;
+var pvVisual = 'none', pvColor = '#8ef', pvRange = 120, pvParticles = 12, pvSpeed = 4, pvAlpha = 0.6;
+var pvTime = 0, pvSkillIdx = -1;
+var pvPlayerX = 200, pvPlayerY = 150;
+
+function openSkillPreview(idx) {
+  pvSkillIdx = idx;
+  var s = skillsData[idx];
+  document.getElementById('skill-preview-panel').style.display = 'block';
+  document.getElementById('preview-skill-name').textContent = s.icon + ' ' + s.name + ' (' + s.id + ')';
+  pvVisual = s.visual || 'none';
+  pvColor = s.color || '#8ef';
+  document.getElementById('pv-visual').value = pvVisual;
+  document.getElementById('pv-color').value = pvColor;
+  if (s.visualParams) {
+    if (s.visualParams.range) { pvRange = s.visualParams.range; document.getElementById('pv-range').value = pvRange; document.getElementById('pv-range-val').textContent = pvRange; }
+    if (s.visualParams.particles) { pvParticles = s.visualParams.particles; document.getElementById('pv-particles').value = pvParticles; document.getElementById('pv-p-val').textContent = pvParticles; }
+    if (s.visualParams.speed) { pvSpeed = s.visualParams.speed; document.getElementById('pv-speed').value = pvSpeed; }
+    if (s.visualParams.alpha) { pvAlpha = s.visualParams.alpha; document.getElementById('pv-alpha').value = Math.round(pvAlpha * 100); }
+  }
+  if (!pvCanvas) {
+    pvCanvas = document.getElementById('skill-preview-canvas');
+    pvCtx = pvCanvas.getContext('2d');
+  }
+  if (!pvAnimId) pvAnimLoop();
+  pvCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function closeSkillPreview() {
+  document.getElementById('skill-preview-panel').style.display = 'none';
+  if (pvAnimId) { cancelAnimationFrame(pvAnimId); pvAnimId = null; }
+  pvSkillIdx = -1;
+}
+
+function updatePreviewVisual(v) { pvVisual = v; }
+
+function applyPreviewToSkill() {
+  if (pvSkillIdx < 0) return;
+  saveState();
+  skillsData[pvSkillIdx].visual = pvVisual;
+  skillsData[pvSkillIdx].color = pvColor;
+  skillsData[pvSkillIdx].visualParams = { range: pvRange, particles: pvParticles, speed: pvSpeed, alpha: pvAlpha };
+  toast('视觉参数已保存到 ' + skillsData[pvSkillIdx].name, 'success');
+}
+
+function pvAnimLoop() {
+  pvAnimId = requestAnimationFrame(pvAnimLoop);
+  pvTime += 0.016;
+  var c = pvCtx, W = pvCanvas.width, H = pvCanvas.height;
+  var px = pvPlayerX, py = pvPlayerY;
+
+  c.fillStyle = '#0a0a1a'; c.fillRect(0, 0, W, H);
+
+  // Grid lines
+  c.strokeStyle = '#1a1a2e'; c.lineWidth = 1;
+  for (var gx = 0; gx < W; gx += 40) { c.beginPath(); c.moveTo(gx, 0); c.lineTo(gx, H); c.stroke(); }
+  for (var gy = 0; gy < H; gy += 40) { c.beginPath(); c.moveTo(0, gy); c.lineTo(W, gy); c.stroke(); }
+
+  // Draw dummy enemies
+  var enemies = [];
+  for (var ei = 0; ei < 5; ei++) {
+    var ex = px + Math.cos(pvTime * 0.5 + ei * 1.3) * (100 + ei * 30);
+    var ey = py + Math.sin(pvTime * 0.7 + ei * 1.1) * (60 + ei * 20);
+    enemies.push({ x: ex, y: ey });
+    c.globalAlpha = 0.6; c.fillStyle = '#f44';
+    c.beginPath(); c.arc(ex, ey, 8, 0, Math.PI * 2); c.fill();
+    c.globalAlpha = 1;
+  }
+
+  // Draw player
+  c.fillStyle = '#4af'; c.globalAlpha = 1;
+  c.beginPath(); c.arc(px, py, 14, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#fff'; c.lineWidth = 2;
+  c.beginPath(); c.arc(px, py, 14, 0, Math.PI * 2); c.stroke();
+
+  // Draw skill effect
+  drawSkillEffect(c, pvVisual, pvColor, px, py, pvRange, pvParticles, pvSpeed, pvAlpha, pvTime, enemies, W, H);
+
+  // Label
+  c.globalAlpha = 1; c.fillStyle = '#888'; c.font = '10px Arial'; c.textAlign = 'left';
+  c.fillText('visual: ' + pvVisual + '  range: ' + pvRange + '  particles: ' + pvParticles, 5, H - 5);
+}
+
+function drawSkillEffect(c, visual, color, px, py, range, particles, speed, alpha, t, enemies, W, H) {
+  switch (visual) {
+    case 'frost_aura':
+      c.globalAlpha = alpha * 0.15;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, range * 1.2, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = alpha * 0.25;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.fill();
+      for (var i = 0; i < particles; i++) {
+        var a = t * speed * 0.5 + i * Math.PI * 2 / particles;
+        var r = range * (0.5 + 0.4 * Math.sin(t * 2 + i));
+        var sx = px + Math.cos(a) * r, sy = py + Math.sin(a) * r;
+        c.globalAlpha = alpha * 0.8;
+        c.fillStyle = '#fff';
+        c.beginPath();
+        c.moveTo(sx, sy - 4); c.lineTo(sx - 3, sy + 2); c.lineTo(sx + 3, sy + 2);
+        c.closePath(); c.fill();
+      }
+      c.setLineDash([4, 6]); c.globalAlpha = alpha * 0.5;
+      c.strokeStyle = color; c.lineWidth = 2;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.stroke();
+      c.setLineDash([]);
+      // Freeze indicators on enemies in range
+      for (var ei = 0; ei < enemies.length; ei++) {
+        var dx = enemies[ei].x - px, dy = enemies[ei].y - py;
+        if (Math.sqrt(dx*dx + dy*dy) < range) {
+          c.globalAlpha = 0.6; c.fillStyle = color; c.font = 'bold 12px Arial'; c.textAlign = 'center';
+          c.fillText('❄', enemies[ei].x, enemies[ei].y - 12);
+        }
+      }
+      break;
+
+    case 'fire_trail':
+      for (var i = 0; i < particles; i++) {
+        var age = (t * speed + i * 0.3) % 3;
+        var fx = px - Math.cos(t * 1.5) * age * 30;
+        var fy = py - Math.sin(t * 1.2) * age * 20 + age * 10;
+        c.globalAlpha = alpha * Math.max(0, 1 - age / 3);
+        c.fillStyle = age < 1 ? '#ff4400' : (age < 2 ? '#ff8800' : '#ffaa00');
+        c.beginPath(); c.arc(fx, fy, 6 - age * 1.5, 0, Math.PI * 2); c.fill();
+      }
+      break;
+
+    case 'chain_lightning':
+      c.globalAlpha = alpha;
+      var targets = enemies.slice(0, Math.min(particles, enemies.length));
+      var prev = { x: px, y: py };
+      for (var i = 0; i < targets.length; i++) {
+        c.strokeStyle = color; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(prev.x, prev.y);
+        var mx = (prev.x + targets[i].x) / 2 + (Math.random() - 0.5) * 30;
+        var my = (prev.y + targets[i].y) / 2 + (Math.random() - 0.5) * 30;
+        c.quadraticCurveTo(mx, my, targets[i].x, targets[i].y);
+        c.stroke();
+        c.fillStyle = '#fff'; c.beginPath();
+        c.arc(targets[i].x, targets[i].y, 5, 0, Math.PI * 2); c.fill();
+        prev = targets[i];
+      }
+      c.globalAlpha = alpha * 0.3;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, 20, 0, Math.PI * 2); c.fill();
+      break;
+
+    case 'thorns':
+      c.globalAlpha = alpha * 0.2;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.fill();
+      for (var i = 0; i < particles; i++) {
+        var a = t * speed * 0.3 + i * Math.PI * 2 / particles;
+        var r1 = range * 0.7, r2 = range;
+        c.globalAlpha = alpha * 0.7;
+        c.strokeStyle = color; c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(px + Math.cos(a) * r1, py + Math.sin(a) * r1);
+        c.lineTo(px + Math.cos(a + 0.05) * r2, py + Math.sin(a + 0.05) * r2);
+        c.lineTo(px + Math.cos(a + 0.1) * r1 * 0.9, py + Math.sin(a + 0.1) * r1 * 0.9);
+        c.stroke();
+      }
+      c.setLineDash([3, 5]); c.globalAlpha = alpha * 0.4;
+      c.strokeStyle = color; c.lineWidth = 1;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.stroke();
+      c.setLineDash([]);
+      break;
+
+    case 'time_warp':
+      c.globalAlpha = alpha * 0.12;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = alpha * 0.5;
+      c.strokeStyle = color; c.lineWidth = 2;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.stroke();
+      // Clock hands
+      var h1 = t * speed * 0.5, h2 = t * speed * 2;
+      c.globalAlpha = alpha * 0.8; c.strokeStyle = '#fff'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(h1) * range * 0.5, py + Math.sin(h1) * range * 0.5); c.stroke();
+      c.lineWidth = 1;
+      c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(h2) * range * 0.7, py + Math.sin(h2) * range * 0.7); c.stroke();
+      // Slow indicators
+      for (var ei = 0; ei < enemies.length; ei++) {
+        var dx = enemies[ei].x - px, dy = enemies[ei].y - py;
+        if (Math.sqrt(dx*dx+dy*dy) < range) {
+          c.globalAlpha = 0.5; c.fillStyle = color; c.font = '10px Arial'; c.textAlign = 'center';
+          c.fillText('⏳', enemies[ei].x, enemies[ei].y - 12);
+        }
+      }
+      break;
+
+    case 'shield_bubble':
+      var pulse = 1 + Math.sin(t * speed * 2) * 0.1;
+      c.globalAlpha = alpha * 0.2;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, 22 * pulse, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = alpha * 0.6;
+      c.strokeStyle = color; c.lineWidth = 3;
+      c.beginPath(); c.arc(px, py, 22 * pulse, 0, Math.PI * 2); c.stroke();
+      c.globalAlpha = alpha * 0.3;
+      for (var i = 0; i < 6; i++) {
+        var sa = t * speed + i * Math.PI / 3;
+        c.beginPath(); c.arc(px + Math.cos(sa) * 22, py + Math.sin(sa) * 22, 3, 0, Math.PI * 2); c.fill();
+      }
+      break;
+
+    case 'orbit':
+      for (var i = 0; i < particles; i++) {
+        var oa = t * speed * 1.5 + i * Math.PI * 2 / particles;
+        var ox = px + Math.cos(oa) * range * 0.6;
+        var oy = py + Math.sin(oa) * range * 0.6;
+        c.globalAlpha = alpha * 0.9;
+        c.fillStyle = color;
+        c.beginPath(); c.arc(ox, oy, 5, 0, Math.PI * 2); c.fill();
+        c.globalAlpha = alpha * 0.3;
+        c.beginPath(); c.arc(ox, oy, 8, 0, Math.PI * 2); c.fill();
+      }
+      c.setLineDash([2, 4]); c.globalAlpha = alpha * 0.15;
+      c.strokeStyle = color; c.lineWidth = 1;
+      c.beginPath(); c.arc(px, py, range * 0.6, 0, Math.PI * 2); c.stroke();
+      c.setLineDash([]);
+      break;
+
+    case 'explosion':
+      var expPhase = (t * speed) % 2;
+      if (expPhase < 1) {
+        var expR = range * expPhase;
+        c.globalAlpha = alpha * (1 - expPhase);
+        c.fillStyle = color;
+        c.beginPath(); c.arc(px + 60, py - 20, expR, 0, Math.PI * 2); c.fill();
+        for (var i = 0; i < particles; i++) {
+          var ea = Math.PI * 2 * i / particles;
+          c.fillStyle = '#ff4400';
+          c.beginPath(); c.arc(px + 60 + Math.cos(ea) * expR * 0.8, py - 20 + Math.sin(ea) * expR * 0.8, 3, 0, Math.PI * 2); c.fill();
+        }
+      }
+      break;
+
+    case 'heal_glow':
+      var hpulse = 0.7 + 0.3 * Math.sin(t * speed * 3);
+      c.globalAlpha = alpha * 0.2 * hpulse;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, 25, 0, Math.PI * 2); c.fill();
+      c.globalAlpha = alpha * 0.8;
+      c.fillStyle = '#4f4'; c.font = 'bold 14px Arial'; c.textAlign = 'center';
+      c.fillText('+', px, py - 22);
+      for (var i = 0; i < 4; i++) {
+        var ha = t * speed + i * Math.PI / 2;
+        var hx = px + Math.cos(ha) * 18, hy = py + Math.sin(ha) * 18 - (t * 20) % 30;
+        c.globalAlpha = alpha * 0.5; c.fillStyle = color;
+        c.fillText('+', hx, hy);
+      }
+      break;
+
+    case 'meteor':
+      for (var i = 0; i < Math.min(particles, 6); i++) {
+        var mt = (t * speed * 0.5 + i * 0.5) % 3;
+        var mx = px + 80 + i * 40 - mt * 60;
+        var my = py - 80 + mt * 60;
+        c.globalAlpha = alpha * Math.max(0, 1 - mt / 2);
+        c.fillStyle = '#ff6600';
+        c.beginPath(); c.arc(mx, my, 8 - mt * 2, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#ff0'; c.beginPath(); c.arc(mx, my, 4, 0, Math.PI * 2); c.fill();
+        // Trail
+        for (var ti = 1; ti < 4; ti++) {
+          c.globalAlpha = alpha * 0.2 / ti;
+          c.fillStyle = '#f80';
+          c.beginPath(); c.arc(mx + ti * 8, my - ti * 8, 5, 0, Math.PI * 2); c.fill();
+        }
+        if (mt > 2.5) {
+          var impR = (mt - 2.5) * 100;
+          c.globalAlpha = alpha * 0.3 * (3 - mt) * 2;
+          c.fillStyle = '#f44';
+          c.beginPath(); c.arc(mx, my, impR, 0, Math.PI * 2); c.fill();
+        }
+      }
+      break;
+
+    case 'poison_cloud':
+      for (var i = 0; i < particles; i++) {
+        var pa = t * speed * 0.3 + i * Math.PI * 2 / particles;
+        var pr = range * (0.3 + 0.5 * Math.sin(t + i * 0.7));
+        var pcx = px + Math.cos(pa) * pr, pcy = py + Math.sin(pa) * pr;
+        c.globalAlpha = alpha * (0.15 + 0.1 * Math.sin(t * 2 + i));
+        c.fillStyle = color;
+        c.beginPath(); c.arc(pcx, pcy, 15 + Math.sin(t + i) * 5, 0, Math.PI * 2); c.fill();
+      }
+      c.globalAlpha = alpha * 0.08;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.fill();
+      for (var ei = 0; ei < enemies.length; ei++) {
+        var dx = enemies[ei].x - px, dy = enemies[ei].y - py;
+        if (Math.sqrt(dx*dx+dy*dy) < range) {
+          c.globalAlpha = 0.5; c.fillStyle = '#0f0'; c.font = '10px Arial'; c.textAlign = 'center';
+          c.fillText('☠', enemies[ei].x, enemies[ei].y - 12);
+        }
+      }
+      break;
+
+    case 'holy_light':
+      var hlPhase = (t * speed) % 4;
+      c.globalAlpha = alpha * 0.1;
+      c.fillStyle = color;
+      c.beginPath(); c.arc(px, py, range, 0, Math.PI * 2); c.fill();
+      // Light beams
+      for (var i = 0; i < particles; i++) {
+        var ba = i * Math.PI * 2 / particles + t * speed * 0.2;
+        c.globalAlpha = alpha * (0.3 + 0.2 * Math.sin(t * 3 + i));
+        c.strokeStyle = color; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(px, py);
+        c.lineTo(px + Math.cos(ba) * range, py + Math.sin(ba) * range);
+        c.stroke();
+      }
+      c.globalAlpha = alpha * 0.6;
+      c.fillStyle = '#fff';
+      c.beginPath(); c.arc(px, py, 10 + Math.sin(t * speed * 3) * 3, 0, Math.PI * 2); c.fill();
+      break;
+
+    case 'shadow_strike':
+      var ssPhase = (t * speed * 2) % 2;
+      if (ssPhase < 1) {
+        var target = enemies[Math.floor(t * speed) % enemies.length];
+        if (target) {
+          c.globalAlpha = alpha * (1 - ssPhase);
+          c.strokeStyle = color; c.lineWidth = 4;
+          c.beginPath(); c.moveTo(px, py); c.lineTo(target.x, target.y); c.stroke();
+          c.fillStyle = '#fff';
+          c.beginPath(); c.arc(target.x, target.y, 10 * ssPhase, 0, Math.PI * 2); c.fill();
+          // Slash mark
+          c.strokeStyle = '#f44'; c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(target.x - 12, target.y - 12); c.lineTo(target.x + 12, target.y + 12);
+          c.moveTo(target.x + 12, target.y - 12); c.lineTo(target.x - 12, target.y + 12);
+          c.stroke();
+        }
+      }
+      break;
+
+    case 'tornado':
+      for (var layer = 0; layer < 5; layer++) {
+        var tr = range * (0.3 + layer * 0.15);
+        var tOff = layer * 0.5;
+        c.globalAlpha = alpha * (0.3 - layer * 0.04);
+        c.strokeStyle = color; c.lineWidth = 3;
+        c.beginPath();
+        for (var a = 0; a < Math.PI * 2; a += 0.1) {
+          var wobble = Math.sin(a * 3 + t * speed * 3 + tOff) * 8;
+          var rx = px + Math.cos(a + t * speed + tOff) * (tr + wobble);
+          var ry = py + Math.sin(a + t * speed + tOff) * (tr * 0.6 + wobble * 0.5) - layer * 12;
+          if (a === 0) c.moveTo(rx, ry); else c.lineTo(rx, ry);
+        }
+        c.closePath(); c.stroke();
+      }
+      break;
+
+    case 'speed_lines':
+      for (var i = 0; i < particles; i++) {
+        var sa = t * speed * 2 + i * Math.PI * 2 / particles;
+        c.globalAlpha = alpha * 0.4;
+        c.strokeStyle = color; c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(px + Math.cos(sa) * 20, py + Math.sin(sa) * 20);
+        c.lineTo(px + Math.cos(sa) * 35, py + Math.sin(sa) * 35);
+        c.stroke();
+      }
+      break;
+
+    case 'bullet':
+    case 'sword_wave':
+    case 'fireball':
+    case 'arrow':
+      var projAngle = t * speed * 0.5;
+      var projDist = ((t * speed * 60) % 200) + 20;
+      var projX = px + Math.cos(projAngle) * projDist;
+      var projY = py + Math.sin(projAngle) * projDist;
+      c.globalAlpha = alpha;
+      if (visual === 'sword_wave') {
+        c.strokeStyle = color; c.lineWidth = 4;
+        c.beginPath(); c.arc(projX, projY, 15, projAngle - 0.8, projAngle + 0.8); c.stroke();
+      } else if (visual === 'fireball') {
+        c.fillStyle = '#f80'; c.beginPath(); c.arc(projX, projY, 8, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#ff0'; c.beginPath(); c.arc(projX, projY, 4, 0, Math.PI * 2); c.fill();
+      } else if (visual === 'arrow') {
+        c.strokeStyle = color; c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(projX - Math.cos(projAngle) * 10, projY - Math.sin(projAngle) * 10);
+        c.lineTo(projX + Math.cos(projAngle) * 10, projY + Math.sin(projAngle) * 10);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(projX + Math.cos(projAngle) * 10, projY + Math.sin(projAngle) * 10);
+        c.lineTo(projX + Math.cos(projAngle + 2.5) * 6, projY + Math.sin(projAngle + 2.5) * 6);
+        c.moveTo(projX + Math.cos(projAngle) * 10, projY + Math.sin(projAngle) * 10);
+        c.lineTo(projX + Math.cos(projAngle - 2.5) * 6, projY + Math.sin(projAngle - 2.5) * 6);
+        c.stroke();
+      } else {
+        c.fillStyle = color; c.beginPath(); c.arc(projX, projY, 5, 0, Math.PI * 2); c.fill();
+      }
+      break;
+
+    default:
+      c.globalAlpha = 0.3; c.fillStyle = '#555'; c.font = '14px Arial'; c.textAlign = 'center';
+      c.fillText('选择视觉类型开始预览', px, py + 40);
+  }
+  c.globalAlpha = 1;
 }
 
 // ====== INIT ======

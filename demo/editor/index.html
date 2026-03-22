@@ -100,6 +100,15 @@
   /* Attack preview */
   .attack-preview { display: inline-block; margin-top: 8px; }
   .attack-preview canvas { border: 1px solid #333; border-radius: 4px; background: #0a0a1a; }
+  /* Full preview modal */
+  .fp-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9000; display: none; align-items: center; justify-content: center; }
+  .fp-overlay.open { display: flex; }
+  .fp-box { background: #111; border: 2px solid #ffd700; border-radius: 12px; padding: 20px; position: relative; }
+  .fp-close { position: absolute; top: 8px; right: 12px; background: #a33; border: none; color: #fff; font-size: 16px; cursor: pointer; padding: 4px 10px; border-radius: 4px; }
+  .fp-title { color: #ffd700; font-size: 16px; font-weight: bold; margin-bottom: 10px; }
+  .fp-info { display: flex; gap: 20px; margin-top: 10px; }
+  .fp-info-col { flex: 1; color: #aaa; font-size: 12px; }
+  .fp-info-col b { color: #ffd700; }
 </style>
 </head>
 <body>
@@ -112,6 +121,20 @@
   <button class="nav-save" onclick="saveCurrentTab()">💾 保存 (Ctrl+S)</button>
 </div>
 <div id="toast" class="toast"></div>
+
+<!-- Full-screen skill preview modal -->
+<div id="fp-overlay" class="fp-overlay" onclick="if(event.target===this)closeFullPreview()">
+  <div class="fp-box">
+    <button class="fp-close" onclick="closeFullPreview()">✕</button>
+    <div class="fp-title" id="fp-title">技能效果预览</div>
+    <canvas id="fp-canvas" width="700" height="500" style="border:1px solid #444;border-radius:8px;background:#0a0a1a;display:block;"></canvas>
+    <div class="fp-info">
+      <div class="fp-info-col" id="fp-desc"></div>
+      <div class="fp-info-col" id="fp-stats"></div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ====== SKILLS TAB ====== -->
 <div id="tab-skills" class="tab-content active">
@@ -372,7 +395,7 @@ function renderSkills() {
       '<label>类型</label>' + selOpts(['buff','passive','projectile','aoe','summon'], s.type, 'saveState();skillsData[' + i + '].type=this.value;renderSkills()') +
       '<label>图标</label><input type="text" value="' + esc(s.icon || '') + '" style="width:40px" onchange="saveState();skillsData[' + i + '].icon=this.value;renderSkills()">' +
       '<label>颜色</label><input type="color" value="' + (s.color || '#ffffff') + '" onchange="saveState();skillsData[' + i + '].color=this.value;renderSkills()">' +
-      '<label>视觉效果</label>' + selOpts(['none','sword_wave','fireball','arrow','chain_lightning','frost_aura','fire_trail','explosion','orbit','thorns','time_warp','shield_bubble','speed_lines','heal_glow','bullet'], s.visual || 'none', 'saveState();skillsData[' + i + '].visual=this.value;restartSkillPreview("' + esc(s.id) + '",this.value,skillsData[' + i + '].color)') +
+      '<label>视觉效果</label>' + selOpts(['none','sword_wave','fireball','arrow','chain_lightning','frost_aura','fire_trail','explosion','orbit','thorns','time_warp','shield_bubble','speed_lines','heal_glow','bullet','meteor','poison_cloud','holy_light','shadow_strike','tornado','power_aura','lifesteal','magnet'], s.visual || 'none', 'saveState();skillsData[' + i + '].visual=this.value;restartSkillPreview("' + esc(s.id) + '",this.value,skillsData[' + i + '].color)') +
       '<label>描述</label><input type="text" value="' + esc(s.description || '') + '" style="width:200px" onchange="saveState();skillsData[' + i + '].description=this.value">' +
       '</div>';
 
@@ -422,7 +445,10 @@ function renderSkills() {
 
     var deleteBtn = '<div style="margin-top:10px;"><button class="delete-btn" onclick="deleteSkill(' + i + ')">删除此技能</button></div>';
 
-    var previewHtml = '<div class="attack-preview" style="margin-bottom:10px;"><canvas id="skill-preview-' + esc(s.id) + '" width="160" height="120"></canvas></div>';
+    var previewHtml = '<div class="attack-preview" style="margin-bottom:10px;">' +
+      '<canvas id="skill-preview-' + esc(s.id) + '" width="360" height="260"></canvas>' +
+      '<button style="margin-left:10px;padding:4px 12px;background:#2a4a6a;color:#fff;border:1px solid #4af;cursor:pointer;border-radius:4px;font-size:12px;vertical-align:top;" onclick="openFullPreview(' + i + ')">🔍 放大预览</button>' +
+      '</div>';
 
     body.innerHTML = meta + previewHtml + tbl + deleteBtn;
     card.appendChild(body);
@@ -1081,6 +1107,69 @@ function animateSkillPreview(skillId, visual, color) {
   });
 }
 
+// ====== FULL PREVIEW MODAL ======
+var fpAnimId = null, fpTime = 0, fpSkillIdx = -1;
+
+function openFullPreview(idx) {
+  fpSkillIdx = idx;
+  var s = skillsData[idx];
+  document.getElementById('fp-overlay').classList.add('open');
+  document.getElementById('fp-title').textContent = s.icon + ' ' + s.name + '  —  效果预览';
+  document.getElementById('fp-desc').innerHTML = '<b>描述：</b>' + esc(s.description || '无') + '<br><b>类型：</b>' + (s.type || '-') + '<br><b>视觉：</b>' + (s.visual || 'none');
+  var lvl5 = (s.levels || {})['5'] || {};
+  var statsHtml = '<b>5级数值：</b><br>';
+  var lk = Object.keys(lvl5);
+  for (var li = 0; li < lk.length; li++) {
+    if (lk[li] !== 'desc') statsHtml += lk[li] + ': ' + lvl5[lk[li]] + '<br>';
+  }
+  document.getElementById('fp-stats').innerHTML = statsHtml;
+  fpTime = 0;
+  if (!fpAnimId) fpAnimLoop();
+}
+
+function closeFullPreview() {
+  document.getElementById('fp-overlay').classList.remove('open');
+  if (fpAnimId) { cancelAnimationFrame(fpAnimId); fpAnimId = null; }
+  fpSkillIdx = -1;
+}
+
+function fpAnimLoop() {
+  if (fpSkillIdx < 0) { fpAnimId = null; return; }
+  fpAnimId = requestAnimationFrame(fpAnimLoop);
+  fpTime += 0.016;
+  var s = skillsData[fpSkillIdx];
+  var canvas = document.getElementById('fp-canvas');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#151525'; ctx.lineWidth = 1;
+  for (var gx = 0; gx < W; gx += 50) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+  for (var gy = 0; gy < H; gy += 50) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+  // Dummy enemies
+  ctx.globalAlpha = 0.5;
+  var fpEnemies = [];
+  for (var ei = 0; ei < 5; ei++) {
+    var ex = W * 0.55 + Math.cos(fpTime * 0.5 + ei * 1.3) * (80 + ei * 20);
+    var ey = H * 0.5 + Math.sin(fpTime * 0.7 + ei * 1.1) * (40 + ei * 15);
+    fpEnemies.push({x: ex, y: ey});
+    ctx.fillStyle = '#f44'; ctx.beginPath(); ctx.arc(ex, ey, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.3; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#f88';
+    ctx.fillText('怪物' + (ei+1), ex, ey - 14); ctx.globalAlpha = 0.5;
+  }
+  ctx.globalAlpha = 1;
+
+  // Draw the effect
+  drawSkillEffect(ctx, W, H, s.visual || 'none', s.color || '#fff', fpTime);
+  ctx.globalAlpha = 1;
+
+  // Label
+  ctx.fillStyle = '#555'; ctx.font = '11px Arial'; ctx.textAlign = 'left';
+  ctx.fillText(s.name + ' | visual: ' + (s.visual || 'none') + ' | color: ' + (s.color || '#fff'), 8, H - 8);
+}
+
 function drawSkillEffect(ctx, w, h, visual, color, t) {
   if (visual === 'sword_wave') {
     var sx = 30 + ((t * 80) % (w - 40));
@@ -1278,6 +1367,256 @@ function drawSkillEffect(ctx, w, h, visual, color, t) {
     ctx.beginPath(); ctx.arc(bx, h/2, 7, 0, Math.PI*2); ctx.fill();
     ctx.globalAlpha = 1; ctx.fillStyle = '#fff';
     ctx.beginPath(); ctx.arc(bx, h/2, 3, 0, Math.PI*2); ctx.fill();
+  } else if (visual === 'meteor') {
+    // 流星火雨 — 参考魔兽暴风雪/王者荣耀嫦娥大招
+    var sc = Math.min(w, h) / 260;
+    var impactZoneX = w * 0.55, impactZoneY = h * 0.5, impactR = 50 * sc;
+    ctx.globalAlpha = 0.08; ctx.fillStyle = '#f60';
+    ctx.beginPath(); ctx.arc(impactZoneX, impactZoneY, impactR * 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.25; ctx.setLineDash([4, 4]); ctx.strokeStyle = '#f40'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(impactZoneX, impactZoneY, impactR, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    for (var mi = 0; mi < 5; mi++) {
+      var mt = (t * 1.2 + mi * 0.7) % 2.5;
+      var ma = mi * 1.2 + 0.5;
+      var startX = impactZoneX + Math.cos(ma) * impactR * 0.6 + (2.5 - mt) * 40 * sc;
+      var startY = impactZoneY + Math.sin(ma) * impactR * 0.4 - (2.5 - mt) * 50 * sc;
+      var endX = impactZoneX + Math.cos(ma) * impactR * 0.3;
+      var endY = impactZoneY + Math.sin(ma) * impactR * 0.2;
+      var rx = startX + (endX - startX) * (mt / 2.5);
+      var ry = startY + (endY - startY) * (mt / 2.5);
+      var mSize = (8 - mt * 2) * sc;
+      if (mt < 2.2) {
+        ctx.globalAlpha = 0.9 - mt * 0.2;
+        ctx.fillStyle = '#ff4400'; ctx.beginPath(); ctx.arc(rx, ry, mSize, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ff8800'; ctx.beginPath(); ctx.arc(rx, ry, mSize * 0.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(rx, ry, mSize * 0.3, 0, Math.PI * 2); ctx.fill();
+        for (var tt = 1; tt <= 3; tt++) {
+          ctx.globalAlpha = (0.3 - tt * 0.08) * (1 - mt / 2.5);
+          ctx.fillStyle = '#f60';
+          ctx.beginPath(); ctx.arc(rx + tt * (startX - endX) * 0.05, ry + tt * (startY - endY) * 0.05, mSize * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+      } else {
+        var impT = (mt - 2.2) / 0.3;
+        var blastR = impT * impactR * 0.7;
+        ctx.globalAlpha = (1 - impT) * 0.4;
+        ctx.fillStyle = '#f80'; ctx.beginPath(); ctx.arc(endX, endY, blastR, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fa0'; ctx.lineWidth = 2; ctx.globalAlpha = (1 - impT) * 0.6;
+        ctx.beginPath(); ctx.arc(endX, endY, blastR * 0.8, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(w * 0.3, h * 0.5, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'poison_cloud') {
+    // 毒雾 — 参考魔兽世界庄园瘴气/瘟疫之地
+    var sc = Math.min(w, h) / 260;
+    var cx7 = w / 2, cy7 = h / 2, pcR = 60 * sc;
+    ctx.globalAlpha = 0.06; ctx.fillStyle = '#0a0';
+    ctx.beginPath(); ctx.arc(cx7, cy7, pcR * 1.5, 0, Math.PI * 2); ctx.fill();
+    for (var pi2 = 0; pi2 < 10; pi2++) {
+      var pa2 = t * 0.4 + pi2 * 0.63;
+      var pr2 = pcR * (0.3 + 0.5 * Math.sin(t * 0.8 + pi2 * 0.9));
+      var pcx2 = cx7 + Math.cos(pa2) * pr2;
+      var pcy2 = cy7 + Math.sin(pa2) * pr2;
+      var blobR = (12 + Math.sin(t * 1.5 + pi2) * 5) * sc;
+      ctx.globalAlpha = 0.12 + 0.06 * Math.sin(t * 2 + pi2);
+      ctx.fillStyle = pi2 % 3 === 0 ? '#2a2' : (pi2 % 3 === 1 ? '#4a4' : '#060');
+      ctx.beginPath(); ctx.arc(pcx2, pcy2, blobR, 0, Math.PI * 2); ctx.fill();
+    }
+    for (var bi = 0; bi < 6; bi++) {
+      var ba2 = t * 0.6 + bi * 1.05;
+      var br = pcR * 0.8;
+      var bbx = cx7 + Math.cos(ba2) * br;
+      var bby = cy7 + Math.sin(ba2) * br - ((t * 15 + bi * 10) % 30);
+      ctx.globalAlpha = 0.4; ctx.fillStyle = '#0f0'; ctx.font = (8 * sc) + 'px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('☠', bbx, bby);
+    }
+    ctx.globalAlpha = 0.15; ctx.strokeStyle = '#0a0'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.arc(cx7, cy7, pcR, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx7, cy7, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'holy_light') {
+    // 圣光 — 参考魔兽圣骑士/王者荣耀张良大招光束
+    var sc = Math.min(w, h) / 260;
+    var cx8 = w / 2, cy8 = h / 2, hlR = 55 * sc;
+    ctx.globalAlpha = 0.06; ctx.fillStyle = color || '#ffd700';
+    ctx.beginPath(); ctx.arc(cx8, cy8, hlR * 1.4, 0, Math.PI * 2); ctx.fill();
+    var beamCount = 8;
+    for (var bi2 = 0; bi2 < beamCount; bi2++) {
+      var ba3 = bi2 * Math.PI * 2 / beamCount + t * 0.3;
+      var bw = (4 + Math.sin(t * 3 + bi2) * 2) * sc;
+      ctx.globalAlpha = 0.2 + 0.15 * Math.sin(t * 4 + bi2 * 0.8);
+      ctx.strokeStyle = color || '#ffd700'; ctx.lineWidth = bw;
+      ctx.beginPath(); ctx.moveTo(cx8, cy8);
+      ctx.lineTo(cx8 + Math.cos(ba3) * hlR * 1.3, cy8 + Math.sin(ba3) * hlR * 1.3); ctx.stroke();
+    }
+    var innerPulse = 1 + Math.sin(t * 5) * 0.15;
+    ctx.globalAlpha = 0.4; ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx8, cy8, 10 * sc * innerPulse, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.7; ctx.fillStyle = color || '#ffd700';
+    ctx.beginPath(); ctx.arc(cx8, cy8, 6 * sc * innerPulse, 0, Math.PI * 2); ctx.fill();
+    for (var sp = 0; sp < 6; sp++) {
+      var spa = t * 1.5 + sp * Math.PI / 3;
+      var spr = hlR * (0.4 + 0.3 * Math.sin(t * 2 + sp));
+      ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(cx8 + Math.cos(spa) * spr, cy8 + Math.sin(spa) * spr, 2 * sc, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (visual === 'shadow_strike') {
+    // 暗影突袭 — 参考王者荣耀兰陵王/魔兽盗贼暗影步
+    var sc = Math.min(w, h) / 260;
+    var px3 = w * 0.3, py3 = h * 0.5;
+    var targets2 = [[w*0.65, h*0.35], [w*0.7, h*0.6], [w*0.55, h*0.7]];
+    var tgtIdx = Math.floor(t * 1.5) % targets2.length;
+    var tgt = targets2[tgtIdx];
+    var phase2 = (t * 1.5) % 1;
+    ctx.globalAlpha = 0.4; ctx.fillStyle = '#f44';
+    for (var ti3 = 0; ti3 < targets2.length; ti3++) {
+      ctx.beginPath(); ctx.arc(targets2[ti3][0], targets2[ti3][1], 8 * sc, 0, Math.PI * 2); ctx.fill();
+    }
+    if (phase2 < 0.4) {
+      var dashP = phase2 / 0.4;
+      var dx = tgt[0] - px3, dy = tgt[1] - py3;
+      ctx.globalAlpha = 0.6 * (1 - dashP);
+      ctx.strokeStyle = '#808'; ctx.lineWidth = 3 * sc;
+      ctx.setLineDash([6, 3]);
+      ctx.beginPath(); ctx.moveTo(px3, py3); ctx.lineTo(px3 + dx * dashP, py3 + dy * dashP); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 0.8; ctx.fillStyle = '#c0c';
+      ctx.beginPath(); ctx.arc(px3 + dx * dashP, py3 + dy * dashP, 6 * sc, 0, Math.PI * 2); ctx.fill();
+    } else if (phase2 < 0.7) {
+      var slashP = (phase2 - 0.4) / 0.3;
+      ctx.globalAlpha = 0.8 * (1 - slashP * 0.5);
+      ctx.strokeStyle = '#f4f'; ctx.lineWidth = 4 * sc;
+      var slashR = 20 * sc;
+      ctx.beginPath();
+      ctx.moveTo(tgt[0] - slashR, tgt[1] - slashR); ctx.lineTo(tgt[0] + slashR * slashP, tgt[1] + slashR * slashP);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(tgt[0] + slashR, tgt[1] - slashR); ctx.lineTo(tgt[0] - slashR * slashP, tgt[1] + slashR * slashP);
+      ctx.stroke();
+      ctx.globalAlpha = (1 - slashP) * 0.5; ctx.fillStyle = '#f0f';
+      ctx.beginPath(); ctx.arc(tgt[0], tgt[1], slashR * slashP * 1.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+      var fadeP = (phase2 - 0.7) / 0.3;
+      ctx.globalAlpha = (1 - fadeP) * 0.3; ctx.fillStyle = '#808';
+      ctx.beginPath(); ctx.arc(tgt[0], tgt[1], 25 * sc * (1 + fadeP * 0.5), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#c0c';
+    ctx.beginPath(); ctx.arc(px3, py3, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'tornado') {
+    // 龙卷风 — 参考王者荣耀貂蝉/魔兽元素萨满风暴
+    var sc = Math.min(w, h) / 260;
+    var tcx = w * 0.55, tcy = h * 0.5;
+    for (var layer = 0; layer < 6; layer++) {
+      var tr = (20 + layer * 8) * sc;
+      var layerY = tcy - layer * 10 * sc;
+      ctx.globalAlpha = 0.25 - layer * 0.03;
+      ctx.strokeStyle = layer < 2 ? '#aaf' : (layer < 4 ? '#88f' : '#66d');
+      ctx.lineWidth = (3 - layer * 0.3) * sc;
+      ctx.beginPath();
+      for (var a = 0; a < Math.PI * 2; a += 0.08) {
+        var wobble2 = Math.sin(a * 3 + t * 4 + layer) * 5 * sc;
+        var rx2 = tcx + Math.cos(a + t * 2.5 + layer * 0.4) * (tr + wobble2);
+        var ry2 = layerY + Math.sin(a + t * 2.5 + layer * 0.4) * (tr * 0.45 + wobble2 * 0.3);
+        if (a < 0.01) ctx.moveTo(rx2, ry2); else ctx.lineTo(rx2, ry2);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+    for (var di = 0; di < 8; di++) {
+      var da = t * 3 + di * 0.8;
+      var dR = (15 + di * 5) * sc;
+      var ddx = tcx + Math.cos(da) * dR;
+      var ddy = tcy + Math.sin(da) * dR * 0.4 - di * 3 * sc;
+      ctx.globalAlpha = 0.3; ctx.fillStyle = '#889';
+      ctx.beginPath(); ctx.arc(ddx, ddy, 2 * sc, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 0.08; ctx.fillStyle = '#88f';
+    ctx.beginPath(); ctx.arc(tcx, tcy, 50 * sc, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(w * 0.3, h * 0.5, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'power_aura') {
+    // 力量光环 — 参考王者荣耀红buff增益效果
+    var sc = Math.min(w, h) / 260;
+    var cx9 = w / 2, cy9 = h / 2;
+    var pulse2 = 1 + Math.sin(t * 4) * 0.15;
+    ctx.globalAlpha = 0.08; ctx.fillStyle = color || '#f44';
+    ctx.beginPath(); ctx.arc(cx9, cy9, 30 * sc * pulse2, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.2; ctx.strokeStyle = color || '#f44'; ctx.lineWidth = 2 * sc;
+    ctx.beginPath(); ctx.arc(cx9, cy9, 22 * sc * pulse2, 0, Math.PI * 2); ctx.stroke();
+    for (var pi3 = 0; pi3 < 6; pi3++) {
+      var pa3 = t * 2 + pi3 * Math.PI / 3;
+      var pR2 = 18 * sc + Math.sin(t * 3 + pi3) * 5 * sc;
+      ctx.globalAlpha = 0.5 + Math.sin(t * 4 + pi3) * 0.2;
+      ctx.fillStyle = color || '#f44';
+      ctx.beginPath();
+      ctx.moveTo(cx9 + Math.cos(pa3) * pR2, cy9 + Math.sin(pa3) * pR2);
+      ctx.lineTo(cx9 + Math.cos(pa3 + 0.15) * (pR2 + 8 * sc), cy9 + Math.sin(pa3 + 0.15) * (pR2 + 8 * sc));
+      ctx.lineTo(cx9 + Math.cos(pa3 - 0.15) * (pR2 + 8 * sc), cy9 + Math.sin(pa3 - 0.15) * (pR2 + 8 * sc));
+      ctx.fill();
+    }
+    // Rising power particles
+    for (var rp = 0; rp < 4; rp++) {
+      var rpY = cy9 - ((t * 25 + rp * 15) % 35) * sc;
+      var rpX = cx9 + Math.sin(t * 2 + rp * 1.5) * 10 * sc;
+      ctx.globalAlpha = 0.6 - ((t * 25 + rp * 15) % 35) / 50;
+      ctx.fillStyle = '#ff8'; ctx.font = (8 * sc) + 'px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('⚔', rpX, rpY);
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx9, cy9, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'lifesteal') {
+    // 吸血 — 参考魔兽世界死亡骑士血之瘟疫
+    var sc = Math.min(w, h) / 260;
+    var cx10 = w * 0.35, cy10 = h / 2;
+    var tgt2 = {x: w * 0.65, y: h * 0.45};
+    ctx.globalAlpha = 0.4; ctx.fillStyle = '#f44';
+    ctx.beginPath(); ctx.arc(tgt2.x, tgt2.y, 8 * sc, 0, Math.PI * 2); ctx.fill();
+    // Drain beam from enemy to player
+    var drainPhase = (t * 2) % 1.5;
+    if (drainPhase < 1) {
+      var dP = drainPhase;
+      for (var di2 = 0; di2 < 5; di2++) {
+        var dOff = (dP + di2 * 0.2) % 1;
+        var dx2 = tgt2.x + (cx10 - tgt2.x) * dOff;
+        var dy2 = tgt2.y + (cy10 - tgt2.y) * dOff + Math.sin(dOff * Math.PI * 3) * 8 * sc;
+        ctx.globalAlpha = (1 - dOff) * 0.6;
+        ctx.fillStyle = color || '#d4f';
+        ctx.beginPath(); ctx.arc(dx2, dy2, (4 - dOff * 2) * sc, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    // Player heal glow
+    var hpulse2 = Math.sin(t * 5) * 0.3;
+    ctx.globalAlpha = 0.15 + hpulse2 * 0.1; ctx.fillStyle = '#f4a';
+    ctx.beginPath(); ctx.arc(cx10, cy10, 18 * sc, 0, Math.PI * 2); ctx.fill();
+    // HP text
+    ctx.globalAlpha = 0.7; ctx.fillStyle = '#4f4'; ctx.font = 'bold ' + (10 * sc) + 'px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('+HP', cx10, cy10 - 20 * sc);
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx10, cy10, 5 * sc, 0, Math.PI * 2); ctx.fill();
+  } else if (visual === 'magnet') {
+    // 磁铁吸附 — 参考弹幕幸存者经验吸取效果
+    var sc = Math.min(w, h) / 260;
+    var cx11 = w / 2, cy11 = h / 2, mR = 50 * sc;
+    ctx.globalAlpha = 0.06; ctx.fillStyle = color || '#af0';
+    ctx.beginPath(); ctx.arc(cx11, cy11, mR * 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.2; ctx.setLineDash([4, 4]); ctx.strokeStyle = color || '#af0'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx11, cy11, mR, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx11, cy11, mR * 1.3, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    // XP orbs being attracted
+    for (var xi = 0; xi < 8; xi++) {
+      var xa = t * 0.8 + xi * Math.PI / 4;
+      var xr = mR * 1.4 - ((t * 30 + xi * 15) % (mR * 1.2));
+      if (xr < 0) xr += mR * 1.2;
+      var xx = cx11 + Math.cos(xa) * xr;
+      var xy = cy11 + Math.sin(xa) * xr;
+      var xAlpha = Math.max(0.1, 1 - xr / (mR * 1.4));
+      ctx.globalAlpha = xAlpha * 0.8;
+      ctx.fillStyle = '#0f0'; ctx.beginPath(); ctx.arc(xx, xy, (3 + xAlpha * 3) * sc, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.arc(xx, xy, (1 + xAlpha * 2) * sc, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = '#4af';
+    ctx.beginPath(); ctx.arc(cx11, cy11, 5 * sc, 0, Math.PI * 2); ctx.fill();
   }
 }
 

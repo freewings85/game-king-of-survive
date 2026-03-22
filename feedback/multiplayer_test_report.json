@@ -1,0 +1,300 @@
+{
+  "test_time": "2026-03-08 15:03:18",
+  "modes_tested": [
+    "solo",
+    "team"
+  ],
+  "results": [
+    {
+      "mode": "solo",
+      "duration": 60,
+      "issues": [],
+      "snapshots": [
+        {
+          "time": 5.0,
+          "state": "playing",
+          "wave": 1,
+          "kills": 6,
+          "hp": 186,
+          "enemyCount": 4,
+          "totalEnemies": 24,
+          "alivePlayers": 8,
+          "eliminatedPlayers": 0
+        },
+        {
+          "time": 10.3,
+          "state": "playing",
+          "wave": 1,
+          "kills": 10,
+          "hp": 114,
+          "enemyCount": 3,
+          "totalEnemies": 22,
+          "alivePlayers": 8,
+          "eliminatedPlayers": 0
+        },
+        {
+          "time": 15.3,
+          "state": "playing",
+          "wave": 2,
+          "kills": 17,
+          "hp": 96,
+          "enemyCount": 20,
+          "totalEnemies": 41,
+          "alivePlayers": 7,
+          "eliminatedPlayers": 1
+        },
+        {
+          "time": 20.5,
+          "state": "playing",
+          "wave": 2,
+          "kills": 24,
+          "hp": 78,
+          "enemyCount": 7,
+          "totalEnemies": 36,
+          "alivePlayers": 5,
+          "eliminatedPlayers": 3
+        },
+        {
+          "time": 25.7,
+          "state": "playing",
+          "wave": 2,
+          "kills": 33,
+          "hp": 78,
+          "enemyCount": 4,
+          "totalEnemies": 37,
+          "alivePlayers": 5,
+          "eliminatedPlayers": 3
+        },
+        {
+          "time": 31.0,
+          "state": "playing",
+          "wave": 3,
+          "kills": 39,
+          "hp": 78,
+          "enemyCount": 16,
+          "totalEnemies": 61,
+          "alivePlayers": 4,
+          "eliminatedPlayers": 4
+        },
+        {
+          "time": 36.2,
+          "state": "playing",
+          "wave": 3,
+          "kills": 45,
+          "hp": 150,
+          "enemyCount": 20,
+          "totalEnemies": 49,
+          "alivePlayers": 0,
+          "eliminatedPlayers": 8
+        },
+        {
+          "time": 41.3,
+          "state": "playing",
+          "wave": 3,
+          "kills": 54,
+          "hp": 150,
+          "enemyCount": 20,
+          "totalEnemies": 51,
+          "alivePlayers": 0,
+          "eliminatedPlayers": 8
+        },
+        {
+          "time": 46.9,
+          "state": "playing",
+          "wave": 4,
+          "kills": 63,
+          "hp": 150,
+          "enemyCount": 10,
+          "totalEnemies": 75,
+          "alivePlayers": 0,
+          "eliminatedPlayers": 8
+        },
+        {
+          "time": 52.1,
+          "state": "playing",
+          "wave": 4,
+          "kills": 72,
+          "hp": 150,
+          "enemyCount": 20,
+          "totalEnemies": 69,
+          "alivePlayers": 0,
+          "eliminatedPlayers": 8
+        },
+        {
+          "time": 57.3,
+          "state": "playing",
+          "wave": 4,
+          "kills": 76,
+          "hp": 150,
+          "enemyCount": 5,
+          "totalEnemies": 76,
+          "alivePlayers": 0,
+          "eliminatedPlayers": 8
+        }
+      ],
+      "js_errors": [],
+      "screenshots": [
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_solo_10s.png",
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_solo_30s.png",
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_solo_final.png"
+      ],
+      "summary": {
+        "total_issues": 0,
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "bot_movement": true,
+        "pvp_kill_detected": true,
+        "max_enemies": 76,
+        "victory_seen": false
+      }
+    },
+    {
+      "mode": "team",
+      "duration": 60,
+      "issues": [],
+      "snapshots": [
+        {
+          "time": 5.1,
+          "state": "playing",
+          "wave": 1,
+          "kills": 8,
+          "hp": 253,
+          "enemyCount": 11,
+          "totalEnemies": 22,
+          "alivePlayers": 8,
+          "eliminatedPlayers": 0
+        },
+        {
+          "time": 10.3,
+          "state": "playing",
+          "wave": 1,
+          "kills": 23,
+          "hp": 253,
+          "enemyCount": 5,
+          "totalEnemies": 17,
+          "alivePlayers": 7,
+          "eliminatedPlayers": 1
+        },
+        {
+          "time": 15.4,
+          "state": "playing",
+          "wave": 2,
+          "kills": 40,
+          "hp": 253,
+          "enemyCount": 10,
+          "totalEnemies": 25,
+          "alivePlayers": 7,
+          "eliminatedPlayers": 1
+        },
+        {
+          "time": 20.4,
+          "state": "playing",
+          "wave": 2,
+          "kills": 49,
+          "hp": 238,
+          "enemyCount": 7,
+          "totalEnemies": 18,
+          "alivePlayers": 7,
+          "eliminatedPlayers": 1
+        },
+        {
+          "time": 25.4,
+          "state": "playing",
+          "wave": 2,
+          "kills": 57,
+          "hp": 175,
+          "enemyCount": 3,
+          "totalEnemies": 16,
+          "alivePlayers": 7,
+          "eliminatedPlayers": 1
+        },
+        {
+          "time": 30.4,
+          "state": "playing",
+          "wave": 2,
+          "kills": 61,
+          "hp": 150,
+          "enemyCount": 3,
+          "totalEnemies": 19,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        },
+        {
+          "time": 35.5,
+          "state": "playing",
+          "wave": 3,
+          "kills": 79,
+          "hp": 150,
+          "enemyCount": 6,
+          "totalEnemies": 27,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        },
+        {
+          "time": 40.6,
+          "state": "playing",
+          "wave": 3,
+          "kills": 91,
+          "hp": 150,
+          "enemyCount": 3,
+          "totalEnemies": 22,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        },
+        {
+          "time": 45.6,
+          "state": "playing",
+          "wave": 3,
+          "kills": 102,
+          "hp": 150,
+          "enemyCount": 4,
+          "totalEnemies": 21,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        },
+        {
+          "time": 51.0,
+          "state": "playing",
+          "wave": 4,
+          "kills": 113,
+          "hp": 140,
+          "enemyCount": 15,
+          "totalEnemies": 37,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        },
+        {
+          "time": 56.2,
+          "state": "playing",
+          "wave": 4,
+          "kills": 117,
+          "hp": 132,
+          "enemyCount": 5,
+          "totalEnemies": 38,
+          "alivePlayers": 6,
+          "eliminatedPlayers": 2
+        }
+      ],
+      "js_errors": [],
+      "screenshots": [
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_team_10s.png",
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_team_30s.png",
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_team_50s.png",
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/mp_team_final.png"
+      ],
+      "summary": {
+        "total_issues": 0,
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "bot_movement": true,
+        "pvp_kill_detected": true,
+        "max_enemies": 38,
+        "victory_seen": false
+      }
+    }
+  ],
+  "all_issues": [],
+  "total_issues": 0
+}

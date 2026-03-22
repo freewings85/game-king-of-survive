@@ -132,8 +132,8 @@ public class CombatSystem {
     private void resolveProjectileVsPlayers(List<PlayerEntity> players,
                                              List<ProjectileEntity> projectiles,
                                              double gameTime) {
-        // PvP immunity for first 20 seconds (early farming phase)
-        if (gameTime < 20) return;
+        // PvP immunity for first 90 seconds (farming phase)
+        if (gameTime < 90) return;
 
         for (ProjectileEntity proj : projectiles) {
             if (!proj.isAlive() || proj.isEnemyProjectile()) continue;
@@ -149,10 +149,8 @@ public class CombatSystem {
                     if (proj.isCrit()) damage *= proj.getCritMultiplier();
                     damage *= randomMin + Math.random() * (randomMax - randomMin);
 
-                    // Gradual PvP damage ramp: 50% at 20-40s, 75% at 40-60s, full after 60s
-                    if (gameTime < 40) {
-                        damage *= 0.5;
-                    } else if (gameTime < 60) {
+                    // Gradual PvP damage ramp: 75% at 90-110s, full after 110s
+                    if (gameTime < 110) {
                         damage *= 0.75;
                     }
 

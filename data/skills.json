@@ -7,7 +7,7 @@
       "icon": "⚔",
       "color": "#f44",
       "description": "提升攻击力",
-      "visual": "none",
+      "visual": "power_aura",
       "maxLevel": 10,
       "levels": {
         "1":  { "attackBonus": 0.15, "desc": "攻击力+15%" },
@@ -227,7 +227,7 @@
       "icon": "💥",
       "color": "#fd0",
       "description": "提升暴击率和暴击伤害",
-      "visual": "none",
+      "visual": "shadow_strike",
       "maxLevel": 10,
       "levels": {
         "1":  { "critChance": 0.05, "critDamage": 1.50, "desc": "5%暴击率, 1.5倍暴伤" },
@@ -249,7 +249,7 @@
       "icon": "🩸",
       "color": "#d4f",
       "description": "攻击命中时吸取生命",
-      "visual": "none",
+      "visual": "lifesteal",
       "maxLevel": 10,
       "levels": {
         "1":  { "lifestealRate": 0.05, "desc": "5%伤害吸血" },
@@ -271,7 +271,7 @@
       "icon": "🧲",
       "color": "#af0",
       "description": "扩大经验吸收范围并增加经验获取",
-      "visual": "none",
+      "visual": "magnet",
       "maxLevel": 10,
       "levels": {
         "1":  { "magnetRange": 60,  "xpBonus": 0.05, "desc": "吸收范围+60, 经验+5%" },
@@ -315,7 +315,7 @@
       "icon": "❤",
       "color": "#0a0",
       "description": "增加最大生命值",
-      "visual": "none",
+      "visual": "holy_light",
       "maxLevel": 10,
       "levels": {
         "1":  { "maxHP": 30,  "desc": "最大HP+30" },

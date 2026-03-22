@@ -1,0 +1,47 @@
+{
+  "rounds_played": 5,
+  "avg_duration": 60.1,
+  "duration_trend": "stable",
+  "skill_variety": 4.4,
+  "issues": [],
+  "strengths": [
+    "多轮测试无明显问题——基础体验稳定",
+    "平均存活60.1s——游戏有足够深度"
+  ],
+  "viral_score": 80,
+  "rounds": [
+    {
+      "round": 0,
+      "duration": 60.1,
+      "skills_picked": 11,
+      "screenshots": [
+        "/mnt/e/Documents/github/game-king-of-survive/feedback/ra_first_impression.png"
+      ]
+    },
+    {
+      "round": 1,
+      "duration": 60.1,
+      "skills_picked": 8,
+      "screenshots": []
+    },
+    {
+      "round": 2,
+      "duration": 60.1,
+      "skills_picked": 2,
+      "screenshots": []
+    },
+    {
+      "round": 3,
+      "duration": 60.1,
+      "skills_picked": 0,
+      "screenshots": []
+    },
+    {
+      "round": 4,
+      "duration": 60.2,
+      "skills_picked": 1,
+      "screenshots": []
+    }
+  ],
+  "js_errors": []
+}

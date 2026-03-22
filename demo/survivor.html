@@ -2,12 +2,12 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>生存之王 King of Survive</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { border: 1px solid #222; cursor: crosshair; }
+  canvas { border: 1px solid #222; cursor: crosshair; max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
   #login-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%);
@@ -312,6 +312,13 @@ function doLogin() {
   var player2 = null;
   var p2Input = { x: 0, y: 0 }; // player2 WASD input
   var p2Keys = { w: false, a: false, s: false, d: false };
+
+  // Virtual joystick state (mobile-friendly, left-hand control)
+  var joystick = {
+    active: false, touchId: null,
+    baseX: 0, baseY: 0, stickX: 0, stickY: 0,
+    dx: 0, dy: 0, radius: 55, deadzone: 8
+  };
 
   // roomSystem (US-001): game room for multiplayer
   var roomSystem = { rooms: [], currentRoom: null };
@@ -624,8 +631,8 @@ function doLogin() {
     { text: '移动鼠标/手指 控制角色移动', icon: '🖱', time: 0 },
     { text: '自动攻击最近的敌人，击杀获得经验', icon: '⚔', time: 0 },
     { text: '升级时选择技能，两个技能达到3级可进化', icon: '⬆', time: 0 },
-    { text: '45秒内PvP免疫，先刷怪升级!', icon: '🛡', time: 0 },
-    { text: '45秒后或存活人数不足时毒圈缩小，留在圈内存活!', icon: '🌀', time: 0 },
+    { text: '90秒新手保护期，先刷怪升级!', icon: '🛡', time: 0 },
+    { text: '120秒后或存活人数不足时毒圈缩小，留在圈内存活!', icon: '🌀', time: 0 },
     { text: '最后存活的玩家/队伍获胜!', icon: '👑', time: 0 }
   ];
 
@@ -1268,7 +1275,7 @@ function doLogin() {
     if (xpRemaining < 30 && xpRemaining > 0) hints.push('再' + xpRemaining + ' XP就升' + (playerLevel + 1) + '级!');
     // Boss wave
     var nextBossWave = Math.ceil((wave + 1) / 5) * 5;
-    if (nextBossWave - wave <= 2) hints.push('差' + (nextBossWave - wave) + '波就到BOSS战!');
+    if (nextBossWave - wave <= 2) hints.push('还差' + (nextBossWave - wave) + '波就到BOSS战!');
     // Survival milestones
     var milestones = [30, 60, 120, 180, 300];
     for (var mi = 0; mi < milestones.length; mi++) {
@@ -1330,6 +1337,7 @@ function doLogin() {
         var passiveEffect = c.passive.effect || {};
         defs[key] = {
           name: c.name, icon: c.icon, hp: c.baseHP, maxHp: c.baseHP,
+          baseHP: c.baseHP, baseATK: c.baseATK, baseSpeed: c.baseSpeed,
           attackDamage: c.baseATK, speed: c.baseSpeed,
           passive: c.passive.name + ': ' + c.passive.description,
           thornsDamage: passiveEffect.thornsDamage || 0,
@@ -1345,9 +1353,9 @@ function doLogin() {
     }
     // Fallback if RPGEngine not available or data not loaded
     return {
-      warrior: { name: '战士', icon: '🛡', hp: 200, maxHp: 200, attackDamage: 15, speed: 170, passive: '荆棘护甲: 反弹3伤害', thornsDamage: 3, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
-      mage:    { name: '法师', icon: '🔮', hp: 100, maxHp: 100, attackDamage: 35, speed: 190, passive: '奥术延伸: 射程+50%', rangeBonus: 0.5, color: '#a4f', initialAttributes: {INT:10,STR:2,AGI:4,STA:4}, availableSkills: [] },
-      scout:   { name: '斥候', icon: '🏹', hp: 130, maxHp: 130, attackDamage: 20, speed: 260, passive: '闪避本能: 15%闪避', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
+      warrior: { name: '战士', icon: '🛡', hp: 200, maxHp: 200, baseHP: 200, baseATK: 15, baseSpeed: 170, attackDamage: 15, speed: 170, passive: '荆棘护甲: 反弹3伤害', thornsDamage: 3, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
+      mage:    { name: '法师', icon: '🔮', hp: 100, maxHp: 100, baseHP: 100, baseATK: 35, baseSpeed: 190, attackDamage: 35, speed: 190, passive: '奥术延伸: 射程+50%', rangeBonus: 0.5, color: '#a4f', initialAttributes: {INT:10,STR:2,AGI:4,STA:4}, availableSkills: [] },
+      scout:   { name: '斥候', icon: '🏹', hp: 130, maxHp: 130, baseHP: 130, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避本能: 15%闪避', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
     };
   })();
 
@@ -1364,9 +1372,9 @@ function doLogin() {
             if (CLASS_DEFS[key]) {
               CLASS_DEFS[key].availableSkills = c.availableSkills || [];
               // Also update stats if they were from fallback
-              if (c.baseHP) { CLASS_DEFS[key].hp = c.baseHP; CLASS_DEFS[key].maxHp = c.baseHP; }
-              if (c.baseATK) CLASS_DEFS[key].attackDamage = c.baseATK;
-              if (c.baseSpeed) CLASS_DEFS[key].speed = c.baseSpeed;
+              if (c.baseHP) { CLASS_DEFS[key].hp = c.baseHP; CLASS_DEFS[key].maxHp = c.baseHP; CLASS_DEFS[key].baseHP = c.baseHP; }
+              if (c.baseATK) { CLASS_DEFS[key].attackDamage = c.baseATK; CLASS_DEFS[key].baseATK = c.baseATK; }
+              if (c.baseSpeed) { CLASS_DEFS[key].speed = c.baseSpeed; CLASS_DEFS[key].baseSpeed = c.baseSpeed; }
               if (c.initialAttributes) CLASS_DEFS[key].initialAttributes = c.initialAttributes;
               if (c.growthCoefficients) CLASS_DEFS[key].growthCoefficients = c.growthCoefficients;
               if (c.color) CLASS_DEFS[key].color = c.color;
@@ -2567,10 +2575,16 @@ function doLogin() {
     // Step 1: Send input to server at 30Hz
     var worldMouseX = mouseX + cameraX;
     var worldMouseY = mouseY + cameraY;
-    var dx = worldMouseX - player.x, dy = worldMouseY - player.y;
-    var dist = Math.sqrt(dx * dx + dy * dy);
-    var moveX = dist > 5 ? dx / dist : 0;
-    var moveY = dist > 5 ? dy / dist : 0;
+    var moveX = 0, moveY = 0;
+    if (joystick.active && (Math.abs(joystick.dx) > 0.01 || Math.abs(joystick.dy) > 0.01)) {
+      moveX = joystick.dx;
+      moveY = joystick.dy;
+    } else {
+      var dx = worldMouseX - player.x, dy = worldMouseY - player.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      moveX = dist > 5 ? dx / dist : 0;
+      moveY = dist > 5 ? dy / dist : 0;
+    }
 
     // During dodge: override movement with dash direction (fast burst)
     if (player._isDodging && player._dodgeVX !== undefined) {
@@ -2775,7 +2789,7 @@ function doLogin() {
           wave = d.wave;
           var isBossWave = wave % 5 === 0;
           waveBanner.active = true; waveBanner.timer = 2;
-          waveBanner.text = isBossWave ? '⚠ BOSS WAVE ' + wave + ' ⚠' : '— WAVE ' + wave + ' —';
+          waveBanner.text = isBossWave ? '⚠ BOSS 第' + wave + '波 ⚠' : '— 第' + wave + '波 —';
           waveBanner.color = isBossWave ? '#f44' : (wave > 10 ? '#fa0' : '#fff');
           if (isBossWave) {
             bossWarning.active = true; bossWarning.timer = 2.5;
@@ -2835,6 +2849,9 @@ function doLogin() {
     gold += killGold + waveGold + survivalGold + levelGold + victoryBonus;
     _lastEarnedGold = gold - _goldAtGameStart;
     saveGold();
+    // Sync top bar
+    var barGoldEl = document.getElementById('bar-gold');
+    if (barGoldEl) barGoldEl.textContent = gold + ' 金币';
     // Submit to server
     if (_currentPlayer && _currentPlayer.id) {
       _apiRequest('POST', '/api/players/' + _currentPlayer.id + '/game-result', {
@@ -2844,6 +2861,7 @@ function doLogin() {
         if (!err && data && data.gold !== undefined) {
           gold = data.gold;
           saveGold();
+          if (barGoldEl) barGoldEl.textContent = gold + ' 金币';
         }
       });
     }
@@ -3891,29 +3909,40 @@ function doLogin() {
       }
     }
 
-    // Draw bot players (multiPlayerRender US-004)
+    // Draw other players (multiPlayerRender US-004)
     for (var bpi = 1; bpi < allPlayers.length; bpi++) {
       var bp = allPlayers[bpi];
       if (!bp.alive) continue;
-      // Outer glow ring for visibility
-      ctx.globalAlpha = 0.3;
-      ctx.strokeStyle = bp.color || '#f44';
-      ctx.lineWidth = 2;
+      var isEnemy = bp.factionId !== player.factionId;
+      // Outer glow ring — red for enemies, green for allies
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = isEnemy ? '#f44' : '#4f4';
+      ctx.lineWidth = isEnemy ? 3 : 2;
       ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 4, 0, Math.PI * 2); ctx.stroke();
+      // Enemy indicator triangle above name
+      if (isEnemy) {
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = '#f44';
+        ctx.beginPath();
+        ctx.moveTo(bp.x, bp.y - bp.radius - 24);
+        ctx.lineTo(bp.x - 5, bp.y - bp.radius - 18);
+        ctx.lineTo(bp.x + 5, bp.y - bp.radius - 18);
+        ctx.closePath(); ctx.fill();
+      }
       ctx.globalAlpha = 1;
-      // Character sprite for bot — use their class type
       var bpAngle = bp.facingAngle || 0;
       drawCharacterSprite(bp.x, bp.y, bp.radius, bp.characterType || 'warrior', bpAngle, {
         isBot: true, color: bp.color || '#f44', shield: bp.shieldActive
       });
-      // Name + level label
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+      // Name + level label — red for enemies
+      ctx.fillStyle = isEnemy ? '#f88' : '#fff';
+      ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
       ctx.fillText(bp.name + ' L' + (bp.level || 1), bp.x, bp.y - bp.radius - 14);
-      // Always show HP bar for bots
+      // HP bar
       var botBarW = 34;
       ctx.fillStyle = '#222'; ctx.fillRect(bp.x - botBarW/2, bp.y - bp.radius - 8, botBarW, 4);
       var botHpR = Math.max(0, bp.hp / bp.maxHp);
-      ctx.fillStyle = bp.factionId === player.factionId ? '#0c0' : '#f44';
+      ctx.fillStyle = isEnemy ? '#f44' : '#0c0';
       ctx.fillRect(bp.x - botBarW/2, bp.y - bp.radius - 8, botBarW * botHpR, 4);
     }
 
@@ -3967,7 +3996,7 @@ function doLogin() {
 
     // HUD
     ctx.fillStyle = '#fff'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
-    ctx.fillText('HP ' + Math.floor(player.hp) + '/' + player.maxHp + '  Lv.' + playerLevel + '  Wave ' + wave + '  Kills ' + kills, 8, 18);
+    ctx.fillText('HP ' + Math.floor(player.hp) + '/' + player.maxHp + '  Lv.' + playerLevel + '  第' + wave + '波  击杀 ' + kills, 8, 18);
     // Game time — right-aligned to avoid overlap with kills
     ctx.textAlign = 'right';
     ctx.fillText(Math.floor(gameTime) + 's', W - 80, 18);
@@ -3976,7 +4005,7 @@ function doLogin() {
     if (dpsDisplay > 0) {
       ctx.fillStyle = dpsDisplay > 500 ? '#f44' : dpsDisplay > 200 ? '#fa0' : '#aaa';
       ctx.font = '14px monospace';
-      ctx.fillText('DPS: ' + dpsDisplay, 8, 36);
+      ctx.fillText('秒伤: ' + dpsDisplay, 8, 36);
     }
 
     // Kill streak + multiplier display
@@ -4013,7 +4042,7 @@ function doLogin() {
     ctx.fillRect(ultBarX, ultBarY, ultBarW * ultRatio, ultBarH);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(ultBarX, ultBarY, ultBarW, ultBarH);
     ctx.fillStyle = ultReady ? '#ffd700' : '#888'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(ultReady ? '按Q/双击 释放大招!' : 'ULT ' + ultCharge + '/' + ultChargeMax, W / 2, ultBarY - 3);
+    ctx.fillText(ultReady ? '按Q/双击 释放大招!' : '大招 ' + ultCharge + '/' + ultChargeMax, W / 2, ultBarY - 3);
 
     // MOBA-style skill upgrade bar (right side)
     drawSkillBar();
@@ -4033,18 +4062,45 @@ function doLogin() {
     ctx.globalAlpha = 1;
 
     // Minimap (US-204)
+    // Virtual joystick overlay
+    if (state === 'playing') {
+      if (joystick.active) {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.beginPath(); ctx.arc(joystick.baseX, joystick.baseY, joystick.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(joystick.stickX, joystick.stickY, 20, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.beginPath(); ctx.arc(90, H - 90, joystick.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath(); ctx.arc(90, H - 90, 18, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.globalAlpha = 0.4;
+        ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+        ctx.fillText('拖拽移动', 90, H - 50);
+        ctx.restore();
+      }
+    }
+
     drawMinimap();
     // Player status panel — shows all players with HP bars
     drawPlayerPanel();
     // PvP immunity countdown
-    if (gameTime < 45) {
-      var pvpLeft = Math.ceil(45 - gameTime);
+    if (gameTime < 90) {
+      var pvpLeft = Math.ceil(90 - gameTime);
       var pvpAlpha = pvpLeft <= 5 ? (0.5 + 0.5 * Math.sin(gameTime * 10)) : 0.9;
       ctx.save();
       ctx.globalAlpha = pvpAlpha;
       ctx.fillStyle = pvpLeft <= 3 ? '#f44' : '#4af';
       ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('🛡 PvP免疫 ' + pvpLeft + 's', W / 2, 20);
+      ctx.fillText('🛡 新手保护 ' + pvpLeft + '秒', W / 2, 20);
       ctx.restore();
     }
     // Kill feed display (right side, below skill bar to avoid overlap)
@@ -4388,9 +4444,15 @@ function doLogin() {
       }
     }
 
-    // Skill points indicator — pulsing glow to attract attention
+    // Skill points indicator — pulsing glow + screen flash to attract attention
     if (pendingSkillPoints > 0) {
       var spPulse = 0.6 + 0.4 * Math.sin((gameTime || 0) * 6);
+      // Full-width flash bar at top of skill panel
+      ctx.save();
+      ctx.globalAlpha = spPulse * 0.15;
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(barX - 10, barY - 30, 170, barY + selectedBuild.length * 44);
+      ctx.restore();
       // Glowing background banner
       ctx.globalAlpha = spPulse * 0.35;
       ctx.fillStyle = '#ffd700';
@@ -4761,11 +4823,11 @@ function doLogin() {
     if (!playerAttributes._classInit || playerAttributes._classInit !== selectedClass) {
       playerAttributes.INT = initAttrs.INT; playerAttributes.STR = initAttrs.STR;
       playerAttributes.AGI = initAttrs.AGI; playerAttributes.STA = initAttrs.STA;
-      attributePoints = 0;
+      attributePoints = 5;
       playerAttributes._classInit = selectedClass;
     }
     var attrNames = ['INT', 'STR', 'AGI', 'STA'];
-    var attrLabels = { INT: 'INT(智力)', STR: 'STR(力量)', AGI: 'AGI(敏捷)', STA: 'STA(耐力)' };
+    var attrLabels = { INT: '智力(法术强度↑)', STR: '力量(攻击+护甲↑)', AGI: '敏捷(速度+暴击↑)', STA: '耐力(生命+回血↑)' };
     var panelY = 350;
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(W / 2 - 190, panelY - 5, 380, 130);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 190, panelY - 5, 380, 130);
@@ -4793,8 +4855,10 @@ function doLogin() {
       ctx.fillStyle = '#111'; ctx.fillRect(W / 2 - 190, dsY, 380, 50);
       ctx.strokeStyle = '#333'; ctx.strokeRect(W / 2 - 190, dsY, 380, 50);
       ctx.font = '10px Arial'; ctx.fillStyle = '#8f8'; ctx.textAlign = 'left';
-      ctx.fillText('maxHP:' + derivedStats.maxHP + '  攻击力:' + derivedStats.physicalAttack.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), W / 2 - 180, dsY + 16);
-      ctx.fillText('暴击:' + (derivedStats.critRate * 100).toFixed(1) + '%  护甲:' + derivedStats.armor.toFixed(1) + '  闪避:' + (derivedStats.evasion * 100).toFixed(1) + '%', W / 2 - 180, dsY + 34);
+      var atkLabel = selectedClass === 'mage' ? '法术强度' : '攻击力';
+      var atkValue = selectedClass === 'mage' ? derivedStats.skillPower : derivedStats.physicalAttack;
+      ctx.fillText('生命:' + derivedStats.maxHP + '  ' + atkLabel + ':' + atkValue.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), W / 2 - 180, dsY + 16);
+      ctx.fillText('暴击:' + (derivedStats.critRate * 100).toFixed(1) + '%  护甲:' + derivedStats.armor.toFixed(1) + '  回血:' + derivedStats.hpRegen.toFixed(1) + '/s', W / 2 - 180, dsY + 34);
     }
 
     // Back
@@ -5233,7 +5297,9 @@ function doLogin() {
 
     // Secondary stats + gold (merged to save space)
     ctx.font = '11px Arial'; ctx.fillStyle = '#666';
-    ctx.fillText('Lv.' + playerLevel + '  |  连杀' + maxStreak + '  |  技能' + Object.keys(skillLevels).length + '种', W / 2, sy + 40);
+    var learnedCount = 0;
+    for (var sk in skillLevels) { if (skillLevels[sk] > 0) learnedCount++; }
+    ctx.fillText('Lv.' + playerLevel + '  |  连杀' + maxStreak + '  |  已学技能' + learnedCount + '/' + selectedBuild.length, W / 2, sy + 40);
 
     var achCount = Object.keys(unlockedAchievements).length;
     ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#ffd700';
@@ -5293,7 +5359,7 @@ function doLogin() {
     var myRank = lbPlayers.findIndex(function(e) { return e.isLocal; }) + 1;
     if (myRank > lbShow) {
       ctx.fillStyle = '#f84'; ctx.font = 'bold 10px Arial';
-      ctx.fillText('你排第' + myRank + '名', W / 2, lbY + 13 + lbShow * 13);
+      ctx.fillText('你排第' + myRank + '名 (按击杀数)', W / 2, lbY + 13 + lbShow * 13);
     }
 
     // Share button (fixed position near bottom)
@@ -5396,7 +5462,7 @@ function doLogin() {
     ctx.fillText('⏸ 暂停', W / 2, H / 2 - 20);
     ctx.font = '16px Arial'; ctx.fillStyle = '#888';
     ctx.fillText('按 ESC 继续', W / 2, H / 2 + 20);
-    ctx.fillText('Wave ' + wave + '  Kills ' + kills + '  ' + Math.floor(gameTime) + 's', W / 2, H / 2 + 50);
+    ctx.fillText('第' + wave + '波  击杀 ' + kills + '  ' + Math.floor(gameTime) + '秒', W / 2, H / 2 + 50);
   }
 
   var _stateBeforePause = 'playing';
@@ -5415,12 +5481,10 @@ function doLogin() {
       if (state === 'spectating') { finalizeGameRewards(); state = 'gameOver'; return; }
       togglePause();
     }
-    // Spectator mode: switch target with arrow keys
     if (state === 'spectating') {
       if (ev.key === 'ArrowRight' || ev.key === 'd' || ev.key === 'D') cycleSpectatorTarget(1);
       if (ev.key === 'ArrowLeft' || ev.key === 'a' || ev.key === 'A') cycleSpectatorTarget(-1);
     }
-    // screenshotMode (US-306): toggle clean screenshot view with 'H' key
     if ((ev.key === 'h' || ev.key === 'H') && (state === 'playing' || state === 'paused')) {
       screenshotMode = !screenshotMode;
     }
@@ -5441,14 +5505,90 @@ function doLogin() {
       if (k === 'd') p2Keys.d = false;
     }
   });
-  // Double-click for ultimate (mobile-friendly)
-  var _lastClickTime = 0;
-  canvas.addEventListener('dblclick', function(ev) {
-    if (state === 'playing') useUltimate();
+
+  // === VIRTUAL JOYSTICK (touch + mouse fallback) ===
+  function joystickStart(x, y, id) {
+    if (state !== 'playing') return false;
+    if (x < W * 0.45) {
+      joystick.active = true;
+      joystick.touchId = id;
+      joystick.baseX = x; joystick.baseY = y;
+      joystick.stickX = x; joystick.stickY = y;
+      joystick.dx = 0; joystick.dy = 0;
+      return true;
+    }
+    return false;
+  }
+  function joystickMove(x, y, id) {
+    if (!joystick.active || joystick.touchId !== id) return;
+    var ddx = x - joystick.baseX, ddy = y - joystick.baseY;
+    var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+    if (dist > joystick.radius) { ddx = ddx / dist * joystick.radius; ddy = ddy / dist * joystick.radius; }
+    joystick.stickX = joystick.baseX + ddx;
+    joystick.stickY = joystick.baseY + ddy;
+    if (dist > joystick.deadzone) {
+      joystick.dx = ddx / joystick.radius;
+      joystick.dy = ddy / joystick.radius;
+    } else {
+      joystick.dx = 0; joystick.dy = 0;
+    }
+  }
+  function joystickEnd(id) {
+    if (joystick.touchId === id) {
+      joystick.active = false; joystick.touchId = null;
+      joystick.dx = 0; joystick.dy = 0;
+    }
+  }
+  canvas.addEventListener('touchstart', function(ev) {
+    ev.preventDefault();
+    for (var ti = 0; ti < ev.changedTouches.length; ti++) {
+      var t = ev.changedTouches[ti];
+      var r = canvas.getBoundingClientRect();
+      var tx = (t.clientX - r.left) * W / r.width;
+      var ty = (t.clientY - r.top) * H / r.height;
+      joystickStart(tx, ty, t.identifier);
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchmove', function(ev) {
+    ev.preventDefault();
+    for (var ti = 0; ti < ev.changedTouches.length; ti++) {
+      var t = ev.changedTouches[ti];
+      var r = canvas.getBoundingClientRect();
+      var tx = (t.clientX - r.left) * W / r.width;
+      var ty = (t.clientY - r.top) * H / r.height;
+      joystickMove(tx, ty, t.identifier);
+    }
+  }, { passive: false });
+  canvas.addEventListener('touchend', function(ev) {
+    for (var ti = 0; ti < ev.changedTouches.length; ti++) {
+      joystickEnd(ev.changedTouches[ti].identifier);
+    }
+  });
+  // Mouse fallback for PC testing
+  var _joystickMouseDown = false;
+  canvas.addEventListener('mousedown', function(ev) {
+    if (ev.button !== 0) return;
+    var r = canvas.getBoundingClientRect();
+    var mx = (ev.clientX - r.left) * W / r.width;
+    var my = (ev.clientY - r.top) * H / r.height;
+    if (joystickStart(mx, my, 'mouse')) { _joystickMouseDown = true; }
   });
   canvas.addEventListener('mousemove', function(ev) {
     var r = canvas.getBoundingClientRect();
     mouseX = ev.clientX - r.left; mouseY = ev.clientY - r.top;
+    if (_joystickMouseDown) {
+      var mx = (ev.clientX - r.left) * W / r.width;
+      var my = (ev.clientY - r.top) * H / r.height;
+      joystickMove(mx, my, 'mouse');
+    }
+  });
+  canvas.addEventListener('mouseup', function(ev) {
+    if (_joystickMouseDown) { joystickEnd('mouse'); _joystickMouseDown = false; }
+  });
+  // Double-click for ultimate (mobile-friendly)
+  var _lastClickTime = 0;
+  canvas.addEventListener('dblclick', function(ev) {
+    if (state === 'playing') useUltimate();
   });
   canvas.addEventListener('click', function(ev) {
     if (!audioCtx) initAudio(); // Init audio on first click (browser policy)
@@ -5631,6 +5771,25 @@ function doLogin() {
     var clickEv = new MouseEvent('click', { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY });
     canvas.dispatchEvent(clickEv);
   }, { passive: true });
+
+  // Expose game internals for automated testing (QA helper)
+  window._gameAPI = {
+    get state() { return state; }, set state(v) { state = v; },
+    get player() { return player; },
+    get enemies() { return enemies; },
+    get gold() { return gold; }, set gold(v) { gold = v; },
+    get waveNumber() { return waveNumber; },
+    get pendingSkillPoints() { return pendingSkillPoints; }, set pendingSkillPoints(v) { pendingSkillPoints = v; },
+    get selectedClass() { return selectedClass; },
+    get selectedBuild() { return selectedBuild; },
+    get gameMode() { return gameMode; },
+    get gameTimer() { return gameTimer; },
+    get W() { return W; }, get H() { return H; },
+    get allPlayers() { return allPlayers; },
+    get isDailyMode() { return isDailyMode; },
+    startGame: function(daily) { startGame(daily); },
+    finalizeGameRewards: typeof finalizeGameRewards === 'function' ? finalizeGameRewards : function() {}
+  };
 
   requestAnimationFrame(loop);
 })();
