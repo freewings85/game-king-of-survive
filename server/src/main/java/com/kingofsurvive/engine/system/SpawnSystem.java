@@ -366,13 +366,11 @@ public class SpawnSystem {
 
         EnemyEntity enemy = new EnemyEntity(type, x, y, hp, damage, speed, xpReward, radius, wave);
 
-        // Hostile flag: red-name enemies shoot bullets, green-name give XP on touch
-        // Green (passive): normal, swarm, treasure
-        // Red (hostile): fast, tank, ranged, miniBoss, boss
+        // Hostile flag: red-name enemies chase + shoot + melee, green-name give XP on touch
+        // Green (passive): treasure only (rare reward mobs)
+        // Red (hostile): normal, swarm, fast, tank, ranged, miniBoss, boss
         boolean hostile = true;
         switch (type) {
-            case "normal":
-            case "swarm":
             case "treasure":
                 hostile = false;
                 break;
@@ -382,35 +380,36 @@ public class SpawnSystem {
         }
         enemy.setHostile(hostile);
 
-        // All hostile enemies can shoot — set ranged attack with type-specific stats
-        if (hostile) {
-            enemy.setRangedAttack(true);
-            switch (type) {
-                case "fast":
-                    enemy.setAttackRange(180);
-                    enemy.setRangedCooldown(1.8);
-                    break;
-                case "tank":
-                    enemy.setAttackRange(150);
-                    enemy.setRangedCooldown(2.5);
-                    break;
-                case "ranged":
-                    enemy.setAttackRange(300);
-                    enemy.setRangedCooldown(1.5);
-                    break;
-                case "miniBoss":
-                    enemy.setAttackRange(250);
-                    enemy.setRangedCooldown(1.2);
-                    break;
-                case "boss":
-                    enemy.setAttackRange(350);
-                    enemy.setRangedCooldown(0.8);
-                    break;
-                default:
-                    enemy.setAttackRange(200);
-                    enemy.setRangedCooldown(2.0);
-                    break;
-            }
+        // Ranged attack: only specific types shoot projectiles
+        // normal/swarm are melee-only (they deal contact damage via CombatSystem)
+        switch (type) {
+            case "fast":
+                enemy.setRangedAttack(true);
+                enemy.setAttackRange(180);
+                enemy.setRangedCooldown(1.8);
+                break;
+            case "tank":
+                enemy.setRangedAttack(true);
+                enemy.setAttackRange(150);
+                enemy.setRangedCooldown(2.5);
+                break;
+            case "ranged":
+                enemy.setRangedAttack(true);
+                enemy.setAttackRange(300);
+                enemy.setRangedCooldown(1.5);
+                break;
+            case "miniBoss":
+                enemy.setRangedAttack(true);
+                enemy.setAttackRange(250);
+                enemy.setRangedCooldown(1.2);
+                break;
+            case "boss":
+                enemy.setRangedAttack(true);
+                enemy.setAttackRange(350);
+                enemy.setRangedCooldown(0.8);
+                break;
+            default:
+                break;
         }
 
         // Special properties (legacy — fleeFromPlayer for treasure)

@@ -21,13 +21,7 @@ public class EnemyAISystem {
                 continue;
             }
 
-            // Green (non-hostile) enemies wander randomly instead of chasing
-            if (!enemy.isHostile()) {
-                updateWanderAI(enemy, dt);
-                continue;
-            }
-
-            // Find nearest alive player (hostile enemies only)
+            // All enemies chase the nearest player (passive ones chase more slowly)
             PlayerEntity nearest = null;
             double nearestDist = Double.MAX_VALUE;
 
@@ -58,6 +52,11 @@ public class EnemyAISystem {
                     if (p.getTimeWarp() > 0 && dist < 150) {
                         enemy.applySlowFactor(1 - p.getTimeWarp());
                     }
+                }
+
+                // Non-hostile (green) enemies move slower toward player
+                if (!enemy.isHostile()) {
+                    enemy.applySlowFactor(0.6);
                 }
             }
         }

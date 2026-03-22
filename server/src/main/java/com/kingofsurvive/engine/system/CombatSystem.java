@@ -36,6 +36,9 @@ public class CombatSystem {
         // Enemy projectiles vs players (only bullets cause damage now)
         resolveEnemyProjectilesVsPlayers(players, projectiles, gameTime);
 
+        // Enemy melee contact damage (enemies touching players deal DPS)
+        resolveEnemyMeleeDamage(players, enemies, dt);
+
         // Thorns damage
         resolveThornsDamage(players, enemies, dt);
 
@@ -132,8 +135,8 @@ public class CombatSystem {
     private void resolveProjectileVsPlayers(List<PlayerEntity> players,
                                              List<ProjectileEntity> projectiles,
                                              double gameTime) {
-        // PvP immunity for first 90 seconds (farming phase)
-        if (gameTime < 90) return;
+        // PvP immunity for first 60 seconds (farming phase, aligns with storm start)
+        if (gameTime < 60) return;
 
         for (ProjectileEntity proj : projectiles) {
             if (!proj.isAlive() || proj.isEnemyProjectile()) continue;
@@ -149,8 +152,8 @@ public class CombatSystem {
                     if (proj.isCrit()) damage *= proj.getCritMultiplier();
                     damage *= randomMin + Math.random() * (randomMax - randomMin);
 
-                    // Gradual PvP damage ramp: 75% at 90-110s, full after 110s
-                    if (gameTime < 110) {
+                    // Gradual PvP damage ramp: 75% at 60-80s, full after 80s
+                    if (gameTime < 80) {
                         damage *= 0.75;
                     }
 
@@ -433,6 +436,36 @@ public class CombatSystem {
                 double splashDmg = explosiveDmg * falloff;
                 e.takeDamage(splashDmg);
                 pendingEvents.add(GameEvent.damage(e.getId(), splashDmg, false, proj.getOwnerId()));
+            }
+        }
+    }
+
+    /**
+     * Enemies that overlap with a player deal continuous melee damage (DPS).
+     * Hostile enemies deal full damage; passive (green) enemies deal 40% damage.
+     * This prevents the "stand still and win" exploit.
+     */
+    private void resolveEnemyMeleeDamage(List<PlayerEntity> players,
+                                          List<EnemyEntity> enemies, double dt) {
+        for (PlayerEntity player : players) {
+            if (!player.isAlive()) continue;
+
+            double totalMeleeDps = 0;
+            for (EnemyEntity enemy : enemies) {
+                if (!enemy.isAlive()) continue;
+                double dist = player.getPosition().distanceTo(enemy.getPosition());
+                double touchDist = player.getRadius() + enemy.getRadius() + 2;
+                if (dist < touchDist) {
+                    double dps = enemy.getDamage();
+                    if (!enemy.isHostile()) {
+                        dps *= 0.4;
+                    }
+                    totalMeleeDps += dps;
+                }
+            }
+
+            if (totalMeleeDps > 0) {
+                player.takeDamage(totalMeleeDps * dt);
             }
         }
     }

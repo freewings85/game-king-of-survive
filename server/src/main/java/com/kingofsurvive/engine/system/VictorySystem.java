@@ -10,7 +10,7 @@ public class VictorySystem {
     private boolean victoryTriggered;
     private double victoryTimer;
     private static final double VICTORY_COUNTDOWN = 5.0;
-    private static final double MAX_GAME_TIME = 90.0; // 90s hard limit for fast-paced games
+    private static final double MAX_GAME_TIME = 180.0; // 3-minute matches with storm as pacing mechanism
 
     private String winnerId;
     private int winnerFaction;

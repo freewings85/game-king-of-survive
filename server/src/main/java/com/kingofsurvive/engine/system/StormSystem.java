@@ -52,12 +52,12 @@ public class StormSystem {
         }
 
         // Trigger conditions (any one):
-        // 1. Few players left: 4 or fewer alive after 60s
-        // 2. Forced: always start shrinking at 120s to keep games under 180s
+        // 1. Few players left: 4 or fewer alive after 45s
+        // 2. Timed: always start shrinking at 60s to drive mid-game pressure
         if (!triggered) {
-            if ((aliveCount <= 4 && gameTime > 60) || gameTime > 120) {
+            if ((aliveCount <= 4 && gameTime > 45) || gameTime > 60) {
                 triggered = true;
-                delayTimer = (gameTime > 120) ? 2 : activationDelay;
+                delayTimer = (gameTime > 60) ? 2 : activationDelay;
             }
         }
 

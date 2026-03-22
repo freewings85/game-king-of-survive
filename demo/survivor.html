@@ -2448,9 +2448,42 @@ function doLogin() {
     }
   }
 
+  var _xpBatch = { total: 0, timer: 0, x: 0, y: 0 };
+  var _goldBatch = { total: 0, timer: 0, x: 0, y: 0 };
+
   function floatText(x, y, text, color, size) {
     if (floats.length >= MAX_FLOATS) floats.shift();
-    floats.push({ x: x, y: y, text: text, color: color || '#fff', size: size || 14, life: 0.7, maxLife: 0.7, vy: -60 });
+    var jitterX = (Math.random() - 0.5) * 30;
+    floats.push({ x: x + jitterX, y: y, text: text, color: color || '#fff', size: size || 14, life: 0.7, maxLife: 0.7, vy: -60 - Math.random() * 20 });
+  }
+
+  function floatXP(x, y, amount) {
+    _xpBatch.total += amount;
+    _xpBatch.x = x; _xpBatch.y = y;
+    if (_xpBatch.timer <= 0) _xpBatch.timer = 0.15;
+  }
+
+  function floatGold(x, y, amount) {
+    _goldBatch.total += amount;
+    _goldBatch.x = x; _goldBatch.y = y;
+    if (_goldBatch.timer <= 0) _goldBatch.timer = 0.15;
+  }
+
+  function flushBatchedFloats(dt) {
+    if (_xpBatch.timer > 0) {
+      _xpBatch.timer -= dt;
+      if (_xpBatch.timer <= 0 && _xpBatch.total > 0) {
+        floatText(_xpBatch.x, _xpBatch.y, '+' + Math.round(_xpBatch.total) + 'XP', '#af0', 14);
+        _xpBatch.total = 0;
+      }
+    }
+    if (_goldBatch.timer > 0) {
+      _goldBatch.timer -= dt;
+      if (_goldBatch.timer <= 0 && _goldBatch.total > 0) {
+        floatText(_goldBatch.x, _goldBatch.y - 15, '+' + Math.round(_goldBatch.total) + 'G', '#ffd700', 14);
+        _goldBatch.total = 0;
+      }
+    }
   }
 
   function screenShake(intensity, ms) { shakeDur = ms / 1000; shakeX = intensity; shakeY = intensity; }
@@ -2739,7 +2772,7 @@ function doLogin() {
         // Enemy killed — visual effects at kill location
         if (d.x !== undefined) {
           emit(d.x, d.y, '#f44', 10, 80);
-          if (d.xp) floatText(d.x, d.y, '+' + Math.round(d.xp) + 'XP', '#af0', 14);
+          if (d.xp) floatXP(d.x, d.y, d.xp);
         }
         // Increment kill counter if this player got the kill
         if (d.killerId === localId) {
@@ -2869,8 +2902,10 @@ function doLogin() {
 
   // === MAIN GAME LOOP ===
   var lastTime = 0;
+  var _dt = 0;
   function loop(ts) {
     var dt = Math.min((ts - lastTime) / 1000, 0.05);
+    _dt = dt;
     lastTime = ts;
     // screenFreezeFrame (US-345): skip frame during hitStop
     if (hitStop.active) { hitStop.timer -= dt; if (hitStop.timer <= 0) hitStop.active = false; dt = 0; }
@@ -2930,6 +2965,8 @@ function doLogin() {
       else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2); ctx.fill(); }
     }
     particles.length = pLen;
+    // Flush batched XP/gold floats before rendering
+    flushBatchedFloats(dt);
     // Float texts — swap-and-pop + styledDamageNumbers (US-274)
     var fLen = floats.length;
     for (var i = fLen - 1; i >= 0; i--) {
@@ -4240,9 +4277,9 @@ function doLogin() {
       ctx.globalAlpha = 1;
     }
 
-    // Achievement popup (max 3 visible, auto-fade after 3s)
+    // Achievement popup (max 3 visible, auto-fade after timer expires)
     for (var ai = achievementQueue.length - 1; ai >= 0; ai--) {
-      achievementQueue[ai]._timer -= 0.016;
+      achievementQueue[ai]._timer -= _dt || 0.016;
       if (achievementQueue[ai]._timer <= 0) { achievementQueue.splice(ai, 1); }
     }
     var visibleAch = Math.min(achievementQueue.length, 3);
@@ -4472,7 +4509,7 @@ function doLogin() {
 
     // First-time skill upgrade tutorial hint — large animated arrow pointing at skill panel
     if (_skillHintTimer > 0 && pendingSkillPoints > 0) {
-      _skillHintTimer -= 0.016;
+      _skillHintTimer -= _dt || 0.016;
       var hintAlpha = Math.min(1, _skillHintTimer / 0.5); // fade out in last 0.5s
       var hintBounce = Math.sin((gameTime || 0) * 8) * 8;
       // Dark overlay to draw attention to skill panel

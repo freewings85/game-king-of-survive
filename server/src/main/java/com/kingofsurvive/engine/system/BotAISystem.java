@@ -203,20 +203,20 @@ public class BotAISystem {
             }
         }
 
-        // After PvP immunity (45s), gradually become PvP-aggressive
+        // After PvP immunity (60s), gradually become PvP-aggressive
         // When ≤3 alive: always hunt other players (100%)
-        // Otherwise: 15% at 45-60s, 30% at 60-75s, 50% at 75-90s, 70% after 90s
+        // Otherwise: 20% at 60-90s, 40% at 90-120s, 60% at 120-150s, 80% after 150s
         int aliveCount = 0;
         for (PlayerEntity p : players) {
             if (p.isAlive()) aliveCount++;
         }
-        if (gameTime >= 45) {
+        if (gameTime >= 60) {
             double pvpChance;
-            if (aliveCount <= 3) pvpChance = 1.0; // endgame: always hunt
-            else if (gameTime >= 90) pvpChance = 0.70;
-            else if (gameTime >= 75) pvpChance = 0.50;
-            else if (gameTime >= 60) pvpChance = 0.30;
-            else pvpChance = 0.15;
+            if (aliveCount <= 3) pvpChance = 1.0;
+            else if (gameTime >= 150) pvpChance = 0.80;
+            else if (gameTime >= 120) pvpChance = 0.60;
+            else if (gameTime >= 90) pvpChance = 0.40;
+            else pvpChance = 0.20;
             boolean wantPvP = Math.random() < pvpChance;
             if (wantPvP) {
                 double pvpDetectRange = aliveCount <= 3 ? 2000 : 800; // endgame: full map awareness
