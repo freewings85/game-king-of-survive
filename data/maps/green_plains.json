@@ -1,152 +1,193 @@
 {
-  "id": "green_plains",
-  "name": "绿野平原",
-  "width": 1200,
-  "height": 1200,
-  "shape": "rect",
-  "requiredRank": "BRONZE",
-  "color": "#1a2a1a",
-
-  "initialDensity": 12,
-  "spawnMinDist": 150,
-  "spawnMaxDist": 270,
-
-  "waveBaseCount": 8,
-  "waveIntervalEarly": 18,
-  "waveIntervalMid": 16,
-  "waveIntervalLate": 12,
-  "bossEvery": 5,
-  "eliteAffixChance": 0.2,
-
-  "trickleInterval": 1.2,
-  "trickleMin": 0.6,
-
-  "trickle": {
-    "earlyBoostDuration": 20,
-    "earlyBoostInterval": 0.4,
-    "earlyBoostCount": 2,
-    "composition": {
-      "normal": 0.40,
-      "fast": 0.25,
-      "swarm": 0.20,
-      "tank": 0.10,
-      "ranged": 0.05
+  "id" : "green_plains",
+  "name" : "绿野平原",
+  "width" : 1200,
+  "height" : 1200,
+  "shape" : "rect",
+  "requiredRank" : "BRONZE",
+  "color" : "#1a2a1a",
+  "initialDensity" : 18,
+  "spawnMinDist" : 120,
+  "spawnMaxDist" : 200,
+  "waveBaseCount" : 8,
+  "waveIntervalEarly" : 18,
+  "waveIntervalMid" : 16,
+  "waveIntervalLate" : 12,
+  "bossEvery" : 5,
+  "eliteAffixChance" : 0.2,
+  "trickleInterval" : 1.2,
+  "trickleMin" : 0.6,
+  "trickle" : {
+    "earlyBoostDuration" : 20,
+    "earlyBoostInterval" : 0.3,
+    "earlyBoostCount" : 3,
+    "composition" : {
+      "normal" : 0.4,
+      "fast" : 0.25,
+      "swarm" : 0.2,
+      "tank" : 0.1,
+      "ranged" : 0.05
     }
   },
-
-  "waveComposition": [
-    { "minWave": 1, "types": { "normal": 0.70, "swarm": 0.30 } },
-    { "minWave": 3, "types": { "normal": 0.40, "fast": 0.30, "swarm": 0.20, "tank": 0.10 } },
-    { "minWave": 5, "types": { "fast": 0.30, "tank": 0.30, "ranged": 0.20, "normal": 0.20 } },
-    { "minWave": 8, "types": { "tank": 0.30, "ranged": 0.25, "miniBoss": 0.15, "fast": 0.20, "normal": 0.10 } }
-  ],
-
-  "ambush": {
-    "enabled": true,
-    "interval": 20,
-    "chance": 0.25,
-    "monsterType": "fast",
-    "monsterCount": 3,
-    "spawnMinDist": 80,
-    "spawnMaxDist": 150
+  "waveComposition" : [ {
+    "minWave" : 1,
+    "types" : {
+      "normal" : 0.7,
+      "swarm" : 0.3
+    }
+  }, {
+    "minWave" : 3,
+    "types" : {
+      "normal" : 0.4,
+      "fast" : 0.3,
+      "swarm" : 0.2,
+      "tank" : 0.1
+    }
+  }, {
+    "minWave" : 5,
+    "types" : {
+      "fast" : 0.3,
+      "tank" : 0.3,
+      "ranged" : 0.2,
+      "normal" : 0.2
+    }
+  }, {
+    "minWave" : 8,
+    "types" : {
+      "tank" : 0.3,
+      "ranged" : 0.25,
+      "miniBoss" : 0.15,
+      "fast" : 0.2,
+      "normal" : 0.1
+    }
+  } ],
+  "ambush" : {
+    "enabled" : true,
+    "interval" : 20,
+    "chance" : 0.25,
+    "monsterType" : "fast",
+    "monsterCount" : 3,
+    "spawnMinDist" : 80,
+    "spawnMaxDist" : 150
   },
-
-  "spawnCamps": [
-    {
-      "id": "north_camp",
-      "name": "北部营地",
-      "x": 600, "y": 100,
-      "radius": 80,
-      "monsters": [
-        { "type": "normal", "count": 3 },
-        { "type": "fast", "count": 1 }
-      ],
-      "firstSpawnTime": 5,
-      "respawnCooldown": 18,
-      "maxRespawns": -1
+  "spawnCamps" : [ {
+    "id" : "north_camp",
+    "name" : "北部营地",
+    "x" : 600,
+    "y" : 100,
+    "radius" : 80,
+    "monsters" : [ {
+      "type" : "normal",
+      "count" : 3
+    }, {
+      "type" : "fast",
+      "count" : 1
+    } ],
+    "firstSpawnTime" : 5,
+    "respawnCooldown" : 18,
+    "maxRespawns" : -1
+  }, {
+    "id" : "south_camp",
+    "name" : "南部营地",
+    "x" : 600,
+    "y" : 1100,
+    "radius" : 80,
+    "monsters" : [ {
+      "type" : "normal",
+      "count" : 2
+    }, {
+      "type" : "tank",
+      "count" : 1
+    } ],
+    "firstSpawnTime" : 8,
+    "respawnCooldown" : 20,
+    "maxRespawns" : -1
+  }, {
+    "id" : "east_camp",
+    "name" : "东部丛林",
+    "x" : 1100,
+    "y" : 600,
+    "radius" : 70,
+    "monsters" : [ {
+      "type" : "fast",
+      "count" : 3
+    }, {
+      "type" : "swarm",
+      "count" : 2
+    } ],
+    "firstSpawnTime" : 10,
+    "respawnCooldown" : 15,
+    "maxRespawns" : -1
+  }, {
+    "id" : "west_camp",
+    "name" : "西部矿洞",
+    "x" : 100,
+    "y" : 600,
+    "radius" : 70,
+    "monsters" : [ {
+      "type" : "tank",
+      "count" : 2
+    }, {
+      "type" : "ranged",
+      "count" : 1
+    } ],
+    "firstSpawnTime" : 12,
+    "respawnCooldown" : 22,
+    "maxRespawns" : -1
+  }, {
+    "id" : "center_treasure",
+    "name" : "中央宝库",
+    "x" : 600,
+    "y" : 600,
+    "radius" : 50,
+    "monsters" : [ {
+      "type" : "treasure",
+      "count" : 1
+    }, {
+      "type" : "miniBoss",
+      "count" : 1
+    } ],
+    "firstSpawnTime" : 30,
+    "respawnCooldown" : 45,
+    "maxRespawns" : 2
+  }, {
+    "id" : "boss_pit",
+    "name" : "Boss 洞穴",
+    "x" : 300,
+    "y" : 300,
+    "radius" : 60,
+    "monsters" : [ {
+      "type" : "boss",
+      "count" : 1
+    } ],
+    "firstSpawnTime" : 50,
+    "respawnCooldown" : -1,
+    "maxRespawns" : 1
+  } ],
+  "zones" : [ {
+    "name" : "平原中心",
+    "type" : "safe",
+    "bounds" : {
+      "x" : 400,
+      "y" : 400,
+      "width" : 400,
+      "height" : 400
     },
-    {
-      "id": "south_camp",
-      "name": "南部营地",
-      "x": 600, "y": 1100,
-      "radius": 80,
-      "monsters": [
-        { "type": "normal", "count": 2 },
-        { "type": "tank", "count": 1 }
-      ],
-      "firstSpawnTime": 8,
-      "respawnCooldown": 20,
-      "maxRespawns": -1
+    "monsterLevel" : [ 1, 3 ],
+    "spawnRate" : 0.8
+  }, {
+    "name" : "平原外围",
+    "type" : "normal",
+    "bounds" : {
+      "x" : 0,
+      "y" : 0,
+      "width" : 1200,
+      "height" : 1200
     },
-    {
-      "id": "east_camp",
-      "name": "东部丛林",
-      "x": 1100, "y": 600,
-      "radius": 70,
-      "monsters": [
-        { "type": "fast", "count": 3 },
-        { "type": "swarm", "count": 2 }
-      ],
-      "firstSpawnTime": 10,
-      "respawnCooldown": 15,
-      "maxRespawns": -1
-    },
-    {
-      "id": "west_camp",
-      "name": "西部矿洞",
-      "x": 100, "y": 600,
-      "radius": 70,
-      "monsters": [
-        { "type": "tank", "count": 2 },
-        { "type": "ranged", "count": 1 }
-      ],
-      "firstSpawnTime": 12,
-      "respawnCooldown": 22,
-      "maxRespawns": -1
-    },
-    {
-      "id": "center_treasure",
-      "name": "中央宝库",
-      "x": 600, "y": 600,
-      "radius": 50,
-      "monsters": [
-        { "type": "treasure", "count": 1 },
-        { "type": "miniBoss", "count": 1 }
-      ],
-      "firstSpawnTime": 30,
-      "respawnCooldown": 45,
-      "maxRespawns": 2
-    },
-    {
-      "id": "boss_pit",
-      "name": "Boss 洞穴",
-      "x": 300, "y": 300,
-      "radius": 60,
-      "monsters": [
-        { "type": "boss", "count": 1 }
-      ],
-      "firstSpawnTime": 50,
-      "respawnCooldown": -1,
-      "maxRespawns": 1
-    }
-  ],
-
-  "zones": [
-    {
-      "name": "平原中心",
-      "type": "safe",
-      "bounds": { "x": 400, "y": 400, "width": 400, "height": 400 },
-      "monsterLevel": [1, 3],
-      "spawnRate": 0.8
-    },
-    {
-      "name": "平原外围",
-      "type": "normal",
-      "bounds": { "x": 0, "y": 0, "width": 1200, "height": 1200 },
-      "monsterLevel": [2, 5],
-      "spawnRate": 1.2
-    }
-  ],
-  "spawnPoints": [],
-  "obstacles": []
+    "monsterLevel" : [ 2, 5 ],
+    "spawnRate" : 1.2
+  } ],
+  "spawnPoints" : [ ],
+  "obstacles" : [ ],
+  "waves" : { }
 }

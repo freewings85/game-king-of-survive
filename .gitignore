@@ -14,9 +14,12 @@ Thumbs.db
 
 # Temp screenshots & evaluation results
 *.jpg
+*.png
 review_screenshots/
 round*_eval/
 test-results/
+feedback/
+qa/rounds/*/screenshots/
 
 # Replay recordings
 server/replays/
