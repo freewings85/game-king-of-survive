@@ -256,32 +256,35 @@ game-king-of-survive/
 
 ## 快速开始
 
+### 环境要求
+
+- Java 8+（推荐 JDK 8 或 11）
+- Maven 3.6+
+
+### 1. 编译并启动服务端
+
 ```bash
-# 1. 编译后端
 cd server
 mvn package -DskipTests
-
-# 2. 启动服务器
 java -jar target/king-of-survive-server-1.0.0-SNAPSHOT.jar
-
-# 3. 打开浏览器
-open http://localhost:8080
 ```
 
-## AI 玩家模拟测试
+服务器启动后默认监听 `http://localhost:8080`。
 
-```bash
-# 8玩家×2模式全链路模拟
-uv run python scripts/profile_simulator.py
+### 2. 试玩游戏
 
-# 8人多模式测试
-uv run python scripts/multiplayer_test.py
+浏览器打开 http://localhost:8080 ，会自动跳转到游戏页面。
 
-# 留存率分析
-uv run python scripts/retention_analyst.py
-```
+流程：输入昵称注册 → 选择单排/组队 → 选角色 → 选地图 → 选技能 → 开始游戏。
 
-模拟器覆盖 8 种玩家画像（男/女 × 少年/青少年/青年/中年），每种画像有不同的操作风格和偏好，全流程测试注册→签到→皮肤→组队→游戏→结算→反馈。
+- PC：鼠标控制移动方向，角色自动攻击最近敌人
+- 移动端：触屏/虚拟摇杆控制
+
+### 3. 地图编辑器
+
+浏览器打开 http://localhost:8080/editor/ ，可以编辑技能、地图刷怪参数等配置。
+
+编辑器修改会通过 API 保存到服务端，重启服务后生效。
 
 ## 段位系统
 
