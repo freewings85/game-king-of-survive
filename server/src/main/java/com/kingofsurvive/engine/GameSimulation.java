@@ -83,6 +83,11 @@ public class GameSimulation {
      */
     public void addPlayer(String playerId, String nickname, String characterType,
                           int factionId, boolean isBot, DataLoader dataLoader) {
+        addPlayer(playerId, nickname, characterType, "default", factionId, isBot, dataLoader);
+    }
+
+    public void addPlayer(String playerId, String nickname, String characterType,
+                          String skinId, int factionId, boolean isBot, DataLoader dataLoader) {
         // Determine spawn position
         List<MapData.SpawnPoint> spawnPoints = mapData.getSpawnPoints();
         int idx = players.size() % (spawnPoints != null && !spawnPoints.isEmpty() ? spawnPoints.size() : 1);
@@ -102,6 +107,7 @@ public class GameSimulation {
 
         PlayerEntity player = new PlayerEntity(playerId, nickname, characterType,
                 factionId, isBot, x, y);
+        player.setSkinId(skinId != null ? skinId : "default");
 
         // Init from class data
         ClassData classData = dataLoader.getClassData(characterType);

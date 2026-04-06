@@ -6,26 +6,591 @@
   "shape": "diamond",
   "requiredRank": "SILVER",
   "color": "#2a2a1a",
-  "zones": [
+  "initialDensity": 20,
+  "spawnMinDist": 110,
+  "spawnMaxDist": 200,
+  "waveBaseCount": 10,
+  "waveIntervalEarly": 16,
+  "waveIntervalMid": 13,
+  "waveIntervalLate": 10,
+  "bossEvery": 5,
+  "eliteAffixChance": 0.28,
+  "trickleInterval": 1.0,
+  "trickleMin": 0.5,
+  "trickle": {
+    "earlyBoostDuration": 18,
+    "earlyBoostInterval": 0.3,
+    "earlyBoostCount": 3,
+    "composition": {
+      "normal": 0.25,
+      "fast": 0.2,
+      "swarm": 0.3,
+      "tank": 0.15,
+      "ranged": 0.1
+    }
+  },
+  "waveComposition": [
     {
-      "name": "浅沼区",
-      "type": "normal",
-      "bounds": { "x": 400, "y": 400, "width": 800, "height": 800 },
-      "monsterLevel": [5, 9],
-      "spawnRate": 1.3
+      "minWave": 1,
+      "types": {
+        "normal": 0.4,
+        "swarm": 0.5,
+        "fast": 0.1
+      }
     },
     {
-      "name": "深沼区",
+      "minWave": 3,
+      "types": {
+        "swarm": 0.35,
+        "normal": 0.25,
+        "fast": 0.2,
+        "ranged": 0.2
+      }
+    },
+    {
+      "minWave": 5,
+      "types": {
+        "swarm": 0.25,
+        "ranged": 0.3,
+        "tank": 0.2,
+        "fast": 0.15,
+        "normal": 0.1
+      }
+    },
+    {
+      "minWave": 8,
+      "types": {
+        "ranged": 0.3,
+        "tank": 0.25,
+        "miniBoss": 0.2,
+        "swarm": 0.15,
+        "fast": 0.1
+      }
+    }
+  ],
+  "ambush": {
+    "enabled": true,
+    "interval": 16,
+    "chance": 0.35,
+    "monsterType": "swarm",
+    "monsterCount": 6,
+    "spawnMinDist": 70,
+    "spawnMaxDist": 130
+  },
+  "spawnCamps": [
+    {
+      "id": "north_marsh",
+      "name": "北部沼地",
+      "x": 800,
+      "y": 200,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 3
+        },
+        {
+          "type": "swarm",
+          "count": 3
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "south_bank",
+      "name": "南部岸边",
+      "x": 800,
+      "y": 1400,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "normal",
+          "count": 2
+        },
+        {
+          "type": "swarm",
+          "count": 3
+        }
+      ],
+      "firstSpawnTime": 5,
+      "respawnCooldown": 16,
+      "maxRespawns": -1
+    },
+    {
+      "id": "east_bog",
+      "name": "东部泥潭",
+      "x": 1350,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 2
+        },
+        {
+          "type": "swarm",
+          "count": 3
+        }
+      ],
+      "firstSpawnTime": 12,
+      "respawnCooldown": 20,
+      "maxRespawns": -1
+    },
+    {
+      "id": "west_reed",
+      "name": "西部芦苇荡",
+      "x": 250,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "fast",
+          "count": 2
+        },
+        {
+          "type": "ranged",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "swamp_heart_cache",
+      "name": "沼泽宝藏",
+      "x": 800,
+      "y": 700,
+      "radius": 50,
+      "monsters": [
+        {
+          "type": "treasure",
+          "count": 1
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 35,
+      "respawnCooldown": 50,
+      "maxRespawns": 2
+    },
+    {
+      "id": "corruption_source",
+      "name": "腐化之源",
+      "x": 800,
+      "y": 200,
+      "radius": 65,
+      "monsters": [
+        {
+          "type": "boss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 55,
+      "respawnCooldown": -1,
+      "maxRespawns": 1
+    }
+  ],
+  "zones": [
+    {
+      "id": "spawn_zone",
+      "name": "沼泽入口",
+      "type": "spawn",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 1350
+      },
+      "radius": 140,
+      "monsterLevelRange": [
+        3,
+        4
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "normal",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_south",
+      "name": "浅水区·南",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 300,
+        "y": 1050,
+        "width": 1000,
+        "height": 300
+      },
+      "monsterLevelRange": [
+        3,
+        6
+      ],
+      "spawnRate": 0.6,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_east",
+      "name": "浅水区·东",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 1100,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        3,
+        6
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_west",
+      "name": "浅水区·西",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 200,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        3,
+        6
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_poison_east",
+      "name": "毒雾区·东",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 900,
+        "y": 350,
+        "width": 250,
+        "height": 600
+      },
+      "monsterLevelRange": [
+        5,
+        9
+      ],
+      "spawnRate": 1.2,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_poison_west",
+      "name": "毒雾区·西",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 450,
+        "y": 350,
+        "width": 250,
+        "height": 600
+      },
+      "monsterLevelRange": [
+        5,
+        9
+      ],
+      "spawnRate": 1.2,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "inner_core",
+      "name": "沼泽深处",
+      "type": "inner",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 650
+      },
+      "radius": 200,
+      "monsterLevelRange": [
+        7,
+        12
+      ],
+      "spawnRate": 1.6,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "miniBoss",
+        "treasure"
+      ]
+    },
+    {
+      "id": "boss_lair",
+      "name": "腐化之源",
+      "type": "boss_lair",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 200
+      },
+      "radius": 90,
+      "monsterLevelRange": [
+        10,
+        15
+      ],
+      "spawnRate": 0,
+      "allowedMonsters": [
+        "boss"
+      ],
+      "bossType": "boss",
+      "bossSpawnTime": 130,
+      "bossRespawnCooldown": 200
+    },
+    {
+      "id": "hazard_poison_north",
+      "name": "毒沼地带",
       "type": "hazard",
-      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
-      "monsterLevel": [8, 13],
-      "spawnRate": 1.6
+      "shape": "rect",
+      "bounds": {
+        "x": 650,
+        "y": 350,
+        "width": 300,
+        "height": 200
+      },
+      "monsterLevelRange": [
+        6,
+        10
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "swarm"
+      ],
+      "damagePerSecond": 4
+    },
+    {
+      "id": "resource_east",
+      "name": "隐秘泉眼·东",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 1300,
+        "y": 500
+      },
+      "radius": 60,
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "resource_west",
+      "name": "隐秘泉眼·西",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 300,
+        "y": 500
+      },
+      "radius": 60,
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    }
+  ],
+  "terrain": [
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 600,
+        "y": 700
+      },
+      "radius": 60
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 1000,
+        "y": 700
+      },
+      "radius": 60
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 500
+      },
+      "radius": 50
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 500,
+        "y": 1000
+      },
+      "radius": 45
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 1100,
+        "y": 1000
+      },
+      "radius": 45
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 400,
+        "y": 600
+      },
+      "radius": 55
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 1200,
+        "y": 600
+      },
+      "radius": 55
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 900
+      },
+      "radius": 50
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 750,
+        "y": 150,
+        "width": 100,
+        "height": 60
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 600,
+        "y": 1200
+      },
+      "to": {
+        "x": 600,
+        "y": 900
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1000,
+        "y": 1200
+      },
+      "to": {
+        "x": 1000,
+        "y": 900
+      }
+    },
+    {
+      "type": "poison",
+      "shape": "circle",
+      "center": {
+        "x": 400,
+        "y": 500
+      },
+      "radius": 70
+    },
+    {
+      "type": "poison",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 700
+      },
+      "radius": 55
+    },
+    {
+      "type": "heal_spring",
+      "shape": "circle",
+      "center": {
+        "x": 600,
+        "y": 1000
+      },
+      "radius": 30
     }
   ],
   "spawnPoints": [
-    { "x": 800, "y": 800 },
-    { "x": 800, "y": 400 },
-    { "x": 400, "y": 800 }
+    {
+      "x": 800,
+      "y": 1350
+    },
+    {
+      "x": 600,
+      "y": 1400
+    },
+    {
+      "x": 1000,
+      "y": 1400
+    }
   ],
-  "obstacles": []
+  "obstacles": [],
+  "waves": {}
 }

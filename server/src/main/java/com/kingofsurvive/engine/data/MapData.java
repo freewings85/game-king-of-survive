@@ -135,23 +135,91 @@ public class MapData {
         public void setComposition(Map<String, Double> composition) { this.composition = composition; }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class MapZone {
+        private String id;
         private String name;
-        private String type; // "safe", "normal", "danger"
-        private Map<String, Double> bounds; // x, y, width, height
-        private List<Integer> monsterLevel; // [min, max]
+        private String type; // "spawn", "outer", "middle", "inner", "boss_lair", "resource"
+        private String shape; // "circle" or "rect"
+        private Map<String, Double> center; // for circle: { x, y }
+        private double radius; // for circle
+        private Map<String, Double> bounds; // for rect: { x, y, width, height }
+        private List<Integer> monsterLevelRange; // [min, max]
+        private List<Integer> monsterLevel; // legacy alias
         private double spawnRate;
+        private List<String> allowedMonsters; // ["normal", "fast", "tank", ...]
+        private List<String> loot; // for resource zones: ["gold_chest", "xp_fountain"]
+        // Boss zone config
+        private String bossType;
+        private double bossSpawnTime;
+        private double bossRespawnCooldown;
 
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
         public String getType() { return type; }
         public void setType(String type) { this.type = type; }
+        public String getShape() { return shape; }
+        public void setShape(String shape) { this.shape = shape; }
+        public Map<String, Double> getCenter() { return center; }
+        public void setCenter(Map<String, Double> center) { this.center = center; }
+        public double getRadius() { return radius; }
+        public void setRadius(double radius) { this.radius = radius; }
         public Map<String, Double> getBounds() { return bounds; }
         public void setBounds(Map<String, Double> bounds) { this.bounds = bounds; }
+        public List<Integer> getMonsterLevelRange() {
+            return monsterLevelRange != null ? monsterLevelRange : monsterLevel;
+        }
+        public void setMonsterLevelRange(List<Integer> monsterLevelRange) { this.monsterLevelRange = monsterLevelRange; }
         public List<Integer> getMonsterLevel() { return monsterLevel; }
         public void setMonsterLevel(List<Integer> monsterLevel) { this.monsterLevel = monsterLevel; }
         public double getSpawnRate() { return spawnRate; }
         public void setSpawnRate(double spawnRate) { this.spawnRate = spawnRate; }
+        public List<String> getAllowedMonsters() { return allowedMonsters; }
+        public void setAllowedMonsters(List<String> allowedMonsters) { this.allowedMonsters = allowedMonsters; }
+        public List<String> getLoot() { return loot; }
+        public void setLoot(List<String> loot) { this.loot = loot; }
+        public String getBossType() { return bossType; }
+        public void setBossType(String bossType) { this.bossType = bossType; }
+        public double getBossSpawnTime() { return bossSpawnTime; }
+        public void setBossSpawnTime(double bossSpawnTime) { this.bossSpawnTime = bossSpawnTime; }
+        public double getBossRespawnCooldown() { return bossRespawnCooldown; }
+        public void setBossRespawnCooldown(double bossRespawnCooldown) { this.bossRespawnCooldown = bossRespawnCooldown; }
+
+        /** Check if a point (x,y) is inside this zone */
+        public boolean contains(double x, double y) {
+            if ("circle".equals(shape) && center != null) {
+                double dx = x - center.getOrDefault("x", 0.0);
+                double dy = y - center.getOrDefault("y", 0.0);
+                return dx * dx + dy * dy <= radius * radius;
+            } else if (bounds != null) {
+                double bx = bounds.getOrDefault("x", 0.0);
+                double by = bounds.getOrDefault("y", 0.0);
+                double bw = bounds.getOrDefault("width", 0.0);
+                double bh = bounds.getOrDefault("height", 0.0);
+                return x >= bx && x <= bx + bw && y >= by && y <= by + bh;
+            }
+            return false;
+        }
+
+        /** Get a random position inside this zone */
+        public double[] randomPosition() {
+            if ("circle".equals(shape) && center != null) {
+                double angle = Math.random() * Math.PI * 2;
+                double dist = Math.random() * radius;
+                return new double[]{
+                    center.getOrDefault("x", 0.0) + Math.cos(angle) * dist,
+                    center.getOrDefault("y", 0.0) + Math.sin(angle) * dist
+                };
+            } else if (bounds != null) {
+                return new double[]{
+                    bounds.getOrDefault("x", 0.0) + Math.random() * bounds.getOrDefault("width", 100.0),
+                    bounds.getOrDefault("y", 0.0) + Math.random() * bounds.getOrDefault("height", 100.0)
+                };
+            }
+            return new double[]{0, 0};
+        }
     }
 
     public static class SpawnPoint {

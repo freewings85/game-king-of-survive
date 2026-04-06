@@ -1,0 +1,3021 @@
+{
+  "default": {
+    "name": "默认",
+    "description": "职业默认外观",
+    "tier": "C",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": null,
+      "accent": null,
+      "highlight": null,
+      "eye": null
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "default"
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": null
+  },
+  "warrior_red": {
+    "name": "烈焰战士",
+    "description": "燃烧着战意的赤红铠甲",
+    "tier": "C",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#cc2222",
+      "accent": "#ff6633",
+      "highlight": "#ffaa44",
+      "eye": "#fff"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 5
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "iron_helm",
+        "colorOverride": {
+          "primary": "#cc2222",
+          "secondary": "#ff6633"
+        }
+      },
+      "body": {
+        "variant": "plate_armor",
+        "colorOverride": {
+          "primary": "#cc2222",
+          "secondary": "#ff6633"
+        }
+      },
+      "weapon": {
+        "variant": "longsword_shield"
+      },
+      "legs": {
+        "variant": "heavy_boots",
+        "colorOverride": {
+          "color": "#882222"
+        }
+      }
+    }
+  },
+  "warrior_blue": {
+    "name": "寒冰战士",
+    "description": "寒气逼人的冰蓝战甲",
+    "tier": "C",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#2244aa",
+      "accent": "#4488dd",
+      "highlight": "#88ccff",
+      "eye": "#ccddff"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 5
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "iron_helm",
+        "colorOverride": {
+          "primary": "#2244aa",
+          "secondary": "#4488dd"
+        }
+      },
+      "body": {
+        "variant": "plate_armor",
+        "colorOverride": {
+          "primary": "#2244aa",
+          "secondary": "#4488dd"
+        }
+      },
+      "weapon": {
+        "variant": "longsword_shield",
+        "colorOverride": {
+          "weapon": "#88ccff",
+          "shield": "#3399cc"
+        }
+      },
+      "legs": {
+        "variant": "heavy_boots",
+        "colorOverride": {
+          "color": "#223388"
+        }
+      }
+    }
+  },
+  "forest_green": {
+    "name": "翠林迷彩",
+    "description": "与森林融为一体的迷彩涂装",
+    "tier": "C",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#2a6633",
+      "accent": "#44aa55",
+      "highlight": "#88dd77",
+      "eye": "#ccffcc"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 5
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#44aa55"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#2a6633",
+          "secondary": "#44aa55"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#2a6633"
+        }
+      }
+    }
+  },
+  "flame_red": {
+    "name": "炎之纹章",
+    "description": "灼热火焰纹路环绕全身",
+    "tier": "B",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#aa2200",
+      "accent": "#ff4400",
+      "highlight": "#ff8844",
+      "eye": "#ffcc88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ff6622",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 15
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "flame",
+      "glowColor": "#ff6622",
+      "glowIntensity": 0.3,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#ff4400"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#aa2200",
+          "secondary": "#ff4400"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#aa2200"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ff6622",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "ice_blue": {
+    "name": "冰霜之心",
+    "description": "寒冰结晶覆盖的冷冽外装",
+    "tier": "B",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#1144aa",
+      "accent": "#2266cc",
+      "highlight": "#66bbff",
+      "eye": "#aaddff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#66bbff",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 15
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "frost_crystal",
+      "glowColor": "#66bbff",
+      "glowIntensity": 0.3,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#2266cc"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#1144aa",
+          "secondary": "#2266cc"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#1144aa"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#66bbff",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "shadow_purple": {
+    "name": "暗影紫雾",
+    "description": "紫色暗影缭绕的神秘外观",
+    "tier": "B",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#3a1155",
+      "accent": "#6622aa",
+      "highlight": "#9944ff",
+      "eye": "#cc88ff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#9944ff",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 15
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "shadow_smoke",
+      "glowColor": "#9944ff",
+      "glowIntensity": 0.3,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#6622aa"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#3a1155",
+          "secondary": "#6622aa"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#3a1155"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#9944ff",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "cherry_blossom": {
+    "name": "樱花绽放",
+    "description": "飘散着粉色花瓣的浪漫皮肤",
+    "tier": "A",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#cc6688",
+      "accent": "#ff88aa",
+      "highlight": "#ffaacc",
+      "eye": "#ffddee"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ff88aa",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "petal",
+      "count": 6,
+      "color": "#ffaacc",
+      "sizeRange": [
+        0.08,
+        0.12
+      ],
+      "radiusRange": [
+        1.5,
+        2.5
+      ],
+      "speed": 1.5,
+      "alpha": [
+        0.3,
+        0.7
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 30
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "stripe",
+      "glowColor": "#ff88aa",
+      "glowIntensity": 0.5,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#ff88aa"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#cc6688",
+          "secondary": "#ff88aa"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#cc6688"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ff88aa",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "petal",
+        "count": 6,
+        "color": "#ffaacc",
+        "sizeRange": [
+          0.08,
+          0.12
+        ],
+        "radiusRange": [
+          1.5,
+          2.5
+        ],
+        "speed": 1.5,
+        "alpha": [
+          0.3,
+          0.7
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "ocean_wave": {
+    "name": "海浪潮涌",
+    "description": "水滴环绕的深海之力",
+    "tier": "A",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#1155aa",
+      "accent": "#2288cc",
+      "highlight": "#44ccff",
+      "eye": "#88eeff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#2288cc",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "droplet",
+      "count": 5,
+      "color": "#44ccff",
+      "sizeRange": [
+        0.06,
+        0.1
+      ],
+      "radiusRange": [
+        1.2,
+        2.0
+      ],
+      "speed": 3.0,
+      "alpha": [
+        0.4,
+        0.7
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 30
+      }
+    },
+    "visual": {
+      "bodyShape": "hexagon",
+      "pattern": "stripe",
+      "glowColor": "#2288cc",
+      "glowIntensity": 0.5,
+      "trailEffect": "ice_trail",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#2288cc"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#1155aa",
+          "secondary": "#2288cc"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#1155aa"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#2288cc",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "droplet",
+        "count": 5,
+        "color": "#44ccff",
+        "sizeRange": [
+          0.06,
+          0.1
+        ],
+        "radiusRange": [
+          1.2,
+          2.0
+        ],
+        "speed": 3.0,
+        "alpha": [
+          0.4,
+          0.7
+        ]
+      },
+      "trail": "ice_trail"
+    }
+  },
+  "autumn_leaf": {
+    "name": "秋叶知秋",
+    "description": "金色枫叶飘落的深秋之韵",
+    "tier": "A",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#aa6622",
+      "accent": "#cc8833",
+      "highlight": "#ffaa33",
+      "eye": "#ffcc88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#cc8833",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "leaf",
+      "count": 6,
+      "color": "#ffaa33",
+      "sizeRange": [
+        0.08,
+        0.12
+      ],
+      "radiusRange": [
+        1.5,
+        2.5
+      ],
+      "speed": 1.5,
+      "alpha": [
+        0.3,
+        0.7
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 30
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "stripe",
+      "glowColor": "#cc8833",
+      "glowIntensity": 0.5,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#cc8833"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#aa6622",
+          "secondary": "#cc8833"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#aa6622"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#cc8833",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "leaf",
+        "count": 6,
+        "color": "#ffaa33",
+        "sizeRange": [
+          0.08,
+          0.12
+        ],
+        "radiusRange": [
+          1.5,
+          2.5
+        ],
+        "speed": 1.5,
+        "alpha": [
+          0.3,
+          0.7
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "knight_gold": {
+    "name": "黄金圣骑",
+    "description": "闪耀的黄金圣骑士铠甲",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#aa8822",
+      "accent": "#ffcc44",
+      "highlight": "#ffe866",
+      "eye": "#fff8cc"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ffcc44",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 8,
+      "color": "#ffe866",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.5,
+        3.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.3,
+        0.9
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#ffdd44",
+      "radiusMultiplier": 3.0,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "hexagon",
+      "pattern": "stripe",
+      "glowColor": "#ffcc44",
+      "glowIntensity": 0.8,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#ffcc44"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#aa8822",
+          "secondary": "#ffcc44"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#aa8822"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ffcc44",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#ffdd44",
+        "radiusMultiplier": 3.0,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 8,
+        "color": "#ffe866",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.5,
+          3.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.3,
+          0.9
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "ninja_shadow": {
+    "name": "暗影忍者",
+    "description": "来去无踪的暗影忍者装束",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#1a1a2e",
+      "accent": "#333355",
+      "highlight": "#6644aa",
+      "eye": "#aa88ff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#6644aa",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "ring",
+      "count": 5,
+      "color": "#6644aa",
+      "sizeRange": [
+        0.06,
+        0.1
+      ],
+      "radiusRange": [
+        1.2,
+        2.2
+      ],
+      "speed": 1.8,
+      "alpha": [
+        0.2,
+        0.6
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#442266",
+      "radiusMultiplier": 2.5,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "diamond",
+      "pattern": "shadow_smoke",
+      "glowColor": "#6644aa",
+      "glowIntensity": 0.7,
+      "trailEffect": "shadow_fade",
+      "idleAnimation": "shadow_flicker"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#333355"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#1a1a2e",
+          "secondary": "#333355"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#1a1a2e"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#6644aa",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#442266",
+        "radiusMultiplier": 2.5,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "ring",
+        "count": 5,
+        "color": "#6644aa",
+        "sizeRange": [
+          0.06,
+          0.1
+        ],
+        "radiusRange": [
+          1.2,
+          2.2
+        ],
+        "speed": 1.8,
+        "alpha": [
+          0.2,
+          0.6
+        ]
+      },
+      "trail": "shadow_fade"
+    }
+  },
+  "starlight": {
+    "name": "星辰之光",
+    "description": "璀璨星光环绕的神圣套装",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#2233aa",
+      "accent": "#4466dd",
+      "highlight": "#aaccff",
+      "eye": "#ddeeff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#6688ff",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 8,
+      "color": "#aaccff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.0,
+        3.0
+      ],
+      "speed": 6.0,
+      "alpha": [
+        0.2,
+        1.0
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#6688ff",
+      "radiusMultiplier": 3.0,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "lightning",
+      "glowColor": "#6688ff",
+      "glowIntensity": 0.8,
+      "trailEffect": "sparkle",
+      "idleAnimation": "rotate"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#4466dd"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#2233aa",
+          "secondary": "#4466dd"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#2233aa"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#6688ff",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#6688ff",
+        "radiusMultiplier": 3.0,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 8,
+        "color": "#aaccff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.0,
+          3.0
+        ],
+        "speed": 6.0,
+        "alpha": [
+          0.2,
+          1.0
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "neon_cyber": {
+    "name": "霓虹机甲",
+    "description": "赛博朋克风格的霓虹机甲",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#0a0a1a",
+      "accent": "#00ffaa",
+      "highlight": "#00ff88",
+      "eye": "#00ffcc"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#00ffcc",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "pixel",
+      "count": 10,
+      "color": "#00ff88",
+      "sizeRange": [
+        0.03,
+        0.06
+      ],
+      "radiusRange": [
+        1.0,
+        2.5
+      ],
+      "speed": 4.0,
+      "alpha": [
+        0.3,
+        1.0
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#00ffcc",
+      "radiusMultiplier": 2.8,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "hexagon",
+      "pattern": "lightning",
+      "glowColor": "#00ffcc",
+      "glowIntensity": 0.8,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#00ffaa"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#0a0a1a",
+          "secondary": "#00ffaa"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#0a0a1a"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#00ffcc",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#00ffcc",
+        "radiusMultiplier": 2.8,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "pixel",
+        "count": 10,
+        "color": "#00ff88",
+        "sizeRange": [
+          0.03,
+          0.06
+        ],
+        "radiusRange": [
+          1.0,
+          2.5
+        ],
+        "speed": 4.0,
+        "alpha": [
+          0.3,
+          1.0
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "royal_gold": {
+    "name": "皇家金铠",
+    "description": "皇家御赐的金色华贵铠甲",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#886622",
+      "accent": "#ddaa33",
+      "highlight": "#ffcc00",
+      "eye": "#ffee88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ffcc00",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "petal",
+      "count": 6,
+      "color": "#ffcc00",
+      "sizeRange": [
+        0.06,
+        0.1
+      ],
+      "radiusRange": [
+        1.5,
+        2.8
+      ],
+      "speed": 1.2,
+      "alpha": [
+        0.4,
+        0.8
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#ffbb22",
+      "radiusMultiplier": 3.0,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "hexagon",
+      "pattern": "stripe",
+      "glowColor": "#ffcc00",
+      "glowIntensity": 0.8,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#ddaa33"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#886622",
+          "secondary": "#ddaa33"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#886622"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ffcc00",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#ffbb22",
+        "radiusMultiplier": 3.0,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "petal",
+        "count": 6,
+        "color": "#ffcc00",
+        "sizeRange": [
+          0.06,
+          0.1
+        ],
+        "radiusRange": [
+          1.5,
+          2.8
+        ],
+        "speed": 1.2,
+        "alpha": [
+          0.4,
+          0.8
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "mage_purple": {
+    "name": "大魔导师",
+    "description": "传说中大魔导师的紫色法袍",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#44226a",
+      "accent": "#8844cc",
+      "highlight": "#cc88ff",
+      "eye": "#eeccff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#9955dd",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 8,
+      "color": "#cc88ff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.5,
+        3.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.3,
+        0.9
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#9955dd",
+      "radiusMultiplier": 2.8,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 50
+      }
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "shadow_smoke",
+      "glowColor": "#9955dd",
+      "glowIntensity": 0.8,
+      "trailEffect": "sparkle",
+      "idleAnimation": "rotate"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#8844cc"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#44226a",
+          "secondary": "#8844cc"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#44226a"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#9955dd",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#9955dd",
+        "radiusMultiplier": 2.8,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 8,
+        "color": "#cc88ff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.5,
+          3.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.3,
+          0.9
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "mage_fire": {
+    "name": "焰火法师",
+    "description": "烈焰在指尖跳跃的炽热法袍",
+    "tier": "C",
+    "applicableClasses": [
+      "mage"
+    ],
+    "colors": {
+      "body": "#8a2200",
+      "accent": "#cc4400",
+      "highlight": "#ff6622",
+      "eye": "#ff8844"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 5
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "wizard_hat",
+        "colorOverride": {
+          "primary": "#8a2200",
+          "secondary": "#cc4400"
+        }
+      },
+      "body": {
+        "variant": "robe",
+        "colorOverride": {
+          "primary": "#8a2200",
+          "secondary": "#cc4400"
+        }
+      },
+      "weapon": {
+        "variant": "staff",
+        "colorOverride": {
+          "gem": "#ff6622"
+        }
+      },
+      "legs": {
+        "variant": "robe_feet",
+        "colorOverride": {
+          "color": "#6a1100"
+        }
+      }
+    }
+  },
+  "scout_night": {
+    "name": "暗夜猎手",
+    "description": "在黑暗中无声狩猎的斥候",
+    "tier": "C",
+    "applicableClasses": [
+      "scout"
+    ],
+    "colors": {
+      "body": "#1a1a33",
+      "accent": "#2a2a55",
+      "highlight": "#5555aa",
+      "eye": "#88aaff"
+    },
+    "outline": {
+      "enabled": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "craft",
+      "cost": {
+        "skinFragments": 5
+      }
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "none",
+      "glowColor": null,
+      "glowIntensity": 0,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "hood",
+        "colorOverride": {
+          "primary": "#1a1a33",
+          "secondary": "#2a2a55"
+        }
+      },
+      "body": {
+        "variant": "leather_vest",
+        "colorOverride": {
+          "primary": "#1a1a33",
+          "secondary": "#2a2a55"
+        }
+      },
+      "weapon": {
+        "variant": "longbow",
+        "colorOverride": {
+          "weapon": "#333366"
+        }
+      },
+      "legs": {
+        "variant": "light_boots",
+        "colorOverride": {
+          "color": "#1a1a33"
+        }
+      }
+    }
+  },
+  "warrior_inferno": {
+    "name": "炎铠战士",
+    "description": "熔岩纹理的烈焰战甲，橙红色弹道",
+    "tier": "B",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#ff4400",
+      "accent": "#ffaa00",
+      "highlight": "#ff6600",
+      "eye": "#fff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ff6600",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "clear_lava_canyon"
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "flame",
+      "glowColor": "#ff6600",
+      "glowIntensity": 0.4,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "horned_helm",
+        "colorOverride": {
+          "primary": "#ff4400",
+          "secondary": "#cc2200"
+        }
+      },
+      "body": {
+        "variant": "demon_armor"
+      },
+      "weapon": {
+        "variant": "flame_greatsword"
+      },
+      "legs": {
+        "variant": "demon_greaves"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ff6600",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "warrior_frost_knight": {
+    "name": "寒冰骑士",
+    "description": "冰蓝色战甲，冰晶拖尾效果",
+    "tier": "A",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#44aaff",
+      "accent": "#aaddff",
+      "highlight": "#88ccff",
+      "eye": "#ddeeff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#66bbff",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 5,
+      "color": "#aaddff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.2,
+        2.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.3,
+        0.7
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "clear_frost_wasteland"
+    },
+    "visual": {
+      "bodyShape": "hexagon",
+      "pattern": "frost_crystal",
+      "glowColor": "#66bbff",
+      "glowIntensity": 0.6,
+      "trailEffect": "ice_trail",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "frost_crown"
+      },
+      "body": {
+        "variant": "frost_plate"
+      },
+      "weapon": {
+        "variant": "frost_blade_shield"
+      },
+      "legs": {
+        "variant": "frost_boots"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#66bbff",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 5,
+        "color": "#aaddff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.2,
+          2.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.3,
+          0.7
+        ]
+      },
+      "trail": "ice_trail"
+    }
+  },
+  "warrior_shadow_lord": {
+    "name": "暗影领主",
+    "description": "暗紫色铠甲，散发紫色粒子光环",
+    "tier": "S",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#8800aa",
+      "accent": "#aa44cc",
+      "highlight": "#ff00ff",
+      "eye": "#ff88ff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#cc00ff",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 8,
+      "color": "#ff00ff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.5,
+        3.0
+      ],
+      "speed": 2.5,
+      "alpha": [
+        0.3,
+        0.9
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#8800aa",
+      "radiusMultiplier": 3.0,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "total_kills_10000"
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "shadow_smoke",
+      "glowColor": "#cc00ff",
+      "glowIntensity": 0.8,
+      "trailEffect": "shadow_fade",
+      "idleAnimation": "shadow_flicker"
+    },
+    "parts": {
+      "head": {
+        "variant": "horned_helm",
+        "colorOverride": {
+          "primary": "#8800aa",
+          "secondary": "#aa44cc",
+          "hornColor": "#ff00ff"
+        }
+      },
+      "body": {
+        "variant": "demon_armor",
+        "colorOverride": {
+          "primary": "#8800aa",
+          "secondary": "#aa44cc"
+        }
+      },
+      "weapon": {
+        "variant": "flame_greatsword",
+        "colorOverride": {
+          "weapon": "#aa44cc",
+          "glow": "#ff00ff"
+        }
+      },
+      "legs": {
+        "variant": "demon_greaves",
+        "colorOverride": {
+          "color": "#660088"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#cc00ff",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#8800aa",
+        "radiusMultiplier": 3.0,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 8,
+        "color": "#ff00ff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.5,
+          3.0
+        ],
+        "speed": 2.5,
+        "alpha": [
+          0.3,
+          0.9
+        ]
+      },
+      "trail": "shadow_fade"
+    }
+  },
+  "mage_flame_sage": {
+    "name": "烈焰贤者",
+    "description": "火焰色法袍，火球弹道特效",
+    "tier": "B",
+    "applicableClasses": [
+      "mage"
+    ],
+    "colors": {
+      "body": "#ff6600",
+      "accent": "#cc4400",
+      "highlight": "#ffcc00",
+      "eye": "#ffee88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ff6600",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "evolve_10_times"
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "flame",
+      "glowColor": "#ff6600",
+      "glowIntensity": 0.3,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "wizard_hat",
+        "colorOverride": {
+          "primary": "#ff6600",
+          "secondary": "#cc4400"
+        }
+      },
+      "body": {
+        "variant": "robe",
+        "colorOverride": {
+          "primary": "#ff6600",
+          "secondary": "#ffcc00"
+        }
+      },
+      "weapon": {
+        "variant": "staff",
+        "colorOverride": {
+          "gem": "#ffcc00"
+        }
+      },
+      "legs": {
+        "variant": "robe_feet",
+        "colorOverride": {
+          "color": "#cc4400"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ff6600",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "mage_thunder": {
+    "name": "雷霆法师",
+    "description": "电蓝光效加闪电拖尾",
+    "tier": "A",
+    "applicableClasses": [
+      "mage"
+    ],
+    "colors": {
+      "body": "#00ccff",
+      "accent": "#0088cc",
+      "highlight": "#ffffff",
+      "eye": "#aaeeff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#00ccff",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 6,
+      "color": "#88eeff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.2,
+        2.2
+      ],
+      "speed": 4.0,
+      "alpha": [
+        0.3,
+        0.8
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "clear_sky_arena"
+    },
+    "visual": {
+      "bodyShape": "diamond",
+      "pattern": "lightning",
+      "glowColor": "#00ccff",
+      "glowIntensity": 0.6,
+      "trailEffect": "sparkle",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "wizard_hat",
+        "colorOverride": {
+          "primary": "#00ccff",
+          "secondary": "#0088cc"
+        }
+      },
+      "body": {
+        "variant": "robe",
+        "colorOverride": {
+          "primary": "#00ccff",
+          "secondary": "#0088cc"
+        }
+      },
+      "weapon": {
+        "variant": "staff",
+        "colorOverride": {
+          "gem": "#ffffff"
+        }
+      },
+      "legs": {
+        "variant": "robe_feet",
+        "colorOverride": {
+          "color": "#006688"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#00ccff",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 6,
+        "color": "#88eeff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.2,
+          2.2
+        ],
+        "speed": 4.0,
+        "alpha": [
+          0.3,
+          0.8
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "mage_void_prophet": {
+    "name": "虚空先知",
+    "description": "黑紫色虚空粒子环绕",
+    "tier": "S",
+    "applicableClasses": [
+      "mage"
+    ],
+    "colors": {
+      "body": "#110033",
+      "accent": "#330066",
+      "highlight": "#cc00ff",
+      "eye": "#ee88ff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#cc00ff",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "ring",
+      "count": 8,
+      "color": "#cc00ff",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.5,
+        3.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.2,
+        0.8
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#440088",
+      "radiusMultiplier": 3.0,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "clear_void_abyss"
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "shadow_smoke",
+      "glowColor": "#cc00ff",
+      "glowIntensity": 0.8,
+      "trailEffect": "shadow_fade",
+      "idleAnimation": "rotate"
+    },
+    "parts": {
+      "head": {
+        "variant": "void_mask"
+      },
+      "body": {
+        "variant": "void_robe"
+      },
+      "weapon": {
+        "variant": "void_staff"
+      },
+      "legs": {
+        "variant": "void_feet"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#cc00ff",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#440088",
+        "radiusMultiplier": 3.0,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "ring",
+        "count": 8,
+        "color": "#cc00ff",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.5,
+          3.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.2,
+          0.8
+        ]
+      },
+      "trail": "shadow_fade"
+    }
+  },
+  "scout_desert_ranger": {
+    "name": "沙漠游侠",
+    "description": "沙金色涂装加沙尘拖尾",
+    "tier": "B",
+    "applicableClasses": [
+      "scout"
+    ],
+    "colors": {
+      "body": "#ddaa44",
+      "accent": "#aa7722",
+      "highlight": "#ff8800",
+      "eye": "#ffcc88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ddaa44",
+      "width": 2,
+      "shadowBlur": 5,
+      "pulse": false
+    },
+    "particles": {
+      "enabled": false
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "play_50_games"
+    },
+    "visual": {
+      "bodyShape": "circle",
+      "pattern": "stripe",
+      "glowColor": "#ddaa44",
+      "glowIntensity": 0.3,
+      "trailEffect": "none",
+      "idleAnimation": "none"
+    },
+    "parts": {
+      "head": {
+        "variant": "hood",
+        "colorOverride": {
+          "primary": "#ddaa44",
+          "secondary": "#aa7722"
+        }
+      },
+      "body": {
+        "variant": "leather_vest",
+        "colorOverride": {
+          "primary": "#ddaa44",
+          "secondary": "#aa7722"
+        }
+      },
+      "weapon": {
+        "variant": "longbow",
+        "colorOverride": {
+          "weapon": "#cc9922"
+        }
+      },
+      "legs": {
+        "variant": "light_boots",
+        "colorOverride": {
+          "color": "#aa7722"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ddaa44",
+        "width": 2,
+        "shadowBlur": 5,
+        "pulse": false
+      }
+    }
+  },
+  "scout_ghost_assassin": {
+    "name": "幽灵刺客",
+    "description": "半透明绿色加残影效果",
+    "tier": "A",
+    "applicableClasses": [
+      "scout"
+    ],
+    "colors": {
+      "body": "#44ffaa",
+      "accent": "#228866",
+      "highlight": "#00ff88",
+      "eye": "#88ffcc"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#44ffaa",
+      "width": 2,
+      "shadowBlur": 8,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "ring",
+      "count": 5,
+      "color": "#00ff88",
+      "sizeRange": [
+        0.06,
+        0.1
+      ],
+      "radiusRange": [
+        1.2,
+        2.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.2,
+        0.6
+      ]
+    },
+    "aura": {
+      "enabled": false
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "dodge_100_in_one_game"
+    },
+    "visual": {
+      "bodyShape": "diamond",
+      "pattern": "shadow_smoke",
+      "glowColor": "#44ffaa",
+      "glowIntensity": 0.5,
+      "trailEffect": "shadow_fade",
+      "idleAnimation": "shadow_flicker"
+    },
+    "parts": {
+      "head": {
+        "variant": "phantom_mask",
+        "colorOverride": {
+          "primary": "#44ffaa",
+          "secondary": "#228866"
+        }
+      },
+      "body": {
+        "variant": "shadow_leather",
+        "colorOverride": {
+          "primary": "#228866",
+          "secondary": "#44ffaa"
+        }
+      },
+      "weapon": {
+        "variant": "phantom_bow"
+      },
+      "legs": {
+        "variant": "phantom_boots"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#44ffaa",
+        "width": 2,
+        "shadowBlur": 8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "ring",
+        "count": 5,
+        "color": "#00ff88",
+        "sizeRange": [
+          0.06,
+          0.1
+        ],
+        "radiusRange": [
+          1.2,
+          2.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.2,
+          0.6
+        ]
+      },
+      "trail": "shadow_fade"
+    }
+  },
+  "scout_dragon_archer": {
+    "name": "龙血射手",
+    "description": "赤金色龙焰弹道特效",
+    "tier": "S",
+    "applicableClasses": [
+      "scout"
+    ],
+    "colors": {
+      "body": "#ff2244",
+      "accent": "#cc1133",
+      "highlight": "#ffdd00",
+      "eye": "#ffee88"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ff4444",
+      "width": 2,
+      "shadowBlur": 12,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 8,
+      "color": "#ffdd00",
+      "sizeRange": [
+        0.04,
+        0.08
+      ],
+      "radiusRange": [
+        1.5,
+        3.0
+      ],
+      "speed": 2.5,
+      "alpha": [
+        0.3,
+        0.9
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#ff4422",
+      "radiusMultiplier": 2.8,
+      "rotationSpeed": 1.0,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "clear_dragon_ridge"
+    },
+    "visual": {
+      "bodyShape": "diamond",
+      "pattern": "flame",
+      "glowColor": "#ff4444",
+      "glowIntensity": 0.8,
+      "trailEffect": "fire_particles",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "dragon_helm"
+      },
+      "body": {
+        "variant": "leather_vest",
+        "colorOverride": {
+          "primary": "#ff2244",
+          "secondary": "#cc1133"
+        }
+      },
+      "weapon": {
+        "variant": "longbow",
+        "colorOverride": {
+          "weapon": "#ff2244",
+          "string": "#ffdd00"
+        }
+      },
+      "legs": {
+        "variant": "light_boots",
+        "colorOverride": {
+          "color": "#cc1133"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ff4444",
+        "width": 2,
+        "shadowBlur": 12,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#ff4422",
+        "radiusMultiplier": 2.8,
+        "rotationSpeed": 1.0,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 8,
+        "color": "#ffdd00",
+        "sizeRange": [
+          0.04,
+          0.08
+        ],
+        "radiusRange": [
+          1.5,
+          3.0
+        ],
+        "speed": 2.5,
+        "alpha": [
+          0.3,
+          0.9
+        ]
+      },
+      "trail": "fire_particles"
+    }
+  },
+  "warrior_god_of_war": {
+    "name": "战神降临",
+    "description": "远古战神附体，金红双色烈焰铠甲，六翼火焰背翼不断跳动",
+    "tier": "SS",
+    "applicableClasses": [
+      "warrior"
+    ],
+    "colors": {
+      "body": "#cc0000",
+      "accent": "#ffaa00",
+      "highlight": "#ffe066",
+      "eye": "#fff8cc"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ffaa00",
+      "width": 3,
+      "shadowBlur": 16,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 12,
+      "color": "#ffcc00",
+      "sizeRange": [
+        0.05,
+        0.1
+      ],
+      "radiusRange": [
+        1.5,
+        3.5
+      ],
+      "speed": 2.5,
+      "alpha": [
+        0.4,
+        1.0
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#ff6600",
+      "radiusMultiplier": 3.5,
+      "rotationSpeed": 1.2,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "total_kills_50000"
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "flame",
+      "glowColor": "#ffaa00",
+      "glowIntensity": 1.0,
+      "trailEffect": "fire_particles",
+      "idleAnimation": "pulse"
+    },
+    "parts": {
+      "head": {
+        "variant": "horned_helm",
+        "colorOverride": {
+          "primary": "#cc0000",
+          "secondary": "#ffaa00",
+          "hornColor": "#ffe066"
+        }
+      },
+      "body": {
+        "variant": "demon_armor",
+        "colorOverride": {
+          "primary": "#cc0000",
+          "secondary": "#ffaa00"
+        }
+      },
+      "weapon": {
+        "variant": "flame_greatsword",
+        "colorOverride": {
+          "weapon": "#ffaa00",
+          "glow": "#ffe066"
+        }
+      },
+      "legs": {
+        "variant": "demon_greaves",
+        "colorOverride": {
+          "color": "#aa0000"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ffaa00",
+        "width": 3,
+        "shadowBlur": 16,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#ff6600",
+        "radiusMultiplier": 3.5,
+        "rotationSpeed": 1.2,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 12,
+        "color": "#ffcc00",
+        "sizeRange": [
+          0.05,
+          0.1
+        ],
+        "radiusRange": [
+          1.5,
+          3.5
+        ],
+        "speed": 2.5,
+        "alpha": [
+          0.4,
+          1.0
+        ]
+      },
+      "trail": "fire_particles"
+    }
+  },
+  "mage_archmage_eternal": {
+    "name": "永恒大法师",
+    "description": "超越时空的终极魔导士，虚空粒子与星尘交织，全身流转宇宙星河",
+    "tier": "SS",
+    "applicableClasses": [
+      "mage"
+    ],
+    "colors": {
+      "body": "#0a0033",
+      "accent": "#4400aa",
+      "highlight": "#cc88ff",
+      "eye": "#ffffff"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#aa66ff",
+      "width": 3,
+      "shadowBlur": 16,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 14,
+      "color": "#cc88ff",
+      "sizeRange": [
+        0.03,
+        0.09
+      ],
+      "radiusRange": [
+        1.2,
+        3.5
+      ],
+      "speed": 3.0,
+      "alpha": [
+        0.3,
+        1.0
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#6622cc",
+      "radiusMultiplier": 3.5,
+      "rotationSpeed": 1.5,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "evolve_all_mage_skills"
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "lightning",
+      "glowColor": "#aa66ff",
+      "glowIntensity": 1.0,
+      "trailEffect": "sparkle",
+      "idleAnimation": "rotate"
+    },
+    "parts": {
+      "head": {
+        "variant": "archmage_crown"
+      },
+      "body": {
+        "variant": "void_robe",
+        "colorOverride": {
+          "primary": "#0a0033",
+          "secondary": "#4400aa"
+        }
+      },
+      "weapon": {
+        "variant": "void_staff",
+        "colorOverride": {
+          "gem": "#cc88ff"
+        }
+      },
+      "legs": {
+        "variant": "void_feet"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#aa66ff",
+        "width": 3,
+        "shadowBlur": 16,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#6622cc",
+        "radiusMultiplier": 3.5,
+        "rotationSpeed": 1.5,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 14,
+        "color": "#cc88ff",
+        "sizeRange": [
+          0.03,
+          0.09
+        ],
+        "radiusRange": [
+          1.2,
+          3.5
+        ],
+        "speed": 3.0,
+        "alpha": [
+          0.3,
+          1.0
+        ]
+      },
+      "trail": "sparkle"
+    }
+  },
+  "scout_phantom_hunter": {
+    "name": "幻影猎手",
+    "description": "来自异次元的终极刺客，身影如幻，残像叠叠，猎杀无声",
+    "tier": "SS",
+    "applicableClasses": [
+      "scout"
+    ],
+    "colors": {
+      "body": "#003322",
+      "accent": "#00aa66",
+      "highlight": "#44ffaa",
+      "eye": "#88ffdd"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#00ffaa",
+      "width": 3,
+      "shadowBlur": 16,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "ring",
+      "count": 10,
+      "color": "#00ffaa",
+      "sizeRange": [
+        0.04,
+        0.09
+      ],
+      "radiusRange": [
+        1.5,
+        3.5
+      ],
+      "speed": 3.5,
+      "alpha": [
+        0.2,
+        0.9
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#00aa66",
+      "radiusMultiplier": 3.5,
+      "rotationSpeed": 1.8,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "achievement",
+      "condition": "dodge_500_total"
+    },
+    "visual": {
+      "bodyShape": "diamond",
+      "pattern": "shadow_smoke",
+      "glowColor": "#00ffaa",
+      "glowIntensity": 1.0,
+      "trailEffect": "shadow_fade",
+      "idleAnimation": "shadow_flicker"
+    },
+    "parts": {
+      "head": {
+        "variant": "phantom_mask"
+      },
+      "body": {
+        "variant": "shadow_leather"
+      },
+      "weapon": {
+        "variant": "phantom_bow"
+      },
+      "legs": {
+        "variant": "phantom_boots"
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#00ffaa",
+        "width": 3,
+        "shadowBlur": 16,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#00aa66",
+        "radiusMultiplier": 3.5,
+        "rotationSpeed": 1.8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "ring",
+        "count": 10,
+        "color": "#00ffaa",
+        "sizeRange": [
+          0.04,
+          0.09
+        ],
+        "radiusRange": [
+          1.5,
+          3.5
+        ],
+        "speed": 3.5,
+        "alpha": [
+          0.2,
+          0.9
+        ]
+      },
+      "trail": "shadow_fade"
+    }
+  },
+  "universal_celestial": {
+    "name": "天界之子",
+    "description": "天界赐福的神圣战装，白金光芒与虹彩交织，万物敬仰",
+    "tier": "SS",
+    "applicableClasses": [
+      "warrior",
+      "mage",
+      "scout"
+    ],
+    "colors": {
+      "body": "#eeddcc",
+      "accent": "#ffcc88",
+      "highlight": "#ffffff",
+      "eye": "#ffffaa"
+    },
+    "outline": {
+      "enabled": true,
+      "color": "#ffffff",
+      "width": 3,
+      "shadowBlur": 20,
+      "pulse": true
+    },
+    "particles": {
+      "enabled": true,
+      "type": "sparkle",
+      "count": 16,
+      "color": "#ffffcc",
+      "sizeRange": [
+        0.04,
+        0.1
+      ],
+      "radiusRange": [
+        1.5,
+        4.0
+      ],
+      "speed": 2.0,
+      "alpha": [
+        0.4,
+        1.0
+      ]
+    },
+    "aura": {
+      "enabled": true,
+      "color": "#ffeeaa",
+      "radiusMultiplier": 4.0,
+      "rotationSpeed": 0.8,
+      "pulse": true
+    },
+    "obtain": {
+      "method": "event",
+      "condition": "grand_final_champion"
+    },
+    "visual": {
+      "bodyShape": "star",
+      "pattern": "lightning",
+      "glowColor": "#ffffff",
+      "glowIntensity": 1.0,
+      "trailEffect": "sparkle",
+      "idleAnimation": "rotate"
+    },
+    "parts": {
+      "head": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#ffcc88"
+        }
+      },
+      "body": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "primary": "#eeddcc",
+          "secondary": "#ffcc88"
+        }
+      },
+      "weapon": {
+        "variant": "_class_default"
+      },
+      "legs": {
+        "variant": "_class_default",
+        "colorOverride": {
+          "color": "#eeddcc"
+        }
+      }
+    },
+    "effects": {
+      "outline": {
+        "enabled": true,
+        "color": "#ffffff",
+        "width": 3,
+        "shadowBlur": 20,
+        "pulse": true
+      },
+      "aura": {
+        "enabled": true,
+        "color": "#ffeeaa",
+        "radiusMultiplier": 4.0,
+        "rotationSpeed": 0.8,
+        "pulse": true
+      },
+      "particles": {
+        "enabled": true,
+        "type": "sparkle",
+        "count": 16,
+        "color": "#ffffcc",
+        "sizeRange": [
+          0.04,
+          0.1
+        ],
+        "radiusRange": [
+          1.5,
+          4.0
+        ],
+        "speed": 2.0,
+        "alpha": [
+          0.4,
+          1.0
+        ]
+      },
+      "trail": "sparkle"
+    }
+  }
+}

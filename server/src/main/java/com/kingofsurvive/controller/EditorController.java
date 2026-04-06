@@ -264,6 +264,50 @@ public class EditorController {
         return saveJsonFile("xp_curve.json", body);
     }
 
+    // --- Skins ---
+
+    @GetMapping("/skins")
+    public ResponseEntity<?> getSkins() {
+        try {
+            File file = new File(getDataDir(), "skins.json");
+            if (!file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            JsonNode node = MAPPER.readTree(file);
+            return ResponseEntity.ok(node);
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, "Failed to read skins.json", e);
+            return ResponseEntity.status(500).body(errorMap("Failed to read skins.json"));
+        }
+    }
+
+    @PutMapping("/skins")
+    public ResponseEntity<?> saveSkins(@RequestBody JsonNode body) {
+        return saveJsonFile("skins.json", body);
+    }
+
+    // --- Part Variants ---
+
+    @GetMapping("/part_variants")
+    public ResponseEntity<?> getPartVariants() {
+        try {
+            File file = new File(getDataDir(), "part_variants.json");
+            if (!file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            JsonNode node = MAPPER.readTree(file);
+            return ResponseEntity.ok(node);
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, "Failed to read part_variants.json", e);
+            return ResponseEntity.status(500).body(errorMap("Failed to read part_variants.json"));
+        }
+    }
+
+    @PutMapping("/part_variants")
+    public ResponseEntity<?> savePartVariants(@RequestBody JsonNode body) {
+        return saveJsonFile("part_variants.json", body);
+    }
+
     // --- Formulas ---
 
     @GetMapping("/formulas")

@@ -7,7 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { border: 1px solid #222; cursor: crosshair; max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
+  canvas { border: none; cursor: crosshair; display: block; width: 100vw; height: 100vh; touch-action: none; }
   #login-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%);
@@ -56,7 +56,7 @@
   <span class="rank" id="bar-rank">青铜</span>
   <span id="bar-level">Lv.1</span>
 </div>
-<canvas id="c" width="800" height="600"></canvas>
+<canvas id="c"></canvas>
 <script>
 // ─── Login/Register System ─────────────────────────────────────
 var _serverUrl = (location.protocol === 'file:') ? 'http://localhost:8080' : '';
@@ -184,7 +184,35 @@ function doLogin() {
 (function() {
   var canvas = document.getElementById('c');
   var ctx = canvas.getContext('2d');
-  var W = canvas.width, H = canvas.height;
+  var W = 800, H = 600;
+  var _dpr = 1;
+
+  function resizeCanvas() {
+    var dpr = window.devicePixelRatio || 1;
+    _dpr = dpr;
+    var sw = window.innerWidth;
+    var sh = window.innerHeight;
+    // Use logical 800x600 aspect ratio, scale to fit screen
+    var targetAspect = 800 / 600;
+    var screenAspect = sw / sh;
+    if (screenAspect > targetAspect) {
+      // Screen is wider — fit to height
+      H = Math.round(sh * dpr);
+      W = Math.round(H * targetAspect);
+    } else {
+      // Screen is taller — fit to width
+      W = Math.round(sw * dpr);
+      H = Math.round(W / targetAspect);
+    }
+    // Clamp minimum size
+    if (W < 400) { W = 400; H = Math.round(W / targetAspect); }
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = sw + 'px';
+    canvas.style.height = sh + 'px';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
 
   // mapGenerator (US-015): world map (reduced from 2400 for tighter PvP encounters)
   var WORLD_W = 1200, WORLD_H = 1200;
@@ -460,14 +488,45 @@ function doLogin() {
 
   // factionSystem (US-003): faction data managed via allPlayers[].factionId
 
-  // spawnZone (US-005): different areas with different spawn rates
-  var spawnZones = [
-    { x: WORLD_W/2, y: WORLD_H/2, radius: 250, spawnRate: 2, types: ['boss','tank','miniBoss'], name: '危险区', zoneSpawnRate: 2 },
-    { x: WORLD_W*0.2, y: WORLD_H*0.2, radius: 300, spawnRate: 0.5, types: ['normal','swarm'], name: '新手区', zoneSpawnRate: 0.5 },
-    { x: WORLD_W*0.8, y: WORLD_H*0.2, radius: 300, spawnRate: 0.5, types: ['normal','fast'], name: '东部区', zoneSpawnRate: 0.5 },
-    { x: WORLD_W*0.2, y: WORLD_H*0.8, radius: 300, spawnRate: 0.8, types: ['normal','ranged'], name: '西部区', zoneSpawnRate: 0.8 },
-    { x: WORLD_W*0.8, y: WORLD_H*0.8, radius: 300, spawnRate: 1, types: ['fast','tank'], name: '南部区', zoneSpawnRate: 1 }
-  ];
+  // spawnZone (US-005): zone-based spawning — populated from mapZones on game start
+  var spawnZones = [];
+
+  // Build spawnZones from mapZones data
+  function buildSpawnZonesFromMap() {
+    spawnZones = [];
+    if (mapZones.length === 0) {
+      // Fallback: use default zones if no map data
+      spawnZones = [
+        { x: WORLD_W/2, y: WORLD_H/2, radius: 250, spawnRate: 2, types: ['boss','tank','miniBoss'], name: '危险区', zoneSpawnRate: 2 },
+        { x: WORLD_W*0.2, y: WORLD_H*0.2, radius: 300, spawnRate: 0.5, types: ['normal','swarm'], name: '新手区', zoneSpawnRate: 0.5 },
+        { x: WORLD_W*0.8, y: WORLD_H*0.2, radius: 300, spawnRate: 0.5, types: ['normal','fast'], name: '东部区', zoneSpawnRate: 0.5 },
+        { x: WORLD_W*0.2, y: WORLD_H*0.8, radius: 300, spawnRate: 0.8, types: ['normal','ranged'], name: '西部区', zoneSpawnRate: 0.8 },
+        { x: WORLD_W*0.8, y: WORLD_H*0.8, radius: 300, spawnRate: 1, types: ['fast','tank'], name: '南部区', zoneSpawnRate: 1 }
+      ];
+      return;
+    }
+    for (var i = 0; i < mapZones.length; i++) {
+      var z = mapZones[i];
+      if (z.type === 'boss_lair' && z.spawnRate === 0) continue; // Boss zones have special spawn logic
+      var cx, cy, r;
+      if (z.shape === 'circle' && z.center) {
+        cx = z.center.x; cy = z.center.y; r = z.radius || 100;
+      } else if (z.bounds) {
+        cx = z.bounds.x + z.bounds.width / 2;
+        cy = z.bounds.y + z.bounds.height / 2;
+        r = Math.max(z.bounds.width, z.bounds.height) / 2;
+      } else continue;
+      spawnZones.push({
+        x: cx, y: cy, radius: r,
+        spawnRate: z.spawnRate || 1,
+        types: z.allowedMonsters || ['normal'],
+        name: z.name || z.id,
+        zoneSpawnRate: z.spawnRate || 1,
+        monsterLevelRange: z.monsterLevelRange || [1, 5],
+        zoneType: z.type
+      });
+    }
+  }
 
   // victoryCondition (US-007): check if all enemies eliminated
   var victoryState = { active: false, timer: 0 };
@@ -520,7 +579,8 @@ function doLogin() {
   // Load rank
   try { var _sr = localStorage.getItem('kos_rank'); if (_sr) rankTier = JSON.parse(_sr); } catch(e) {}
 
-  // skinSystem (US-011): cosmetic skins
+  // skinSystem (US-011): cosmetic skins — data-driven from skins.json
+  var skinsData = {}; // loaded from server or data/skins.json
   var skinCollection = [
     { id: 'default', name: '默认', color: '#4f4', owned: true },
     { id: 'flame', name: '烈焰', color: '#f80', owned: false, fragments: 0 },
@@ -534,6 +594,45 @@ function doLogin() {
     var s = skinCollection.find(function(sk) { return sk.id === skinId; });
     if (s) { s.fragments = (s.fragments || 0) + 1; if (s.fragments >= 10) { s.owned = true; s.fragments = 0; } }
   }
+  // Load skins data from server
+  function loadSkinsData() {
+    var url = serverUrl + '/api/editor/skins';
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onload = function() {
+      try { skinsData = JSON.parse(xhr.responseText); } catch(e) { skinsData = {}; }
+      // Sync skinCollection with loaded data
+      Object.keys(skinsData).forEach(function(sid) {
+        if (sid === 'default') return;
+        var sd = skinsData[sid];
+        var existing = skinCollection.find(function(sk) { return sk.id === sid; });
+        if (!existing) {
+          skinCollection.push({ id: sid, name: sd.name, color: sd.colors.body || '#888', owned: false, fragments: 0, tier: sd.tier });
+        }
+      });
+    };
+    xhr.onerror = function() { skinsData = {}; };
+    xhr.send();
+  }
+  loadSkinsData();
+  function getSkinData(skinId) { return skinsData[skinId] || skinsData['default'] || null; }
+
+  // Load part variants data from server
+  var partVariantsData = {};
+  function loadPartVariants() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', serverUrl + '/api/editor/part_variants');
+    xhr.onload = function() { try { partVariantsData = JSON.parse(xhr.responseText); } catch(e) { partVariantsData = {}; } };
+    xhr.onerror = function() {
+      // Fallback: try direct file fetch
+      var xhr2 = new XMLHttpRequest();
+      xhr2.open('GET', 'data/part_variants.json');
+      xhr2.onload = function() { try { partVariantsData = JSON.parse(xhr2.responseText); } catch(e) {} };
+      xhr2.send();
+    };
+    xhr.send();
+  }
+  loadPartVariants();
 
   // dailyReward (US-012): daily login rewards
   var dailyLogin = { streak: 0, lastDate: '', rewards: [50, 100, 150, 200, 300, 500, 'skin'] };
@@ -1471,7 +1570,8 @@ function doLogin() {
       lifesteal: 0, _fireDmg: 0, _explosiveDmg: 0, _chainCount: 0,
       thornsDamage: cls.thornsDamage || 0, dodgeChance: cls.dodgeChance || 0,
       rangeBonus: cls.rangeBonus || 0, playerClass: selectedClass,
-      kills: 0, factionId: 0, name: 'Player 1', skinId: 'default'
+      kills: 0, factionId: 0, name: 'Player 1', skinId: equippedSkin || 'default',
+      facingAngle: 0
     };
     allPlayers = [player];
     localPlayerId = 0;
@@ -1515,6 +1615,16 @@ function doLogin() {
     powerSpike = { active: false, text: '', timer: 0 };
     initBgParticles();
     initEnvDecoration();
+    loadMapZonesAndTerrain(currentMap);
+    // Fetch full map data from server for zones and terrain
+    var _mapId = (currentMap && currentMap.id) || 'green_plains';
+    _apiRequest('GET', '/api/editor/maps/' + _mapId, null, function(err, fullMapData) {
+      if (!err && fullMapData) {
+        loadMapZonesAndTerrain(fullMapData);
+        if (fullMapData.width) WORLD_W = fullMapData.width;
+        if (fullMapData.height) WORLD_H = fullMapData.height;
+      }
+    });
     networkInputTimer = 0;
 
     // Connect to server — create room, start game, then connect WebSocket
@@ -1551,6 +1661,206 @@ function doLogin() {
     });
   }
 
+  // === OFFLINE DEMO MODE ===
+  var offlineMode = false;
+  var offlineEnemies = [];
+  var offlineSpawnTimer = 0;
+  var offlineBots = [];
+
+  function startOfflineDemo() {
+    offlineMode = true;
+    state = 'playing';
+    player.skinId = equippedSkin || 'default';
+
+    // Spawn initial enemies around player
+    var monsterTypes = ['normal', 'normal', 'fast', 'swarm', 'normal', 'tank', 'ranged', 'normal', 'fast', 'treasure'];
+    for (var i = 0; i < monsterTypes.length; i++) {
+      var angle = Math.PI * 2 * i / monsterTypes.length;
+      var dist = 150 + Math.random() * 200;
+      spawnOfflineEnemy(monsterTypes[i], player.x + Math.cos(angle) * dist, player.y + Math.sin(angle) * dist);
+    }
+
+    // Spawn some bot players with different classes and skins
+    var botClasses = ['warrior', 'mage', 'scout'];
+    var botSkins = ['warrior_inferno', 'mage_thunder', 'scout_ghost_assassin'];
+    for (var bi = 0; bi < 3; bi++) {
+      var bAngle = Math.PI * 2 * bi / 3 + 0.5;
+      var bDist = 200 + Math.random() * 100;
+      offlineBots.push({
+        x: player.x + Math.cos(bAngle) * bDist,
+        y: player.y + Math.sin(bAngle) * bDist,
+        playerClass: botClasses[bi],
+        skinId: botSkins[bi],
+        isBot: true,
+        alive: true,
+        hp: 200, maxHp: 200,
+        level: 3 + bi * 2,
+        name: ['铁壁战士', '雷霆法师', '幽灵斥候'][bi],
+        kills: bi * 5,
+        factionId: 0,
+        shieldActive: false,
+        radius: 14,
+        facingAngle: bAngle + Math.PI,
+        _moveTimer: Math.random() * 10
+      });
+    }
+
+    // Spawn a miniBoss and boss further out
+    spawnOfflineEnemy('miniBoss', player.x + 350, player.y - 300);
+    spawnOfflineEnemy('boss', player.x - 400, player.y - 400);
+  }
+
+  function spawnOfflineEnemy(type, x, y) {
+    var hp = { normal: 30, fast: 20, tank: 80, ranged: 25, swarm: 10, miniBoss: 200, boss: 500, treasure: 15 };
+    var spd = { normal: 40, fast: 80, tank: 25, ranged: 35, swarm: 70, miniBoss: 30, boss: 20, treasure: 120 };
+    var rad = { normal: 8, fast: 6, tank: 14, ranged: 7, swarm: 5, miniBoss: 16, boss: 28, treasure: 7 };
+    var colors = { normal: '#5a8a3a', fast: '#442244', tank: '#777766', ranged: '#556677', swarm: '#885522', miniBoss: '#aa3355', boss: '#882222', treasure: '#aa8822' };
+    offlineEnemies.push({
+      x: x, y: y, hp: hp[type] || 30, maxHp: hp[type] || 30,
+      speed: spd[type] || 40, radius: rad[type] || 8,
+      type: type, color: colors[type] || '#c44',
+      alive: true, _angle: Math.random() * Math.PI * 2, _moveTimer: Math.random() * 5,
+      hostile: type !== 'treasure'
+    });
+  }
+
+  function updateOfflineDemo(dt) {
+    if (!offlineMode) return;
+    offlineSpawnTimer += dt;
+
+    // Move enemies (wander + chase if close)
+    for (var i = 0; i < offlineEnemies.length; i++) {
+      var e = offlineEnemies[i];
+      if (!e.alive) continue;
+      e._moveTimer += dt;
+      var dx = player.x - e.x, dy = player.y - e.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (e.type === 'treasure') {
+        // Flee from player
+        if (dist < 200) {
+          e.x -= (dx / dist) * e.speed * dt;
+          e.y -= (dy / dist) * e.speed * dt;
+        } else {
+          e._angle += (Math.random() - 0.5) * 2 * dt;
+          e.x += Math.cos(e._angle) * e.speed * 0.3 * dt;
+          e.y += Math.sin(e._angle) * e.speed * 0.3 * dt;
+        }
+      } else if (dist < 300 && e.hostile) {
+        // Chase player
+        e.x += (dx / dist) * e.speed * dt;
+        e.y += (dy / dist) * e.speed * dt;
+      } else {
+        // Wander
+        e._angle += (Math.random() - 0.5) * dt;
+        e.x += Math.cos(e._angle) * e.speed * 0.5 * dt;
+        e.y += Math.sin(e._angle) * e.speed * 0.5 * dt;
+      }
+      // Keep in bounds
+      e.x = Math.max(e.radius, Math.min(WORLD_W - e.radius, e.x));
+      e.y = Math.max(e.radius, Math.min(WORLD_H - e.radius, e.y));
+    }
+
+    // Move bots (wander around)
+    for (var bi = 0; bi < offlineBots.length; bi++) {
+      var b = offlineBots[bi];
+      b._moveTimer += dt;
+      b.facingAngle += Math.sin(b._moveTimer * 0.5) * dt;
+      b.x += Math.cos(b.facingAngle) * 30 * dt;
+      b.y += Math.sin(b.facingAngle) * 30 * dt;
+      b.x = Math.max(50, Math.min(WORLD_W - 50, b.x));
+      b.y = Math.max(50, Math.min(WORLD_H - 50, b.y));
+    }
+
+    // Periodically spawn new enemies
+    if (offlineSpawnTimer > 3) {
+      offlineSpawnTimer = 0;
+      var types = ['normal', 'fast', 'swarm', 'normal', 'tank'];
+      var t = types[Math.floor(Math.random() * types.length)];
+      var sa = Math.random() * Math.PI * 2;
+      var sd = 250 + Math.random() * 150;
+      spawnOfflineEnemy(t, player.x + Math.cos(sa) * sd, player.y + Math.sin(sa) * sd);
+      // Cap enemies
+      if (offlineEnemies.length > 30) offlineEnemies.splice(0, 5);
+    }
+
+    // Update entities array for rendering (bridge offline→render)
+    entities = offlineEnemies.filter(function(e) { return e.alive; }).map(function(e) {
+      return {
+        x: e.x, y: e.y, hp: e.hp, maxHp: e.maxHp, radius: e.radius,
+        type: 'enemy', enemyType: e.type, color: e.color,
+        hostile: e.hostile, alive: e.alive,
+        isBoss: e.type === 'boss', miniBoss: e.type === 'miniBoss'
+      };
+    });
+
+    // Update allPlayers to include bots for rendering
+    allPlayers = [player].concat(offlineBots);
+    localPlayerId = 0;
+  }
+
+  function offlinePlayerUpdate(dt) {
+    if (!player || !player.alive) return;
+    // Move player based on input (keyboard/mouse)
+    var moveX = 0, moveY = 0;
+    if (joystick.active && (Math.abs(joystick.dx) > 0.01 || Math.abs(joystick.dy) > 0.01)) {
+      moveX = joystick.dx; moveY = joystick.dy;
+    } else {
+      var worldMX = mouseX + cameraX, worldMY = mouseY + cameraY;
+      var pdx = worldMX - player.x, pdy = worldMY - player.y;
+      var pdist = Math.sqrt(pdx*pdx + pdy*pdy);
+      if (pdist > 15) { moveX = pdx/pdist; moveY = pdy/pdist; }
+    }
+    player.x += moveX * player.speed * dt;
+    player.y += moveY * player.speed * dt;
+    player.x = Math.max(player.radius, Math.min(WORLD_W - player.radius, player.x));
+    player.y = Math.max(player.radius, Math.min(WORLD_H - player.radius, player.y));
+    if (Math.abs(moveX) > 0.01 || Math.abs(moveY) > 0.01) {
+      player.facingAngle = Math.atan2(moveY, moveX);
+    }
+    // Auto attack nearby enemies
+    player._timer = (player._timer || 0) - dt;
+    if (player._timer <= 0) {
+      player._timer = player.attackCooldown;
+      var closest = null, closestDist = 400;
+      for (var i = 0; i < offlineEnemies.length; i++) {
+        var e = offlineEnemies[i];
+        if (!e.alive) continue;
+        var edx = e.x - player.x, edy = e.y - player.y;
+        var ed = Math.sqrt(edx*edx + edy*edy);
+        if (ed < closestDist) { closest = e; closestDist = ed; }
+      }
+      if (closest) {
+        var angle = Math.atan2(closest.y - player.y, closest.x - player.x);
+        // Spawn projectile
+        var projSpeed = 350;
+        var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
+        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 4, particleType: 'circle', _isProjectile: true });
+        // Deal damage to closest
+        closest.hp -= player.attackDamage;
+        if (closest.hp <= 0) {
+          closest.alive = false;
+          kills++;
+          player.kills++;
+          emit(closest.x, closest.y, closest.color, 6, 60);
+          floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), '#ffd700', 16);
+        }
+      }
+    }
+    // HP regen
+    player.hp = Math.min(player.maxHp, player.hp + (player.hpRegen || 0.5) * dt);
+    // Collision damage from enemies
+    for (var i = 0; i < offlineEnemies.length; i++) {
+      var e = offlineEnemies[i];
+      if (!e.alive || !e.hostile) continue;
+      var cdx = e.x - player.x, cdy = e.y - player.y;
+      var cd = Math.sqrt(cdx*cdx + cdy*cdy);
+      if (cd < player.radius + e.radius + 2) {
+        player.hp -= 3 * dt;
+        if (player.hp <= 0) { player.hp = 0; player.alive = false; state = 'gameOver'; deathCause = '被怪物击败'; }
+      }
+    }
+  }
+
   function _connectWebSocket(playerId, roomId) {
     NetworkClient.connect(serverUrl, roomId, playerId, {
       onConnected: function(data) {
@@ -1566,20 +1876,29 @@ function doLogin() {
       onDisconnect: function() {
         // Skip menu flash during intentional retry
         if (_intentionalDisconnect) { _intentionalDisconnect = false; return; }
-        // Try reconnect once, then go to menu
-        if (state === 'playing') {
+        // If never connected, enter offline demo mode
+        if (state === 'connecting') {
+          startOfflineDemo();
+          return;
+        }
+        // Try reconnect once, then go to offline mode
+        if (state === 'playing' && !offlineMode) {
           state = 'connecting';
           setTimeout(function() {
             NetworkClient.connect(serverUrl, roomId, playerId, {
               onSnapshot: function() { if (state === 'connecting') state = 'playing'; },
-              onDisconnect: function() { state = 'menu'; }
+              onDisconnect: function() { startOfflineDemo(); }
             });
           }, 2000);
-        } else {
-          state = 'menu';
         }
       }
     });
+    // Safety timeout: if no connection after 3 seconds, enter offline demo
+    setTimeout(function() {
+      if (state === 'connecting') {
+        startOfflineDemo();
+      }
+    }, 3000);
   }
 
   // === SKILL APPLICATION ===
@@ -1650,7 +1969,135 @@ function doLogin() {
     }
   }
 
-  // === TERRAIN SYSTEM (US-013) ===
+  // === ZONE & TERRAIN SYSTEM (US-013) ===
+  var mapZones = []; // loaded from map JSON: { id, type, shape, center, radius, bounds, ... }
+  var mapTerrainFeatures = []; // loaded from map JSON: { type, shape, ... }
+  var zoneTypeColors = {
+    spawn: 'rgba(100,200,100,0.15)',
+    outer: 'rgba(80,150,80,0.12)',
+    middle: 'rgba(200,180,60,0.12)',
+    inner: 'rgba(200,60,60,0.12)',
+    boss_lair: 'rgba(160,0,0,0.18)',
+    resource: 'rgba(60,60,200,0.12)',
+    safe: 'rgba(100,200,100,0.1)',
+    normal: 'rgba(150,150,100,0.08)'
+  };
+  var zoneTypeLabels = {
+    spawn: '出生点', outer: '外围区', middle: '中间区', inner: '核心区',
+    boss_lair: 'Boss巢穴', resource: '资源点', safe: '安全区', normal: '普通区'
+  };
+
+  function loadMapZonesAndTerrain(mapData) {
+    mapZones = [];
+    mapTerrainFeatures = [];
+    terrainObstacles = [];
+    if (!mapData) return;
+    // Load zones
+    if (mapData.zones && mapData.zones.length) {
+      for (var i = 0; i < mapData.zones.length; i++) {
+        var z = mapData.zones[i];
+        mapZones.push({
+          id: z.id || z.name || ('zone_' + i),
+          type: z.type || 'normal',
+          shape: z.shape || 'rect',
+          center: z.center || null,
+          radius: z.radius || 0,
+          bounds: z.bounds || null,
+          name: z.name || zoneTypeLabels[z.type] || z.type,
+          spawnRate: z.spawnRate || 1,
+          monsterLevelRange: z.monsterLevelRange || z.monsterLevel || [1, 5],
+          allowedMonsters: z.allowedMonsters || ['normal']
+        });
+      }
+    }
+    // Load terrain features into terrainObstacles
+    if (mapData.terrain && mapData.terrain.length) {
+      for (var ti = 0; ti < mapData.terrain.length; ti++) {
+        var t = mapData.terrain[ti];
+        if (t.type === 'speed_pad') {
+          // Speed pads stored as line segments
+          mapTerrainFeatures.push(t);
+        } else if (t.shape === 'circle' && t.center) {
+          terrainObstacles.push({ x: t.center.x, y: t.center.y, radius: t.radius || 30, type: t.type === 'bush' ? 'bush' : t.type === 'water' ? 'water' : t.type === 'lava' ? 'lava' : 'rock' });
+        } else if (t.shape === 'rect' && t.bounds) {
+          // Approximate rect as circle at center for collision
+          var cx = t.bounds.x + t.bounds.width / 2;
+          var cy = t.bounds.y + t.bounds.height / 2;
+          var cr = Math.max(t.bounds.width, t.bounds.height) / 2;
+          terrainObstacles.push({ x: cx, y: cy, radius: cr, type: t.type === 'wall' ? 'rock' : t.type, _rect: t.bounds });
+        }
+      }
+    }
+    // Also load obstacles from map data
+    if (mapData.obstacles && mapData.obstacles.length) {
+      for (var oi = 0; oi < mapData.obstacles.length; oi++) {
+        var o = mapData.obstacles[oi];
+        terrainObstacles.push({ x: o.x, y: o.y, radius: o.radius || 20, type: o.type || 'rock' });
+      }
+    }
+  }
+
+  function drawZoneOverlays(ctx, camX, camY) {
+    for (var i = 0; i < mapZones.length; i++) {
+      var z = mapZones[i];
+      var color = zoneTypeColors[z.type] || 'rgba(100,100,100,0.1)';
+      ctx.fillStyle = color;
+      if (z.shape === 'circle' && z.center) {
+        ctx.beginPath();
+        ctx.arc(z.center.x, z.center.y, z.radius, 0, Math.PI * 2);
+        ctx.fill();
+        // Border
+        ctx.strokeStyle = color.replace(/[\d.]+\)$/, '0.4)');
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Label
+        ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
+        ctx.font = '11px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(z.name, z.center.x, z.center.y - z.radius - 5);
+      } else if (z.bounds) {
+        ctx.fillRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
+        // Border
+        ctx.strokeStyle = color.replace(/[\d.]+\)$/, '0.4)');
+        ctx.lineWidth = 1;
+        ctx.strokeRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
+        // Label
+        ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
+        ctx.font = '11px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(z.name, z.bounds.x + z.bounds.width / 2, z.bounds.y - 5);
+      }
+    }
+    // Draw speed pads
+    for (var si = 0; si < mapTerrainFeatures.length; si++) {
+      var sp = mapTerrainFeatures[si];
+      if (sp.type === 'speed_pad' && sp.from && sp.to) {
+        var dx = sp.to.x - sp.from.x, dy = sp.to.y - sp.from.y;
+        var len = Math.sqrt(dx * dx + dy * dy);
+        var nx = -dy / len * 12, ny = dx / len * 12;
+        ctx.fillStyle = 'rgba(0,200,255,0.15)';
+        ctx.beginPath();
+        ctx.moveTo(sp.from.x + nx, sp.from.y + ny);
+        ctx.lineTo(sp.to.x + nx, sp.to.y + ny);
+        ctx.lineTo(sp.to.x - nx, sp.to.y - ny);
+        ctx.lineTo(sp.from.x - nx, sp.from.y - ny);
+        ctx.closePath();
+        ctx.fill();
+        // Arrow indicators
+        ctx.strokeStyle = 'rgba(0,200,255,0.4)'; ctx.lineWidth = 2;
+        var arrowCount = Math.floor(len / 40);
+        for (var ai = 0; ai < arrowCount; ai++) {
+          var t = (ai + 0.5) / arrowCount;
+          var ax = sp.from.x + dx * t, ay = sp.from.y + dy * t;
+          var adx = dx / len * 8, ady = dy / len * 8;
+          ctx.beginPath();
+          ctx.moveTo(ax - adx - ny * 0.3, ay - ady + nx * 0.3);
+          ctx.lineTo(ax, ay);
+          ctx.lineTo(ax - adx + ny * 0.3, ay - ady - nx * 0.3);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
   // Obstacle and terrain element definitions
   var terrainObstacles = []; // { x, y, radius, type: 'rock'|'bush'|'water'|'lava'|'healing' }
   var terrainTypes = {
@@ -1658,7 +2105,8 @@ function doLogin() {
     bush:    { color: '#2a5a2a', blocking: false, stealth: true, label: '灌木' },
     water:   { color: '#2244aa', blocking: false, slowFactor: 0.3, label: '水域' },
     lava:    { color: '#cc3300', blocking: false, damagePerSec: 15, label: '岩浆' },
-    healing: { color: '#44cc88', blocking: false, healPerSec: 5, label: '治疗神殿' }
+    healing: { color: '#44cc88', blocking: false, healPerSec: 5, label: '治疗神殿' },
+    speed_pad: { color: '#00c8ff', blocking: false, speedBoost: 1.5, boostDuration: 3, label: '加速带' }
   };
 
   // Check if a point collides with an obstacle of type 'rock'
@@ -1694,7 +2142,7 @@ function doLogin() {
 
   // Get terrain effect at a position (bush stealth, water slow, lava damage)
   function getTerrainEffect(x, y) {
-    var effects = { stealth: false, slowFactor: 0, damagePerSec: 0, healPerSec: 0 };
+    var effects = { stealth: false, slowFactor: 0, damagePerSec: 0, healPerSec: 0, speedBoost: 0 };
     for (var i = 0; i < terrainObstacles.length; i++) {
       var obs = terrainObstacles[i];
       var dx = x - obs.x, dy = y - obs.y;
@@ -1705,6 +2153,21 @@ function doLogin() {
           if (tType.slowFactor) effects.slowFactor = Math.max(effects.slowFactor, tType.slowFactor);
           if (tType.damagePerSec) effects.damagePerSec += tType.damagePerSec;
           if (tType.healPerSec) effects.healPerSec += tType.healPerSec;
+        }
+      }
+    }
+    // Check speed pads (line segments with width)
+    for (var si = 0; si < mapTerrainFeatures.length; si++) {
+      var sp = mapTerrainFeatures[si];
+      if (sp.type === 'speed_pad' && sp.from && sp.to) {
+        var sdx = sp.to.x - sp.from.x, sdy = sp.to.y - sp.from.y;
+        var len = Math.sqrt(sdx * sdx + sdy * sdy);
+        if (len < 1) continue;
+        var t = Math.max(0, Math.min(1, ((x - sp.from.x) * sdx + (y - sp.from.y) * sdy) / (len * len)));
+        var closestX = sp.from.x + t * sdx, closestY = sp.from.y + t * sdy;
+        var distSq = (x - closestX) * (x - closestX) + (y - closestY) * (y - closestY);
+        if (distSq < 15 * 15) { // 15px half-width
+          effects.speedBoost = 1.5;
         }
       }
     }
@@ -1963,7 +2426,540 @@ function doLogin() {
 
   // === PARTICLES ===
   // particleShapeVariety: draw a 5-pointed star particle
-  // === Character Sprite Rendering (class-specific visuals) ===
+  // === Skin Effect Rendering Helpers ===
+  function drawSkinAura(cx, cy, radius, skinData, gt) {
+    if (!skinData || !skinData.aura || !skinData.aura.enabled) return;
+    var aura = skinData.aura;
+    var outerR = radius * (aura.radiusMultiplier || 3.0);
+    var pulseR = aura.pulse ? outerR * (1.0 + 0.08 * Math.sin((gt || 0) * 2)) : outerR;
+    var angle = (gt || 0) * (aura.rotationSpeed || 1.0);
+    ctx.save();
+    ctx.translate(cx, cy);
+    // Radial gradient glow
+    var grad = ctx.createRadialGradient(0, 0, radius * 0.5, 0, 0, pulseR);
+    grad.addColorStop(0, aura.color + '4D'); // alpha ~0.3
+    grad.addColorStop(1, aura.color + '00'); // alpha 0
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(0, 0, pulseR, 0, Math.PI * 2); ctx.fill();
+    // Two crossing light bands
+    ctx.globalAlpha = 0.15;
+    ctx.strokeStyle = aura.color;
+    ctx.lineWidth = pulseR * 0.1;
+    for (var bi = 0; bi < 2; bi++) {
+      var bAngle = angle + bi * Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(bAngle) * pulseR, Math.sin(bAngle) * pulseR);
+      ctx.lineTo(Math.cos(bAngle + Math.PI) * pulseR, Math.sin(bAngle + Math.PI) * pulseR);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSkinParticles(cx, cy, radius, skinData, gt) {
+    if (!skinData || !skinData.particles || !skinData.particles.enabled) return;
+    var p = skinData.particles;
+    var count = p.count || 6;
+    var minR = (p.radiusRange ? p.radiusRange[0] : 1.5) * radius;
+    var maxR = (p.radiusRange ? p.radiusRange[1] : 2.5) * radius;
+    var minS = (p.sizeRange ? p.sizeRange[0] : 0.06) * radius;
+    var maxS = (p.sizeRange ? p.sizeRange[1] : 0.1) * radius;
+    var speed = p.speed || 1.5;
+    var alphaMin = p.alpha ? p.alpha[0] : 0.3;
+    var alphaMax = p.alpha ? p.alpha[1] : 0.7;
+    ctx.save();
+    for (var i = 0; i < count; i++) {
+      var t = (gt || 0) * speed + i * Math.PI * 2 / count;
+      var dist = minR + (maxR - minR) * (0.5 + 0.5 * Math.sin(t * 0.7 + i));
+      var px = cx + Math.cos(t) * dist;
+      var py = cy + Math.sin(t) * dist;
+      var size = minS + (maxS - minS) * (0.5 + 0.5 * Math.sin(t * 1.3));
+      var a = alphaMin + (alphaMax - alphaMin) * (0.5 + 0.5 * Math.sin((gt || 0) * 2 + i));
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color || '#fff';
+      if (p.type === 'petal' || p.type === 'leaf') {
+        // Ellipse (petal/leaf shape)
+        ctx.beginPath();
+        ctx.ellipse(px, py, size * 1.5, size, t, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'sparkle') {
+        // 5-point star
+        drawStarParticle(px, py, size, t);
+      } else if (p.type === 'pixel') {
+        // Square pixel block (cyber/retro style)
+        var ps = size * 2;
+        ctx.fillRect(px - ps / 2, py - ps / 2, ps, ps);
+      } else if (p.type === 'ring') {
+        // Hollow ring (shadow/stealth style)
+        ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.strokeStyle = p.color || '#fff'; ctx.lineWidth = size * 0.4;
+        ctx.stroke();
+      } else {
+        // Circle (droplet, default)
+        ctx.beginPath(); ctx.arc(px, py, size, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawStarParticle(x, y, size, angle) {
+    ctx.beginPath();
+    for (var si = 0; si < 10; si++) {
+      var sr = si % 2 === 0 ? size : size * 0.4;
+      var sa = angle + si * Math.PI / 5;
+      if (si === 0) ctx.moveTo(x + Math.cos(sa) * sr, y + Math.sin(sa) * sr);
+      else ctx.lineTo(x + Math.cos(sa) * sr, y + Math.sin(sa) * sr);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawSkinOutline(cx, cy, radius, skinData, gt) {
+    if (!skinData || !skinData.outline || !skinData.outline.enabled) return;
+    var o = skinData.outline;
+    var pulseAlpha = o.pulse ? (0.6 + 0.4 * Math.sin((gt || 0) * 3)) : 0.8;
+    ctx.save();
+    ctx.globalAlpha = pulseAlpha;
+    ctx.strokeStyle = o.color || '#fff';
+    ctx.lineWidth = o.width || 2;
+    ctx.shadowColor = o.color || '#fff';
+    ctx.shadowBlur = o.shadowBlur || 5;
+    ctx.beginPath(); ctx.arc(cx, cy, radius + 1, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  // Get skin colors for a given class, with skin overrides
+  function getSkinColors(classType, skinData, isFury, shieldActive) {
+    // Default class colors
+    var defaults = {
+      warrior: { body: '#b44', accent: '#d93', highlight: '#ddd', eye: '#fff', hood: null, cape: null, orb: null },
+      mage: { body: '#728', accent: '#5a3d7a', highlight: '#c6f', eye: '#f0f', hood: '#5a3d7a', cape: null, orb: '#c6f' },
+      scout: { body: '#3a6', accent: '#2a5030', highlight: '#a86', eye: '#8f8', hood: '#2a5030', cape: '#1a3520', orb: null }
+    };
+    var base = defaults[classType] || defaults.warrior;
+    var colors = { body: base.body, accent: base.accent, highlight: base.highlight, eye: base.eye, hood: base.hood, cape: base.cape, orb: base.orb };
+    // Apply skin overrides
+    if (skinData && skinData.colors) {
+      if (skinData.colors.body) colors.body = skinData.colors.body;
+      if (skinData.colors.accent) colors.accent = skinData.colors.accent;
+      if (skinData.colors.highlight) colors.highlight = skinData.colors.highlight;
+      if (skinData.colors.eye) colors.eye = skinData.colors.eye;
+      // Derive hood/cape/orb from skin accent/highlight
+      if (skinData.colors.accent) { colors.hood = skinData.colors.accent; colors.cape = skinData.colors.accent; }
+      if (skinData.colors.highlight) colors.orb = skinData.colors.highlight;
+    }
+    // State overrides (fury/shield take precedence for body)
+    if (isFury) colors.body = '#c33';
+    if (shieldActive && !isFury) colors.body = '#669';
+    return colors;
+  }
+
+  // === Body Shape Helpers (hexagon, diamond, star) ===
+  function drawBodyShapePath(r, shape) {
+    if (shape === 'hexagon') {
+      ctx.beginPath();
+      for (var i = 0; i < 6; i++) {
+        var a = i * Math.PI / 3 - Math.PI / 6;
+        var px = Math.cos(a) * r * 0.75, py = Math.sin(a) * r * 0.75;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+    } else if (shape === 'diamond') {
+      ctx.beginPath();
+      ctx.moveTo(r * 0.8, 0);
+      ctx.lineTo(0, -r * 0.6);
+      ctx.lineTo(-r * 0.7, 0);
+      ctx.lineTo(0, r * 0.6);
+      ctx.closePath();
+    } else if (shape === 'star') {
+      ctx.beginPath();
+      for (var i = 0; i < 10; i++) {
+        var sr = i % 2 === 0 ? r * 0.8 : r * 0.4;
+        var sa = i * Math.PI / 5 - Math.PI / 2;
+        if (i === 0) ctx.moveTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+        else ctx.lineTo(Math.cos(sa) * sr, Math.sin(sa) * sr);
+      }
+      ctx.closePath();
+    }
+    // 'circle' = default class shape, handled by existing code
+  }
+
+  // === Pattern Overlay ===
+  function drawPattern(r, pattern, color, gt) {
+    if (!pattern || pattern === 'none') return;
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = color || '#fff';
+    ctx.lineWidth = 1;
+    if (pattern === 'stripe') {
+      for (var i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(-r + i * r * 0.3, -r);
+        ctx.lineTo(-r + i * r * 0.3 + r * 0.5, r);
+        ctx.stroke();
+      }
+    } else if (pattern === 'flame') {
+      for (var i = 0; i < 5; i++) {
+        var fx = -r * 0.5 + i * r * 0.25;
+        var fy = r * 0.3 * Math.sin((gt || 0) * 4 + i * 1.5);
+        ctx.beginPath();
+        ctx.moveTo(fx, r * 0.4);
+        ctx.quadraticCurveTo(fx + r * 0.1, fy, fx, -r * 0.4);
+        ctx.stroke();
+      }
+    } else if (pattern === 'frost_crystal') {
+      for (var i = 0; i < 6; i++) {
+        var ca = i * Math.PI / 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(ca) * r * 0.6, Math.sin(ca) * r * 0.6);
+        ctx.stroke();
+        // small branches
+        var bx = Math.cos(ca) * r * 0.35, by = Math.sin(ca) * r * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + Math.cos(ca + 0.8) * r * 0.2, by + Math.sin(ca + 0.8) * r * 0.2);
+        ctx.stroke();
+      }
+    } else if (pattern === 'shadow_smoke') {
+      ctx.globalAlpha = 0.15 + 0.1 * Math.sin((gt || 0) * 2);
+      for (var i = 0; i < 4; i++) {
+        var sx = Math.cos((gt || 0) * 1.5 + i * 1.6) * r * 0.3;
+        var sy = Math.sin((gt || 0) * 1.2 + i * 1.3) * r * 0.3;
+        ctx.fillStyle = color || '#666';
+        ctx.beginPath(); ctx.arc(sx, sy, r * 0.25, 0, Math.PI * 2); ctx.fill();
+      }
+    } else if (pattern === 'lightning') {
+      ctx.globalAlpha = 0.4 + 0.3 * Math.random();
+      ctx.strokeStyle = color || '#88eeff';
+      ctx.lineWidth = 1.5;
+      for (var i = 0; i < 3; i++) {
+        var lx = -r * 0.4 + i * r * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(lx, -r * 0.5);
+        ctx.lineTo(lx + r * 0.15, -r * 0.1);
+        ctx.lineTo(lx - r * 0.1, r * 0.1);
+        ctx.lineTo(lx + r * 0.1, r * 0.5);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // === Trail Effect (called from render loop with movement info) ===
+  var trailHistory = {}; // playerId -> [{x,y,time}]
+  function updateTrailHistory(id, x, y, t) {
+    if (!trailHistory[id]) trailHistory[id] = [];
+    var h = trailHistory[id];
+    h.push({x:x, y:y, t:t});
+    // Keep last 0.5s of positions
+    while (h.length > 0 && t - h[0].t > 0.5) h.shift();
+  }
+  function drawTrailEffect(id, trailType, color, radius, gt) {
+    if (!trailType || trailType === 'none') return;
+    var h = trailHistory[id];
+    if (!h || h.length < 2) return;
+    ctx.save();
+    for (var i = 0; i < h.length - 1; i++) {
+      var progress = i / (h.length - 1);
+      var p = h[i];
+      ctx.globalAlpha = progress * 0.4;
+      if (trailType === 'fire_particles') {
+        ctx.fillStyle = color || '#ff6600';
+        var s = radius * (0.3 + 0.4 * (1 - progress));
+        ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+        if (i % 2 === 0) {
+          ctx.fillStyle = '#ffcc00';
+          ctx.globalAlpha = progress * 0.2;
+          ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (trailType === 'ice_trail') {
+        ctx.fillStyle = color || '#88ccff';
+        var s = radius * (0.2 + 0.3 * (1 - progress));
+        ctx.fillRect(p.x - s/2, p.y - s/2, s, s);
+      } else if (trailType === 'shadow_fade') {
+        ctx.fillStyle = color || '#333';
+        var s = radius * (0.5 + 0.3 * (1 - progress));
+        ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+      } else if (trailType === 'sparkle') {
+        ctx.fillStyle = color || '#ffe866';
+        var s = radius * 0.15 * (1 - progress);
+        drawStarParticle(p.x, p.y, s + 1, gt * 3 + i);
+      }
+    }
+    ctx.restore();
+  }
+
+  // === Idle Animation Modifier ===
+  function getIdleAnimationScale(anim, gt) {
+    if (anim === 'pulse') return 1.0 + 0.05 * Math.sin(gt * 3);
+    if (anim === 'shadow_flicker') return 1.0 + 0.02 * Math.sin(gt * 8);
+    return 1.0;
+  }
+  function getIdleAnimationAlpha(anim, gt) {
+    if (anim === 'shadow_flicker') return 0.85 + 0.15 * Math.sin(gt * 6);
+    return 1.0;
+  }
+  function getIdleAnimationRotation(anim, gt) {
+    if (anim === 'rotate') return Math.sin(gt * 0.8) * 0.1;
+    if (anim === 'frost_breath') return Math.sin(gt * 2) * 0.03;
+    return 0;
+  }
+
+  // === Character Sprite Rendering — Parts-Based Pipeline ===
+  // Layered rendering: shadow → legs → body → weapon(back) → head → weapon(front) → effects
+
+  // Get part colors with skin overrides
+  function getPartColors(skinData, partName, classType) {
+    var defaults = {
+      warrior: { head: {p:'#888',s:'#666'}, body: {p:'#777',s:'#c33',o:'#444'}, weapon: {w:'#aaa',sh:'#963'}, legs: {c:'#555'}, eye: '#fff' },
+      mage: { head: {p:'#624a8a',s:'#483670'}, body: {p:'#624a8a',s:'#8866bb',o:'#3a2a5a'}, weapon: {w:'#8B4513',g:'#aa66ff'}, legs: {c:'#483670'}, eye: '#f0f' },
+      scout: { head: {p:'#4a5a3a',s:'#3a4a2a'}, body: {p:'#6a5a3a',s:'#4a3a2a',o:'#3a2a1a'}, weapon: {w:'#8B6914',st:'#ccc'}, legs: {c:'#5a4a3a'}, eye: '#8f8' }
+    };
+    var d = defaults[classType] || defaults.warrior;
+    var result = JSON.parse(JSON.stringify(d[partName] || {}));
+    result.eye = d.eye;
+    // Apply skin color overrides
+    if (skinData && skinData.parts && skinData.parts[partName] && skinData.parts[partName].colorOverride) {
+      var ov = skinData.parts[partName].colorOverride;
+      for (var k in ov) { result[k] = ov[k]; }
+    }
+    // Also apply legacy colors
+    if (skinData && skinData.colors) {
+      var c = skinData.colors;
+      if (partName === 'body') { if (c.body) result.p = c.body; if (c.accent) result.s = c.accent; }
+      if (partName === 'head') { if (c.accent) result.p = c.accent; }
+      if (c.eye) result.eye = c.eye;
+    }
+    return result;
+  }
+
+  // Layer 1: Shadow
+  function drawCharShadow(r) {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.55, r * 0.6, r * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Layer 2: Legs
+  function drawCharLegs(r, classType, colors, gt) {
+    var legW, legH, legGap, walkAmp, walkSpeed;
+    if (classType === 'warrior') { legW = r*0.2; legH = r*0.35; legGap = r*0.15; walkAmp = r*0.08; walkSpeed = 8; }
+    else if (classType === 'mage') { legW = r*0.12; legH = r*0.15; legGap = r*0.1; walkAmp = r*0.03; walkSpeed = 6; }
+    else { legW = r*0.15; legH = r*0.3; legGap = r*0.12; walkAmp = r*0.12; walkSpeed = 10; }
+    var lc = colors.c || colors.p || '#555';
+    var walkL = Math.sin(gt * walkSpeed) * walkAmp;
+    var walkR = Math.sin(gt * walkSpeed + Math.PI) * walkAmp;
+    ctx.fillStyle = lc;
+    // Left leg
+    ctx.fillRect(-legGap - legW/2, r*0.3 + walkL, legW, legH);
+    // Right leg
+    ctx.fillRect(legGap - legW/2, r*0.3 + walkR, legW, legH);
+  }
+
+  // Layer 3: Body (class-specific torso)
+  function drawCharBody(r, classType, colors, isFury, shieldActive) {
+    var p = colors.p || '#777', s = colors.s || '#c33', o = colors.o || '#444';
+    if (isFury) p = '#c33';
+    if (shieldActive && !isFury) p = '#669';
+    if (classType === 'warrior') {
+      // Heavy plate armor — trapezoid, wide shoulders
+      ctx.fillStyle = p;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.5, -r*0.3); ctx.lineTo(r*0.3, -r*0.3);
+      ctx.lineTo(r*0.2, r*0.4); ctx.lineTo(-r*0.4, r*0.4);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = o; ctx.lineWidth = 1.5; ctx.stroke();
+      // Shoulder pads
+      ctx.fillStyle = s;
+      ctx.beginPath(); ctx.arc(-r*0.4, -r*0.3, r*0.2, Math.PI, 0); ctx.fill();
+      ctx.beginPath(); ctx.arc(r*0.2, -r*0.3, r*0.2, Math.PI, 0); ctx.fill();
+      // Chest emblem
+      ctx.fillStyle = s; ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.05, -r*0.1); ctx.lineTo(r*0.1, 0);
+      ctx.lineTo(-r*0.05, r*0.1); ctx.lineTo(-r*0.2, 0);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (classType === 'mage') {
+      // Robe — inverted trapezoid, flowing hem
+      ctx.fillStyle = p;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.3, -r*0.35); ctx.lineTo(r*0.2, -r*0.35);
+      ctx.lineTo(r*0.45, r*0.5); ctx.lineTo(-r*0.55, r*0.5);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = o; ctx.lineWidth = 1; ctx.stroke();
+      // Belt
+      ctx.fillStyle = s;
+      ctx.fillRect(-r*0.35, -r*0.05, r*0.6, r*0.08);
+      // Hem folds
+      ctx.strokeStyle = s; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.5;
+      for (var fi = 0; fi < 3; fi++) {
+        var fx = -r*0.4 + fi * r*0.3;
+        ctx.beginPath(); ctx.arc(fx, r*0.48, r*0.12, 0, Math.PI); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      // Scout leather vest — slim, with short cape
+      ctx.fillStyle = p;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.35, -r*0.3); ctx.lineTo(r*0.25, -r*0.3);
+      ctx.lineTo(r*0.15, r*0.05); ctx.lineTo(r*0.2, r*0.35);
+      ctx.lineTo(-r*0.3, r*0.35); ctx.lineTo(-r*0.25, r*0.05);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = o; ctx.lineWidth = 1; ctx.stroke();
+      // Short cape
+      var capeC = s;
+      ctx.fillStyle = capeC; ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.35, -r*0.3);
+      ctx.quadraticCurveTo(-r*0.7, r*0.1, -r*0.5, r*0.3);
+      ctx.lineTo(-r*0.3, r*0.2);
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Layer 4: Weapon
+  function drawCharWeapon(r, classType, colors, gt) {
+    if (classType === 'warrior') {
+      // Shield (left/back)
+      var shC = colors.sh || '#963';
+      ctx.fillStyle = shC;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.5, -r*0.35); ctx.lineTo(-r*1.0, -r*0.25);
+      ctx.lineTo(-r*1.05, 0); ctx.lineTo(-r*1.0, r*0.25);
+      ctx.lineTo(-r*0.5, r*0.35);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
+      // Shield cross emblem
+      ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-r*0.78, -r*0.12); ctx.lineTo(-r*0.78, r*0.12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r*0.92, 0); ctx.lineTo(-r*0.65, 0); ctx.stroke();
+      // Sword (right/front)
+      var wC = colors.w || '#aaa';
+      ctx.fillStyle = wC;
+      ctx.beginPath();
+      ctx.moveTo(r*0.4, -r*0.06); ctx.lineTo(r*1.3, -r*0.06);
+      ctx.lineTo(r*1.45, 0); ctx.lineTo(r*1.3, r*0.06);
+      ctx.lineTo(r*0.4, r*0.06);
+      ctx.closePath(); ctx.fill();
+      // Hilt
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(r*0.25, -r*0.12, r*0.18, r*0.24);
+      // Cross-guard
+      ctx.fillStyle = '#DAA520';
+      ctx.fillRect(r*0.38, -r*0.18, r*0.06, r*0.36);
+    } else if (classType === 'mage') {
+      // Staff
+      ctx.strokeStyle = colors.w || '#8B4513'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(r*0.15, r*0.3); ctx.lineTo(r*0.3, -r*1.0); ctx.stroke();
+      // Staff gem
+      var gemC = colors.g || '#aa66ff';
+      ctx.fillStyle = gemC;
+      ctx.save();
+      ctx.shadowColor = gemC; ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(r*0.3, -r*1.05, r*0.12, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.7;
+      ctx.beginPath(); ctx.arc(r*0.3, -r*1.05, r*0.04, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+      // Floating orb (left hand)
+      var orbC = colors.g || '#aa66ff';
+      var orbY = -r*0.1 + Math.sin(gt * 3) * r*0.05;
+      ctx.fillStyle = orbC;
+      ctx.save();
+      ctx.shadowColor = orbC; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(-r*0.5, orbY, r*0.1, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      // Arcane particles
+      for (var ap = 0; ap < 3; ap++) {
+        var apA = gt * 2.5 + ap * Math.PI * 2 / 3;
+        var apD = r * 0.8;
+        ctx.fillStyle = orbC; ctx.globalAlpha = 0.3 + 0.2 * Math.sin(gt * 3 + ap);
+        ctx.beginPath(); ctx.arc(Math.cos(apA) * apD, Math.sin(apA) * apD, r*0.06, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      // Scout bow
+      var bowC = colors.w || '#8B6914';
+      var strC = colors.st || '#ccc';
+      // Bow (left side, behind)
+      ctx.strokeStyle = bowC; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.6, -r*0.5);
+      ctx.quadraticCurveTo(-r*1.1, 0, -r*0.6, r*0.5);
+      ctx.stroke();
+      // Bowstring
+      ctx.strokeStyle = strC; ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.6, -r*0.5); ctx.lineTo(-r*0.6, r*0.5);
+      ctx.stroke();
+      // Arrow
+      ctx.fillStyle = '#ddd';
+      ctx.beginPath();
+      ctx.moveTo(r*1.1, 0); ctx.lineTo(r*0.6, -r*0.05); ctx.lineTo(r*0.6, r*0.05);
+      ctx.closePath(); ctx.fill();
+      // Arrow shaft
+      ctx.strokeStyle = '#c96'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(r*0.2, 0); ctx.lineTo(r*1.0, 0); ctx.stroke();
+    }
+  }
+
+  // Layer 5: Head
+  function drawCharHead(r, classType, colors, gt) {
+    var p = colors.p || '#888', s = colors.s || '#666';
+    var eyeC = colors.eye || '#fff';
+    if (classType === 'warrior') {
+      // Round helmet
+      ctx.fillStyle = p;
+      ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = s; ctx.lineWidth = 1.5; ctx.stroke();
+      // T-shaped visor
+      ctx.fillStyle = eyeC; ctx.globalAlpha = 0.9;
+      ctx.fillRect(-r*0.08, -r*0.55, r*0.16, r*0.06);
+      ctx.fillRect(-r*0.12, -r*0.49, r*0.24, r*0.06);
+      ctx.globalAlpha = 1;
+    } else if (classType === 'mage') {
+      // Face
+      ctx.fillStyle = '#ddb89a';
+      ctx.beginPath(); ctx.arc(0, -r*0.5, r*0.28, 0, Math.PI * 2); ctx.fill();
+      // Pointed hat
+      ctx.fillStyle = p;
+      // Brim
+      ctx.beginPath();
+      ctx.ellipse(0, -r*0.65, r*0.35, r*0.1, 0, 0, Math.PI * 2); ctx.fill();
+      // Cone
+      ctx.beginPath();
+      ctx.moveTo(-r*0.2, -r*0.7);
+      ctx.quadraticCurveTo(r*0.05, -r*1.4, r*0.15, -r*0.7);
+      ctx.closePath(); ctx.fill();
+      // Glowing eyes
+      ctx.fillStyle = eyeC;
+      ctx.globalAlpha = 0.7 + 0.3 * Math.sin(gt * 5);
+      ctx.beginPath(); ctx.arc(-r*0.08, -r*0.48, r*0.05, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(r*0.08, -r*0.48, r*0.05, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    } else {
+      // Hood
+      ctx.fillStyle = p;
+      ctx.beginPath();
+      ctx.moveTo(-r*0.3, -r*0.35);
+      ctx.quadraticCurveTo(-r*0.2, -r*1.0, r*0.15, -r*0.8);
+      ctx.quadraticCurveTo(r*0.25, -r*0.5, r*0.2, -r*0.35);
+      ctx.closePath(); ctx.fill();
+      // Face partial
+      ctx.fillStyle = '#ccb89a';
+      ctx.beginPath(); ctx.arc(r*0.02, -r*0.5, r*0.2, -0.3, 1.2); ctx.fill();
+      // Single visible eye
+      ctx.fillStyle = eyeC;
+      ctx.save(); ctx.shadowColor = eyeC; ctx.shadowBlur = 4;
+      ctx.beginPath(); ctx.arc(r*0.08, -r*0.52, r*0.04, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   function drawCharacterSprite(cx, cy, radius, classType, facingAngle, options) {
     var opts = options || {};
     var isFury = opts.fury || false;
@@ -1971,180 +2967,47 @@ function doLogin() {
     var alpha = opts.alpha || 1;
     var isBot = opts.isBot || false;
     var color = opts.color || '#4488ff';
+    var skinId = opts.skinId || 'default';
+    var skinData = getSkinData(skinId);
     var r = radius;
+    var gt = gameTime || 0;
+
+    // Idle animation
+    var visual = (skinData && skinData.visual) ? skinData.visual : {};
+    var idleAnim = visual.idleAnimation || 'none';
+    var animScale = getIdleAnimationScale(idleAnim, gt);
+    r = radius * animScale;
+
+    // Layer 0: Aura (S-tier, behind character)
+    if (skinData && !isBot) {
+      drawSkinAura(cx, cy, r, skinData, gt);
+    }
 
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(cx, cy);
     ctx.rotate(facingAngle);
 
-    if (classType === 'warrior') {
-      // === WARRIOR: armored figure with sword ===
-      // Body armor (wider torso)
-      var bodyColor = isFury ? '#c33' : (shieldActive ? '#669' : '#b44');
-      ctx.fillStyle = bodyColor;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.7, -r * 0.5);
-      ctx.lineTo(r * 0.4, -r * 0.7);
-      ctx.lineTo(r * 0.6, 0);
-      ctx.lineTo(r * 0.4, r * 0.7);
-      ctx.lineTo(-r * 0.7, r * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Shoulder pauldrons
-      ctx.fillStyle = '#d93';
-      ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.6, r * 0.25, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(-r * 0.3, r * 0.6, r * 0.25, 0, Math.PI * 2); ctx.fill();
-      // Shield on left side
-      ctx.fillStyle = '#888';
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.5, -r * 0.4);
-      ctx.lineTo(-r * 1.0, -r * 0.3);
-      ctx.lineTo(-r * 1.1, 0);
-      ctx.lineTo(-r * 1.0, r * 0.3);
-      ctx.lineTo(-r * 0.5, r * 0.4);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#da5'; ctx.lineWidth = 1.5;
-      ctx.stroke();
-      // Shield emblem (cross)
-      ctx.strokeStyle = '#da5'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(-r * 0.8, -r * 0.15); ctx.lineTo(-r * 0.8, r * 0.15); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r * 0.95, 0); ctx.lineTo(-r * 0.65, 0); ctx.stroke();
-      // Sword on right side
-      ctx.fillStyle = '#ddd';
-      ctx.beginPath();
-      ctx.moveTo(r * 0.5, 0);
-      ctx.lineTo(r * 1.4, -r * 0.08);
-      ctx.lineTo(r * 1.5, 0);
-      ctx.lineTo(r * 1.4, r * 0.08);
-      ctx.closePath();
-      ctx.fill();
-      // Sword hilt
-      ctx.fillStyle = '#a63';
-      ctx.fillRect(r * 0.35, -r * 0.15, r * 0.18, r * 0.3);
-      // Sword cross-guard
-      ctx.fillStyle = '#da5';
-      ctx.fillRect(r * 0.45, -r * 0.22, r * 0.06, r * 0.44);
-      // Helmet visor (eye slit)
-      ctx.fillStyle = '#fff';
-      ctx.globalAlpha = alpha * 0.9;
-      ctx.fillRect(r * 0.1, -r * 0.12, r * 0.2, r * 0.08);
-      ctx.fillRect(r * 0.1, r * 0.04, r * 0.2, r * 0.08);
+    // Get per-part colors
+    var headC = getPartColors(skinData, 'head', classType);
+    var bodyC = getPartColors(skinData, 'body', classType);
+    var weaponC = getPartColors(skinData, 'weapon', classType);
+    var legsC = getPartColors(skinData, 'legs', classType);
 
-    } else if (classType === 'mage') {
-      // === MAGE: robed figure with magic orb ===
-      // Robe body (flowing shape)
-      var robeColor = isFury ? '#a24' : (shieldActive ? '#558' : '#728');
-      ctx.fillStyle = robeColor;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.8, -r * 0.3);
-      ctx.lineTo(r * 0.3, -r * 0.6);
-      ctx.lineTo(r * 0.5, 0);
-      ctx.lineTo(r * 0.3, r * 0.6);
-      ctx.lineTo(-r * 0.8, r * 0.3);
-      ctx.quadraticCurveTo(-r * 1.0, 0, -r * 0.8, -r * 0.3);
-      ctx.fill();
-      // Robe trim
-      ctx.strokeStyle = '#c8f'; ctx.lineWidth = 1;
-      ctx.stroke();
-      // Hood/head
-      ctx.fillStyle = '#5a3d7a';
-      ctx.beginPath(); ctx.arc(r * 0.15, 0, r * 0.35, 0, Math.PI * 2); ctx.fill();
-      // Glowing eyes
-      ctx.fillStyle = '#f0f';
-      ctx.globalAlpha = alpha * (0.7 + 0.3 * Math.sin((gameTime || 0) * 5));
-      ctx.beginPath(); ctx.arc(r * 0.28, -r * 0.1, r * 0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(r * 0.28, r * 0.1, r * 0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = alpha;
-      // Staff
-      ctx.strokeStyle = '#a86'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 0.8); ctx.lineTo(-r * 0.2, r * 0.8); ctx.stroke();
-      // Staff orb (top)
-      ctx.fillStyle = '#c6f';
-      ctx.globalAlpha = alpha * (0.5 + 0.3 * Math.sin((gameTime || 0) * 4));
-      ctx.beginPath(); ctx.arc(-r * 0.2, -r * 0.9, r * 0.2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.globalAlpha = alpha * 0.7;
-      ctx.beginPath(); ctx.arc(-r * 0.2, -r * 0.9, r * 0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = alpha;
-      // Arcane particles floating around
-      for (var api = 0; api < 3; api++) {
-        var apAngle = (gameTime || 0) * 2.5 + api * Math.PI * 2 / 3;
-        var apDist = r * 0.9;
-        ctx.fillStyle = '#c8f';
-        ctx.globalAlpha = alpha * (0.3 + 0.2 * Math.sin((gameTime || 0) * 3 + api));
-        ctx.beginPath(); ctx.arc(Math.cos(apAngle) * apDist, Math.sin(apAngle) * apDist, r * 0.08, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.globalAlpha = alpha;
-
-    } else if (classType === 'scout') {
-      // === SCOUT: agile figure with bow ===
-      // Slim body
-      var scoutColor = isFury ? '#a44' : (shieldActive ? '#468' : '#3a6');
-      ctx.fillStyle = scoutColor;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.5, -r * 0.3);
-      ctx.lineTo(r * 0.5, -r * 0.4);
-      ctx.lineTo(r * 0.6, 0);
-      ctx.lineTo(r * 0.5, r * 0.4);
-      ctx.lineTo(-r * 0.5, r * 0.3);
-      ctx.closePath();
-      ctx.fill();
-      // Hood/cape
-      ctx.fillStyle = '#2a5030';
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.6, -r * 0.35);
-      ctx.lineTo(-r * 0.3, -r * 0.5);
-      ctx.lineTo(r * 0.2, -r * 0.4);
-      ctx.lineTo(r * 0.2, r * 0.4);
-      ctx.lineTo(-r * 0.3, r * 0.5);
-      ctx.lineTo(-r * 0.6, r * 0.35);
-      ctx.closePath();
-      ctx.fill();
-      // Cape trailing behind
-      ctx.fillStyle = '#1a3520';
-      ctx.globalAlpha = alpha * 0.7;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.5, -r * 0.25);
-      ctx.quadraticCurveTo(-r * 1.2, 0, -r * 0.5, r * 0.25);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = alpha;
-      // Eyes (sharp, alert)
-      ctx.fillStyle = '#8f8';
-      ctx.beginPath(); ctx.arc(r * 0.35, -r * 0.1, r * 0.07, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(r * 0.35, r * 0.1, r * 0.07, 0, Math.PI * 2); ctx.fill();
-      // Bow (right side)
-      ctx.strokeStyle = '#a86'; ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(r * 0.3, 0, r * 0.7, -0.9, 0.9);
-      ctx.stroke();
-      // Bowstring
-      ctx.strokeStyle = '#ddd'; ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(r * 0.3 + Math.cos(-0.9) * r * 0.7, Math.sin(-0.9) * r * 0.7);
-      ctx.lineTo(r * 0.3 + Math.cos(0.9) * r * 0.7, Math.sin(0.9) * r * 0.7);
-      ctx.stroke();
-      // Arrow nocked
-      ctx.fillStyle = '#ddd';
-      ctx.beginPath();
-      ctx.moveTo(r * 1.1, 0);
-      ctx.lineTo(r * 0.6, -r * 0.06);
-      ctx.lineTo(r * 0.6, r * 0.06);
-      ctx.closePath();
-      ctx.fill();
-
-    } else {
-      // Fallback: simple circle for unknown class
-      ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.2, r * 0.15, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(r * 0.3, r * 0.2, r * 0.15, 0, Math.PI * 2); ctx.fill();
-    }
+    // Render layers bottom-to-top
+    drawCharShadow(r);
+    drawCharLegs(r, classType, legsC, gt);
+    drawCharBody(r, classType, bodyC, isFury, shieldActive);
+    drawCharWeapon(r, classType, weaponC, gt);
+    drawCharHead(r, classType, headC, gt);
 
     ctx.restore();
+
+    // Layer 6: Outline + Particles (after restore, in world space)
+    if (skinData && !isBot) {
+      drawSkinOutline(cx, cy, r, skinData, gt);
+      drawSkinParticles(cx, cy, r, skinData, gt);
+    }
   }
 
   // === ENEMY SPRITES — Canvas-drawn creatures per enemy type ===
@@ -2152,27 +3015,37 @@ function doLogin() {
     ctx.save();
     ctx.translate(x, y);
     switch (type) {
-      case 'normal': // Alien creature — triangular body with antenna + eyes
+      case 'normal': // Goblin — big round head, small body, club
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.55, r*0.45, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+        // Legs
+        ctx.fillStyle = '#4a7a2a';
+        ctx.fillRect(-r*0.2, r*0.25, r*0.12, r*0.3);
+        ctx.fillRect(r*0.08, r*0.25, r*0.12, r*0.3);
+        // Body (small trapezoid)
         ctx.fillStyle = themeColor;
         ctx.beginPath();
-        ctx.moveTo(0, -r * 0.9);
-        ctx.lineTo(-r * 0.8, r * 0.6);
-        ctx.quadraticCurveTo(0, r * 0.9, r * 0.8, r * 0.6);
+        ctx.moveTo(-r*0.3, -r*0.05); ctx.lineTo(r*0.3, -r*0.05);
+        ctx.lineTo(r*0.25, r*0.3); ctx.lineTo(-r*0.25, r*0.3);
         ctx.closePath(); ctx.fill();
-        // Antenna
-        ctx.strokeStyle = themeColor; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 0.7); ctx.lineTo(-r * 0.4, -r * 1.1); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r * 0.2, -r * 0.7); ctx.lineTo(r * 0.4, -r * 1.1); ctx.stroke();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(-r * 0.4, -r * 1.1, r * 0.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.4, -r * 1.1, r * 0.1, 0, Math.PI * 2); ctx.fill();
-        // Eyes
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(-r * 0.25, -r * 0.1, r * 0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.25, -r * 0.1, r * 0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#201';
-        ctx.beginPath(); ctx.arc(-r * 0.25, -r * 0.05, r * 0.1, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.25, -r * 0.05, r * 0.1, 0, Math.PI * 2); ctx.fill();
+        // Head (large round)
+        ctx.fillStyle = themeColor;
+        ctx.beginPath(); ctx.arc(0, -r*0.3, r*0.4, 0, Math.PI*2); ctx.fill();
+        // Pointy ears
+        ctx.beginPath(); ctx.moveTo(-r*0.35, -r*0.35); ctx.lineTo(-r*0.65, -r*0.5); ctx.lineTo(-r*0.3, -r*0.2); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r*0.35, -r*0.35); ctx.lineTo(r*0.65, -r*0.5); ctx.lineTo(r*0.3, -r*0.2); ctx.closePath(); ctx.fill();
+        // Eyes (yellow triangular)
+        ctx.fillStyle = '#ffcc00';
+        ctx.beginPath(); ctx.moveTo(-r*0.18, -r*0.4); ctx.lineTo(-r*0.08, -r*0.28); ctx.lineTo(-r*0.28, -r*0.28); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r*0.18, -r*0.4); ctx.lineTo(r*0.28, -r*0.28); ctx.lineTo(r*0.08, -r*0.28); ctx.closePath(); ctx.fill();
+        // Club (right hand)
+        ctx.fillStyle = '#8B6914';
+        ctx.save(); ctx.translate(r*0.3, r*0.05); ctx.rotate(-0.3);
+        ctx.fillRect(0, -r*0.05, r*0.6, r*0.1);
+        ctx.fillStyle = '#6a5a3a';
+        ctx.beginPath(); ctx.arc(r*0.6, 0, r*0.12, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
         break;
       case 'fast': // Bat — spread wings with fangs
         var wingFlap = Math.sin(gt * 12) * 0.3;
@@ -2205,67 +3078,132 @@ function doLogin() {
         ctx.beginPath(); ctx.moveTo(-r * 0.08, r * 0.1); ctx.lineTo(-r * 0.04, r * 0.35); ctx.lineTo(0, r * 0.1); ctx.fill();
         ctx.beginPath(); ctx.moveTo(0, r * 0.1); ctx.lineTo(r * 0.04, r * 0.35); ctx.lineTo(r * 0.08, r * 0.1); ctx.fill();
         break;
-      case 'tank': // Boar — wide body with tusks and snout
+      case 'tank': // Stone Giant — large block body, small head, thick arms
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.7, r*0.8, r*0.2, 0, 0, Math.PI*2); ctx.fill();
+        // Legs (thick stumps)
+        ctx.fillStyle = '#666655';
+        ctx.fillRect(-r*0.4, r*0.35, r*0.3, r*0.35);
+        ctx.fillRect(r*0.1, r*0.35, r*0.3, r*0.35);
+        // Body (large rounded rectangle)
         ctx.fillStyle = themeColor;
-        ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-        // Snout
-        ctx.fillStyle = '#d88';
-        ctx.beginPath(); ctx.ellipse(0, r * 0.35, r * 0.35, r * 0.22, 0, 0, Math.PI * 2); ctx.fill();
-        // Nostrils
-        ctx.fillStyle = '#844';
-        ctx.beginPath(); ctx.arc(-r * 0.1, r * 0.35, r * 0.06, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.1, r * 0.35, r * 0.06, 0, Math.PI * 2); ctx.fill();
-        // Tusks
-        ctx.strokeStyle = '#ffe'; ctx.lineWidth = r * 0.12; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-r * 0.4, r * 0.2); ctx.quadraticCurveTo(-r * 0.7, 0, -r * 0.5, -r * 0.3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r * 0.4, r * 0.2); ctx.quadraticCurveTo(r * 0.7, 0, r * 0.5, -r * 0.3); ctx.stroke();
-        // Angry eyes
-        ctx.fillStyle = '#f22';
-        ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.2, r * 0.13, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.2, r * 0.13, 0, Math.PI * 2); ctx.fill();
-        // Eyebrow ridge
-        ctx.strokeStyle = themeColor; ctx.lineWidth = r * 0.1;
-        ctx.beginPath(); ctx.moveTo(-r * 0.5, -r * 0.35); ctx.lineTo(-r * 0.15, -r * 0.3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r * 0.5, -r * 0.35); ctx.lineTo(r * 0.15, -r * 0.3); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-r*0.6, -r*0.4);
+        ctx.lineTo(r*0.6, -r*0.4);
+        ctx.quadraticCurveTo(r*0.7, 0, r*0.6, r*0.4);
+        ctx.lineTo(-r*0.6, r*0.4);
+        ctx.quadraticCurveTo(-r*0.7, 0, -r*0.6, -r*0.4);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#555544'; ctx.lineWidth = 2; ctx.stroke();
+        // Rock cracks
+        ctx.strokeStyle = '#555544'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-r*0.3, -r*0.2); ctx.lineTo(-r*0.1, r*0.15); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(r*0.2, -r*0.3); ctx.lineTo(r*0.35, r*0.1); ctx.stroke();
+        // Arms (thick rectangles from sides)
+        ctx.fillStyle = '#888877';
+        ctx.fillRect(-r*0.95, -r*0.2, r*0.4, r*0.35);
+        ctx.fillRect(r*0.55, -r*0.2, r*0.4, r*0.35);
+        // Fists
+        ctx.fillStyle = '#777766';
+        ctx.beginPath(); ctx.arc(-r*0.95, r*0.0, r*0.2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.95, r*0.0, r*0.2, 0, Math.PI*2); ctx.fill();
+        // Small head (embedded in body top)
+        ctx.fillStyle = '#999988';
+        ctx.beginPath();
+        ctx.moveTo(-r*0.25, -r*0.4); ctx.lineTo(r*0.25, -r*0.4);
+        ctx.lineTo(r*0.2, -r*0.7); ctx.lineTo(-r*0.2, -r*0.7);
+        ctx.closePath(); ctx.fill();
+        // Eyes (glowing amber)
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath(); ctx.arc(-r*0.1, -r*0.52, r*0.07, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.1, -r*0.52, r*0.07, 0, Math.PI*2); ctx.fill();
         break;
-      case 'boss': // Demon lord — horned skull with glowing eyes
+      case 'boss': // Demon Lord — full body with wings, horns, tail
+        // Ground shadow (large)
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.6, r*1.2, r*0.3, 0, 0, Math.PI*2); ctx.fill();
+        // Wings (behind body)
+        var wingBreath = Math.sin(gt * 2) * 0.1;
+        ctx.fillStyle = '#661111';
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(-r*0.4, -r*0.2);
+        ctx.lineTo(-r*1.3, -r*(0.8 + wingBreath));
+        ctx.lineTo(-r*1.5, -r*0.1);
+        ctx.lineTo(-r*1.2, r*0.3);
+        ctx.lineTo(-r*0.5, r*0.1);
+        ctx.closePath(); ctx.fill();
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(r*0.4, -r*0.2);
+        ctx.lineTo(r*1.3, -r*(0.8 + wingBreath));
+        ctx.lineTo(r*1.5, -r*0.1);
+        ctx.lineTo(r*1.2, r*0.3);
+        ctx.lineTo(r*0.5, r*0.1);
+        ctx.closePath(); ctx.fill();
+        // Wing bones
+        ctx.strokeStyle = '#882222'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(-r*0.4, -r*0.15); ctx.lineTo(-r*1.3, -r*(0.75 + wingBreath)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(r*0.4, -r*0.15); ctx.lineTo(r*1.3, -r*(0.75 + wingBreath)); ctx.stroke();
+        // Tail
+        ctx.strokeStyle = '#882222'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, r*0.5);
+        ctx.quadraticCurveTo(-r*0.6, r*1.0, -r*0.3, r*1.2);
+        ctx.stroke();
+        // Tail spike
+        ctx.fillStyle = '#cc4444';
+        ctx.beginPath(); ctx.moveTo(-r*0.3, r*1.15); ctx.lineTo(-r*0.45, r*1.35); ctx.lineTo(-r*0.15, r*1.2); ctx.closePath(); ctx.fill();
+        // Legs
+        ctx.fillStyle = '#771111';
+        ctx.fillRect(-r*0.3, r*0.3, r*0.2, r*0.35);
+        ctx.fillRect(r*0.1, r*0.3, r*0.2, r*0.35);
+        // Body (large trapezoid)
+        ctx.fillStyle = themeColor;
+        ctx.beginPath();
+        ctx.moveTo(-r*0.5, -r*0.4); ctx.lineTo(r*0.5, -r*0.4);
+        ctx.lineTo(r*0.45, r*0.4); ctx.lineTo(-r*0.45, r*0.4);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#511'; ctx.lineWidth = 2; ctx.stroke();
+        // Chest cracks (lava pattern)
+        ctx.strokeStyle = '#ff4400'; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.moveTo(-r*0.2, -r*0.2); ctx.lineTo(0, r*0.1); ctx.lineTo(r*0.15, -r*0.1); ctx.stroke();
+        ctx.globalAlpha = 1;
         // Horns
-        ctx.fillStyle = '#a33';
-        ctx.beginPath(); ctx.moveTo(-r * 0.5, -r * 0.3); ctx.lineTo(-r * 0.9, -r * 1.1); ctx.lineTo(-r * 0.3, -r * 0.5); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(r * 0.5, -r * 0.3); ctx.lineTo(r * 0.9, -r * 1.1); ctx.lineTo(r * 0.3, -r * 0.5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#cc4444';
+        ctx.beginPath(); ctx.moveTo(-r*0.35, -r*0.55); ctx.lineTo(-r*0.7, -r*1.1); ctx.lineTo(-r*0.2, -r*0.6); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r*0.35, -r*0.55); ctx.lineTo(r*0.7, -r*1.1); ctx.lineTo(r*0.2, -r*0.6); ctx.closePath(); ctx.fill();
         // Head
         ctx.fillStyle = themeColor;
-        ctx.beginPath(); ctx.arc(0, 0, r * 0.75, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.35, 0, Math.PI*2); ctx.fill();
         // Brow ridge
         ctx.fillStyle = '#511';
         ctx.beginPath();
-        ctx.moveTo(-r * 0.6, -r * 0.2);
-        ctx.quadraticCurveTo(0, -r * 0.5, r * 0.6, -r * 0.2);
-        ctx.lineTo(r * 0.6, -r * 0.1);
-        ctx.quadraticCurveTo(0, -r * 0.35, -r * 0.6, -r * 0.1);
+        ctx.moveTo(-r*0.3, -r*0.5);
+        ctx.quadraticCurveTo(0, -r*0.7, r*0.3, -r*0.5);
+        ctx.lineTo(r*0.3, -r*0.45);
+        ctx.quadraticCurveTo(0, -r*0.6, -r*0.3, -r*0.45);
         ctx.closePath(); ctx.fill();
         // Glowing eyes
         var eyePulse = 0.7 + 0.3 * Math.sin(gt * 5);
-        ctx.fillStyle = '#ff0'; ctx.globalAlpha = eyePulse;
-        ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.1, r * 0.18, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.1, r * 0.18, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f80';
-        ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.1, r * 0.08, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.1, r * 0.08, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffff00'; ctx.globalAlpha = eyePulse;
+        ctx.save(); ctx.shadowColor = '#ff8800'; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(-r*0.15, -r*0.42, r*0.1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.15, -r*0.42, r*0.1, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
         ctx.globalAlpha = 1;
         // Jagged mouth
         ctx.fillStyle = '#300';
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.4, r * 0.2);
+        ctx.beginPath(); ctx.moveTo(-r*0.2, -r*0.25);
         for (var ti = 0; ti < 5; ti++) {
-          ctx.lineTo(-r * 0.3 + ti * r * 0.15, r * (ti % 2 === 0 ? 0.35 : 0.2));
+          ctx.lineTo(-r*0.15 + ti * r*0.075, -r*(ti%2===0 ? 0.18 : 0.25));
         }
-        ctx.lineTo(r * 0.4, r * 0.2);
-        ctx.closePath(); ctx.fill();
+        ctx.lineTo(r*0.2, -r*0.25); ctx.closePath(); ctx.fill();
         // Fangs
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.moveTo(-r * 0.25, r * 0.2); ctx.lineTo(-r * 0.2, r * 0.4); ctx.lineTo(-r * 0.15, r * 0.2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(r * 0.15, r * 0.2); ctx.lineTo(r * 0.2, r * 0.4); ctx.lineTo(r * 0.25, r * 0.2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-r*0.1, -r*0.25); ctx.lineTo(-r*0.07, -r*0.15); ctx.lineTo(-r*0.04, -r*0.25); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r*0.04, -r*0.25); ctx.lineTo(r*0.07, -r*0.15); ctx.lineTo(r*0.1, -r*0.25); ctx.fill();
         break;
       case 'ranged': // Archer — hooded figure with bow
         // Cloak
@@ -2367,30 +3305,46 @@ function doLogin() {
         ctx.lineTo(r * 0.1, -r * 0.45);
         ctx.closePath(); ctx.fill();
         break;
-      case 'treasure': // Treasure chest with golden glow
-        // Chest body
-        ctx.fillStyle = '#8B5E3C';
-        ctx.fillRect(-r * 0.65, -r * 0.15, r * 1.3, r * 0.7);
-        // Metal bands
-        ctx.fillStyle = '#a67c00';
-        ctx.fillRect(-r * 0.65, -r * 0.15, r * 1.3, r * 0.1);
-        ctx.fillRect(-r * 0.65, r * 0.35, r * 1.3, r * 0.1);
-        // Lid
-        ctx.fillStyle = '#9B6E4C';
-        ctx.beginPath();
-        ctx.moveTo(-r * 0.7, -r * 0.15);
-        ctx.quadraticCurveTo(0, -r * 0.75, r * 0.7, -r * 0.15);
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#a67c00'; ctx.lineWidth = 1.5; ctx.stroke();
-        // Lock
+      case 'treasure': // Treasure Goblin — small goblin carrying big sack
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.5, r*0.4, r*0.1, 0, 0, Math.PI*2); ctx.fill();
+        // Big golden sack (behind)
+        ctx.fillStyle = '#c9a040';
+        ctx.beginPath(); ctx.arc(-r*0.2, -r*0.1, r*0.5, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#8B6914'; ctx.lineWidth = 1; ctx.stroke();
+        // Gold coins peeking out
         ctx.fillStyle = '#ffd700';
-        ctx.beginPath(); ctx.arc(0, r * 0.1, r * 0.15, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-r * 0.04, r * 0.06, r * 0.08, r * 0.12);
-        // Sparkles
+        ctx.beginPath(); ctx.arc(-r*0.35, -r*0.45, r*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r*0.05, -r*0.5, r*0.07, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r*0.45, -r*0.25, r*0.06, 0, Math.PI*2); ctx.fill();
+        // Legs (running pose)
+        var runPhase = Math.sin(gt * 12);
+        ctx.fillStyle = '#5a8a3a';
+        ctx.fillRect(-r*0.12, r*0.2 + runPhase*r*0.08, r*0.1, r*0.25);
+        ctx.fillRect(r*0.05, r*0.2 - runPhase*r*0.08, r*0.1, r*0.25);
+        // Small body
+        ctx.fillStyle = '#5a8a3a';
+        ctx.beginPath();
+        ctx.moveTo(-r*0.2, -r*0.0); ctx.lineTo(r*0.2, -r*0.0);
+        ctx.lineTo(r*0.15, r*0.25); ctx.lineTo(-r*0.15, r*0.25);
+        ctx.closePath(); ctx.fill();
+        // Head (round, looking back nervously)
+        ctx.fillStyle = '#5a8a3a';
+        ctx.beginPath(); ctx.arc(r*0.1, -r*0.2, r*0.25, 0, Math.PI*2); ctx.fill();
+        // Ears
+        ctx.beginPath(); ctx.moveTo(r*0.3, -r*0.25); ctx.lineTo(r*0.5, -r*0.45); ctx.lineTo(r*0.25, -r*0.15); ctx.closePath(); ctx.fill();
+        // Eyes (scared expression)
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(r*0.15, -r*0.22, r*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.28, -r*0.22, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(r*0.17, -r*0.2, r*0.04, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.3, -r*0.2, r*0.03, 0, Math.PI*2); ctx.fill();
+        // Gold sparkles
         ctx.fillStyle = '#ffd700'; ctx.globalAlpha = 0.5 + 0.3 * Math.sin(gt * 4);
-        ctx.beginPath(); ctx.arc(-r * 0.4, -r * 0.4, r * 0.08, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.3, r * 0.06, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r*0.4, -r*0.5, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.0, -r*0.55, r*0.05, 0, Math.PI*2); ctx.fill();
         ctx.globalAlpha = 1;
         break;
       case 'miniBoss': // Demon imp — smaller demon
@@ -2949,7 +3903,12 @@ function doLogin() {
       ctx.font = '14px Arial'; ctx.fillStyle = '#888';
       ctx.fillText('Connecting to ' + serverUrl, W / 2, H / 2 + 30);
     }
-    else if (state === 'playing') { networkUpdate(dt); checkAchievements(); drawGame(); }
+    else if (state === 'playing') {
+      if (offlineMode) { updateOfflineDemo(dt); offlinePlayerUpdate(dt); }
+      else { networkUpdate(dt); }
+      gameTime += dt;
+      checkAchievements(); drawGame();
+    }
     else if (state === 'spectating') { networkUpdate(dt); spectatorUpdate(); drawGame(); drawSpectatorHUD(); }
     else if (state === 'gameOver') { drawGame(); drawDeathRecap(); }
     else if (state === 'paused') { drawGame(); drawPause(); }
@@ -3218,6 +4177,11 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(bpScreenX, bpScreenY, bp.radius, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
+
+    // Zone overlays — draw colored zone regions on the map
+    drawZoneOverlays(ctx, cameraX, cameraY);
+    // Terrain obstacles — rocks, bushes, water, lava, etc.
+    drawTerrain(ctx, cameraX, cameraY);
 
     // envDecoration — draw floatingDebris and energyWisp (US-272)
     for (var di = 0; di < floatingDebris.length; di++) {
@@ -3896,7 +4860,7 @@ function doLogin() {
     // Character sprite — class-specific visual
     var localFacing = Math.atan2((mouseY + cameraY) - player.y, (mouseX + cameraX) - player.x);
     drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, localFacing, {
-      fury: isFury, shield: player.shieldActive
+      fury: isFury, shield: player.shieldActive, skinId: equippedSkin
     });
 
     // localMultiplayer (US-344): draw player2
@@ -3969,7 +4933,7 @@ function doLogin() {
       ctx.globalAlpha = 1;
       var bpAngle = bp.facingAngle || 0;
       drawCharacterSprite(bp.x, bp.y, bp.radius, bp.characterType || 'warrior', bpAngle, {
-        isBot: true, color: bp.color || '#f44', shield: bp.shieldActive
+        isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default'
       });
       // Name + level label — red for enemies
       ctx.fillStyle = isEnemy ? '#f88' : '#fff';
@@ -4836,7 +5800,7 @@ function doLogin() {
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
       ctx.strokeRect(W / 2 - 190, by, 380, 80);
       // Character sprite preview + emoji icon
-      drawCharacterSprite(W / 2 - 155, by + 40, 18, classKeys[i], 0, {});
+      drawCharacterSprite(W / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default' });
       ctx.font = '18px Arial'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
       ctx.fillText(cls.icon, W / 2 - 175, by + 20);
@@ -4897,6 +5861,57 @@ function doLogin() {
       ctx.fillText('生命:' + derivedStats.maxHP + '  ' + atkLabel + ':' + atkValue.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), W / 2 - 180, dsY + 16);
       ctx.fillText('暴击:' + (derivedStats.critRate * 100).toFixed(1) + '%  护甲:' + derivedStats.armor.toFixed(1) + '  回血:' + derivedStats.hpRegen.toFixed(1) + '/s', W / 2 - 180, dsY + 34);
     }
+
+    // === Skin Selection Panel ===
+    var skinPanelY = (derivedStats ? panelY + 185 : panelY + 135);
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(W / 2 - 190, skinPanelY, 380, 110);
+    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 190, skinPanelY, 380, 110);
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('🎨 皮肤选择', W / 2, skinPanelY + 16);
+    // Get skins applicable to selected class
+    var applicableSkins = skinCollection.filter(function(sk) {
+      var sd = skinsData[sk.id];
+      if (!sd) return sk.id === 'default';
+      return !sd.applicableClasses || sd.applicableClasses.indexOf(selectedClass) >= 0;
+    });
+    var skinCols = Math.min(applicableSkins.length, 8);
+    var skinSize = 28;
+    var skinGap = 6;
+    var skinStartX = W / 2 - (skinCols * (skinSize + skinGap) - skinGap) / 2;
+    var skinRowY = skinPanelY + 30;
+    var tierColors = { C: '#aaa', B: '#4a9eff', A: '#c44aff', S: '#ffd700' };
+    for (var si = 0; si < applicableSkins.length && si < 16; si++) {
+      var sk = applicableSkins[si];
+      var sd = skinsData[sk.id] || {};
+      var row = Math.floor(si / 8);
+      var col = si % 8;
+      var skx = skinStartX + col * (skinSize + skinGap);
+      var sky = skinRowY + row * (skinSize + skinGap + 8);
+      var isEquipped = (equippedSkin === sk.id);
+      // Background
+      ctx.fillStyle = isEquipped ? '#2a2a4e' : '#111118';
+      ctx.fillRect(skx, sky, skinSize, skinSize);
+      ctx.strokeStyle = isEquipped ? '#ffd700' : (sk.owned ? (tierColors[sk.tier] || '#444') : '#333');
+      ctx.lineWidth = isEquipped ? 2 : 1;
+      ctx.strokeRect(skx, sky, skinSize, skinSize);
+      // Character preview
+      drawCharacterSprite(skx + skinSize / 2, sky + skinSize / 2, 10, selectedClass, 0, { skinId: sk.id });
+      // Lock icon for unowned
+      if (!sk.owned && sk.id !== 'default') {
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(skx, sky, skinSize, skinSize);
+        ctx.fillStyle = '#888'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+        ctx.fillText('🔒', skx + skinSize / 2, sky + skinSize / 2 + 4);
+      }
+      // Tier badge
+      if (sd.tier && sd.tier !== 'C') {
+        ctx.fillStyle = tierColors[sd.tier] || '#888'; ctx.font = 'bold 8px Arial'; ctx.textAlign = 'left';
+        ctx.fillText(sd.tier, skx + 2, sky + 9);
+      }
+    }
+    // Show equipped skin name
+    var eqSkinData = skinsData[equippedSkin] || {};
+    ctx.fillStyle = '#ccc'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
+    ctx.fillText('当前: ' + (eqSkinData.name || '默认'), W / 2, skinPanelY + 103);
 
     // Back
     ctx.fillStyle = '#333'; ctx.fillRect(W / 2 - 50, H - 50, 100, 36);
@@ -5612,11 +6627,10 @@ function doLogin() {
   });
   canvas.addEventListener('mousemove', function(ev) {
     var r = canvas.getBoundingClientRect();
-    mouseX = ev.clientX - r.left; mouseY = ev.clientY - r.top;
+    mouseX = (ev.clientX - r.left) * W / r.width;
+    mouseY = (ev.clientY - r.top) * H / r.height;
     if (_joystickMouseDown) {
-      var mx = (ev.clientX - r.left) * W / r.width;
-      var my = (ev.clientY - r.top) * H / r.height;
-      joystickMove(mx, my, 'mouse');
+      joystickMove(mouseX, mouseY, 'mouse');
     }
   });
   canvas.addEventListener('mouseup', function(ev) {
@@ -5630,7 +6644,7 @@ function doLogin() {
   canvas.addEventListener('click', function(ev) {
     if (!audioCtx) initAudio(); // Init audio on first click (browser policy)
     var r = canvas.getBoundingClientRect();
-    var cx = ev.clientX - r.left, cy = ev.clientY - r.top;
+    var cx = (ev.clientX - r.left) * W / r.width, cy = (ev.clientY - r.top) * H / r.height;
     if (state === 'menu') {
       // Solo mode button (left)
       if (cx > W / 2 - 90 && cx < W / 2 - 5 && cy > H / 2 + 30 && cy < H / 2 + 80) { gameMode = 'solo'; state = 'charSelect'; }
@@ -5689,6 +6703,33 @@ function doLogin() {
           if (attributePoints > 0) {
             playerAttributes[attrNames[ai]]++;
             attributePoints--;
+          }
+        }
+      }
+      // Skin selection clicks
+      var _selCls = CLASS_DEFS[selectedClass];
+      var _initAttrs = _selCls ? (_selCls.initialAttributes || { INT: 5, STR: 5, AGI: 5, STA: 5 }) : {};
+      var _derivedStats = (typeof RPGEngine !== 'undefined' && RPGEngine.calculateDerivedStats)
+        ? RPGEngine.calculateDerivedStats(playerAttributes, _selCls, 1) : null;
+      var _skinPanelY = (_derivedStats ? panelY + 185 : panelY + 135);
+      var _applicableSkins = skinCollection.filter(function(sk) {
+        var sd = skinsData[sk.id];
+        if (!sd) return sk.id === 'default';
+        return !sd.applicableClasses || sd.applicableClasses.indexOf(selectedClass) >= 0;
+      });
+      var _skinSize = 28, _skinGap = 6;
+      var _skinCols = Math.min(_applicableSkins.length, 8);
+      var _skinStartX = W / 2 - (_skinCols * (_skinSize + _skinGap) - _skinGap) / 2;
+      var _skinRowY = _skinPanelY + 30;
+      for (var si = 0; si < _applicableSkins.length && si < 16; si++) {
+        var sk = _applicableSkins[si];
+        var row = Math.floor(si / 8);
+        var col = si % 8;
+        var skx = _skinStartX + col * (_skinSize + _skinGap);
+        var sky = _skinRowY + row * (_skinSize + _skinGap + 8);
+        if (cx > skx && cx < skx + _skinSize && cy > sky && cy < sky + _skinSize) {
+          if (sk.owned || sk.id === 'default') {
+            equippedSkin = sk.id;
           }
         }
       }
@@ -5799,11 +6840,15 @@ function doLogin() {
   canvas.addEventListener('touchmove', function(ev) {
     ev.preventDefault();
     var r = canvas.getBoundingClientRect();
-    mouseX = ev.touches[0].clientX - r.left; mouseY = ev.touches[0].clientY - r.top;
+    mouseX = (ev.touches[0].clientX - r.left) * W / r.width;
+    mouseY = (ev.touches[0].clientY - r.top) * H / r.height;
   }, { passive: false });
   canvas.addEventListener('touchstart', function(ev) {
     var r = canvas.getBoundingClientRect();
-    var cx = ev.touches[0].clientX - r.left, cy = ev.touches[0].clientY - r.top;
+    var cx = (ev.touches[0].clientX - r.left) * W / r.width;
+    var cy = (ev.touches[0].clientY - r.top) * H / r.height;
+    // Update mouseX/mouseY for facing direction
+    mouseX = cx; mouseY = cy;
     // Simulate click for menus
     var clickEv = new MouseEvent('click', { clientX: ev.touches[0].clientX, clientY: ev.touches[0].clientY });
     canvas.dispatchEvent(clickEv);

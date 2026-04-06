@@ -24,6 +24,7 @@ public class DataLoader {
     private Map<String, MapData> maps;
     private List<EvolutionData> evolutions;
     private List<Integer> xpCurve;
+    private JsonNode skinsRaw; // raw JSON for skins (served to client as-is)
 
     public DataLoader(String dataDir) {
         this.dataDir = dataDir;
@@ -48,6 +49,7 @@ public class DataLoader {
         loadEvolutions();
         loadMaps();
         loadXpCurve();
+        loadSkins();
         LOG.info("Loaded " + skills.size() + " skills, " + classes.size() + " classes, "
                 + monsters.size() + " monster types, " + evolutions.size() + " evolutions, "
                 + maps.size() + " maps, " + xpCurve.size() + " XP curve levels");
@@ -149,7 +151,23 @@ public class DataLoader {
         }
     }
 
+    private void loadSkins() throws IOException {
+        File file = new File(dataDir, "skins.json");
+        if (!file.exists()) {
+            LOG.warning("skins.json not found at " + file.getAbsolutePath());
+            skinsRaw = MAPPER.createObjectNode();
+            return;
+        }
+        skinsRaw = MAPPER.readTree(file);
+        int count = 0;
+        if (skinsRaw.isObject()) {
+            count = skinsRaw.size();
+        }
+        LOG.info("Loaded " + count + " skins");
+    }
+
     // Accessors
+    public JsonNode getSkinsRaw() { return skinsRaw; }
     public List<Integer> getXpCurve() { return xpCurve; }
 
     /**

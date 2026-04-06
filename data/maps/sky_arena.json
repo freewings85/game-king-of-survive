@@ -6,26 +6,584 @@
   "shape": "octagon",
   "requiredRank": "GOLD",
   "color": "#1a1a3a",
-  "zones": [
+  "initialDensity": 14,
+  "spawnMinDist": 140,
+  "spawnMaxDist": 240,
+  "waveBaseCount": 12,
+  "waveIntervalEarly": 15,
+  "waveIntervalMid": 12,
+  "waveIntervalLate": 9,
+  "bossEvery": 4,
+  "eliteAffixChance": 0.35,
+  "trickleInterval": 0.9,
+  "trickleMin": 0.4,
+  "trickle": {
+    "earlyBoostDuration": 15,
+    "earlyBoostInterval": 0.25,
+    "earlyBoostCount": 4,
+    "composition": {
+      "normal": 0.15,
+      "fast": 0.25,
+      "swarm": 0.15,
+      "tank": 0.25,
+      "ranged": 0.2
+    }
+  },
+  "waveComposition": [
     {
-      "name": "竞技场中心",
-      "type": "elite",
-      "bounds": { "x": 400, "y": 400, "width": 800, "height": 800 },
-      "monsterLevel": [10, 15],
-      "spawnRate": 1.5
+      "minWave": 1,
+      "types": {
+        "normal": 0.4,
+        "fast": 0.3,
+        "swarm": 0.3
+      }
     },
     {
-      "name": "外围平台",
-      "type": "normal",
-      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
-      "monsterLevel": [12, 18],
-      "spawnRate": 2.0
+      "minWave": 3,
+      "types": {
+        "fast": 0.3,
+        "tank": 0.25,
+        "ranged": 0.25,
+        "normal": 0.2
+      }
+    },
+    {
+      "minWave": 5,
+      "types": {
+        "tank": 0.3,
+        "ranged": 0.3,
+        "miniBoss": 0.15,
+        "fast": 0.15,
+        "normal": 0.1
+      }
+    },
+    {
+      "minWave": 8,
+      "types": {
+        "miniBoss": 0.25,
+        "tank": 0.25,
+        "ranged": 0.25,
+        "fast": 0.15,
+        "normal": 0.1
+      }
+    }
+  ],
+  "ambush": {
+    "enabled": true,
+    "interval": 15,
+    "chance": 0.35,
+    "monsterType": "fast",
+    "monsterCount": 4,
+    "spawnMinDist": 80,
+    "spawnMaxDist": 140
+  },
+  "spawnCamps": [
+    {
+      "id": "north_platform",
+      "name": "北部浮空台",
+      "x": 800,
+      "y": 200,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 3
+        },
+        {
+          "type": "tank",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "south_platform",
+      "name": "南部浮空台",
+      "x": 800,
+      "y": 1400,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "fast",
+          "count": 3
+        },
+        {
+          "type": "normal",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 8,
+      "respawnCooldown": 16,
+      "maxRespawns": -1
+    },
+    {
+      "id": "east_platform",
+      "name": "东部浮空台",
+      "x": 1400,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 2
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 15,
+      "respawnCooldown": 25,
+      "maxRespawns": -1
+    },
+    {
+      "id": "west_platform",
+      "name": "西部浮空台",
+      "x": 200,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 3
+        },
+        {
+          "type": "fast",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 12,
+      "respawnCooldown": 20,
+      "maxRespawns": -1
+    },
+    {
+      "id": "arena_treasure",
+      "name": "竞技场宝库",
+      "x": 800,
+      "y": 750,
+      "radius": 50,
+      "monsters": [
+        {
+          "type": "treasure",
+          "count": 2
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 30,
+      "respawnCooldown": 40,
+      "maxRespawns": 3
+    },
+    {
+      "id": "sky_throne",
+      "name": "天顶王座",
+      "x": 800,
+      "y": 200,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "boss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 50,
+      "respawnCooldown": -1,
+      "maxRespawns": 1
+    }
+  ],
+  "zones": [
+    {
+      "id": "spawn_zone",
+      "name": "传送门入口",
+      "type": "spawn",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 1300
+      },
+      "radius": 140,
+      "monsterLevelRange": [
+        8,
+        10
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "normal",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_south",
+      "name": "浮空平台·南",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 300,
+        "y": 1050,
+        "width": 1000,
+        "height": 300
+      },
+      "monsterLevelRange": [
+        8,
+        12
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_east",
+      "name": "浮空平台·东",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 1150,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        9,
+        13
+      ],
+      "spawnRate": 0.8,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_west",
+      "name": "浮空平台·西",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 150,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        9,
+        13
+      ],
+      "spawnRate": 0.8,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_east",
+      "name": "断裂区域·东",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 900,
+        "y": 350,
+        "width": 300,
+        "height": 600
+      },
+      "monsterLevelRange": [
+        11,
+        15
+      ],
+      "spawnRate": 1.3,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_west",
+      "name": "断裂区域·西",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 400,
+        "y": 350,
+        "width": 300,
+        "height": 600
+      },
+      "monsterLevelRange": [
+        11,
+        15
+      ],
+      "spawnRate": 1.3,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "inner_core",
+      "name": "中央竞技台",
+      "type": "inner",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 650
+      },
+      "radius": 220,
+      "monsterLevelRange": [
+        13,
+        18
+      ],
+      "spawnRate": 1.8,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "miniBoss",
+        "treasure"
+      ]
+    },
+    {
+      "id": "boss_lair",
+      "name": "天顶王座",
+      "type": "boss_lair",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 180
+      },
+      "radius": 100,
+      "monsterLevelRange": [
+        16,
+        22
+      ],
+      "spawnRate": 0,
+      "allowedMonsters": [
+        "boss"
+      ],
+      "bossType": "boss",
+      "bossSpawnTime": 110,
+      "bossRespawnCooldown": 180
+    },
+    {
+      "id": "resource_east",
+      "name": "天空宝箱·东",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 1350,
+        "y": 500
+      },
+      "radius": 60,
+      "monsterLevelRange": [
+        10,
+        14
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "resource_west",
+      "name": "天空宝箱·西",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 250,
+        "y": 500
+      },
+      "radius": 60,
+      "monsterLevelRange": [
+        10,
+        14
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "hazard_lightning",
+      "name": "雷击区",
+      "shape": "circle",
+      "center": {
+        "x": 900,
+        "y": 400
+      },
+      "radius": 90,
+      "type": "hazard",
+      "monsterLevelRange": [
+        5,
+        10
+      ],
+      "spawnRate": 1.8,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "fast"
+      ]
+    }
+  ],
+  "terrain": [
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 600,
+        "y": 500,
+        "width": 80,
+        "height": 100
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 920,
+        "y": 500,
+        "width": 80,
+        "height": 100
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 750,
+        "y": 130,
+        "width": 100,
+        "height": 60
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 350,
+        "y": 800,
+        "width": 60,
+        "height": 150
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 1190,
+        "y": 800,
+        "width": 60,
+        "height": 150
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 500,
+        "y": 1100
+      },
+      "to": {
+        "x": 500,
+        "y": 750
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1100,
+        "y": 1100
+      },
+      "to": {
+        "x": 1100,
+        "y": 750
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 300,
+        "y": 600
+      },
+      "to": {
+        "x": 550,
+        "y": 600
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1300,
+        "y": 600
+      },
+      "to": {
+        "x": 1050,
+        "y": 600
+      }
+    },
+    {
+      "type": "ice",
+      "shape": "rect",
+      "bounds": {
+        "x": 400,
+        "y": 200,
+        "width": 150,
+        "height": 100
+      }
+    },
+    {
+      "type": "portal",
+      "shape": "circle",
+      "center": {
+        "x": 100,
+        "y": 600
+      },
+      "radius": 25,
+      "linkedPortal": "portal_e"
+    },
+    {
+      "type": "portal",
+      "shape": "circle",
+      "center": {
+        "x": 1100,
+        "y": 600
+      },
+      "radius": 25,
+      "linkedPortal": "portal_w"
     }
   ],
   "spawnPoints": [
-    { "x": 800, "y": 800 },
-    { "x": 400, "y": 800 },
-    { "x": 1200, "y": 800 }
+    {
+      "x": 800,
+      "y": 1300
+    },
+    {
+      "x": 600,
+      "y": 1350
+    },
+    {
+      "x": 1000,
+      "y": 1350
+    }
   ],
-  "obstacles": []
+  "obstacles": [],
+  "waves": {}
 }

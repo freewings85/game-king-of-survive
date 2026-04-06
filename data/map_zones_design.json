@@ -1,0 +1,232 @@
+{
+  "_description": "地图区域化 + 结构化刷怪规则设计文档，供Developer实现、编辑器集成",
+
+  "designPrinciples": [
+    "地图不再是空地，每个区域有明确的地形特征和视觉风格",
+    "怪物按区域规则刷出，不同区域难度递进",
+    "参考MOBA地图：中心高价值高风险，外围安全低收益",
+    "所有区域配置必须在地图编辑器中可视化编辑"
+  ],
+
+  "zoneTypes": {
+    "spawn": {
+      "name": "出生点",
+      "color": "rgba(100,200,100,0.2)",
+      "description": "玩家初始位置，短暂无敌保护",
+      "spawnRate": 0.3,
+      "monsterLevelRange": [1, 2],
+      "allowedMonsters": ["normal", "swarm"],
+      "features": ["无敌保护区10秒", "低密度刷怪"]
+    },
+    "outer": {
+      "name": "外围区",
+      "color": "rgba(80,150,80,0.15)",
+      "description": "入门练级区域，低风险低收益",
+      "spawnRate": 0.8,
+      "monsterLevelRange": [1, 4],
+      "allowedMonsters": ["normal", "fast", "swarm"],
+      "features": ["基础怪物", "经验宝石密度中等"]
+    },
+    "middle": {
+      "name": "中间区",
+      "color": "rgba(200,180,60,0.15)",
+      "description": "过渡区域，怪物种类增多",
+      "spawnRate": 1.2,
+      "monsterLevelRange": [3, 7],
+      "allowedMonsters": ["normal", "fast", "tank", "ranged", "swarm"],
+      "features": ["混合怪物群", "偶尔刷精英怪"]
+    },
+    "inner": {
+      "name": "核心区",
+      "color": "rgba(200,60,60,0.15)",
+      "description": "高风险高收益，精英怪和Boss出没",
+      "spawnRate": 1.8,
+      "monsterLevelRange": [5, 10],
+      "allowedMonsters": ["tank", "ranged", "miniBoss", "treasure"],
+      "features": ["精英怪常驻", "宝藏哥布林", "高经验密度"]
+    },
+    "boss_lair": {
+      "name": "Boss巢穴",
+      "color": "rgba(160,0,0,0.2)",
+      "description": "Boss固定刷新点，有视觉标识",
+      "spawnRate": 0,
+      "monsterLevelRange": [8, 15],
+      "allowedMonsters": ["boss"],
+      "features": ["Boss定时刷新", "击杀后掉落大量奖励", "地面有警告标记"]
+    },
+    "resource": {
+      "name": "资源点",
+      "color": "rgba(60,60,200,0.15)",
+      "description": "采集/宝箱/金币点位",
+      "spawnRate": 0.5,
+      "monsterLevelRange": [3, 6],
+      "allowedMonsters": ["treasure", "normal"],
+      "features": ["金币宝箱", "经验泉水", "限时刷新"]
+    }
+  },
+
+  "terrainFeatures": {
+    "wall": {
+      "name": "墙壁/岩石",
+      "collision": true,
+      "description": "不可通行的障碍物，弹幕被阻挡",
+      "editorTool": "矩形/多边形绘制"
+    },
+    "bush": {
+      "name": "草丛",
+      "collision": false,
+      "description": "进入后对远处敌人隐身（MOBA草丛机制）",
+      "visual": "绿色半透明区域 + 草叶粒子",
+      "editorTool": "圆形区域绘制"
+    },
+    "water": {
+      "name": "水域",
+      "collision": false,
+      "description": "进入后移速-30%，但HP回复+50%",
+      "visual": "蓝色波纹动画",
+      "editorTool": "不规则区域绘制"
+    },
+    "lava": {
+      "name": "熔岩",
+      "collision": false,
+      "description": "进入后每秒受到5点伤害",
+      "visual": "红色流动纹理 + 火焰粒子",
+      "editorTool": "不规则区域绘制"
+    },
+    "speed_pad": {
+      "name": "加速带",
+      "collision": false,
+      "description": "踩上后移速+50%持续3秒",
+      "visual": "箭头纹路发光带",
+      "editorTool": "线段绘制"
+    }
+  },
+
+  "mapLayoutTemplate": {
+    "description": "以绿野平原(1200x1200)为例的标准区域布局",
+    "zones": [
+      {
+        "id": "spawn_zone",
+        "type": "spawn",
+        "shape": "circle",
+        "center": { "x": 600, "y": 1000 },
+        "radius": 120,
+        "monsterLevelRange": [1, 2]
+      },
+      {
+        "id": "outer_north",
+        "type": "outer",
+        "shape": "rect",
+        "bounds": { "x": 200, "y": 0, "width": 800, "height": 300 },
+        "monsterLevelRange": [1, 4],
+        "spawnRate": 0.8
+      },
+      {
+        "id": "outer_south",
+        "type": "outer",
+        "shape": "rect",
+        "bounds": { "x": 200, "y": 900, "width": 800, "height": 300 },
+        "monsterLevelRange": [1, 3],
+        "spawnRate": 0.6
+      },
+      {
+        "id": "middle_east",
+        "type": "middle",
+        "shape": "rect",
+        "bounds": { "x": 900, "y": 200, "width": 300, "height": 800 },
+        "monsterLevelRange": [3, 6],
+        "spawnRate": 1.2
+      },
+      {
+        "id": "middle_west",
+        "type": "middle",
+        "shape": "rect",
+        "bounds": { "x": 0, "y": 200, "width": 300, "height": 800 },
+        "monsterLevelRange": [3, 6],
+        "spawnRate": 1.2
+      },
+      {
+        "id": "inner_core",
+        "type": "inner",
+        "shape": "circle",
+        "center": { "x": 600, "y": 500 },
+        "radius": 200,
+        "monsterLevelRange": [5, 10],
+        "spawnRate": 1.8
+      },
+      {
+        "id": "boss_pit",
+        "type": "boss_lair",
+        "shape": "circle",
+        "center": { "x": 600, "y": 150 },
+        "radius": 80,
+        "monsterLevelRange": [8, 15],
+        "bossType": "boss",
+        "bossSpawnTime": 120,
+        "bossRespawnCooldown": 180
+      },
+      {
+        "id": "resource_east",
+        "type": "resource",
+        "shape": "circle",
+        "center": { "x": 1050, "y": 600 },
+        "radius": 60,
+        "loot": ["gold_chest", "xp_fountain"]
+      },
+      {
+        "id": "resource_west",
+        "type": "resource",
+        "shape": "circle",
+        "center": { "x": 150, "y": 600 },
+        "radius": 60,
+        "loot": ["gold_chest", "xp_fountain"]
+      }
+    ],
+    "terrain": [
+      { "type": "wall", "shape": "rect", "bounds": { "x": 400, "y": 280, "width": 80, "height": 80 } },
+      { "type": "wall", "shape": "rect", "bounds": { "x": 720, "y": 280, "width": 80, "height": 80 } },
+      { "type": "bush", "shape": "circle", "center": { "x": 300, "y": 700 }, "radius": 50 },
+      { "type": "bush", "shape": "circle", "center": { "x": 900, "y": 700 }, "radius": 50 },
+      { "type": "water", "shape": "circle", "center": { "x": 600, "y": 800 }, "radius": 60 },
+      { "type": "speed_pad", "from": { "x": 500, "y": 900 }, "to": { "x": 500, "y": 700 } },
+      { "type": "speed_pad", "from": { "x": 700, "y": 900 }, "to": { "x": 700, "y": 700 } }
+    ]
+  },
+
+  "spawnRules": {
+    "zoneBasedSpawning": {
+      "description": "怪物只在所属区域内刷新，不再全地图随机",
+      "rules": [
+        "每个zone有自己的allowedMonsters列表",
+        "怪物等级由zone的monsterLevelRange决定",
+        "spawnRate控制该区域的刷怪频率倍率",
+        "怪物不会主动跨越zone边界追击（除非被攻击后仇恨追踪）"
+      ]
+    },
+    "densityByZoneType": {
+      "spawn": { "maxMonsters": 3, "interval": 8 },
+      "outer": { "maxMonsters": 8, "interval": 4 },
+      "middle": { "maxMonsters": 12, "interval": 3 },
+      "inner": { "maxMonsters": 15, "interval": 2 },
+      "boss_lair": { "maxMonsters": 1, "interval": -1 },
+      "resource": { "maxMonsters": 4, "interval": 6 }
+    },
+    "waveIntegration": {
+      "description": "波次事件仍然存在，但改为区域内增强",
+      "effect": "波次来临时，middle和inner区域临时spawnRate翻倍，持续15秒"
+    }
+  },
+
+  "editorIntegration": {
+    "location": "地图编辑器",
+    "features": [
+      "可视化绘制/编辑zone区域（拖拽边界、调整大小）",
+      "为每个zone设置类型、怪物列表、等级范围、刷怪频率",
+      "放置地形要素（墙壁/草丛/水域/熔岩/加速带）",
+      "预览zone的颜色叠加效果",
+      "测试模式：在编辑器中模拟刷怪查看分布",
+      "导出为地图JSON（兼容现有格式，扩展zones和terrain字段）"
+    ],
+    "dataFormat": "扩展现有地图JSON，zones数组增加type/allowedMonsters/terrain等字段，向后兼容"
+  }
+}

@@ -7,6 +7,7 @@ public class RoomPlayer {
     private int factionId;
     private boolean ready;
     private String characterType;
+    private String skinId = "default";
 
     public RoomPlayer() {
     }
@@ -49,5 +50,13 @@ public class RoomPlayer {
 
     public void setCharacterType(String characterType) {
         this.characterType = characterType;
+    }
+
+    public String getSkinId() {
+        return skinId;
+    }
+
+    public void setSkinId(String skinId) {
+        this.skinId = skinId;
     }
 }

@@ -6,26 +6,624 @@
   "shape": "circle",
   "requiredRank": "GOLD",
   "color": "#2a2a2a",
-  "zones": [
+  "initialDensity": 12,
+  "spawnMinDist": 150,
+  "spawnMaxDist": 250,
+  "waveBaseCount": 14,
+  "waveIntervalEarly": 14,
+  "waveIntervalMid": 10,
+  "waveIntervalLate": 7,
+  "bossEvery": 4,
+  "eliteAffixChance": 0.42,
+  "trickleInterval": 0.7,
+  "trickleMin": 0.3,
+  "trickle": {
+    "earlyBoostDuration": 12,
+    "earlyBoostInterval": 0.2,
+    "earlyBoostCount": 5,
+    "composition": {
+      "normal": 0.05,
+      "fast": 0.2,
+      "swarm": 0.15,
+      "tank": 0.35,
+      "ranged": 0.25
+    }
+  },
+  "waveComposition": [
     {
-      "name": "永恒核心",
-      "type": "elite",
-      "bounds": { "x": 500, "y": 500, "width": 600, "height": 600 },
-      "monsterLevel": [15, 20],
-      "spawnRate": 2.0
+      "minWave": 1,
+      "types": {
+        "fast": 0.3,
+        "tank": 0.3,
+        "ranged": 0.25,
+        "normal": 0.15
+      }
     },
     {
-      "name": "时空边界",
+      "minWave": 3,
+      "types": {
+        "tank": 0.3,
+        "ranged": 0.3,
+        "miniBoss": 0.15,
+        "fast": 0.15,
+        "normal": 0.1
+      }
+    },
+    {
+      "minWave": 5,
+      "types": {
+        "miniBoss": 0.25,
+        "tank": 0.3,
+        "ranged": 0.25,
+        "fast": 0.15,
+        "normal": 0.05
+      }
+    },
+    {
+      "minWave": 8,
+      "types": {
+        "miniBoss": 0.35,
+        "tank": 0.3,
+        "ranged": 0.2,
+        "fast": 0.1,
+        "normal": 0.05
+      }
+    }
+  ],
+  "ambush": {
+    "enabled": true,
+    "interval": 12,
+    "chance": 0.45,
+    "monsterType": "tank",
+    "monsterCount": 3,
+    "spawnMinDist": 70,
+    "spawnMaxDist": 120
+  },
+  "spawnCamps": [
+    {
+      "id": "north_ruins",
+      "name": "北部废墟",
+      "x": 800,
+      "y": 200,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "miniBoss",
+          "count": 2
+        },
+        {
+          "type": "tank",
+          "count": 3
+        }
+      ],
+      "firstSpawnTime": 8,
+      "respawnCooldown": 16,
+      "maxRespawns": -1
+    },
+    {
+      "id": "south_rift",
+      "name": "南部时空裂缝",
+      "x": 800,
+      "y": 1400,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "fast",
+          "count": 3
+        },
+        {
+          "type": "ranged",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 5,
+      "respawnCooldown": 14,
+      "maxRespawns": -1
+    },
+    {
+      "id": "east_temporal",
+      "name": "东部时间乱流",
+      "x": 1400,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 3
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "west_temporal",
+      "name": "西部时间乱流",
+      "x": 200,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 3
+        },
+        {
+          "type": "tank",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "eternal_vault",
+      "name": "永恒宝库",
+      "x": 800,
+      "y": 700,
+      "radius": 55,
+      "monsters": [
+        {
+          "type": "treasure",
+          "count": 3
+        },
+        {
+          "type": "miniBoss",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 20,
+      "respawnCooldown": 35,
+      "maxRespawns": 3
+    },
+    {
+      "id": "time_lord_throne",
+      "name": "时间之主王座",
+      "x": 800,
+      "y": 180,
+      "radius": 75,
+      "monsters": [
+        {
+          "type": "boss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 40,
+      "respawnCooldown": -1,
+      "maxRespawns": 1
+    }
+  ],
+  "zones": [
+    {
+      "id": "spawn_zone",
+      "name": "时间裂缝",
+      "type": "spawn",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 1350
+      },
+      "radius": 140,
+      "monsterLevelRange": [
+        12,
+        14
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "normal",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_south",
+      "name": "远古废墟·南",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 250,
+        "y": 1050,
+        "width": 1100,
+        "height": 300
+      },
+      "monsterLevelRange": [
+        12,
+        16
+      ],
+      "spawnRate": 0.8,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_east",
+      "name": "远古废墟·东",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 1150,
+        "y": 250,
+        "width": 300,
+        "height": 800
+      },
+      "monsterLevelRange": [
+        13,
+        17
+      ],
+      "spawnRate": 0.9,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_west",
+      "name": "远古废墟·西",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 150,
+        "y": 250,
+        "width": 300,
+        "height": 800
+      },
+      "monsterLevelRange": [
+        13,
+        17
+      ],
+      "spawnRate": 0.9,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_east",
+      "name": "时间乱流区·东",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 900,
+        "y": 300,
+        "width": 300,
+        "height": 650
+      },
+      "monsterLevelRange": [
+        16,
+        21
+      ],
+      "spawnRate": 1.5,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_west",
+      "name": "时间乱流区·西",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 400,
+        "y": 300,
+        "width": 300,
+        "height": 650
+      },
+      "monsterLevelRange": [
+        16,
+        21
+      ],
+      "spawnRate": 1.5,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "inner_core",
+      "name": "永恒圣殿",
+      "type": "inner",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 650
+      },
+      "radius": 230,
+      "monsterLevelRange": [
+        20,
+        26
+      ],
+      "spawnRate": 2.2,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "miniBoss",
+        "treasure"
+      ]
+    },
+    {
+      "id": "boss_lair",
+      "name": "时间之主王座",
+      "type": "boss_lair",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 180
+      },
+      "radius": 110,
+      "monsterLevelRange": [
+        24,
+        32
+      ],
+      "spawnRate": 0,
+      "allowedMonsters": [
+        "boss"
+      ],
+      "bossType": "boss",
+      "bossSpawnTime": 90,
+      "bossRespawnCooldown": 150
+    },
+    {
+      "id": "hazard_temporal",
+      "name": "时间裂隙带",
       "type": "hazard",
-      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
-      "monsterLevel": [18, 25],
-      "spawnRate": 2.5
+      "shape": "rect",
+      "bounds": {
+        "x": 680,
+        "y": 380,
+        "width": 240,
+        "height": 250
+      },
+      "monsterLevelRange": [
+        18,
+        24
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "tank"
+      ],
+      "damagePerSecond": 10
+    },
+    {
+      "id": "resource_east",
+      "name": "时间碎片·东",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 1350,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        14,
+        19
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "resource_west",
+      "name": "时间碎片·西",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 250,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        14,
+        19
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    }
+  ],
+  "terrain": [
+    {
+      "type": "lava",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 480
+      },
+      "radius": 55,
+      "note": "时间裂隙-持续伤害"
+    },
+    {
+      "type": "lava",
+      "shape": "circle",
+      "center": {
+        "x": 650,
+        "y": 600
+      },
+      "radius": 35,
+      "note": "时间裂隙"
+    },
+    {
+      "type": "lava",
+      "shape": "circle",
+      "center": {
+        "x": 950,
+        "y": 600
+      },
+      "radius": 35,
+      "note": "时间裂隙"
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 580,
+        "y": 320,
+        "width": 90,
+        "height": 130
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 930,
+        "y": 320,
+        "width": 90,
+        "height": 130
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 730,
+        "y": 130,
+        "width": 140,
+        "height": 60
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 330,
+        "y": 650,
+        "width": 70,
+        "height": 220
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 1200,
+        "y": 650,
+        "width": 70,
+        "height": 220
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 500,
+        "y": 1100
+      },
+      "to": {
+        "x": 500,
+        "y": 750
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1100,
+        "y": 1100
+      },
+      "to": {
+        "x": 1100,
+        "y": 750
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 300,
+        "y": 450
+      },
+      "to": {
+        "x": 550,
+        "y": 450
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1300,
+        "y": 450
+      },
+      "to": {
+        "x": 1050,
+        "y": 450
+      }
+    },
+    {
+      "type": "heal_spring",
+      "shape": "circle",
+      "center": {
+        "x": 700,
+        "y": 700
+      },
+      "radius": 40
+    },
+    {
+      "type": "portal",
+      "shape": "circle",
+      "center": {
+        "x": 200,
+        "y": 200
+      },
+      "radius": 25,
+      "linkedPortal": "portal_se"
+    },
+    {
+      "type": "portal",
+      "shape": "circle",
+      "center": {
+        "x": 1200,
+        "y": 1000
+      },
+      "radius": 25,
+      "linkedPortal": "portal_nw"
+    },
+    {
+      "type": "ice",
+      "shape": "circle",
+      "center": {
+        "x": 400,
+        "y": 300
+      },
+      "radius": 50
     }
   ],
   "spawnPoints": [
-    { "x": 800, "y": 800 },
-    { "x": 600, "y": 600 },
-    { "x": 1000, "y": 1000 }
+    {
+      "x": 800,
+      "y": 1350
+    },
+    {
+      "x": 600,
+      "y": 1400
+    },
+    {
+      "x": 1000,
+      "y": 1400
+    }
   ],
-  "obstacles": []
+  "obstacles": [],
+  "waves": {}
 }

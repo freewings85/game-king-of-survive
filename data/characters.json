@@ -24,7 +24,8 @@
     },
     "color": "#f44",
     "defaultSkill": "warrior_slash",
-    "availableSkills": ["attack_up", "attack_speed", "shield", "hp_regen", "max_hp", "lifesteal", "thorns_aura", "crit", "explosive", "move_speed"]
+    "availableSkills": ["attack_up", "attack_speed", "shield", "hp_regen", "max_hp", "lifesteal", "thorns_aura", "crit", "explosive", "move_speed"],
+    "skins": ["default", "warrior_red", "warrior_blue", "warrior_inferno", "warrior_frost_knight", "warrior_shadow_lord", "forest_green", "flame_red", "ice_blue", "shadow_purple", "cherry_blossom", "ocean_wave", "autumn_leaf", "knight_gold", "ninja_shadow", "starlight", "neon_cyber", "royal_gold", "mage_purple", "warrior_god_of_war", "universal_celestial"]
   },
   "mage": {
     "name": "法师",
@@ -51,7 +52,8 @@
     },
     "color": "#a4f",
     "defaultSkill": "mage_fireball",
-    "availableSkills": ["attack_up", "attack_speed", "chain_lightning", "fire_trail", "frost_aura", "time_warp", "scatter", "pierce", "xp_magnet", "move_speed"]
+    "availableSkills": ["attack_up", "attack_speed", "chain_lightning", "fire_trail", "frost_aura", "time_warp", "scatter", "pierce", "xp_magnet", "move_speed"],
+    "skins": ["default", "mage_fire", "mage_flame_sage", "mage_thunder", "mage_void_prophet", "forest_green", "flame_red", "ice_blue", "shadow_purple", "cherry_blossom", "ocean_wave", "autumn_leaf", "knight_gold", "ninja_shadow", "starlight", "neon_cyber", "royal_gold", "mage_purple", "mage_archmage_eternal", "universal_celestial"]
   },
   "scout": {
     "name": "斥候",
@@ -78,6 +80,7 @@
     },
     "color": "#4f4",
     "defaultSkill": "scout_shoot",
-    "availableSkills": ["attack_up", "attack_speed", "scatter", "pierce", "crit", "move_speed", "orbit", "xp_magnet", "lifesteal", "explosive"]
+    "availableSkills": ["attack_up", "attack_speed", "scatter", "pierce", "crit", "move_speed", "orbit", "xp_magnet", "lifesteal", "explosive"],
+    "skins": ["default", "scout_night", "scout_desert_ranger", "scout_ghost_assassin", "scout_dragon_archer", "forest_green", "flame_red", "ice_blue", "shadow_purple", "cherry_blossom", "ocean_wave", "autumn_leaf", "knight_gold", "ninja_shadow", "starlight", "neon_cyber", "royal_gold", "mage_purple", "scout_phantom_hunter", "universal_celestial"]
   }
 }

@@ -89,7 +89,8 @@ public class GameService {
         for (RoomPlayer rp : room.getPlayers()) {
             String charType = rp.getCharacterType() != null ? rp.getCharacterType() : "warrior";
             int factionId = "team".equals(mode) ? rp.getFactionId() : rp.hashCode(); // unique faction in solo
-            sim.addPlayer(rp.getPlayerId(), rp.getNickname(), charType, factionId, false, dataLoader);
+            String skinId = rp.getSkinId() != null ? rp.getSkinId() : "default";
+            sim.addPlayer(rp.getPlayerId(), rp.getNickname(), charType, skinId, factionId, false, dataLoader);
             humanPlayerIds.add(rp.getPlayerId());
         }
 

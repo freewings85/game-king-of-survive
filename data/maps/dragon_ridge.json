@@ -6,26 +6,578 @@
   "shape": "rect",
   "requiredRank": "SILVER",
   "color": "#2a1a2a",
-  "zones": [
+  "initialDensity": 16,
+  "spawnMinDist": 130,
+  "spawnMaxDist": 220,
+  "waveBaseCount": 10,
+  "waveIntervalEarly": 17,
+  "waveIntervalMid": 14,
+  "waveIntervalLate": 10,
+  "bossEvery": 5,
+  "eliteAffixChance": 0.3,
+  "trickleInterval": 1.0,
+  "trickleMin": 0.5,
+  "trickle": {
+    "earlyBoostDuration": 18,
+    "earlyBoostInterval": 0.3,
+    "earlyBoostCount": 3,
+    "composition": {
+      "normal": 0.25,
+      "fast": 0.2,
+      "swarm": 0.15,
+      "tank": 0.3,
+      "ranged": 0.1
+    }
+  },
+  "waveComposition": [
     {
-      "name": "山脚",
-      "type": "normal",
-      "bounds": { "x": 200, "y": 200, "width": 1200, "height": 1200 },
-      "monsterLevel": [6, 10],
-      "spawnRate": 1.2
+      "minWave": 1,
+      "types": {
+        "normal": 0.5,
+        "fast": 0.3,
+        "swarm": 0.2
+      }
     },
     {
-      "name": "山顶龙巢",
-      "type": "elite",
-      "bounds": { "x": 600, "y": 600, "width": 400, "height": 400 },
-      "monsterLevel": [10, 15],
-      "spawnRate": 1.8
+      "minWave": 3,
+      "types": {
+        "normal": 0.25,
+        "tank": 0.3,
+        "fast": 0.25,
+        "ranged": 0.2
+      }
+    },
+    {
+      "minWave": 5,
+      "types": {
+        "tank": 0.35,
+        "ranged": 0.25,
+        "fast": 0.2,
+        "miniBoss": 0.1,
+        "normal": 0.1
+      }
+    },
+    {
+      "minWave": 8,
+      "types": {
+        "tank": 0.3,
+        "miniBoss": 0.25,
+        "ranged": 0.25,
+        "fast": 0.15,
+        "normal": 0.05
+      }
+    }
+  ],
+  "ambush": {
+    "enabled": true,
+    "interval": 20,
+    "chance": 0.3,
+    "monsterType": "fast",
+    "monsterCount": 3,
+    "spawnMinDist": 90,
+    "spawnMaxDist": 160
+  },
+  "spawnCamps": [
+    {
+      "id": "mountain_pass_north",
+      "name": "北部山口",
+      "x": 800,
+      "y": 250,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 3
+        },
+        {
+          "type": "ranged",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 12,
+      "respawnCooldown": 22,
+      "maxRespawns": -1
+    },
+    {
+      "id": "foothill_south",
+      "name": "南部山脚",
+      "x": 800,
+      "y": 1400,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "normal",
+          "count": 3
+        },
+        {
+          "type": "fast",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 5,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "east_cliff",
+      "name": "东部悬崖",
+      "x": 1350,
+      "y": 700,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 3
+        },
+        {
+          "type": "fast",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "west_cliff",
+      "name": "西部悬崖",
+      "x": 250,
+      "y": 700,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 2
+        },
+        {
+          "type": "normal",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 20,
+      "maxRespawns": -1
+    },
+    {
+      "id": "dragon_hoard",
+      "name": "龙之宝藏",
+      "x": 800,
+      "y": 600,
+      "radius": 50,
+      "monsters": [
+        {
+          "type": "treasure",
+          "count": 2
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 35,
+      "respawnCooldown": 50,
+      "maxRespawns": 2
+    },
+    {
+      "id": "dragon_nest",
+      "name": "龙巢",
+      "x": 800,
+      "y": 150,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "boss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 60,
+      "respawnCooldown": -1,
+      "maxRespawns": 1
+    }
+  ],
+  "zones": [
+    {
+      "id": "spawn_zone",
+      "name": "山脚营地",
+      "type": "spawn",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 1400
+      },
+      "radius": 150,
+      "monsterLevelRange": [
+        3,
+        5
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "normal",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_south",
+      "name": "山间小径·南",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 200,
+        "y": 1050,
+        "width": 1200,
+        "height": 300
+      },
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_east",
+      "name": "山间小径·东",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 1150,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.8,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_west",
+      "name": "山间小径·西",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 150,
+        "y": 300,
+        "width": 300,
+        "height": 750
+      },
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.8,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_east",
+      "name": "悬崖区·东",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 900,
+        "y": 300,
+        "width": 300,
+        "height": 650
+      },
+      "monsterLevelRange": [
+        6,
+        10
+      ],
+      "spawnRate": 1.2,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_west",
+      "name": "悬崖区·西",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 400,
+        "y": 300,
+        "width": 300,
+        "height": 650
+      },
+      "monsterLevelRange": [
+        6,
+        10
+      ],
+      "spawnRate": 1.2,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "inner_core",
+      "name": "龙巢外围",
+      "type": "inner",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 550
+      },
+      "radius": 220,
+      "monsterLevelRange": [
+        8,
+        13
+      ],
+      "spawnRate": 1.6,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "miniBoss",
+        "treasure"
+      ]
+    },
+    {
+      "id": "boss_lair",
+      "name": "龙巢",
+      "type": "boss_lair",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 150
+      },
+      "radius": 100,
+      "monsterLevelRange": [
+        12,
+        18
+      ],
+      "spawnRate": 0,
+      "allowedMonsters": [
+        "boss"
+      ],
+      "bossType": "boss",
+      "bossSpawnTime": 140,
+      "bossRespawnCooldown": 210
+    },
+    {
+      "id": "resource_east",
+      "name": "矿脉·东",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 1350,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        5,
+        8
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "resource_west",
+      "name": "矿脉·西",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 250,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        5,
+        8
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "hazard_east",
+      "name": "东部火山裂隙",
+      "shape": "rect",
+      "bounds": {
+        "x": 1100,
+        "y": 400,
+        "width": 200,
+        "height": 250
+      },
+      "type": "hazard",
+      "monsterLevelRange": [
+        5,
+        10
+      ],
+      "spawnRate": 1.8,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "fast"
+      ]
+    }
+  ],
+  "terrain": [
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 500,
+        "y": 400,
+        "width": 100,
+        "height": 150
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 1000,
+        "y": 400,
+        "width": 100,
+        "height": 150
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 700,
+        "y": 250,
+        "width": 200,
+        "height": 60
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 350,
+        "y": 700,
+        "width": 80,
+        "height": 200
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 1170,
+        "y": 700,
+        "width": 80,
+        "height": 200
+      }
+    },
+    {
+      "type": "lava",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 350
+      },
+      "radius": 35
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 500,
+        "y": 1200
+      },
+      "radius": 45
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 1100,
+        "y": 1200
+      },
+      "radius": 45
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 600,
+        "y": 1100
+      },
+      "to": {
+        "x": 600,
+        "y": 800
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1000,
+        "y": 1100
+      },
+      "to": {
+        "x": 1000,
+        "y": 800
+      }
+    },
+    {
+      "type": "heal_spring",
+      "shape": "circle",
+      "center": {
+        "x": 700,
+        "y": 1000
+      },
+      "radius": 30
+    },
+    {
+      "type": "ice",
+      "shape": "circle",
+      "center": {
+        "x": 300,
+        "y": 200
+      },
+      "radius": 45
     }
   ],
   "spawnPoints": [
-    { "x": 800, "y": 1400 },
-    { "x": 200, "y": 1400 },
-    { "x": 1400, "y": 1400 }
+    {
+      "x": 800,
+      "y": 1400
+    },
+    {
+      "x": 600,
+      "y": 1450
+    },
+    {
+      "x": 1000,
+      "y": 1450
+    }
   ],
-  "obstacles": []
+  "obstacles": [],
+  "waves": {}
 }

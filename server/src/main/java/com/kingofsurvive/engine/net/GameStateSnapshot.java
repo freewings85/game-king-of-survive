@@ -71,6 +71,7 @@ public class GameStateSnapshot {
         public String id;
         public String nickname;
         public String characterType;
+        public String skinId;
         public double x;
         public double y;
         public double hp;
@@ -99,6 +100,7 @@ public class GameStateSnapshot {
             s.id = p.getPlayerId();
             s.nickname = p.getNickname();
             s.characterType = p.getCharacterType();
+            s.skinId = p.getSkinId();
             s.x = p.getX();
             s.y = p.getY();
             s.hp = p.getHp();

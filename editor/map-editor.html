@@ -122,6 +122,21 @@
 
   <div class="section">
     <h2>区域 Zones</h2>
+    <label>类型:</label>
+    <select id="zone-type-select">
+      <option value="spawn">出生区 spawn</option>
+      <option value="outer">外围区 outer</option>
+      <option value="middle">中间区 middle</option>
+      <option value="inner">核心区 inner</option>
+      <option value="boss_lair">Boss巢穴</option>
+      <option value="resource">资源点</option>
+      <option value="hazard">危险区</option>
+    </select>
+    <label>形状:</label>
+    <select id="zone-shape-select">
+      <option value="rect">矩形</option>
+      <option value="circle">圆形</option>
+    </select>
     <button onclick="addZone()" title="点击添加一个新的怪物区域">+ 添加区域</button>
     <div id="zone-list"></div>
   </div>
@@ -134,6 +149,10 @@
       <option value="bush">灌木 Bush</option>
       <option value="water">水域 Water</option>
       <option value="lava">岩浆 Lava</option>
+      <option value="ice">寒冰 Ice</option>
+      <option value="poison">毒沼 Poison</option>
+      <option value="heal_spring">治疗泉 Heal Spring</option>
+      <option value="portal">传送门 Portal</option>
     </select>
     <button onclick="setTool('obstacle')" title="点击后在画布上点击放置障碍物">放置障碍物</button>
     <div id="obstacle-list"></div>
@@ -261,13 +280,27 @@ var HANDLE_SIZE = 8;
 
 function findZone(mx, my) {
   for (var i = zones.length - 1; i >= 0; i--) {
-    var b = zones[i].bounds;
-    if (mx >= b.x && mx <= b.x + b.width && my >= b.y && my <= b.y + b.height) return i;
+    var z = zones[i];
+    if (z.shape === 'circle' && z.center) {
+      var dx = mx - z.center.x, dy = my - z.center.y;
+      if (dx * dx + dy * dy <= z.radius * z.radius) return i;
+    } else if (z.bounds) {
+      var b = z.bounds;
+      if (mx >= b.x && mx <= b.x + b.width && my >= b.y && my <= b.y + b.height) return i;
+    }
   }
   return -1;
 }
 
 function hitTestResize(mx, my, zone) {
+  if (zone.shape === 'circle' && zone.center) {
+    // For circles, resize from the edge
+    var dx = mx - zone.center.x, dy = my - zone.center.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (Math.abs(dist - zone.radius) < 15) return 'radius';
+    return '';
+  }
+  if (!zone.bounds) return '';
   var b = zone.bounds;
   var t = 10;
   var onLeft = Math.abs(mx - b.x) < t;
@@ -342,21 +375,32 @@ canvas.addEventListener('mousemove', function(e) {
   if (isDragging && selectedZone >= 0) {
     var dx = mx - dragStart.x;
     var dy = my - dragStart.y;
-    zones[selectedZone].bounds.x += dx;
-    zones[selectedZone].bounds.y += dy;
+    var sz = zones[selectedZone];
+    if (sz.shape === 'circle' && sz.center) {
+      sz.center.x += dx; sz.center.y += dy;
+    } else if (sz.bounds) {
+      sz.bounds.x += dx; sz.bounds.y += dy;
+    }
     dragStart = { x: mx, y: my };
     renderZoneList(); draw();
     return;
   }
 
   if (isResizing && selectedZone >= 0) {
-    var b = zones[selectedZone].bounds;
+    var sz = zones[selectedZone];
     var dx = mx - dragStart.x;
     var dy = my - dragStart.y;
-    if (resizeHandle.indexOf('e') >= 0) b.width = Math.max(20, b.width + dx);
-    if (resizeHandle.indexOf('w') >= 0) { b.x += dx; b.width = Math.max(20, b.width - dx); }
-    if (resizeHandle.indexOf('s') >= 0) b.height = Math.max(20, b.height + dy);
-    if (resizeHandle.indexOf('n') >= 0) { b.y += dy; b.height = Math.max(20, b.height - dy); }
+    if (sz.shape === 'circle' && sz.center) {
+      // Resize circle: adjust radius based on distance from center
+      var distFromCenter = Math.sqrt(Math.pow(mx - sz.center.x, 2) + Math.pow(my - sz.center.y, 2));
+      sz.radius = Math.max(20, distFromCenter);
+    } else if (sz.bounds) {
+      var b = sz.bounds;
+      if (resizeHandle.indexOf('e') >= 0) b.width = Math.max(20, b.width + dx);
+      if (resizeHandle.indexOf('w') >= 0) { b.x += dx; b.width = Math.max(20, b.width - dx); }
+      if (resizeHandle.indexOf('s') >= 0) b.height = Math.max(20, b.height + dy);
+      if (resizeHandle.indexOf('n') >= 0) { b.y += dy; b.height = Math.max(20, b.height - dy); }
+    }
     dragStart = { x: mx, y: my };
     renderZoneList(); draw();
     return;
@@ -399,36 +443,68 @@ function toggleHelp() {
 function getMapWidth() { return +document.getElementById('map-width').value || 1600; }
 function getMapHeight() { return +document.getElementById('map-height').value || 1600; }
 
+var zoneTypeColors = {
+  spawn: '#4c84', outer: '#4844', middle: '#cc84', inner: '#c444', boss_lair: '#a008', resource: '#44c4', hazard: '#a4f4'
+};
+var zoneTypeNames = {
+  spawn: '出生区', outer: '外围区', middle: '中间区', inner: '核心区', boss_lair: 'Boss巢穴', resource: '资源点', hazard: '危险区'
+};
+var allMonsterTypes = ['normal', 'fast', 'swarm', 'tank', 'ranged', 'miniBoss', 'boss', 'treasure'];
+
 function addZone() {
   saveState();
   var w = getMapWidth(), h = getMapHeight();
-  zones.push({
-    name: '区域 ' + (zones.length + 1),
-    bounds: { x: w * 0.25, y: h * 0.25, width: w * 0.5, height: h * 0.5 },
-    monsterLevel: [1, 5],
-    spawnRate: 1.0
-  });
+  var type = document.getElementById('zone-type-select').value;
+  var shape = document.getElementById('zone-shape-select').value;
+  var z = {
+    id: type + '_' + (zones.length + 1),
+    name: (zoneTypeNames[type] || type) + ' ' + (zones.length + 1),
+    type: type,
+    shape: shape,
+    monsterLevelRange: [1, 5],
+    spawnRate: type === 'spawn' ? 0.3 : type === 'outer' ? 0.6 : type === 'middle' ? 1.2 : type === 'inner' ? 1.8 : type === 'boss_lair' ? 0 : type === 'hazard' ? 1.8 : 0.5,
+    allowedMonsters: type === 'spawn' ? ['normal', 'swarm'] : type === 'boss_lair' ? ['boss'] : type === 'hazard' ? ['tank', 'ranged', 'fast'] : ['normal', 'fast', 'swarm']
+  };
+  if (shape === 'circle') {
+    z.center = { x: w / 2, y: h / 2 };
+    z.radius = w * 0.15;
+  } else {
+    z.bounds = { x: w * 0.25, y: h * 0.25, width: w * 0.5, height: w * 0.5 };
+  }
+  zones.push(z);
   renderZoneList(); draw();
-  setStatus('已添加区域，拖拽移动位置');
+  setStatus('已添加' + (zoneTypeNames[type] || '区域') + '，拖拽移动位置');
 }
 
 function removeZone(i) { saveState(); zones.splice(i, 1); renderZoneList(); draw(); }
 function removeObstacle(i) { saveState(); obstacles.splice(i, 1); renderObstacleList(); draw(); }
 function removeSpawn(i) { saveState(); spawnPoints.splice(i, 1); renderSpawnList(); draw(); }
 
+function updateZoneMonsters(idx, monstersStr) {
+  zones[idx].allowedMonsters = monstersStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+}
+
 function renderZoneList() {
   var list = document.getElementById('zone-list');
   list.innerHTML = '';
   for (var i = 0; i < zones.length; i++) {
     var z = zones[i];
+    var lvRange = z.monsterLevelRange || z.monsterLevel || [1, 5];
+    var typeLabel = zoneTypeNames[z.type] || z.type || '';
+    var shapeLabel = z.shape === 'circle' ? '圆' : '矩';
+    var monsters = (z.allowedMonsters || []).join(',');
+    var colorDot = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + (zoneTypeColors[z.type] || '#888') + ';margin-right:4px;vertical-align:middle"></span>';
     var div = document.createElement('div');
     div.className = 'zone-item';
+    div.style.borderLeft = '3px solid ' + (zoneTypeColors[z.type] || '#888').replace(/4$/, 'f');
     div.innerHTML =
-      '<input value="' + z.name + '" onchange="zones[' + i + '].name=this.value;draw()" style="width:100px">' +
-      ' Lv: <input type="number" value="' + z.monsterLevel[0] + '" style="width:35px" onchange="zones[' + i + '].monsterLevel[0]=+this.value">' +
-      '-<input type="number" value="' + z.monsterLevel[1] + '" style="width:35px" onchange="zones[' + i + '].monsterLevel[1]=+this.value">' +
-      ' Rate: <input type="number" step="0.1" value="' + z.spawnRate + '" style="width:45px" onchange="zones[' + i + '].spawnRate=+this.value">' +
-      ' <button onclick="removeZone(' + i + ')">X</button>';
+      colorDot + '<b style="font-size:11px;color:#ffd700">' + typeLabel + '</b> [' + shapeLabel + '] ' +
+      '<input value="' + z.name + '" onchange="zones[' + i + '].name=this.value;draw()" style="width:80px;font-size:11px">' +
+      '<br>Lv: <input type="number" value="' + lvRange[0] + '" style="width:32px;font-size:11px" onchange="if(!zones[' + i + '].monsterLevelRange)zones[' + i + '].monsterLevelRange=zones[' + i + '].monsterLevel||[1,5];zones[' + i + '].monsterLevelRange[0]=+this.value">' +
+      '-<input type="number" value="' + lvRange[1] + '" style="width:32px;font-size:11px" onchange="if(!zones[' + i + '].monsterLevelRange)zones[' + i + '].monsterLevelRange=zones[' + i + '].monsterLevel||[1,5];zones[' + i + '].monsterLevelRange[1]=+this.value">' +
+      ' Rate: <input type="number" step="0.1" value="' + z.spawnRate + '" style="width:40px;font-size:11px" onchange="zones[' + i + '].spawnRate=+this.value">' +
+      '<br>怪物: <input value="' + monsters + '" style="width:180px;font-size:11px" onchange="updateZoneMonsters(' + i + ',this.value)" title="' + allMonsterTypes.join(', ') + '">' +
+      ' <button onclick="removeZone(' + i + ')" style="float:right">X</button>';
     list.appendChild(div);
   }
 }
@@ -511,25 +587,38 @@ function draw() {
   // Draw grid
   drawGrid();
 
-  // Draw zones
+  // Draw zones (supports circle and rect shapes, color-coded by type)
+  var zoneDrawColors = {
+    spawn: 'rgba(100,200,100,', outer: 'rgba(80,150,80,', middle: 'rgba(200,180,60,',
+    inner: 'rgba(200,60,60,', boss_lair: 'rgba(160,0,0,', resource: 'rgba(60,60,200,'
+  };
   for (var i = 0; i < zones.length; i++) {
     var z = zones[i];
-    var b = z.bounds;
-    ctx.fillStyle = (i === selectedZone) ? 'rgba(100, 200, 100, 0.3)' : 'rgba(100, 150, 100, 0.2)';
-    ctx.fillRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
-    ctx.strokeStyle = (i === selectedZone) ? '#8f8' : '#4a4';
-    ctx.lineWidth = (i === selectedZone) ? 2 : 1;
-    ctx.strokeRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
+    var isSel = (i === selectedZone);
+    var colorBase = zoneDrawColors[z.type] || 'rgba(100,150,100,';
+    ctx.fillStyle = colorBase + (isSel ? '0.35)' : '0.2)');
+    ctx.strokeStyle = colorBase + (isSel ? '0.9)' : '0.5)');
+    ctx.lineWidth = isSel ? 2 : 1;
 
-    // Draw resize handles for selected zone
-    if (i === selectedZone) {
-      drawResizeHandles(b);
+    if (z.shape === 'circle' && z.center) {
+      ctx.beginPath();
+      ctx.arc(z.center.x * scale, z.center.y * scale, z.radius * scale, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      // Label
+      ctx.fillStyle = colorBase + '0.9)';
+      ctx.font = '11px Arial'; ctx.textAlign = 'center';
+      var lvRange = z.monsterLevelRange || z.monsterLevel || [1, 5];
+      ctx.fillText(z.name + ' Lv' + lvRange[0] + '-' + lvRange[1], z.center.x * scale, z.center.y * scale - z.radius * scale - 4);
+    } else if (z.bounds) {
+      var b = z.bounds;
+      ctx.fillRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
+      ctx.strokeRect(b.x * scale, b.y * scale, b.width * scale, b.height * scale);
+      if (isSel) { drawResizeHandles(b); }
+      ctx.fillStyle = colorBase + '0.9)';
+      ctx.font = '11px Arial'; ctx.textAlign = 'left';
+      var lvRange = z.monsterLevelRange || z.monsterLevel || [1, 5];
+      ctx.fillText(z.name + ' Lv' + lvRange[0] + '-' + lvRange[1], b.x * scale + 4, b.y * scale + 14);
     }
-
-    ctx.fillStyle = '#8f8';
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText(z.name + ' Lv' + z.monsterLevel[0] + '-' + z.monsterLevel[1], b.x * scale + 4, b.y * scale + 14);
   }
 
   // Draw obstacles
@@ -610,7 +699,10 @@ function getMapData() {
     },
     zones: zones,
     spawnPoints: spawnPoints,
-    obstacles: obstacles
+    obstacles: obstacles,
+    terrain: obstacles.map(function(o) {
+      return { type: o.type, shape: 'circle', center: { x: o.x, y: o.y }, radius: o.radius };
+    })
   };
 }
 

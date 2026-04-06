@@ -1,0 +1,109 @@
+{
+  "_description": "皮肤系统增强设计 — 基于现有skins.json，增加角色形象、动画、选择流程和编辑器集成",
+
+  "currentState": {
+    "summary": "skins.json已有完整的颜色/轮廓/粒子/光环/稀有度(C/B/A/S)体系",
+    "gap": "角色仍然是纯色圆形，没有角色形象差异，没有动画状态，没有sprite支持"
+  },
+
+  "enhancement": {
+    "phase1_canvas_drawing": {
+      "priority": "P0 — 立即实现",
+      "description": "用Canvas API绘制有辨识度的角色形象，不依赖外部图片资源",
+      "approach": "在现有圆形基础上，根据职业绘制不同的'身体部件'",
+      "classForms": {
+        "warrior": {
+          "body": "较大圆形(radius×1.1)，厚实感",
+          "feature": "顶部绘制小方形头盔 + 左侧绘制圆盾",
+          "weapon": "右侧短剑图形",
+          "idle_animation": "轻微上下浮动(±1px, 0.5Hz)"
+        },
+        "mage": {
+          "body": "标准圆形，外层绘制法袍弧线",
+          "feature": "顶部绘制尖帽三角形",
+          "weapon": "右侧法杖细线 + 顶端小光球",
+          "idle_animation": "光球闪烁(alpha 0.5~1.0, 2Hz)"
+        },
+        "scout": {
+          "body": "略小圆形(radius×0.9)，灵动感",
+          "feature": "背后绘制披风弧线",
+          "weapon": "右侧弓形曲线 + 箭矢",
+          "idle_animation": "左右轻摇(±1px, 0.8Hz)"
+        }
+      },
+      "skinApplication": {
+        "description": "现有skins.json的colors字段直接映射到Canvas绘制",
+        "mapping": {
+          "body": "身体主色",
+          "accent": "装备/武器颜色",
+          "highlight": "头盔/帽子/披风高光色",
+          "eye": "眼睛/光球颜色"
+        },
+        "outline_particles_aura": "现有字段已定义，渲染逻辑不变"
+      },
+      "dataChange": "skins.json新增classForm字段（可选），覆盖默认职业形象"
+    },
+
+    "phase2_sprite_sheet": {
+      "priority": "P1 — Artist资源就绪后替换",
+      "description": "支持加载sprite sheet PNG，按帧动画渲染",
+      "spriteSpec": {
+        "frameSize": { "width": 64, "height": 64 },
+        "states": ["idle", "run", "attack", "hurt", "death"],
+        "framesPerState": { "idle": 4, "run": 6, "attack": 4, "hurt": 2, "death": 4 },
+        "layout": "每行一个状态，列为帧序列",
+        "sheetSize": { "width": 384, "height": 320 },
+        "format": "PNG with transparency"
+      },
+      "dataChange": "skins.json中每个皮肤新增可选字段 spriteSheet: 'assets/skins/{skinId}.png'",
+      "renderPriority": [
+        "1. 如果spriteSheet存在且加载成功 → 用sprite帧渲染",
+        "2. 否则 → 用Canvas API绘制（phase1的classForm + colors）"
+      ]
+    }
+  },
+
+  "selectionFlow": {
+    "entry": "选角界面 → 选择职业后 → 展开皮肤选择",
+    "layout": "横向滚动卡片列表",
+    "card": {
+      "size": { "width": 120, "height": 160 },
+      "content": [
+        "实时Canvas预览（使用classForm+skin颜色渲染）",
+        "皮肤名称",
+        "稀有度标签（C灰/B绿/A蓝/S金色边框）",
+        "解锁状态"
+      ]
+    },
+    "locked_display": {
+      "visual": "灰色遮罩 + 🔒图标",
+      "tooltip": "显示obtain方法和cost"
+    },
+    "equipped_display": {
+      "visual": "金色边框 + ✓ 标记"
+    },
+    "storage": "localStorage.playerSkins = { warrior: 'warrior_red', mage: 'default', scout: 'scout_night' }",
+    "server_sync": "选择结果通过WebSocket同步，其他玩家可见对方皮肤"
+  },
+
+  "editorIntegration": {
+    "tab": "编辑器 → 皮肤管理",
+    "features": [
+      "实时预览：选择任意皮肤，在Canvas中渲染完整角色形象（含粒子/光环/动画）",
+      "颜色编辑：点击body/accent/highlight/eye色块打开取色器",
+      "轮廓编辑：开关、颜色、宽度、发光强度、脉冲",
+      "粒子编辑：类型(sparkle/petal/leaf/droplet/pixel/ring)、数量、颜色、速度、透明度",
+      "光环编辑：颜色、半径倍率、旋转速度、脉冲",
+      "稀有度和获取方式设置",
+      "新增/删除皮肤",
+      "导出为skins.json"
+    ]
+  },
+
+  "tierVisualRules": {
+    "C": { "label": "普通", "color": "#888", "features": "仅颜色变化" },
+    "B": { "label": "精良", "color": "#4a4", "features": "颜色+轮廓发光" },
+    "A": { "label": "稀有", "color": "#48f", "features": "颜色+轮廓+粒子特效" },
+    "S": { "label": "传说", "color": "#fa0", "features": "颜色+轮廓+粒子+光环全开" }
+  }
+}

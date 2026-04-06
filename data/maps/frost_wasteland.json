@@ -6,26 +6,565 @@
   "shape": "rect",
   "requiredRank": "SILVER",
   "color": "#1a2a3a",
-  "zones": [
+  "initialDensity": 16,
+  "spawnMinDist": 130,
+  "spawnMaxDist": 220,
+  "waveBaseCount": 10,
+  "waveIntervalEarly": 17,
+  "waveIntervalMid": 14,
+  "waveIntervalLate": 10,
+  "bossEvery": 5,
+  "eliteAffixChance": 0.28,
+  "trickleInterval": 1.0,
+  "trickleMin": 0.5,
+  "trickle": {
+    "earlyBoostDuration": 18,
+    "earlyBoostInterval": 0.3,
+    "earlyBoostCount": 3,
+    "composition": {
+      "normal": 0.3,
+      "fast": 0.2,
+      "swarm": 0.15,
+      "tank": 0.25,
+      "ranged": 0.1
+    }
+  },
+  "waveComposition": [
     {
-      "name": "冻土中心",
-      "type": "normal",
-      "bounds": { "x": 400, "y": 400, "width": 800, "height": 800 },
-      "monsterLevel": [5, 8],
-      "spawnRate": 1.2
+      "minWave": 1,
+      "types": {
+        "normal": 0.5,
+        "swarm": 0.3,
+        "fast": 0.2
+      }
     },
     {
+      "minWave": 3,
+      "types": {
+        "normal": 0.3,
+        "fast": 0.25,
+        "tank": 0.25,
+        "swarm": 0.2
+      }
+    },
+    {
+      "minWave": 5,
+      "types": {
+        "tank": 0.35,
+        "ranged": 0.25,
+        "fast": 0.2,
+        "normal": 0.2
+      }
+    },
+    {
+      "minWave": 8,
+      "types": {
+        "tank": 0.3,
+        "ranged": 0.25,
+        "miniBoss": 0.2,
+        "fast": 0.15,
+        "normal": 0.1
+      }
+    }
+  ],
+  "ambush": {
+    "enabled": true,
+    "interval": 22,
+    "chance": 0.25,
+    "monsterType": "tank",
+    "monsterCount": 2,
+    "spawnMinDist": 90,
+    "spawnMaxDist": 160
+  },
+  "spawnCamps": [
+    {
+      "id": "north_ice_field",
+      "name": "北部冰原",
+      "x": 800,
+      "y": 150,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 3
+        },
+        {
+          "type": "ranged",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 10,
+      "respawnCooldown": 20,
+      "maxRespawns": -1
+    },
+    {
+      "id": "south_shelter",
+      "name": "南部避风处",
+      "x": 800,
+      "y": 1450,
+      "radius": 80,
+      "monsters": [
+        {
+          "type": "normal",
+          "count": 3
+        },
+        {
+          "type": "fast",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 5,
+      "respawnCooldown": 18,
+      "maxRespawns": -1
+    },
+    {
+      "id": "east_glacier",
+      "name": "东部冰川",
+      "x": 1400,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "tank",
+          "count": 2
+        },
+        {
+          "type": "normal",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 12,
+      "respawnCooldown": 22,
+      "maxRespawns": -1
+    },
+    {
+      "id": "west_cave",
+      "name": "西部冰洞",
+      "x": 200,
+      "y": 800,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "ranged",
+          "count": 2
+        },
+        {
+          "type": "fast",
+          "count": 2
+        }
+      ],
+      "firstSpawnTime": 12,
+      "respawnCooldown": 20,
+      "maxRespawns": -1
+    },
+    {
+      "id": "frozen_temple_cache",
+      "name": "冰封宝藏",
+      "x": 800,
+      "y": 700,
+      "radius": 50,
+      "monsters": [
+        {
+          "type": "treasure",
+          "count": 1
+        },
+        {
+          "type": "miniBoss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 35,
+      "respawnCooldown": 50,
+      "maxRespawns": 2
+    },
+    {
+      "id": "ice_throne",
+      "name": "寒冰王座",
+      "x": 800,
+      "y": 180,
+      "radius": 70,
+      "monsters": [
+        {
+          "type": "boss",
+          "count": 1
+        }
+      ],
+      "firstSpawnTime": 55,
+      "respawnCooldown": -1,
+      "maxRespawns": 1
+    }
+  ],
+  "zones": [
+    {
+      "id": "spawn_zone",
+      "name": "避风营地",
+      "type": "spawn",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 1350
+      },
+      "radius": 150,
+      "monsterLevelRange": [
+        3,
+        4
+      ],
+      "spawnRate": 0.3,
+      "allowedMonsters": [
+        "normal",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_east",
+      "name": "冻土平原·东",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 1100,
+        "y": 200,
+        "width": 400,
+        "height": 1200
+      },
+      "monsterLevelRange": [
+        3,
+        6
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "outer_west",
+      "name": "冻土平原·西",
+      "type": "outer",
+      "shape": "rect",
+      "bounds": {
+        "x": 100,
+        "y": 200,
+        "width": 400,
+        "height": 1200
+      },
+      "monsterLevelRange": [
+        3,
+        6
+      ],
+      "spawnRate": 0.7,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_blizzard_north",
+      "name": "暴风雪区·北",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 350,
+        "y": 350,
+        "width": 900,
+        "height": 350
+      },
+      "monsterLevelRange": [
+        5,
+        9
+      ],
+      "spawnRate": 1.2,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "middle_blizzard_south",
+      "name": "暴风雪区·南",
+      "type": "middle",
+      "shape": "rect",
+      "bounds": {
+        "x": 350,
+        "y": 900,
+        "width": 900,
+        "height": 350
+      },
+      "monsterLevelRange": [
+        5,
+        8
+      ],
+      "spawnRate": 1.0,
+      "allowedMonsters": [
+        "normal",
+        "fast",
+        "tank",
+        "ranged",
+        "swarm"
+      ]
+    },
+    {
+      "id": "inner_core",
+      "name": "冰封神殿",
+      "type": "inner",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 700
+      },
+      "radius": 220,
+      "monsterLevelRange": [
+        7,
+        12
+      ],
+      "spawnRate": 1.6,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "miniBoss",
+        "treasure"
+      ]
+    },
+    {
+      "id": "boss_lair",
+      "name": "寒冰王座",
+      "type": "boss_lair",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 180
+      },
+      "radius": 100,
+      "monsterLevelRange": [
+        10,
+        15
+      ],
+      "spawnRate": 0,
+      "allowedMonsters": [
+        "boss"
+      ],
+      "bossType": "boss",
+      "bossSpawnTime": 130,
+      "bossRespawnCooldown": 200
+    },
+    {
+      "id": "resource_east",
+      "name": "冰晶矿脉·东",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 1350,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "resource_west",
+      "name": "冰晶矿脉·西",
+      "type": "resource",
+      "shape": "circle",
+      "center": {
+        "x": 250,
+        "y": 500
+      },
+      "radius": 65,
+      "monsterLevelRange": [
+        4,
+        7
+      ],
+      "spawnRate": 0.5,
+      "allowedMonsters": [
+        "treasure",
+        "normal"
+      ],
+      "loot": [
+        "gold_chest",
+        "xp_fountain"
+      ]
+    },
+    {
+      "id": "hazard_blizzard",
       "name": "暴风雪区",
+      "shape": "circle",
+      "center": {
+        "x": 300,
+        "y": 350
+      },
+      "radius": 100,
       "type": "hazard",
-      "bounds": { "x": 0, "y": 0, "width": 1600, "height": 1600 },
-      "monsterLevel": [7, 12],
-      "spawnRate": 1.5
+      "monsterLevelRange": [
+        5,
+        10
+      ],
+      "spawnRate": 1.8,
+      "allowedMonsters": [
+        "tank",
+        "ranged",
+        "fast"
+      ]
+    }
+  ],
+  "terrain": [
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 650,
+        "y": 550,
+        "width": 80,
+        "height": 80
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 870,
+        "y": 550,
+        "width": 80,
+        "height": 80
+      }
+    },
+    {
+      "type": "wall",
+      "shape": "rect",
+      "bounds": {
+        "x": 750,
+        "y": 120,
+        "width": 100,
+        "height": 70
+      }
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 600,
+        "y": 800
+      },
+      "radius": 55,
+      "note": "冰面-减速地形"
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 1000,
+        "y": 800
+      },
+      "radius": 55,
+      "note": "冰面-减速地形"
+    },
+    {
+      "type": "water",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 450
+      },
+      "radius": 40,
+      "note": "冰面-减速地形"
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 400,
+        "y": 1100
+      },
+      "radius": 45
+    },
+    {
+      "type": "bush",
+      "shape": "circle",
+      "center": {
+        "x": 1200,
+        "y": 1100
+      },
+      "radius": 45
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 500,
+        "y": 1200
+      },
+      "to": {
+        "x": 500,
+        "y": 900
+      }
+    },
+    {
+      "type": "speed_pad",
+      "from": {
+        "x": 1100,
+        "y": 1200
+      },
+      "to": {
+        "x": 1100,
+        "y": 900
+      }
+    },
+    {
+      "type": "ice",
+      "shape": "rect",
+      "bounds": {
+        "x": 400,
+        "y": 500,
+        "width": 200,
+        "height": 150
+      }
+    },
+    {
+      "type": "ice",
+      "shape": "circle",
+      "center": {
+        "x": 800,
+        "y": 300
+      },
+      "radius": 60
+    },
+    {
+      "type": "heal_spring",
+      "shape": "circle",
+      "center": {
+        "x": 600,
+        "y": 900
+      },
+      "radius": 35
     }
   ],
   "spawnPoints": [
-    { "x": 800, "y": 800 },
-    { "x": 200, "y": 200 },
-    { "x": 1400, "y": 1400 }
+    {
+      "x": 800,
+      "y": 1350
+    },
+    {
+      "x": 600,
+      "y": 1400
+    },
+    {
+      "x": 1000,
+      "y": 1400
+    }
   ],
-  "obstacles": []
+  "obstacles": [],
+  "waves": {}
 }

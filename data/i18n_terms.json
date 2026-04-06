@@ -1,0 +1,86 @@
+{
+  "_description": "UI术语中文化映射表 — 数据层key不变，UI渲染层统一通过此表转为中文显示",
+  "attributes": {
+    "INT": "智力",
+    "STR": "力量",
+    "AGI": "敏捷",
+    "STA": "耐力"
+  },
+  "stats": {
+    "HP": "生命值",
+    "MP": "法力值",
+    "ATK": "攻击力",
+    "DEF": "防御力",
+    "DPS": "每秒伤害",
+    "Crit": "暴击",
+    "CritRate": "暴击率",
+    "CritDamage": "暴击伤害",
+    "Armor": "护甲",
+    "Resistance": "抗性",
+    "Evasion": "闪避率",
+    "MoveSpeed": "移动速度",
+    "AttackSpeed": "攻击速度",
+    "HpRegen": "生命回复",
+    "SkillPower": "技能威力",
+    "CooldownReduction": "冷却缩减"
+  },
+  "combat": {
+    "ULT": "必杀技",
+    "CD": "冷却时间",
+    "AoE": "范围伤害",
+    "DoT": "持续伤害",
+    "Buff": "增益效果",
+    "Debuff": "减益效果",
+    "Wave": "波次"
+  },
+  "modes": {
+    "PvP": "对战模式",
+    "PvE": "生存模式"
+  },
+  "ui": {
+    "Level": "等级",
+    "EXP": "经验值",
+    "Gold": "金币",
+    "Score": "积分",
+    "Rank": "排名",
+    "Kill": "击杀",
+    "Death": "阵亡",
+    "Assist": "助攻",
+    "Damage": "伤害",
+    "Healing": "治疗",
+    "Survived": "存活时间"
+  },
+  "settlement": {
+    "rank_1": {
+      "title": "大吉大利，今晚吃鸡！",
+      "icon": "🏆",
+      "color": "#FFD700"
+    },
+    "rank_2_3": {
+      "title": "不错，差一点就赢了！",
+      "icon": "🥈",
+      "color": "#C0C0C0"
+    },
+    "rank_4_5": {
+      "title": "还不赖，继续加油！",
+      "icon": "⚔",
+      "color": "#CD7F32"
+    },
+    "rank_6_plus": {
+      "title": "下次一定！",
+      "icon": "💀",
+      "color": "#808080"
+    },
+    "solo_victory": {
+      "title": "生存成功！",
+      "icon": "🎉",
+      "color": "#FFD700"
+    },
+    "solo_defeat": {
+      "title": "坚持了 {seconds} 秒",
+      "icon": "💀",
+      "color": "#808080"
+    }
+  },
+  "waveFormat": "第 {n} 波"
+}

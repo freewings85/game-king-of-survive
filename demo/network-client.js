@@ -219,6 +219,7 @@ var NetworkClient = (function() {
                 ap.isLocal = (sp.id === localPlayerId);
                 ap.shieldActive = sp.shieldActive;
                 ap.characterType = sp.characterType || 'warrior';
+                ap.skinId = sp.skinId || 'default';
                 ap.facingAngle = sp.facingAngle || 0;
 
                 if (sp.id === localPlayerId) {

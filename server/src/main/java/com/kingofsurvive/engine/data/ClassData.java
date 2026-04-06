@@ -55,4 +55,8 @@ public class ClassData {
     private List<String> availableSkills;
     public List<String> getAvailableSkills() { return availableSkills; }
     public void setAvailableSkills(List<String> availableSkills) { this.availableSkills = availableSkills; }
+
+    private List<String> skins;
+    public List<String> getSkins() { return skins; }
+    public void setSkins(List<String> skins) { this.skins = skins; }
 }

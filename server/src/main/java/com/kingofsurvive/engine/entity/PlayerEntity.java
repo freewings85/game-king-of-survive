@@ -10,6 +10,7 @@ public class PlayerEntity extends BaseEntity {
     private String playerId;
     private String nickname;
     private String characterType; // "warrior", "mage", "scout"
+    private String skinId = "default"; // skin identifier from skins.json
     private int factionId;
     private boolean isBot;
 
@@ -342,6 +343,8 @@ public class PlayerEntity extends BaseEntity {
     public String getPlayerId() { return playerId; }
     public String getNickname() { return nickname; }
     public String getCharacterType() { return characterType; }
+    public String getSkinId() { return skinId; }
+    public void setSkinId(String skinId) { this.skinId = skinId; }
     public int getFactionId() { return factionId; }
     public boolean isBot() { return isBot; }
     public void convertToBot() { this.isBot = true; }

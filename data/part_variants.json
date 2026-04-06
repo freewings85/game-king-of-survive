@@ -1,0 +1,202 @@
+{
+  "_meta": {
+    "description": "Part variant registry - defines all drawable part types for character rendering",
+    "version": "1.0"
+  },
+  "head": {
+    "iron_helm": {
+      "name": "铁盔",
+      "drawType": "round_helm",
+      "defaultColors": { "primary": "#888", "secondary": "#666" },
+      "features": ["visor"]
+    },
+    "wizard_hat": {
+      "name": "法师帽",
+      "drawType": "pointed_hat",
+      "defaultColors": { "primary": "#624a8a", "secondary": "#483670" },
+      "features": ["brim", "pointed_tip"]
+    },
+    "hood": {
+      "name": "兜帽",
+      "drawType": "hood",
+      "defaultColors": { "primary": "#4a5a3a", "secondary": "#3a4a2a" },
+      "features": ["face_shadow"]
+    },
+    "horned_helm": {
+      "name": "恶魔角盔",
+      "drawType": "horned_helm",
+      "defaultColors": { "primary": "#cc2200", "secondary": "#880000" },
+      "features": ["horns", "visor"],
+      "extras": { "hornColor": "#ff6600" }
+    },
+    "frost_crown": {
+      "name": "冰霜王冠",
+      "drawType": "crown",
+      "defaultColors": { "primary": "#66ccff", "secondary": "#3399cc" },
+      "features": ["crystals", "frost_glow"]
+    },
+    "void_mask": {
+      "name": "虚空面具",
+      "drawType": "mask",
+      "defaultColors": { "primary": "#1a0033", "secondary": "#330066" },
+      "features": ["glowing_eyes", "smoke_trail"]
+    },
+    "dragon_helm": {
+      "name": "龙鳞头盔",
+      "drawType": "dragon_helm",
+      "defaultColors": { "primary": "#cc3300", "secondary": "#ff6600" },
+      "features": ["dragon_crest", "visor"]
+    },
+    "archmage_crown": {
+      "name": "大法师冠冕",
+      "drawType": "archmage_crown",
+      "defaultColors": { "primary": "#6622cc", "secondary": "#aa66ff" },
+      "features": ["floating_gems", "glow"]
+    },
+    "phantom_mask": {
+      "name": "幻影面具",
+      "drawType": "phantom_mask",
+      "defaultColors": { "primary": "#003322", "secondary": "#00aa66" },
+      "features": ["half_face", "glowing_eye"]
+    }
+  },
+  "body": {
+    "plate_armor": {
+      "name": "板甲",
+      "drawType": "heavy_torso",
+      "defaultColors": { "primary": "#777", "secondary": "#c33", "outline": "#444" },
+      "features": ["shoulder_pads"]
+    },
+    "robe": {
+      "name": "长袍",
+      "drawType": "robe_torso",
+      "defaultColors": { "primary": "#624a8a", "secondary": "#8866bb", "outline": "#3a2a5a" },
+      "features": ["flowing_hem", "belt"]
+    },
+    "leather_vest": {
+      "name": "皮甲",
+      "drawType": "light_torso",
+      "defaultColors": { "primary": "#6a5a3a", "secondary": "#4a3a2a", "outline": "#3a2a1a" },
+      "features": ["short_cape"]
+    },
+    "demon_armor": {
+      "name": "恶魔铠甲",
+      "drawType": "heavy_torso",
+      "defaultColors": { "primary": "#cc2200", "secondary": "#ff4400", "outline": "#880000" },
+      "features": ["shoulder_pads", "flame_cracks"]
+    },
+    "frost_plate": {
+      "name": "冰霜板甲",
+      "drawType": "heavy_torso",
+      "defaultColors": { "primary": "#3399cc", "secondary": "#66ccff", "outline": "#226699" },
+      "features": ["shoulder_pads", "ice_crystals"]
+    },
+    "void_robe": {
+      "name": "虚空法袍",
+      "drawType": "robe_torso",
+      "defaultColors": { "primary": "#1a0033", "secondary": "#440088", "outline": "#110022" },
+      "features": ["flowing_hem", "void_particles"]
+    },
+    "shadow_leather": {
+      "name": "暗影皮甲",
+      "drawType": "light_torso",
+      "defaultColors": { "primary": "#1a2a1a", "secondary": "#003322", "outline": "#0a1a0a" },
+      "features": ["short_cape", "shadow_wisps"]
+    }
+  },
+  "weapon": {
+    "longsword_shield": {
+      "name": "长剑+盾",
+      "drawType": "sword_and_shield",
+      "defaultColors": { "weapon": "#aaa", "shield": "#963" },
+      "features": ["shield_emblem"],
+      "attackAnim": "horizontal_slash"
+    },
+    "staff": {
+      "name": "法杖",
+      "drawType": "staff",
+      "defaultColors": { "weapon": "#8B4513", "gem": "#aa66ff" },
+      "features": ["top_gem_glow"],
+      "attackAnim": "thrust_burst"
+    },
+    "longbow": {
+      "name": "长弓",
+      "drawType": "bow",
+      "defaultColors": { "weapon": "#8B6914", "string": "#ccc" },
+      "features": ["bowstring"],
+      "attackAnim": "draw_release"
+    },
+    "flame_greatsword": {
+      "name": "炎魔巨剑",
+      "drawType": "greatsword",
+      "defaultColors": { "weapon": "#ff4400", "glow": "#ff8800" },
+      "features": ["fire_edge", "weapon_glow"],
+      "attackAnim": "heavy_slash"
+    },
+    "frost_blade_shield": {
+      "name": "冰霜之刃+冰盾",
+      "drawType": "sword_and_shield",
+      "defaultColors": { "weapon": "#88ccff", "shield": "#3399cc" },
+      "features": ["shield_emblem", "frost_glow"],
+      "attackAnim": "horizontal_slash"
+    },
+    "void_staff": {
+      "name": "虚空法杖",
+      "drawType": "staff",
+      "defaultColors": { "weapon": "#330066", "gem": "#cc00ff" },
+      "features": ["top_gem_glow", "void_trail"],
+      "attackAnim": "thrust_burst"
+    },
+    "phantom_bow": {
+      "name": "幻影弓",
+      "drawType": "bow",
+      "defaultColors": { "weapon": "#00aa66", "string": "#44ffaa" },
+      "features": ["bowstring", "ghost_trail"],
+      "attackAnim": "draw_release"
+    }
+  },
+  "legs": {
+    "heavy_boots": {
+      "name": "重甲靴",
+      "drawType": "heavy_legs",
+      "defaultColors": { "color": "#555" },
+      "walkAmplitude": 3
+    },
+    "robe_feet": {
+      "name": "袍脚",
+      "drawType": "hidden_legs",
+      "defaultColors": { "color": "#483670" },
+      "walkAmplitude": 1
+    },
+    "light_boots": {
+      "name": "轻便靴",
+      "drawType": "light_legs",
+      "defaultColors": { "color": "#5a4a3a" },
+      "walkAmplitude": 5
+    },
+    "demon_greaves": {
+      "name": "恶魔胫甲",
+      "drawType": "heavy_legs",
+      "defaultColors": { "color": "#aa1100" },
+      "walkAmplitude": 3
+    },
+    "frost_boots": {
+      "name": "冰霜靴",
+      "drawType": "heavy_legs",
+      "defaultColors": { "color": "#3399aa" },
+      "walkAmplitude": 3
+    },
+    "void_feet": {
+      "name": "虚空足",
+      "drawType": "hidden_legs",
+      "defaultColors": { "color": "#220044" },
+      "walkAmplitude": 1
+    },
+    "phantom_boots": {
+      "name": "幻影靴",
+      "drawType": "light_legs",
+      "defaultColors": { "color": "#003322" },
+      "walkAmplitude": 5
+    }
+  }
+}

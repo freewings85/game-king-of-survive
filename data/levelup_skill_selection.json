@@ -1,0 +1,97 @@
+{
+  "_description": "升级暂停选技能 — 选项生成规则与UI规格，供Developer实现参考",
+
+  "trigger": {
+    "event": "player_level_up",
+    "action": "pause_game_and_show_skill_panel",
+    "note": "每次升级都触发，游戏暂停直到玩家选择"
+  },
+
+  "optionGeneration": {
+    "count": 3,
+    "source": "当前职业的 characters.json -> availableSkills",
+    "rules": [
+      {
+        "id": "exclude_maxed",
+        "description": "已满级技能（level >= maxLevel）不进入候选池"
+      },
+      {
+        "id": "learned_weight_boost",
+        "description": "已学习但未满级的技能，抽取权重 ×1.5（鼓励升级而非铺开）",
+        "weight_multiplier": 1.5
+      },
+      {
+        "id": "unlearned_base_weight",
+        "description": "未学习技能的基础权重为 1.0",
+        "weight": 1.0
+      },
+      {
+        "id": "no_duplicate_options",
+        "description": "同一次选择中不出现重复技能"
+      },
+      {
+        "id": "fallback_if_pool_small",
+        "description": "如果候选池不足3个，有多少显示多少（最少1个）"
+      }
+    ],
+    "milestone": {
+      "levels": [5, 10, 15, 20],
+      "description": "里程碑等级额外增加第4个金色选项",
+      "extra_option": {
+        "type": "rare",
+        "source": "从以下类型中随机1个：高级技能（散射/穿透/连锁闪电等）或属性大包（+5属性点）",
+        "visual": "gold_border_glow",
+        "candidates_skill_types": ["projectile", "passive"],
+        "attribute_bundle": {
+          "description": "一次性获得5个自由属性点",
+          "points": 5
+        }
+      }
+    }
+  },
+
+  "ui": {
+    "overlay": {
+      "background": "rgba(0, 0, 0, 0.7)",
+      "description": "全屏半透明黑色遮罩"
+    },
+    "panel": {
+      "position": "center",
+      "layout": "horizontal_cards",
+      "card": {
+        "width": 180,
+        "height": 240,
+        "contents": [
+          { "element": "icon", "source": "skills.json -> icon", "size": 48 },
+          { "element": "name", "source": "skills.json -> name", "fontSize": 18 },
+          { "element": "level_change", "format": "Lv.{current} → Lv.{next}", "fontSize": 14, "color": "#4CAF50" },
+          { "element": "description", "source": "skills.json -> levels[next].desc", "fontSize": 12 },
+          { "element": "new_badge", "condition": "current_level == 0", "text": "新技能!", "color": "#FFD700" }
+        ]
+      },
+      "milestone_card": {
+        "border": "2px solid #FFD700",
+        "glow": "0 0 15px rgba(255, 215, 0, 0.5)",
+        "label": "稀有!"
+      }
+    },
+    "countdown": {
+      "duration_seconds": 15,
+      "position": "bottom_center",
+      "format": "{seconds}秒后自动选择",
+      "auto_select": "random_from_displayed_options",
+      "visual": "circular_progress_bar"
+    },
+    "acquisition_animation": {
+      "duration_ms": 1000,
+      "description": "选择后技能图标飞入技能栏 + 效果文字浮现1秒"
+    }
+  },
+
+  "interaction": {
+    "input": ["click", "touch"],
+    "select_behavior": "选择后立即关闭面板，恢复游戏",
+    "cannot_dismiss": true,
+    "note": "不能点击遮罩关闭，必须选择一个技能或等倒计时结束"
+  }
+}

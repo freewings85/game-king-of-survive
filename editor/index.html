@@ -60,10 +60,11 @@
 <body>
 <div class="nav">
   <span class="nav-title">King of Survive 编辑器</span>
-  <button class="nav-btn active" onclick="switchTab('skills')">技能</button>
-  <button class="nav-btn" onclick="switchTab('monsters')">怪物</button>
-  <button class="nav-btn" onclick="switchTab('maps')">地图</button>
-  <button class="nav-btn" onclick="switchTab('xpcurve')">经验曲线</button>
+  <button class="nav-btn tab active" data-tab="skills" onclick="switchTab('skills')">技能</button>
+  <button class="nav-btn tab" data-tab="monsters" onclick="switchTab('monsters')">怪物</button>
+  <button class="nav-btn tab" data-tab="maps" onclick="switchTab('maps')">地图</button>
+  <button class="nav-btn tab" data-tab="xpcurve" onclick="switchTab('xpcurve')">经验曲线</button>
+  <button class="nav-btn tab" data-tab="skins" onclick="switchTab('skins')">皮肤</button>
   <button class="nav-save" onclick="saveCurrentTab()">💾 保存 (Ctrl+S)</button>
 </div>
 <div id="toast" class="toast"></div>
@@ -227,6 +228,50 @@
   </div>
 </div>
 
+<!-- ====== SKINS TAB ====== -->
+<div id="tab-skins" class="tab-content">
+  <div class="toolbar">
+    <button onclick="addSkin()">+ 添加皮肤</button>
+    <select id="skin-tier-filter" onchange="filterSkins()">
+      <option value="all">全部品阶</option>
+      <option value="C">C 普通</option>
+      <option value="B">B 精良</option>
+      <option value="A">A 史诗</option>
+      <option value="S">S 传说</option>
+      <option value="SS">SS 传说</option>
+    </select>
+    <select id="skin-class-filter" onchange="filterSkins()">
+      <option value="all">全部职业</option>
+      <option value="warrior">��士</option>
+      <option value="mage">法师</option>
+      <option value="scout">斥候</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:15px;">
+    <div style="flex:1;">
+      <table>
+        <thead><tr><th>ID</th><th>名称</th><th>品阶</th><th>适用职业</th><th>底色</th><th>强调色</th><th>高光色</th><th>描边</th><th>粒子</th><th>光环</th><th>操作</th></tr></thead>
+        <tbody id="skins-table"></tbody>
+      </table>
+    </div>
+    <div style="width:280px;flex-shrink:0;">
+      <div class="panel">
+        <h3>皮肤预览</h3>
+        <canvas id="skin-preview-canvas" width="260" height="200" style="background:#0a0a1a;border:1px solid #444;border-radius:4px;display:block;margin-bottom:10px;"></canvas>
+        <div class="form-row">
+          <label>预览职业:</label>
+          <select id="skin-preview-class" onchange="renderSkinPreview()">
+            <option value="warrior">战士</option>
+            <option value="mage">法师</option>
+            <option value="scout">斥候</option>
+          </select>
+        </div>
+        <div id="skin-detail-panel" style="font-size:12px;color:#aaa;margin-top:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ====== STATE ======
 var skillsData = [], evoData = [], monstersRaw = {}, monsterTypes = [], xpCurveData = [];
@@ -245,6 +290,7 @@ function switchTab(tab) {
   for (var i = 0; i < tabs.length; i++) tabs[i].className = 'tab-content';
   document.getElementById('tab-' + tab).className = 'tab-content active';
   if (tab === 'maps' && !currentMap) loadMapList();
+  if (tab === 'skins') { renderSkinsTable(); renderSkinPreview(); }
 }
 
 function toast(msg, type) {
@@ -338,6 +384,8 @@ function saveCurrentTab() {
         toast('地图 ' + mapId + ' 已保存');
       })
       .catch(function(e) { toast('保存失败: ' + e.message, 'error'); });
+  } else if (currentTab === 'skins') {
+    saveSkins();
   }
 }
 
@@ -1269,11 +1317,362 @@ function drawSkillEffect(c, visual, color, px, py, range, particles, speed, alph
   c.globalAlpha = 1;
 }
 
+// ====== SKINS ======
+var skinsData = {};
+var selectedSkinId = null;
+
+function loadSkins() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/api/editor/skins');
+  xhr.onload = function() {
+    try { skinsData = JSON.parse(xhr.responseText); } catch(e) { skinsData = {}; }
+    renderSkinsTable();
+  };
+  xhr.onerror = function() { toast('加载皮肤数据失败', 'error'); };
+  xhr.send();
+}
+
+function renderSkinsTable() {
+  var tbody = document.getElementById('skins-table');
+  if (!tbody) return;
+  var tierFilter = document.getElementById('skin-tier-filter').value;
+  var classFilter = document.getElementById('skin-class-filter').value;
+  var html = '';
+  var keys = Object.keys(skinsData);
+  for (var i = 0; i < keys.length; i++) {
+    var id = keys[i];
+    var s = skinsData[id];
+    if (tierFilter !== 'all' && s.tier !== tierFilter) continue;
+    if (classFilter !== 'all' && s.applicableClasses && s.applicableClasses.indexOf(classFilter) < 0) continue;
+    var tierColors = { C: '#aaa', B: '#44aa44', A: '#4488ff', S: '#aa44ff', SS: '#ffaa00' };
+    var tc = tierColors[s.tier] || '#aaa';
+    html += '<tr onclick="selectSkin(\'' + id + '\')" style="cursor:pointer;border-left:3px solid ' + tc + ';' + (selectedSkinId === id ? 'background:#1a1a3e;' : '') + '">';
+    html += '<td>' + id + '</td>';
+    html += '<td><input value="' + (s.name || '') + '" onchange="updateSkinField(\'' + id + '\',\'name\',this.value)" onclick="event.stopPropagation()"></td>';
+    html += '<td><span style="color:' + tc + '">' + (s.tier || 'C') + '</span></td>';
+    html += '<td>' + (s.applicableClasses || []).join(', ') + '</td>';
+    html += '<td><input type="color" value="' + (s.colors && s.colors.body || '#888888') + '" onchange="updateSkinColor(\'' + id + '\',\'body\',this.value)" onclick="event.stopPropagation()"></td>';
+    html += '<td><input type="color" value="' + (s.colors && s.colors.accent || '#888888') + '" onchange="updateSkinColor(\'' + id + '\',\'accent\',this.value)" onclick="event.stopPropagation()"></td>';
+    html += '<td><input type="color" value="' + (s.colors && s.colors.highlight || '#888888') + '" onchange="updateSkinColor(\'' + id + '\',\'highlight\',this.value)" onclick="event.stopPropagation()"></td>';
+    html += '<td>' + (s.outline && s.outline.enabled ? '✅' : '❌') + '</td>';
+    html += '<td>' + (s.particles && s.particles.enabled ? s.particles.type || '✅' : '❌') + '</td>';
+    html += '<td>' + (s.aura && s.aura.enabled ? '✅' : '❌') + '</td>';
+    html += '<td><button class="delete-btn" onclick="event.stopPropagation();deleteSkin(\'' + id + '\')">删除</button></td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function selectSkin(id) {
+  selectedSkinId = id;
+  renderSkinsTable();
+  renderSkinPreview();
+  // Show detail panel
+  var s = skinsData[id];
+  var panel = document.getElementById('skin-detail-panel');
+  if (s && panel) {
+    var tierColors = { C: '#aaa', B: '#44aa44', A: '#4488ff', S: '#aa44ff', SS: '#ffaa00' };
+    var tc = tierColors[s.tier] || '#aaa';
+    var info = '<b style="color:' + tc + '">[' + s.tier + ']</b> <b style="color:#ffd700">' + s.name + '</b><br>';
+    info += '<span style="color:#666">' + (s.description || '') + '</span>';
+    info += '<br><b>适用职业:</b> ' + (s.applicableClasses || []).join(', ');
+    // Show parts info
+    if (s.parts) {
+      info += '<br><br><b style="color:#88ccff">部件配置:</b>';
+      var partNames = { head: '头部', body: '身体', weapon: '武器', legs: '腿部' };
+      for (var pk in partNames) {
+        if (s.parts[pk]) {
+          info += '<br>&nbsp;&nbsp;' + partNames[pk] + ': <span style="color:#aaf">' + (s.parts[pk].variant || '-') + '</span>';
+          if (s.parts[pk].colorOverride) info += ' <span style="color:#888">(自定义色)</span>';
+        }
+      }
+    } else {
+      info += '<br><br><span style="color:#886">旧格式 (无 parts 配置)</span>';
+    }
+    if (s.outline && s.outline.enabled) info += '<br><b>描边:</b> ' + s.outline.color + ' (宽度:' + s.outline.width + ')';
+    if (s.particles && s.particles.enabled) info += '<br><b>粒子:</b> ' + s.particles.type + ' x' + s.particles.count;
+    if (s.aura && s.aura.enabled) info += '<br><b>光环:</b> ' + s.aura.color + ' (半径x' + s.aura.radiusMultiplier + ')';
+    panel.innerHTML = info;
+  }
+}
+
+var skinPreviewAnimId = null;
+var skinPreviewTime = 0;
+
+function renderSkinPreview() {
+  // Cancel any previous animation loop
+  if (skinPreviewAnimId) { cancelAnimationFrame(skinPreviewAnimId); skinPreviewAnimId = null; }
+  skinPreviewTime = 0;
+  animateSkinPreview();
+}
+
+function animateSkinPreview() {
+  var canvas = document.getElementById('skin-preview-canvas');
+  if (!canvas) return;
+  var c = canvas.getContext('2d');
+  var w = canvas.width, h = canvas.height;
+  c.clearRect(0, 0, w, h);
+  c.fillStyle = '#0a0a1a'; c.fillRect(0, 0, w, h);
+
+  var classType = document.getElementById('skin-preview-class').value;
+  var skinId = selectedSkinId || 'default';
+  var s = skinsData[skinId] || {};
+  var gt = skinPreviewTime;
+
+  var cx = w / 2, cy = h / 2 - 5, r = 30;
+  var defaults = {
+    warrior: { body: '#b44', accent: '#d93', highlight: '#ddd', eye: '#fff', hood: null, cape: null, orb: null },
+    mage: { body: '#728', accent: '#5a3d7a', highlight: '#c6f', eye: '#f0f', hood: '#5a3d7a', cape: null, orb: '#c6f' },
+    scout: { body: '#3a6', accent: '#2a5030', highlight: '#a86', eye: '#8f8', hood: '#2a5030', cape: '#1a3520', orb: null }
+  };
+  var sc = Object.assign({}, defaults[classType] || defaults.warrior);
+  if (s.colors) {
+    if (s.colors.body) sc.body = s.colors.body;
+    if (s.colors.accent) { sc.accent = s.colors.accent; sc.hood = s.colors.accent; sc.cape = s.colors.accent; }
+    if (s.colors.highlight) { sc.highlight = s.colors.highlight; sc.orb = s.colors.highlight; }
+    if (s.colors.eye) sc.eye = s.colors.eye;
+  }
+
+  // Aura (animated rotation + pulse)
+  if (s.aura && s.aura.enabled) {
+    var auraR = r * (s.aura.radiusMultiplier || 2);
+    var pulseMult = s.aura.pulse ? (1 + 0.15 * Math.sin(gt * 2)) : 1;
+    var finalAuraR = auraR * pulseMult;
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(gt * (s.aura.rotationSpeed || 1));
+    var grad = c.createRadialGradient(0, 0, r, 0, 0, finalAuraR);
+    grad.addColorStop(0, s.aura.color + '44');
+    grad.addColorStop(0.6, s.aura.color + '22');
+    grad.addColorStop(1, s.aura.color + '00');
+    c.fillStyle = grad;
+    c.beginPath(); c.arc(0, 0, finalAuraR, 0, Math.PI * 2); c.fill();
+    // Rotating light bands
+    c.globalAlpha = 0.3;
+    for (var bi = 0; bi < 3; bi++) {
+      var bAngle = bi * Math.PI * 2 / 3;
+      c.fillStyle = s.aura.color;
+      c.beginPath();
+      c.arc(0, 0, finalAuraR * 0.8, bAngle - 0.2, bAngle + 0.2);
+      c.lineTo(0, 0);
+      c.closePath();
+      c.fill();
+    }
+    c.globalAlpha = 1;
+    c.restore();
+  }
+
+  // Draw class-specific sprite using parts-based rendering
+  c.save();
+  c.translate(cx, cy);
+
+  // Shadow
+  c.fillStyle = 'rgba(0,0,0,0.2)';
+  c.beginPath(); c.ellipse(0, r*0.55, r*0.6, r*0.2, 0, 0, Math.PI*2); c.fill();
+
+  // Legs (with walking animation)
+  var legC = sc.body;
+  var walkAmp = classType === 'scout' ? r*0.12 : classType === 'mage' ? r*0.03 : r*0.08;
+  var walkSpeed = classType === 'scout' ? 10 : classType === 'mage' ? 6 : 8;
+  var legW = classType === 'mage' ? r*0.12 : classType === 'scout' ? r*0.15 : r*0.2;
+  c.fillStyle = classType === 'mage' ? sc.accent : '#555';
+  c.fillRect(-r*0.15 - legW/2, r*0.3 + Math.sin(gt*walkSpeed)*walkAmp, legW, r*0.35);
+  c.fillRect(r*0.05 - legW/2, r*0.3 + Math.sin(gt*walkSpeed+Math.PI)*walkAmp, legW, r*0.35);
+
+  // Body
+  if (classType === 'warrior') {
+    c.fillStyle = sc.body;
+    c.beginPath(); c.moveTo(-r*0.5,-r*0.3); c.lineTo(r*0.3,-r*0.3); c.lineTo(r*0.2,r*0.4); c.lineTo(-r*0.4,r*0.4); c.closePath(); c.fill();
+    c.strokeStyle = '#444'; c.lineWidth = 1.5; c.stroke();
+    c.fillStyle = sc.accent;
+    c.beginPath(); c.arc(-r*0.4,-r*0.3,r*0.2,Math.PI,0); c.fill();
+    c.beginPath(); c.arc(r*0.2,-r*0.3,r*0.2,Math.PI,0); c.fill();
+    c.fillStyle = sc.accent; c.globalAlpha=0.7;
+    c.beginPath(); c.moveTo(-r*0.05,-r*0.1); c.lineTo(r*0.1,0); c.lineTo(-r*0.05,r*0.1); c.lineTo(-r*0.2,0); c.closePath(); c.fill();
+    c.globalAlpha=1;
+  } else if (classType === 'mage') {
+    c.fillStyle = sc.body;
+    c.beginPath(); c.moveTo(-r*0.3,-r*0.35); c.lineTo(r*0.2,-r*0.35); c.lineTo(r*0.45,r*0.5); c.lineTo(-r*0.55,r*0.5); c.closePath(); c.fill();
+    c.strokeStyle = sc.highlight; c.lineWidth = 1; c.stroke();
+    c.fillStyle = sc.accent; c.fillRect(-r*0.35,-r*0.05,r*0.6,r*0.08);
+  } else {
+    c.fillStyle = sc.body;
+    c.beginPath(); c.moveTo(-r*0.35,-r*0.3); c.lineTo(r*0.25,-r*0.3); c.lineTo(r*0.15,r*0.05); c.lineTo(r*0.2,r*0.35); c.lineTo(-r*0.3,r*0.35); c.lineTo(-r*0.25,r*0.05); c.closePath(); c.fill();
+    c.strokeStyle = '#3a2a1a'; c.lineWidth = 1; c.stroke();
+    c.fillStyle = sc.accent; c.globalAlpha=0.7;
+    c.beginPath(); c.moveTo(-r*0.35,-r*0.3); c.quadraticCurveTo(-r*0.7,r*0.1,-r*0.5,r*0.3); c.lineTo(-r*0.3,r*0.2); c.closePath(); c.fill();
+    c.globalAlpha=1;
+  }
+
+  // Weapon
+  if (classType === 'warrior') {
+    c.fillStyle = '#963';
+    c.beginPath(); c.moveTo(-r*0.5,-r*0.35); c.lineTo(-r*1.0,-r*0.25); c.lineTo(-r*1.05,0); c.lineTo(-r*1.0,r*0.25); c.lineTo(-r*0.5,r*0.35); c.closePath(); c.fill();
+    c.strokeStyle='#DAA520'; c.lineWidth=1.5; c.stroke();
+    c.fillStyle = sc.highlight || '#aaa';
+    c.beginPath(); c.moveTo(r*0.4,-r*0.06); c.lineTo(r*1.3,-r*0.06); c.lineTo(r*1.45,0); c.lineTo(r*1.3,r*0.06); c.lineTo(r*0.4,r*0.06); c.closePath(); c.fill();
+    c.fillStyle='#8B4513'; c.fillRect(r*0.25,-r*0.12,r*0.18,r*0.24);
+    c.fillStyle='#DAA520'; c.fillRect(r*0.38,-r*0.18,r*0.06,r*0.36);
+  } else if (classType === 'mage') {
+    c.strokeStyle='#8B4513'; c.lineWidth=2.5;
+    c.beginPath(); c.moveTo(r*0.15,r*0.3); c.lineTo(r*0.3,-r*1.0); c.stroke();
+    var gemC = sc.highlight || '#aa66ff';
+    c.fillStyle=gemC; c.save(); c.shadowColor=gemC; c.shadowBlur=8;
+    c.beginPath(); c.arc(r*0.3,-r*1.05,r*0.12,0,Math.PI*2); c.fill(); c.restore();
+    c.fillStyle='#fff'; c.globalAlpha=0.7;
+    c.beginPath(); c.arc(r*0.3,-r*1.05,r*0.04,0,Math.PI*2); c.fill(); c.globalAlpha=1;
+    var orbY = -r*0.1 + Math.sin(gt*3)*r*0.05;
+    c.fillStyle=gemC; c.save(); c.shadowColor=gemC; c.shadowBlur=6;
+    c.beginPath(); c.arc(-r*0.5,orbY,r*0.1,0,Math.PI*2); c.fill(); c.restore();
+  } else {
+    c.strokeStyle='#8B6914'; c.lineWidth=2;
+    c.beginPath(); c.moveTo(-r*0.6,-r*0.5); c.quadraticCurveTo(-r*1.1,0,-r*0.6,r*0.5); c.stroke();
+    c.strokeStyle='#ccc'; c.lineWidth=0.8;
+    c.beginPath(); c.moveTo(-r*0.6,-r*0.5); c.lineTo(-r*0.6,r*0.5); c.stroke();
+    c.fillStyle='#ddd';
+    c.beginPath(); c.moveTo(r*1.1,0); c.lineTo(r*0.6,-r*0.05); c.lineTo(r*0.6,r*0.05); c.closePath(); c.fill();
+  }
+
+  // Head
+  if (classType === 'warrior') {
+    c.fillStyle = sc.accent || '#888';
+    c.beginPath(); c.arc(0,-r*0.45,r*0.35,0,Math.PI*2); c.fill();
+    c.strokeStyle = '#666'; c.lineWidth=1.5; c.stroke();
+    c.fillStyle = sc.eye || '#fff'; c.globalAlpha=0.9;
+    c.fillRect(-r*0.08,-r*0.55,r*0.16,r*0.06);
+    c.fillRect(-r*0.12,-r*0.49,r*0.24,r*0.06);
+    c.globalAlpha=1;
+  } else if (classType === 'mage') {
+    c.fillStyle='#ddb89a';
+    c.beginPath(); c.arc(0,-r*0.5,r*0.28,0,Math.PI*2); c.fill();
+    c.fillStyle = sc.accent || '#624a8a';
+    c.beginPath(); c.ellipse(0,-r*0.65,r*0.35,r*0.1,0,0,Math.PI*2); c.fill();
+    c.beginPath(); c.moveTo(-r*0.2,-r*0.7); c.quadraticCurveTo(r*0.05,-r*1.4,r*0.15,-r*0.7); c.closePath(); c.fill();
+    c.fillStyle = sc.eye || '#f0f';
+    c.globalAlpha = 0.7 + 0.3*Math.sin(gt*5);
+    c.beginPath(); c.arc(-r*0.08,-r*0.48,r*0.05,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(r*0.08,-r*0.48,r*0.05,0,Math.PI*2); c.fill();
+    c.globalAlpha=1;
+  } else {
+    c.fillStyle = sc.accent || '#4a5a3a';
+    c.beginPath(); c.moveTo(-r*0.3,-r*0.35); c.quadraticCurveTo(-r*0.2,-r*1.0,r*0.15,-r*0.8); c.quadraticCurveTo(r*0.25,-r*0.5,r*0.2,-r*0.35); c.closePath(); c.fill();
+    c.fillStyle='#ccb89a';
+    c.beginPath(); c.arc(r*0.02,-r*0.5,r*0.2,-0.3,1.2); c.fill();
+    c.fillStyle = sc.eye || '#8f8';
+    c.save(); c.shadowColor=sc.eye||'#8f8'; c.shadowBlur=4;
+    c.beginPath(); c.arc(r*0.08,-r*0.52,r*0.04,0,Math.PI*2); c.fill();
+    c.restore();
+  }
+  c.restore();
+
+  // Outline (animated pulse)
+  if (s.outline && s.outline.enabled) {
+    var outAlpha = s.outline.pulse ? (0.5 + 0.5 * Math.sin(gt * 2)) : 0.8;
+    c.strokeStyle = s.outline.color || '#fff';
+    c.lineWidth = s.outline.width || 2;
+    c.globalAlpha = outAlpha;
+    if (s.outline.shadowBlur) { c.shadowColor = s.outline.color || '#fff'; c.shadowBlur = s.outline.shadowBlur; }
+    c.beginPath(); c.arc(cx, cy, r + 2, 0, Math.PI * 2); c.stroke();
+    c.shadowBlur = 0; c.globalAlpha = 1;
+  }
+
+  // Particles (animated orbit)
+  if (s.particles && s.particles.enabled) {
+    var pCount = s.particles.count || 5;
+    var pColor = s.particles.color || '#fff';
+    var pSpeed = s.particles.speed || 2;
+    var alphaRange = s.particles.alpha || [0.3, 0.7];
+    for (var pi = 0; pi < pCount; pi++) {
+      var angle = gt * pSpeed + (pi / pCount) * Math.PI * 2;
+      var minR = s.particles.radiusRange ? s.particles.radiusRange[0] : 1.5;
+      var maxR = s.particles.radiusRange ? s.particles.radiusRange[1] : 2;
+      var dist = r * (minR + (maxR - minR) * (0.5 + 0.5 * Math.sin(gt * 1.5 + pi)));
+      var px = cx + Math.cos(angle) * dist;
+      var py = cy + Math.sin(angle) * dist;
+      var pSize = r * (s.particles.sizeRange ? s.particles.sizeRange[1] : 0.1);
+      c.fillStyle = pColor;
+      c.globalAlpha = alphaRange[0] + (alphaRange[1] - alphaRange[0]) * (0.5 + 0.5 * Math.sin(gt * 3 + pi));
+      c.beginPath(); c.arc(px, py, pSize * 10, 0, Math.PI * 2); c.fill();
+    }
+    c.globalAlpha = 1;
+  }
+
+  // Label
+  c.fillStyle = '#888'; c.font = '11px Arial'; c.textAlign = 'center';
+  c.fillText(classType === 'warrior' ? '战士' : classType === 'mage' ? '法师' : '斥候', cx, cy + r + 25);
+  c.fillStyle = '#ffd700'; c.font = 'bold 12px Arial';
+  c.fillText(s.name || '默认', cx, cy - r - 15);
+  // Tier badge
+  if (s.tier) {
+    var tierColors = { C: '#888', B: '#44aa44', A: '#4488ff', S: '#aa44ff', SS: '#ffaa00' };
+    c.fillStyle = tierColors[s.tier] || '#888'; c.font = 'bold 14px Arial';
+    c.fillText('[' + s.tier + ']', cx, cy - r - 30);
+  }
+
+  skinPreviewTime += 1 / 60;
+  skinPreviewAnimId = requestAnimationFrame(animateSkinPreview);
+}
+
+function updateSkinField(id, field, value) {
+  if (skinsData[id]) { skinsData[id][field] = value; renderSkinPreview(); }
+}
+
+function updateSkinColor(id, colorKey, value) {
+  if (skinsData[id]) {
+    if (!skinsData[id].colors) skinsData[id].colors = {};
+    skinsData[id].colors[colorKey] = value;
+    renderSkinPreview();
+  }
+}
+
+function addSkin() {
+  var id = prompt('皮肤ID (英文，如 my_skin):');
+  if (!id || skinsData[id]) { toast('ID无效或已存在', 'error'); return; }
+  skinsData[id] = {
+    name: '新皮肤',
+    description: '',
+    tier: 'C',
+    applicableClasses: ['warrior', 'mage', 'scout'],
+    colors: { body: '#888888', accent: '#aaaaaa', highlight: '#cccccc', eye: '#ffffff' },
+    outline: { enabled: false },
+    particles: { enabled: false },
+    aura: { enabled: false },
+    obtain: { method: 'craft', cost: { skinFragments: 5 } }
+  };
+  renderSkinsTable();
+  selectSkin(id);
+  toast('已添加皮肤: ' + id, 'success');
+}
+
+function deleteSkin(id) {
+  if (id === 'default') { toast('不能删除默认皮肤', 'error'); return; }
+  if (!confirm('确定删除皮肤 ' + id + '?')) return;
+  delete skinsData[id];
+  if (selectedSkinId === id) selectedSkinId = null;
+  renderSkinsTable();
+  toast('已删除', 'success');
+}
+
+function filterSkins() { renderSkinsTable(); }
+
+function saveSkins() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', '/api/editor/skins');
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function() { toast('皮肤数据已保存', 'success'); };
+  xhr.onerror = function() { toast('保存失败', 'error'); };
+  xhr.send(JSON.stringify(skinsData));
+}
+
+// Hook into save
+var _origSaveCurrentTab = typeof saveCurrentTab === 'function' ? saveCurrentTab : null;
+
 // ====== INIT ======
 loadSkills();
 loadEvolutions();
 loadMonsters();
 loadXpCurve();
+loadSkins();
 </script>
 </body>
 </html>

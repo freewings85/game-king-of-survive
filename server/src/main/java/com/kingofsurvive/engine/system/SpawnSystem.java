@@ -133,22 +133,68 @@ public class SpawnSystem {
                     : (gameTime < 30 ? 2 : (gameTime < 50 ? 3 : 1));
             if (emergencySpawn) trickleCount = Math.max(trickleCount, 4);
             for (int i = 0; i < trickleCount && enemies.size() < MAX_ENEMIES; i++) {
+                // Zone-aware spawning: pick a zone weighted by spawnRate
+                MapData.MapZone zone = selectSpawnZone(map);
                 Vec2 pos;
-                if (stormActive && stormRadius > 50) {
-                    // During storm: spawn inside safe zone edge (not at map edges)
+                String type;
+                if (zone != null) {
+                    double[] zp = zone.randomPosition();
+                    pos = new Vec2(
+                        Math.max(0, Math.min(map.getWidth(), zp[0])),
+                        Math.max(0, Math.min(map.getHeight(), zp[1]))
+                    );
+                    type = selectZoneMonsterType(zone, map, currentWave);
+                } else if (stormActive && stormRadius > 50) {
                     double angle = Math.random() * Math.PI * 2;
                     double dist = stormRadius * (0.6 + Math.random() * 0.35);
                     pos = new Vec2(
                         Math.max(0, Math.min(map.getWidth(), stormCenterX + Math.cos(angle) * dist)),
                         Math.max(0, Math.min(map.getHeight(), stormCenterY + Math.sin(angle) * dist))
                     );
+                    type = selectTrickleType(map, currentWave);
                 } else {
                     pos = randomEdgePosition(map.getWidth(), map.getHeight());
+                    type = selectTrickleType(map, currentWave);
                 }
-                String type = selectTrickleType(map, currentWave);
                 enemies.add(createEnemy(type, pos.x, pos.y, currentWave));
             }
         }
+    }
+
+    /**
+     * Select a zone for spawning, weighted by spawnRate.
+     * Excludes boss_lair zones (they have special trigger-based spawning).
+     */
+    private MapData.MapZone selectSpawnZone(MapData map) {
+        if (map.getZones() == null || map.getZones().isEmpty()) return null;
+        List<MapData.MapZone> candidates = new ArrayList<>();
+        double totalWeight = 0;
+        for (MapData.MapZone z : map.getZones()) {
+            if ("boss_lair".equals(z.getType())) continue; // Boss zones don't trickle spawn
+            if (z.getSpawnRate() <= 0) continue;
+            candidates.add(z);
+            totalWeight += z.getSpawnRate();
+        }
+        if (candidates.isEmpty() || totalWeight <= 0) return null;
+        double r = Math.random() * totalWeight;
+        double cum = 0;
+        for (MapData.MapZone z : candidates) {
+            cum += z.getSpawnRate();
+            if (r <= cum) return z;
+        }
+        return candidates.get(candidates.size() - 1);
+    }
+
+    /**
+     * Select a monster type appropriate for the zone's allowedMonsters list.
+     */
+    private String selectZoneMonsterType(MapData.MapZone zone, MapData map, int wave) {
+        List<String> allowed = zone.getAllowedMonsters();
+        if (allowed == null || allowed.isEmpty()) {
+            return selectTrickleType(map, wave);
+        }
+        // Simple uniform random from allowed types
+        return allowed.get((int) (Math.random() * allowed.size()));
     }
 
     private void updateWaves(List<EnemyEntity> enemies, MapData map, double dt) {
@@ -254,8 +300,21 @@ public class SpawnSystem {
         double eliteChance = map.getEliteAffixChance();
 
         for (int i = 0; i < count; i++) {
-            Vec2 pos = randomEdgePosition(map.getWidth(), map.getHeight());
-            String type = selectWaveType(map, currentWave, i, count);
+            // Zone-aware wave spawning
+            MapData.MapZone zone = selectSpawnZone(map);
+            Vec2 pos;
+            String type;
+            if (zone != null) {
+                double[] zp = zone.randomPosition();
+                pos = new Vec2(
+                    Math.max(0, Math.min(map.getWidth(), zp[0])),
+                    Math.max(0, Math.min(map.getHeight(), zp[1]))
+                );
+                type = selectZoneMonsterType(zone, map, currentWave);
+            } else {
+                pos = randomEdgePosition(map.getWidth(), map.getHeight());
+                type = selectWaveType(map, currentWave, i, count);
+            }
             EnemyEntity enemy = createEnemy(type, pos.x, pos.y, currentWave);
 
             // Elite affix
