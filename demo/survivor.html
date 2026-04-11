@@ -3156,8 +3156,11 @@ function doLogin() {
         opts._debugOut.facingAngle = facingAngle;
         opts._debugOut.sheetSource = (cfg.sheet || '').split('/').pop();
       }
-      // Destination: scale 64px sprite so it roughly matches old radius visual (diameter ~ r*3.0)
-      var dh = r * 3.0, dw = dh;
+      // Destination: scale 64px sprite to be clearly visible on gameplay screen.
+      // radius=14 (player) → dh≈63 (matches native LPC 64px, 1:1 pixel art).
+      // radius=18 (class card UI) → dh≈81, still fits card panel.
+      // radius=10 (skin card UI) → dh≈45, within skin card area.
+      var dh = r * 4.5, dw = dh;
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.imageSmoothingEnabled = false;
