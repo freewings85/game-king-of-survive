@@ -694,7 +694,8 @@ function doLogin() {
     }
     return {state: state, px: player.x, py: player.y, hp: player.hp, maxHp: player.maxHp, enemies: nearEnemies, wave: wave, kills: kills, gameMode: gameMode, totalEnemies: entities.filter(function(e){return e.type==='enemy'&&!e.dead;}).length, players: playersInfo, victoryTriggered: victoryState ? victoryState.active : false, gameTime: gameTime || 0, spawnZoneCount: spawnZones ? spawnZones.length : 0, playerLevel: playerLevel, xp: playerXP, xpToNextLevel: xpToNextLevel, pendingSkillPoints: pendingSkillPoints, dps: dpsDisplay, maxDps: maxDps, totalDamage: totalDamage, gold: gold, lastEarnedGold: _lastEarnedGold, ownedSkills: ownedSkills, skillLevels: skillLevels};
   };
-  var player, entities = [], particles = [], floats = [], gems = [];
+  var player, entities = [], particles = [], floats = [], gems = [], coins = [];
+  var offlineSkillFx = []; // class-based projectile VFX for offline mode
   var wave, waveTimer, gameTime, kills, killStreak, maxStreak;
   var playerLevel = 1, playerXP = 0, xpToNextLevel = 100, skillLevels = {}, ownedSkills = [];
   var pendingSkillPoints = 0; // MOBA-style non-blocking skill upgrade
@@ -1581,7 +1582,7 @@ function doLogin() {
     player.level = 1;
 
     // Reset rendering state
-    entities = []; particles = []; floats = []; gems = [];
+    entities = []; particles = []; floats = []; gems = []; coins = []; offlineSkillFx = [];
     fireTrails = []; explosionAoe = [];
     groundHazards = []; safeZoneRadius = 500;
     enemyProjectiles = [];
@@ -1964,6 +1965,148 @@ function doLogin() {
     // Wave-based spawning (MOBA-style)
     updateOfflineWaveSystem(dt);
 
+    // === Class-based projectile FX update (trail particles) ===
+    for (var _fxi = offlineSkillFx.length - 1; _fxi >= 0; _fxi--) {
+      var _fx = offlineSkillFx[_fxi];
+      _fx.life -= dt;
+      if (_fx.life <= 0) {
+        // Impact burst
+        var impactColor = _fx.kind === 'fireball' ? '#ff6020' : (_fx.kind === 'arrow' ? '#88ff88' : '#ffdd44');
+        for (var _imp = 0; _imp < 10; _imp++) {
+          var _ia = Math.random() * Math.PI * 2;
+          var _is = 40 + Math.random() * 80;
+          particles.push({
+            x: _fx.x, y: _fx.y,
+            vx: Math.cos(_ia) * _is, vy: Math.sin(_ia) * _is,
+            life: 0.4, maxLife: 0.4,
+            color: impactColor,
+            size: 2 + Math.random() * 2,
+            particleType: 'circle'
+          });
+        }
+        // Fireball: expanding ring
+        if (_fx.kind === 'fireball') {
+          for (var _ri2 = 0; _ri2 < 14; _ri2++) {
+            var _ra = _ri2 / 14 * Math.PI * 2;
+            particles.push({
+              x: _fx.x, y: _fx.y,
+              vx: Math.cos(_ra) * 120, vy: Math.sin(_ra) * 120,
+              life: 0.35, maxLife: 0.35,
+              color: '#ffaa00', size: 3, particleType: 'circle'
+            });
+          }
+        }
+        offlineSkillFx.splice(_fxi, 1);
+        continue;
+      }
+      _fx.x += _fx.vx * dt;
+      _fx.y += _fx.vy * dt;
+      _fx._trailT += dt;
+      // Spawn trail particles
+      if (_fx._trailT > 0.015) {
+        _fx._trailT = 0;
+        if (_fx.kind === 'fireball') {
+          // Fire trail — orange/yellow glow particles
+          for (var _tp = 0; _tp < 2; _tp++) {
+            particles.push({
+              x: _fx.x + (Math.random() - 0.5) * 4,
+              y: _fx.y + (Math.random() - 0.5) * 4,
+              vx: -_fx.vx * 0.1 + (Math.random() - 0.5) * 30,
+              vy: -_fx.vy * 0.1 + (Math.random() - 0.5) * 30 - 20,
+              life: 0.4, maxLife: 0.4,
+              color: Math.random() < 0.5 ? '#ff4400' : '#ffaa00',
+              size: 3 + Math.random() * 2,
+              particleType: 'circle'
+            });
+          }
+        } else if (_fx.kind === 'arrow') {
+          // Green sparkle trail
+          particles.push({
+            x: _fx.x + (Math.random() - 0.5) * 3,
+            y: _fx.y + (Math.random() - 0.5) * 3,
+            vx: (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 0.5) * 20,
+            life: 0.3, maxLife: 0.3,
+            color: '#88ff88',
+            size: 1.5,
+            particleType: 'circle'
+          });
+        } else if (_fx.kind === 'slash') {
+          // Warrior energy slash — red/gold streaks
+          particles.push({
+            x: _fx.x + (Math.random() - 0.5) * 6,
+            y: _fx.y + (Math.random() - 0.5) * 6,
+            vx: -_fx.vx * 0.15, vy: -_fx.vy * 0.15,
+            life: 0.25, maxLife: 0.25,
+            color: Math.random() < 0.5 ? '#ffaa20' : '#ffff80',
+            size: 2,
+            particleType: 'circle'
+          });
+        }
+      }
+    }
+
+    // === Pickup magnetism — gems and coins fly toward player when close ===
+    var pickupR = 18;
+    var magnetR = 110 + (player._pickupRange || 0);
+    for (var _gi = gems.length - 1; _gi >= 0; _gi--) {
+      var _gg = gems[_gi];
+      if (!_gg) { gems.splice(_gi, 1); continue; }
+      var _gdx = player.x - _gg.x, _gdy = player.y - _gg.y;
+      var _gd = Math.sqrt(_gdx * _gdx + _gdy * _gdy);
+      if (_gd < pickupR) {
+        // Collected — grant XP, spawn burst particles, remove
+        playerXP += _gg.xp || 10;
+        emit(_gg.x, _gg.y, '#88ffff', 6, 60);
+        floatText(player.x, player.y - 24, '+' + (_gg.xp || 10) + 'XP', { color: '#88ffdd', size: 11 });
+        gems.splice(_gi, 1);
+        if (playerXP >= xpToNextLevel) triggerLevelUp();
+        continue;
+      }
+      // Initial toss (first ~0.4s of flight)
+      if (!_gg.magnetized && _gg._t < 0.4) {
+        _gg.x += (_gg.vx || 0) * dt;
+        _gg.y += (_gg.vy || 0) * dt;
+        _gg.vx = (_gg.vx || 0) * 0.9;
+        _gg.vy = (_gg.vy || 0) * 0.9 + 120 * dt; // mild gravity
+      }
+      // Magnet pull
+      if (_gd < magnetR || _gg.magnetized) {
+        _gg.magnetized = true;
+        var _pullSpeed = 260 + Math.max(0, (magnetR - _gd)) * 2.2;
+        _gg.x += (_gdx / _gd) * _pullSpeed * dt;
+        _gg.y += (_gdy / _gd) * _pullSpeed * dt;
+      }
+    }
+    for (var _ci2 = coins.length - 1; _ci2 >= 0; _ci2--) {
+      var _cc2 = coins[_ci2];
+      if (!_cc2) { coins.splice(_ci2, 1); continue; }
+      _cc2._t = (_cc2._t || 0) + dt;
+      var _cdx = player.x - _cc2.x, _cdy = player.y - _cc2.y;
+      var _cd = Math.sqrt(_cdx * _cdx + _cdy * _cdy);
+      if (_cd < pickupR) {
+        gold += _cc2.amount || 5;
+        emit(_cc2.x, _cc2.y, '#ffd700', 8, 80);
+        floatText(player.x, player.y - 36, '+' + (_cc2.amount || 5) + '💰', { color: '#ffd700', size: 12 });
+        coins.splice(_ci2, 1);
+        continue;
+      }
+      if (!_cc2.magnetized && _cc2._t < 0.4) {
+        _cc2.x += (_cc2.vx || 0) * dt;
+        _cc2.y += (_cc2.vy || 0) * dt;
+        _cc2.vx = (_cc2.vx || 0) * 0.9;
+        _cc2.vy = (_cc2.vy || 0) * 0.9 + 140 * dt;
+      }
+      if (_cd < magnetR || _cc2.magnetized) {
+        _cc2.magnetized = true;
+        var _csp = 240 + Math.max(0, (magnetR - _cd)) * 2.2;
+        _cc2.x += (_cdx / _cd) * _csp * dt;
+        _cc2.y += (_cdy / _cd) * _csp * dt;
+      }
+      // Timeout — remove old unclaimed coins after 15s
+      if (_cc2._t > 15) coins.splice(_ci2, 1);
+    }
+
     // Update entities array for rendering (bridge offline→render)
     entities = offlineEnemies.filter(function(e) { return e.alive; }).map(function(e) {
       return {
@@ -1997,6 +2140,9 @@ function doLogin() {
     player.y = Math.max(player.radius, Math.min(WORLD_H - player.radius, player.y));
     if (Math.abs(moveX) > 0.01 || Math.abs(moveY) > 0.01) {
       player.facingAngle = Math.atan2(moveY, moveX);
+      // Feed playerTrail for offline mode (network mode pushes in networkUpdate)
+      playerTrail.push({ x: player.x, y: player.y });
+      if (playerTrail.length > playerTrailMax) playerTrail.shift();
     }
     // Auto attack nearby enemies
     player._timer = (player._timer || 0) - dt;
@@ -2023,10 +2169,36 @@ function doLogin() {
         player._attackStart = gameTime;
         player._attackUntil = gameTime + _atkDur;
         player._attackFacing = angle;
-        // Spawn projectile
+        // Spawn class-specific visual projectile (fireball/arrow/slash)
         var projSpeed = 350;
         var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
+        var fxKind = selectedClass === 'warrior' ? 'slash' : (selectedClass === 'mage' ? 'fireball' : 'arrow');
+        offlineSkillFx.push({
+          kind: fxKind,
+          x: player.x, y: player.y,
+          vx: Math.cos(angle) * projSpeed,
+          vy: Math.sin(angle) * projSpeed,
+          angle: angle,
+          life: 0.8, maxLife: 0.8,
+          color: projColor,
+          _trailT: 0,
+          targetX: closest.x, targetY: closest.y
+        });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 4, particleType: 'circle', _isProjectile: true });
+        // Muzzle flash on cast
+        for (var _muz = 0; _muz < 6; _muz++) {
+          var _muzA = angle + (Math.random() - 0.5) * 0.8;
+          var _muzS = 100 + Math.random() * 80;
+          particles.push({
+            x: player.x + Math.cos(angle) * player.radius * 1.2,
+            y: player.y + Math.sin(angle) * player.radius * 1.2,
+            vx: Math.cos(_muzA) * _muzS, vy: Math.sin(_muzA) * _muzS,
+            life: 0.3, maxLife: 0.3,
+            color: selectedClass === 'warrior' ? '#ffaa40' : (selectedClass === 'mage' ? '#c088ff' : '#88ff88'),
+            size: 2 + Math.random() * 2,
+            particleType: 'circle'
+          });
+        }
         // Wave 1: damage roll with crit chance
         var _rawDmg = player.attackDamage;
         var _isCrit = Math.random() < (player.critChance || 0);
@@ -2050,12 +2222,42 @@ function doLogin() {
           triggerHitStop('kill');
           screenShake('medium');
           floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
-          // Wave 2: offline XP flow — gain XP on kill, trigger levelUp at threshold
-          var xpGain = closest.type === 'boss' ? 80 : (closest.type === 'miniBoss' ? 40 : (closest.type === 'tank' ? 20 : 10));
-          playerXP += xpGain;
-          floatText(closest.x, closest.y + 12, '+' + xpGain + 'XP', { color: '#88ff88', size: 12 });
-          if (playerXP >= xpToNextLevel) {
-            triggerLevelUp();
+          // Wave 2: drop XP gems (magnetized in updateOfflineDemo) — bosses drop multiple
+          var xpAmt = closest.type === 'boss' ? 80 : (closest.type === 'miniBoss' ? 40 : (closest.type === 'tank' ? 20 : 10));
+          var gemCount = closest.type === 'boss' ? 6 : (closest.type === 'miniBoss' ? 3 : 1);
+          var perGem = Math.ceil(xpAmt / gemCount);
+          for (var _gc = 0; _gc < gemCount; _gc++) {
+            var _gAng = Math.random() * Math.PI * 2;
+            var _gDist = gemCount > 1 ? 12 + Math.random() * 20 : 0;
+            var _gTier = perGem < 20 ? 'small' : (perGem < 50 ? 'medium' : 'large');
+            gems.push({
+              x: closest.x + Math.cos(_gAng) * _gDist,
+              y: closest.y + Math.sin(_gAng) * _gDist,
+              xp: perGem,
+              radius: 4,
+              _t: 0,
+              gemTier: _gTier,
+              // Magnet state
+              vx: Math.cos(_gAng) * 60,
+              vy: Math.sin(_gAng) * 60 - 30,
+              magnetized: false
+            });
+          }
+          // Bosses also drop gold coins
+          if (closest.type === 'boss' || closest.type === 'miniBoss') {
+            var coinN = closest.type === 'boss' ? 8 : 4;
+            for (var _cc = 0; _cc < coinN; _cc++) {
+              var _cAng = Math.random() * Math.PI * 2;
+              coins.push({
+                x: closest.x + (Math.random() - 0.5) * 20,
+                y: closest.y + (Math.random() - 0.5) * 20,
+                amount: 5 + Math.floor(Math.random() * 6),
+                _t: 0,
+                vx: Math.cos(_cAng) * 80,
+                vy: Math.sin(_cAng) * 80 - 40,
+                magnetized: false
+              });
+            }
           }
         }
         } // end immunity-window else
@@ -5355,12 +5557,40 @@ function doLogin() {
     }
     ctx.globalAlpha = 1;
 
-    // Player movement trail (US-230)
+    // Player movement trail (US-230) — class-colored afterimage ribbon
+    var trailCls = CLASS_DEFS[player.playerClass || selectedClass] || CLASS_DEFS.warrior || { color: '#4488ff' };
+    var trailCol = trailCls.color || '#4488ff';
+    // Ribbon stroke through trail points
+    if (playerTrail.length >= 2) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (var _trb = 0; _trb < 3; _trb++) {
+        ctx.globalAlpha = (0.18 - _trb * 0.05);
+        ctx.strokeStyle = trailCol;
+        ctx.lineWidth = player.radius * (1.6 - _trb * 0.35);
+        ctx.beginPath();
+        ctx.moveTo(playerTrail[0].x, playerTrail[0].y);
+        for (var _trp = 1; _trp < playerTrail.length; _trp++) {
+          ctx.lineTo(playerTrail[_trp].x, playerTrail[_trp].y);
+        }
+        ctx.lineTo(player.x, player.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Fading afterimage orbs at each trail point
     for (var pti = playerTrail.length - 1; pti >= 0; pti--) {
       var pt = playerTrail[pti];
-      ctx.globalAlpha = (1 - pti / playerTrailMax) * 0.15;
-      ctx.fillStyle = '#4488ff';
-      ctx.beginPath(); ctx.arc(pt.x, pt.y, player.radius * (1 - pti / playerTrailMax * 0.5), 0, Math.PI * 2); ctx.fill();
+      var fade = 1 - pti / playerTrailMax;
+      ctx.globalAlpha = fade * 0.35;
+      // Outer glow
+      ctx.fillStyle = trailCol;
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, player.radius * (0.9 * fade + 0.3), 0, Math.PI * 2); ctx.fill();
+      // Inner bright core
+      ctx.globalAlpha = fade * 0.18;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, player.radius * 0.4 * fade, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
 
@@ -5554,6 +5784,110 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(g.x, g.y, gs * 0.4, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
     }
+
+    // Class-based projectile visuals (offline mode: fireball/arrow/slash)
+    for (var _fri = 0; _fri < offlineSkillFx.length; _fri++) {
+      var _frfx = offlineSkillFx[_fri];
+      var _frAlpha = Math.min(1, _frfx.life / _frfx.maxLife);
+      if (_frfx.kind === 'fireball') {
+        // Outer heat distortion
+        ctx.globalAlpha = 0.25 * _frAlpha;
+        ctx.fillStyle = '#f40';
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 22, 0, Math.PI * 2); ctx.fill();
+        // Outer flame
+        ctx.globalAlpha = 0.6 * _frAlpha;
+        ctx.fillStyle = '#ff6020';
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 12, 0, Math.PI * 2); ctx.fill();
+        // Mid flame
+        ctx.globalAlpha = 0.9 * _frAlpha;
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 8, 0, Math.PI * 2); ctx.fill();
+        // Hot core
+        ctx.globalAlpha = _frAlpha;
+        ctx.fillStyle = '#ffff80';
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 2, 0, Math.PI * 2); ctx.fill();
+      } else if (_frfx.kind === 'arrow') {
+        ctx.save();
+        ctx.translate(_frfx.x, _frfx.y);
+        ctx.rotate(_frfx.angle);
+        // Trail streak
+        ctx.globalAlpha = 0.35 * _frAlpha;
+        ctx.fillStyle = '#aaffaa';
+        ctx.beginPath();
+        ctx.moveTo(-22, -1.5); ctx.lineTo(-4, 0); ctx.lineTo(-22, 1.5); ctx.closePath();
+        ctx.fill();
+        // Arrow shaft
+        ctx.globalAlpha = _frAlpha;
+        ctx.fillStyle = '#cc9966';
+        ctx.fillRect(-10, -1, 14, 2);
+        // Arrow head
+        ctx.fillStyle = '#eeeeee';
+        ctx.beginPath();
+        ctx.moveTo(8, 0); ctx.lineTo(3, -3); ctx.lineTo(3, 3); ctx.closePath();
+        ctx.fill();
+        // Fletching
+        ctx.fillStyle = '#44aa44';
+        ctx.beginPath();
+        ctx.moveTo(-10, 0); ctx.lineTo(-14, -3); ctx.lineTo(-8, 0); ctx.lineTo(-14, 3); ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      } else if (_frfx.kind === 'slash') {
+        // Warrior energy slash — crescent blade
+        ctx.save();
+        ctx.translate(_frfx.x, _frfx.y);
+        ctx.rotate(_frfx.angle);
+        // Outer glow
+        ctx.globalAlpha = 0.3 * _frAlpha;
+        ctx.fillStyle = '#ffaa40';
+        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+        // Crescent blade
+        ctx.globalAlpha = _frAlpha;
+        ctx.fillStyle = '#ffdd60';
+        ctx.beginPath();
+        ctx.moveTo(-8, -8);
+        ctx.quadraticCurveTo(10, 0, -8, 8);
+        ctx.quadraticCurveTo(4, 0, -8, -8);
+        ctx.fill();
+        ctx.strokeStyle = '#ffff99'; ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.globalAlpha = 1;
+
+    // Gold coin drops — render with spinning sheen
+    for (var _cri = 0; _cri < coins.length; _cri++) {
+      var _crc = coins[_cri];
+      var _crT = (_crc._t || 0) * 4;
+      var _crSpin = Math.abs(Math.sin(_crT));
+      var _crPulse = 0.85 + Math.sin((_crc._t || 0) * 3) * 0.12;
+      // Outer glow
+      ctx.globalAlpha = 0.4 + Math.sin((_crc._t || 0) * 4) * 0.1;
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath(); ctx.arc(_crc.x, _crc.y, 11 * _crPulse, 0, Math.PI * 2); ctx.fill();
+      // Coin disc (ellipse for spin illusion)
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#c89010';
+      ctx.beginPath(); ctx.ellipse(_crc.x, _crc.y, 6, 6 * (0.3 + _crSpin * 0.7), 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath(); ctx.ellipse(_crc.x, _crc.y, 5, 5 * (0.3 + _crSpin * 0.7), 0, 0, Math.PI * 2); ctx.fill();
+      // "$" mark when facing
+      if (_crSpin > 0.6) {
+        ctx.fillStyle = '#885800'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center';
+        ctx.fillText('$', _crc.x, _crc.y + 3);
+      }
+      // Magnet trail
+      if (_crc.magnetized) {
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(_crc.x, _crc.y);
+        ctx.lineTo(_crc.x - (_crc.vx || 0) * 0.03, _crc.y - (_crc.vy || 0) * 0.03);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
 
     // xpCollectBurst (US-326): draw massCollect light flow lines from gem positions to player
     if (xpCollectBurst.active && xpCollectBurst.lines.length > 0 && player) {
@@ -6886,19 +7220,44 @@ function doLogin() {
 
   // Minimap (US-204) — shows full world with all players
   function drawMinimap() {
-    var mmW = 120, mmH = 120; // Larger minimap for better visibility
-    var mmX = W - mmW - 8, mmY = H - mmH - 20;
+    // Top-right position with gold frame (moved from bottom-right per UX rev)
+    var mmW = 150, mmH = 150;
+    var mmX = W - mmW - 12, mmY = 12;
     ctx.save();
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = '#0a0a12';
+    // Outer glow
+    ctx.shadowColor = 'rgba(255,215,0,0.4)';
+    ctx.shadowBlur = 10;
+    // Panel base
+    var mmGrad = ctx.createLinearGradient(mmX, mmY, mmX, mmY + mmH);
+    mmGrad.addColorStop(0, 'rgba(20,20,40,0.72)');
+    mmGrad.addColorStop(1, 'rgba(4,4,12,0.8)');
+    ctx.fillStyle = mmGrad;
     ctx.fillRect(mmX, mmY, mmW, mmH);
-    ctx.strokeStyle = '#444'; ctx.lineWidth = 1;
-    ctx.strokeRect(mmX, mmY, mmW, mmH);
+    // Gold border
+    ctx.strokeStyle = 'rgba(255,215,0,0.7)'; ctx.lineWidth = 2;
+    ctx.strokeRect(mmX + 0.5, mmY + 0.5, mmW - 1, mmH - 1);
+    ctx.shadowBlur = 0;
+    // Inner hairline
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+    ctx.strokeRect(mmX + 3, mmY + 3, mmW - 6, mmH - 6);
     // Camera viewport indicator
-    ctx.globalAlpha = 0.2;
-    ctx.strokeStyle = '#fff';
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
     ctx.strokeRect(mmX + (cameraX / WORLD_W) * mmW, mmY + (cameraY / WORLD_H) * mmH, (W / WORLD_W) * mmW, (H / WORLD_H) * mmH);
-    ctx.globalAlpha = 0.7;
+    ctx.globalAlpha = 0.85;
+    // Spawn-point markers (pulsing red runes)
+    if (typeof _waveSpawnPoints !== 'undefined' && _waveSpawnPoints && _waveSpawnPoints.length) {
+      for (var _spi2 = 0; _spi2 < _waveSpawnPoints.length; _spi2++) {
+        var _sp = _waveSpawnPoints[_spi2];
+        var _spx = mmX + (_sp.x / WORLD_W) * mmW;
+        var _spy = mmY + (_sp.y / WORLD_H) * mmH;
+        var _spPulse = 0.5 + 0.5 * Math.sin((gameTime || 0) * 3 + _spi2 * 0.6);
+        ctx.fillStyle = 'rgba(255,80,60,' + (0.4 + _spPulse * 0.4) + ')';
+        ctx.beginPath(); ctx.arc(_spx, _spy, 3 + _spPulse * 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,120,80,0.6)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(_spx, _spy, 4.5, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
     // Storm zone on minimap — red danger overlay outside safe zone
     if (stormZone.active) {
       var scx = mmX + (stormZone.centerX / WORLD_W) * mmW;
@@ -6916,14 +7275,26 @@ function doLogin() {
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(scx, scy, sr, 0, Math.PI * 2); ctx.stroke();
     }
-    // Minimap enemy dots (sample every 3rd to save perf)
-    for (var mi = 0; mi < entities.length; mi += 3) {
+    // Minimap enemy dots — sample both network entities and offline enemies
+    for (var mi = 0; mi < entities.length; mi += 2) {
       var me = entities[mi];
       if (me.type !== 'enemy' || me.hp <= 0) continue;
       var mx = mmX + (me.x / WORLD_W) * mmW;
       var my = mmY + (me.y / WORLD_H) * mmH;
       ctx.fillStyle = me.treasureGoblin ? '#ffd700' : (me.hostile !== false ? (me.enemyType === 'boss' ? '#f00' : '#c44') : '#4c4');
-      ctx.beginPath(); ctx.arc(mx, my, me.enemyType === 'boss' ? 2 : 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(mx, my, me.enemyType === 'boss' ? 2.5 : 1.2, 0, Math.PI * 2); ctx.fill();
+    }
+    if (typeof offlineEnemies !== 'undefined' && offlineEnemies) {
+      for (var mei = 0; mei < offlineEnemies.length; mei++) {
+        var oe2 = offlineEnemies[mei];
+        if (!oe2 || !oe2.alive) continue;
+        var omx = mmX + (oe2.x / WORLD_W) * mmW;
+        var omy = mmY + (oe2.y / WORLD_H) * mmH;
+        var isBossM = (oe2.type === 'boss');
+        var isMini = (oe2.type === 'miniBoss');
+        ctx.fillStyle = isBossM ? '#ff2020' : (isMini ? '#ff6020' : (oe2.hostile !== false ? '#c44' : '#4c4'));
+        ctx.beginPath(); ctx.arc(omx, omy, isBossM ? 3 : (isMini ? 2 : 1.2), 0, Math.PI * 2); ctx.fill();
+      }
     }
     // All player dots on minimap
     for (var mpi = 0; mpi < allPlayers.length; mpi++) {
