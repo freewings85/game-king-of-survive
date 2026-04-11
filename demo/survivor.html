@@ -4051,56 +4051,229 @@ function doLogin() {
   }
 
   // === BACKGROUND ===
+  // === HoMM3-style terrain system (Sprint 3) ===
+  // Deterministic biome field using smooth cell interpolation; renders tiles,
+  // scattered decorations (trees/rocks/ruins), and an edge vignette.
+  var TILE_SIZE = 64;
+  var BIOME_CELL = 760;
+  var TERRAIN_BIOMES = [
+    { id: 'grass',  name: '翠绿草原',  base: [58,108,52],   accent: [86,146,68],   decor: 'tree' },
+    { id: 'desert', name: '黄沙荒漠',  base: [214,178,104], accent: [234,200,130], decor: 'cactus' },
+    { id: 'snow',   name: '极寒雪原',  base: [216,226,238], accent: [244,250,255], decor: 'pine' },
+    { id: 'swamp',  name: '幽暗沼泽',  base: [60,80,52],    accent: [90,112,68],   decor: 'reed' },
+    { id: 'rocky',  name: '碎石高地',  base: [112,102,88],  accent: [142,130,112], decor: 'boulder' },
+    { id: 'ruins',  name: '古代废墟',  base: [130,120,100], accent: [162,152,130], decor: 'ruin' }
+  ];
+  function _hash2i(x, y) {
+    var h = ((x | 0) * 374761393 + (y | 0) * 668265263) | 0;
+    h = (h ^ (h >>> 13)) * 1274126177;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  }
+  function _biomeAtCell(cx, cy) {
+    return TERRAIN_BIOMES[Math.floor(_hash2i(cx + 311, cy + 733) * TERRAIN_BIOMES.length)];
+  }
+  function _smooth01(t) { return t * t * (3 - 2 * t); }
+  function _sampleTerrainColor(wx, wy) {
+    var fx = wx / BIOME_CELL, fy = wy / BIOME_CELL;
+    var cx = Math.floor(fx), cy = Math.floor(fy);
+    var tx = _smooth01(fx - cx), ty = _smooth01(fy - cy);
+    var b00 = _biomeAtCell(cx, cy).base;
+    var b10 = _biomeAtCell(cx + 1, cy).base;
+    var b01 = _biomeAtCell(cx, cy + 1).base;
+    var b11 = _biomeAtCell(cx + 1, cy + 1).base;
+    var rA = b00[0] + (b10[0] - b00[0]) * tx;
+    var gA = b00[1] + (b10[1] - b00[1]) * tx;
+    var bA = b00[2] + (b10[2] - b00[2]) * tx;
+    var rB = b01[0] + (b11[0] - b01[0]) * tx;
+    var gB = b01[1] + (b11[1] - b01[1]) * tx;
+    var bB = b01[2] + (b11[2] - b01[2]) * tx;
+    var r = rA + (rB - rA) * ty;
+    var g = gA + (gB - gA) * ty;
+    var b = bA + (bB - bA) * ty;
+    // Per-tile noise variation for texture
+    var n = _hash2i(Math.floor(wx / TILE_SIZE), Math.floor(wy / TILE_SIZE));
+    var shift = (n - 0.5) * 14;
+    r = Math.max(0, Math.min(255, r + shift));
+    g = Math.max(0, Math.min(255, g + shift));
+    b = Math.max(0, Math.min(255, b + shift));
+    return 'rgb(' + (r|0) + ',' + (g|0) + ',' + (b|0) + ')';
+  }
+  function _dominantBiomeAt(wx, wy) {
+    return _biomeAtCell(Math.floor(wx / BIOME_CELL), Math.floor(wy / BIOME_CELL));
+  }
+
+  // _drawDecoration — biome-themed Canvas sprites (screen-space)
+  function _drawDecoration(sx, sy, kind, scale) {
+    scale = scale || 1;
+    if (kind === 'tree') {
+      ctx.fillStyle = '#3a2412'; ctx.fillRect(sx - 2*scale, sy - 2*scale, 4*scale, 12*scale);
+      ctx.fillStyle = '#1e4a1e';
+      ctx.beginPath(); ctx.arc(sx, sy - 10*scale, 10*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#2e6a2e';
+      ctx.beginPath(); ctx.arc(sx - 4*scale, sy - 12*scale, 7*scale, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx + 4*scale, sy - 9*scale, 6*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#4a8a4a';
+      ctx.beginPath(); ctx.arc(sx - 2*scale, sy - 14*scale, 3*scale, 0, Math.PI*2); ctx.fill();
+    } else if (kind === 'pine') {
+      ctx.fillStyle = '#2a1810'; ctx.fillRect(sx - 1.5*scale, sy - 1*scale, 3*scale, 8*scale);
+      ctx.fillStyle = '#1a3a28';
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 20*scale);
+      ctx.lineTo(sx - 9*scale, sy - 2*scale);
+      ctx.lineTo(sx + 9*scale, sy - 2*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#2a5038';
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 15*scale);
+      ctx.lineTo(sx - 7*scale, sy - 5*scale);
+      ctx.lineTo(sx + 7*scale, sy - 5*scale);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f0f4ff';
+      ctx.beginPath(); ctx.arc(sx, sy - 18*scale, 2*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(sx - 6*scale, sy - 3*scale, 12*scale, 1.2*scale);
+    } else if (kind === 'cactus') {
+      ctx.fillStyle = '#3a6a2e';
+      ctx.fillRect(sx - 2.5*scale, sy - 14*scale, 5*scale, 18*scale);
+      ctx.fillRect(sx - 7*scale, sy - 9*scale, 3*scale, 7*scale);
+      ctx.fillRect(sx + 4*scale, sy - 11*scale, 3*scale, 9*scale);
+      ctx.strokeStyle = '#1e4818'; ctx.lineWidth = 1;
+      ctx.strokeRect(sx - 2.5*scale, sy - 14*scale, 5*scale, 18*scale);
+    } else if (kind === 'boulder') {
+      ctx.fillStyle = '#6a6258';
+      ctx.beginPath(); ctx.ellipse(sx, sy - 3*scale, 9*scale, 6*scale, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#504a40';
+      ctx.beginPath(); ctx.arc(sx - 3*scale, sy + scale, 4*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#8a8278';
+      ctx.beginPath(); ctx.ellipse(sx - 2*scale, sy - 5*scale, 3*scale, 1.8*scale, 0, 0, Math.PI*2); ctx.fill();
+    } else if (kind === 'reed') {
+      ctx.strokeStyle = '#7a8a3a'; ctx.lineWidth = 1.5;
+      for (var ri = 0; ri < 5; ri++) {
+        var rx = sx + (ri - 2) * 2*scale;
+        ctx.beginPath();
+        ctx.moveTo(rx, sy + 2*scale);
+        ctx.lineTo(rx + (ri%2?-1:1)*scale, sy - 10*scale);
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#2a3818';
+      ctx.beginPath(); ctx.ellipse(sx, sy + 3*scale, 7*scale, 2*scale, 0, 0, Math.PI*2); ctx.fill();
+    } else if (kind === 'ruin') {
+      ctx.fillStyle = '#7a7268';
+      ctx.fillRect(sx - 7*scale, sy - 12*scale, 4*scale, 12*scale);
+      ctx.fillRect(sx + 3*scale, sy - 10*scale, 4*scale, 10*scale);
+      ctx.fillRect(sx - 3*scale, sy - 6*scale, 6*scale, 6*scale);
+      ctx.strokeStyle = '#403830'; ctx.lineWidth = 1;
+      ctx.strokeRect(sx - 7*scale, sy - 12*scale, 4*scale, 12*scale);
+      ctx.strokeRect(sx + 3*scale, sy - 10*scale, 4*scale, 10*scale);
+      ctx.fillStyle = '#5a5248';
+      ctx.fillRect(sx - 6*scale, sy - 3*scale, 2*scale, 3*scale);
+    } else if (kind === 'flower') {
+      ctx.fillStyle = '#3a8a2e';
+      ctx.fillRect(sx - 0.5*scale, sy - scale, scale, 5*scale);
+      ctx.fillStyle = '#e8d45a';
+      ctx.beginPath(); ctx.arc(sx, sy - scale, 2*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ff7766';
+      ctx.beginPath(); ctx.arc(sx + 3*scale, sy + scale, 1.5*scale, 0, Math.PI*2); ctx.fill();
+    } else if (kind === 'bush') {
+      ctx.fillStyle = '#2a5a2e';
+      ctx.beginPath(); ctx.arc(sx, sy, 5*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#4a8a4a';
+      ctx.beginPath(); ctx.arc(sx - 2*scale, sy - 2*scale, 2.5*scale, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  function drawMapDecorations(camXw, camYw) {
+    // Deterministic per-cell decoration scatter
+    var DC = 96;
+    var startX = Math.floor(camXw / DC) - 1;
+    var startY = Math.floor(camYw / DC) - 1;
+    var endX = Math.ceil((camXw + W) / DC) + 1;
+    var endY = Math.ceil((camYw + H) / DC) + 1;
+    for (var cy = startY; cy <= endY; cy++) {
+      for (var cx = startX; cx <= endX; cx++) {
+        var hh = _hash2i(cx, cy);
+        if (hh < 0.38) continue;
+        var jx = _hash2i(cx * 17 + 3, cy * 31 + 5);
+        var jy = _hash2i(cx * 29 + 7, cy * 13 + 11);
+        var wx = cx * DC + jx * DC;
+        var wy = cy * DC + jy * DC;
+        if (wx < 20 || wy < 20 || wx > WORLD_W - 20 || wy > WORLD_H - 20) continue;
+        var biome = _dominantBiomeAt(wx, wy);
+        var kind = biome.decor;
+        var mixRoll = _hash2i(cx + 7, cy + 11);
+        if (mixRoll < 0.18) kind = (biome.id === 'grass' || biome.id === 'snow') ? 'flower' : 'bush';
+        var scale = 0.75 + _hash2i(cx + 99, cy + 77) * 0.7;
+        _drawDecoration(wx - camXw, wy - camYw, kind, scale);
+      }
+    }
+  }
+
+  function drawWorldEdgeVignette() {
+    var edge = 100;
+    var leftDist = cameraX;
+    var rightDist = WORLD_W - (cameraX + W);
+    var topDist = cameraY;
+    var botDist = WORLD_H - (cameraY + H);
+    if (leftDist < edge) {
+      var g1 = ctx.createLinearGradient(0, 0, edge, 0);
+      g1.addColorStop(0, 'rgba(0,0,0,0.55)'); g1.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g1; ctx.fillRect(0, 0, edge, H);
+    }
+    if (rightDist < edge) {
+      var g2 = ctx.createLinearGradient(W - edge, 0, W, 0);
+      g2.addColorStop(0, 'rgba(0,0,0,0)'); g2.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g2; ctx.fillRect(W - edge, 0, edge, H);
+    }
+    if (topDist < edge) {
+      var g3 = ctx.createLinearGradient(0, 0, 0, edge);
+      g3.addColorStop(0, 'rgba(0,0,0,0.55)'); g3.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g3; ctx.fillRect(0, 0, W, edge);
+    }
+    if (botDist < edge) {
+      var g4 = ctx.createLinearGradient(0, H - edge, 0, H);
+      g4.addColorStop(0, 'rgba(0,0,0,0)'); g4.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = g4; ctx.fillRect(0, H - edge, W, edge);
+    }
+  }
+
   function drawBackground() {
     currentBiome = getBiome(wave || 1);
-    ctx.strokeStyle = currentBiome.gridColor; ctx.lineWidth = 0.5;
-    var offsetX = camX % gridSpacing;
-    var offsetY = camY % gridSpacing;
+    var camXw = cameraX, camYw = cameraY;
+    // Step 1: Fill terrain tiles — sampled biome color with smooth blending
+    var startTX = Math.floor(camXw / TILE_SIZE) - 1;
+    var startTY = Math.floor(camYw / TILE_SIZE) - 1;
+    var endTX = Math.ceil((camXw + W) / TILE_SIZE) + 1;
+    var endTY = Math.ceil((camYw + H) / TILE_SIZE) + 1;
+    for (var ty = startTY; ty <= endTY; ty++) {
+      for (var tx = startTX; tx <= endTX; tx++) {
+        var wxc = tx * TILE_SIZE + TILE_SIZE / 2;
+        var wyc = ty * TILE_SIZE + TILE_SIZE / 2;
+        ctx.fillStyle = _sampleTerrainColor(wxc, wyc);
+        ctx.fillRect(tx * TILE_SIZE - camXw, ty * TILE_SIZE - camYw, TILE_SIZE + 1, TILE_SIZE + 1);
+      }
+    }
+    // Step 2: Subtle grid overlay for tactical feel
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 0.5;
+    var offsetX = camXw % gridSpacing;
+    var offsetY = camYw % gridSpacing;
     for (var gx = -offsetX; gx <= W; gx += gridSpacing) {
       ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
     }
     for (var gy = -offsetY; gy <= H; gy += gridSpacing) {
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
     }
-    // Ground texture — biome-specific scattered details
-    var gtSeed = Math.floor(camX / 200) * 73 + Math.floor(camY / 200) * 137;
-    for (var gi = 0; gi < 30; gi++) {
-      var gx = ((gi * 97 + gtSeed + 41) % 1600 - camX % 1600 + 1600) % 1600 - 400 + W / 2;
-      var gy = ((gi * 163 + gtSeed + 67) % 1600 - camY % 1600 + 1600) % 1600 - 400 + H / 2;
-      if (gx < -20 || gx > W + 20 || gy < -20 || gy > H + 20) continue;
-      var biomeIdx = BIOMES.indexOf(currentBiome);
-      ctx.globalAlpha = 0.12 + (gi % 4) * 0.03;
-      if (biomeIdx <= 0) {
-        // Forest — grass tufts
-        ctx.strokeStyle = '#2a5a2a'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 2, gy - 6 - gi % 3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + 2, gy - 5 - gi % 4); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx, gy - 7 - gi % 3); ctx.stroke();
-      } else if (biomeIdx === 1) {
-        // Lava — embers and cracks
-        ctx.fillStyle = '#f60'; ctx.globalAlpha = 0.08 + 0.05 * Math.sin(Date.now() * 0.003 + gi);
-        ctx.beginPath(); ctx.arc(gx, gy, 2 + gi % 3, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#421'; ctx.lineWidth = 0.5; ctx.globalAlpha = 0.15;
-        ctx.beginPath(); ctx.moveTo(gx - 5, gy); ctx.lineTo(gx + 4, gy + 2); ctx.stroke();
-      } else if (biomeIdx === 2) {
-        // Abyss — arcane runes
-        ctx.strokeStyle = '#448'; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.1;
-        ctx.beginPath(); ctx.arc(gx, gy, 3 + gi % 4, 0, Math.PI * (1 + gi % 2)); ctx.stroke();
-      } else {
-        // Void — distortion particles
-        ctx.fillStyle = '#524'; ctx.globalAlpha = 0.06 + 0.04 * Math.sin(Date.now() * 0.002 + gi * 1.3);
-        ctx.beginPath(); ctx.arc(gx, gy, 1.5 + gi % 3, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-    // Twinkling stars for visual depth
-    for (var si = 0; si < 50; si++) {
-      var sx = ((si * 137 + 29) % W - camX * 0.15 % W + W) % W;
-      var sy = ((si * 211 + 53) % H - camY * 0.15 % H + H) % H;
+    // Step 3: Decorations (trees, rocks, ruins, flowers)
+    drawMapDecorations(camXw, camYw);
+    // Step 4: Edge vignette for natural map boundary
+    drawWorldEdgeVignette();
+    // Step 5: A few ambient twinkles for mood
+    for (var si = 0; si < 20; si++) {
+      var spx = ((si * 137 + 29) % W);
+      var spy = ((si * 211 + 53) % H);
       var twinkle = 0.3 + 0.7 * Math.abs(Math.sin((Date.now() * 0.001 + si * 1.7)));
-      ctx.globalAlpha = twinkle * (0.4 + (si % 5) * 0.12);
-      ctx.fillStyle = (si % 3 === 0) ? (currentBiome.starColor2 || '#aaccff') : (currentBiome.starColor || '#6688ff');
-      var sr = 0.8 + (si % 4) * 0.5;
-      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = twinkle * 0.14;
+      ctx.fillStyle = '#ffffee';
+      var sr = 0.7 + (si % 3) * 0.4;
+      ctx.beginPath(); ctx.arc(spx, spy, sr, 0, Math.PI * 2); ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
