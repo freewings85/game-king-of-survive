@@ -1,0 +1,45 @@
+{
+  "_spec": "LPC standard. 64x64 frames, 13 cols x 21 rows = 832x1344. Direction order: U/L/D/R.",
+  "_locked_by": "GameDesigner v1 doc 2026-04-11",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 13,
+  "sheetRows": 21,
+  "directionOrder": ["up", "left", "down", "right"],
+  "classes": {
+    "warrior": {
+      "sheet": "assets/characters/lpc_warrior.png",
+      "anims": {
+        "idle":   { "rowBase": 8,  "rowFromDir": true, "frames": 1, "fps": 1,  "skipFrame0": false },
+        "walk":   { "rowBase": 8,  "rowFromDir": true, "frames": 8, "fps": 10, "skipFrame0": true  },
+        "attack": { "rowBase": 12, "rowFromDir": true, "frames": 6, "fps": 12, "skipFrame0": false }
+      },
+      "previewFrame": { "row": 8, "col": 0 }
+    },
+    "mage": {
+      "sheet": "assets/characters/lpc_mage.png",
+      "anims": {
+        "idle":   { "rowBase": 8,  "rowFromDir": true, "frames": 1, "fps": 1,  "skipFrame0": false },
+        "walk":   { "rowBase": 8,  "rowFromDir": true, "frames": 8, "fps": 10, "skipFrame0": true  },
+        "attack": { "rowBase": 0,  "rowFromDir": true, "frames": 7, "fps": 12, "skipFrame0": false }
+      },
+      "previewFrame": { "row": 8, "col": 0 }
+    },
+    "scout": {
+      "sheet": "assets/characters/lpc_scout.png",
+      "anims": {
+        "idle":   { "rowBase": 8,  "rowFromDir": true, "frames": 1, "fps": 1,  "skipFrame0": false },
+        "walk":   { "rowBase": 8,  "rowFromDir": true, "frames": 8, "fps": 10, "skipFrame0": true  },
+        "attack": { "rowBase": 16, "rowFromDir": true, "frames": 13, "fps": 14, "skipFrame0": false }
+      },
+      "previewFrame": { "row": 8, "col": 0 }
+    }
+  },
+  "facingAngleMapping": {
+    "_comment": "facingAngle in radians, 0=right, +pi/2=down (canvas convention). Map to LPC dir row offset.",
+    "right": { "rowOffset": 3, "angleRange": [-0.785, 0.785] },
+    "down":  { "rowOffset": 2, "angleRange": [0.785, 2.356] },
+    "left":  { "rowOffset": 1, "angleRange": [2.356, 3.1416, -3.1416, -2.356] },
+    "up":    { "rowOffset": 0, "angleRange": [-2.356, -0.785] }
+  }
+}

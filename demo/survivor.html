@@ -1831,6 +1831,13 @@ function doLogin() {
       }
       if (closest) {
         var angle = Math.atan2(closest.y - player.y, closest.x - player.x);
+        // Trigger sprite attack animation (PM decision 2026-04-11, Plan C:
+        // movement can interrupt attack; re-triggering resets to col 0).
+        // Durations: warrior 6f/12fps=0.50s, mage 7f/12fps=0.58s, scout 13f/14fps=0.93s.
+        var _atkDur = { warrior: 0.50, mage: 0.58, scout: 0.93 }[player.playerClass || selectedClass] || 0.50;
+        player._attackStart = gameTime;
+        player._attackUntil = gameTime + _atkDur;
+        player._attackFacing = angle;
         // Spawn projectile
         var projSpeed = 350;
         var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
@@ -2960,41 +2967,234 @@ function doLogin() {
     }
   }
 
+  // === LPC CHARACTER SPRITE SHEETS ===
+  // Config mirrors demo/assets/characters/sprites.json (locked by GameDesigner v1, 2026-04-11).
+  // Inlined so we don't need a fetch() round-trip (works under file:// too).
+  var CHAR_SPRITE_CFG = {
+    frameW: 64, frameH: 64,
+    // Direction row offset inside an anim's 4-row block. Order U/L/D/R.
+    classes: {
+      warrior: {
+        sheet: 'assets/characters/lpc_warrior.png',
+        anims: {
+          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
+          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
+          attack: { rowBase: 12, frames: 6, fps: 12, skipFrame0: false }
+        }
+      },
+      mage: {
+        sheet: 'assets/characters/lpc_mage.png',
+        anims: {
+          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
+          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
+          attack: { rowBase: 0,  frames: 7, fps: 12, skipFrame0: false }
+        }
+      },
+      scout: {
+        sheet: 'assets/characters/lpc_scout.png',
+        anims: {
+          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
+          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
+          attack: { rowBase: 16, frames: 13, fps: 14, skipFrame0: false }
+        }
+      }
+    }
+  };
+  var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
+  (function preloadCharSprites() {
+    Object.keys(CHAR_SPRITE_CFG.classes).forEach(function(cls) {
+      var entry = { img: new Image(), ready: false, failed: false };
+      entry.img.onload  = function() { entry.ready = true; };
+      entry.img.onerror = function() { entry.failed = true; };
+      entry.img.src = CHAR_SPRITE_CFG.classes[cls].sheet;
+      CHAR_SPRITE_IMGS[cls] = entry;
+    });
+  })();
+  // Debug hook — only mounted on localhost / ?debug=1 so production is zero-cost.
+  // Testor uses this for sprite-sheet.spec.js assertions (see PM decision 2026-04-11).
+  (function mountSpriteDebug() {
+    try {
+      var loc = (typeof window !== 'undefined') ? window.location : null;
+      if (!loc) return;
+      var debugOn = /[?&]debug=1/.test(loc.search) || loc.hostname === 'localhost' || loc.hostname === '127.0.0.1';
+      if (!debugOn) return;
+      function resolvePlayer(id) {
+        if (id == null || id === 0 || id === 'self') return (typeof player !== 'undefined') ? player : null;
+        if (typeof allPlayers !== 'undefined' && allPlayers && allPlayers[id]) return allPlayers[id];
+        return null;
+      }
+      window.__spriteDebug = {
+        getLoadedSheets: function() {
+          var out = [];
+          Object.keys(CHAR_SPRITE_IMGS).forEach(function(k) {
+            var e = CHAR_SPRITE_IMGS[k];
+            if (e.ready) out.push((CHAR_SPRITE_CFG.classes[k].sheet).split('/').pop());
+          });
+          return out;
+        },
+        getCurrentFrame: function(id) {
+          var p = resolvePlayer(id);
+          if (!p || !p._spriteDebugFrame) return null;
+          var f = p._spriteDebugFrame;
+          return {
+            animState: f.animState,
+            row: f.row,
+            col: f.col,
+            dir: f.dir,
+            facingAngle: f.facingAngle,
+            sheet: f.sheetSource
+          };
+        },
+        forceState: function(id, animState) {
+          var p = resolvePlayer(id);
+          if (!p) return;
+          p._forceAnimState = animState || null;
+        },
+        getLastPos: function(id) {
+          var p = resolvePlayer(id);
+          if (!p) return null;
+          var lp = p._spriteLastPos || { x: p.x, y: p.y, t: 0 };
+          var now = (typeof gameTime !== 'undefined') ? gameTime : 0;
+          var dt = Math.max(1e-6, now - lp.t);
+          return {
+            x: p.x, y: p.y, t: now,
+            vx: (p.x - lp.x) / dt,
+            vy: (p.y - lp.y) / dt
+          };
+        },
+        // Test helper: jump straight into offline demo mode without going through
+        // the register/room/WebSocket flow. Lets e2e exercise the sprite path in
+        // isolation. Not for production use — Testor only.
+        enterOfflineDemo: function(classType) {
+          try {
+            if (classType && typeof selectedClass !== 'undefined') selectedClass = classType;
+            if (typeof startGame === 'function') startGame(false);
+            if (typeof startOfflineDemo === 'function') {
+              startOfflineDemo();
+              // Hide login overlay so the canvas is visible for visual tests
+              var ov = document.getElementById('login-overlay');
+              if (ov) ov.classList.add('hidden');
+              return true;
+            }
+          } catch (e) { return 'err: ' + e.message; }
+          return false;
+        },
+        triggerAttack: function(id) {
+          var p = resolvePlayer(id);
+          if (!p) return false;
+          var _atkDur = { warrior: 0.50, mage: 0.58, scout: 0.93 }[p.playerClass || (typeof selectedClass !== 'undefined' ? selectedClass : 'warrior')] || 0.50;
+          p._attackStart = (typeof gameTime !== 'undefined') ? gameTime : 0;
+          p._attackUntil = p._attackStart + _atkDur;
+          p._attackFacing = p.facingAngle || 0;
+          return true;
+        }
+      };
+    } catch (e) { /* no-op */ }
+  })();
+  // facingAngle → direction row offset (U=0, L=1, D=2, R=3)
+  function charDirOffset(angle) {
+    var a = Math.atan2(Math.sin(angle), Math.cos(angle)); // normalize to [-PI, PI]
+    if (a > -Math.PI / 4 && a <= Math.PI / 4) return 3;         // right
+    if (a > Math.PI / 4 && a <= 3 * Math.PI / 4) return 2;      // down
+    if (a > -3 * Math.PI / 4 && a <= -Math.PI / 4) return 0;    // up
+    return 1;                                                   // left
+  }
+
   function drawCharacterSprite(cx, cy, radius, classType, facingAngle, options) {
     var opts = options || {};
     var isFury = opts.fury || false;
     var shieldActive = opts.shield || false;
     var alpha = opts.alpha || 1;
     var isBot = opts.isBot || false;
-    var color = opts.color || '#4488ff';
     var skinId = opts.skinId || 'default';
     var skinData = getSkinData(skinId);
     var r = radius;
     var gt = gameTime || 0;
 
-    // Idle animation
+    // Idle breath/bob scale still applies to skin aura/outline layering
     var visual = (skinData && skinData.visual) ? skinData.visual : {};
     var idleAnim = visual.idleAnimation || 'none';
     var animScale = getIdleAnimationScale(idleAnim, gt);
     r = radius * animScale;
 
-    // Layer 0: Aura (S-tier, behind character)
+    // Layer 0: Aura behind sprite
     if (skinData && !isBot) {
       drawSkinAura(cx, cy, r, skinData, gt);
     }
 
+    // === Sprite-sheet render path ===
+    var cls = classType;
+    if (!CHAR_SPRITE_CFG.classes[cls]) cls = 'warrior';
+    var sheet = CHAR_SPRITE_IMGS[cls];
+    if (sheet && sheet.ready) {
+      var cfg = CHAR_SPRITE_CFG.classes[cls];
+      var state = opts.animState || 'idle';
+      if (!cfg.anims[state]) state = 'idle';
+      var animDef = cfg.anims[state];
+      var dirOff = charDirOffset(facingAngle);
+      var row = animDef.rowBase + dirOff;
+      // Frame index: walking skips frame 0 (LPC idle pose), attack uses full range
+      var frameCount = animDef.frames;
+      var frameIdx;
+      if (frameCount <= 1) {
+        frameIdx = 0;
+      } else if (state === 'attack' && opts.animTime != null) {
+        // One-shot: clamp to last frame when done
+        var af = Math.floor(opts.animTime * animDef.fps);
+        frameIdx = Math.min(af, frameCount - 1);
+      } else {
+        frameIdx = Math.floor(gt * animDef.fps) % frameCount;
+      }
+      if (animDef.skipFrame0) frameIdx += 1;
+      var fw = CHAR_SPRITE_CFG.frameW, fh = CHAR_SPRITE_CFG.frameH;
+      var sx = frameIdx * fw, sy = row * fh;
+      if (opts._debugOut) {
+        opts._debugOut.animState = state;
+        opts._debugOut.row = row;
+        opts._debugOut.col = frameIdx;
+        opts._debugOut.dir = dirOff;
+        opts._debugOut.facingAngle = facingAngle;
+        opts._debugOut.sheetSource = (cfg.sheet || '').split('/').pop();
+      }
+      // Destination: scale 64px sprite so it roughly matches old radius visual (diameter ~ r*3.0)
+      var dh = r * 3.0, dw = dh;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.imageSmoothingEnabled = false;
+      // Anchor feet near cy + r*0.55 (matches old shadow line), head upward
+      ctx.drawImage(sheet.img, sx, sy, fw, fh, cx - dw / 2, cy - dh * 0.72, dw, dh);
+      // Fury / shield visual overlays
+      if (isFury) {
+        ctx.globalAlpha = 0.25 + Math.sin(gt * 10) * 0.1;
+        ctx.fillStyle = '#f44';
+        ctx.beginPath(); ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2); ctx.fill();
+      }
+      if (shieldActive) {
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = '#8cf'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, r * 1.3, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Layer 6: Outline + Particles on top
+      if (skinData && !isBot) {
+        drawSkinOutline(cx, cy, r, skinData, gt);
+        drawSkinParticles(cx, cy, r, skinData, gt);
+      }
+      return;
+    }
+
+    // === Fallback: original Canvas-drawn layered sprite (used until PNGs load) ===
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(cx, cy);
     ctx.rotate(facingAngle);
 
-    // Get per-part colors
     var headC = getPartColors(skinData, 'head', classType);
     var bodyC = getPartColors(skinData, 'body', classType);
     var weaponC = getPartColors(skinData, 'weapon', classType);
     var legsC = getPartColors(skinData, 'legs', classType);
 
-    // Render layers bottom-to-top
     drawCharShadow(r);
     drawCharLegs(r, classType, legsC, gt);
     drawCharBody(r, classType, bodyC, isFury, shieldActive);
@@ -3003,7 +3203,6 @@ function doLogin() {
 
     ctx.restore();
 
-    // Layer 6: Outline + Particles (after restore, in world space)
     if (skinData && !isBot) {
       drawSkinOutline(cx, cy, r, skinData, gt);
       drawSkinParticles(cx, cy, r, skinData, gt);
@@ -4859,9 +5058,35 @@ function doLogin() {
     }
     // Character sprite — class-specific visual
     var localFacing = Math.atan2((mouseY + cameraY) - player.y, (mouseX + cameraX) - player.x);
-    drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, localFacing, {
-      fury: isFury, shield: player.shieldActive, skinId: equippedSkin
+    // Walk/idle detection from frame-to-frame position delta
+    if (player._spriteLastPos == null) player._spriteLastPos = { x: player.x, y: player.y, t: gameTime };
+    var _pdx = player.x - player._spriteLastPos.x;
+    var _pdy = player.y - player._spriteLastPos.y;
+    var _pMoving = (_pdx * _pdx + _pdy * _pdy) > 0.04; // ~0.2px threshold
+    player._spriteLastPos.x = player.x; player._spriteLastPos.y = player.y; player._spriteLastPos.t = gameTime;
+    // Plan C (PM 2026-04-11): movement interrupts attack animation
+    var _pAnimState, _pAnimTime = 0;
+    if (_pMoving) {
+      _pAnimState = 'walk';
+      player._attackUntil = 0; // cancel in-flight attack visual
+    } else if (player._attackUntil && gameTime < player._attackUntil) {
+      _pAnimState = 'attack';
+      _pAnimTime = gameTime - (player._attackStart || gameTime);
+    } else {
+      _pAnimState = 'idle';
+    }
+    if (player._forceAnimState) _pAnimState = player._forceAnimState; // __spriteDebug override
+    if (!player._spriteDebugFrame) player._spriteDebugFrame = {};
+    // Face movement while walking, locked attack direction while attacking, cursor while idle
+    var _pAnimFacing = _pMoving ? Math.atan2(_pdy, _pdx)
+                     : (_pAnimState === 'attack' && player._attackFacing != null) ? player._attackFacing
+                     : localFacing;
+    drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, _pAnimFacing, {
+      fury: isFury, shield: player.shieldActive, skinId: equippedSkin,
+      animState: _pAnimState, animTime: _pAnimTime,
+      _debugOut: player._spriteDebugFrame
     });
+    player._spriteAnimState = _pAnimState; // exposed for __spriteDebug
 
     // localMultiplayer (US-344): draw player2
     if (localMultiplayer && player2 && player2.alive) {
@@ -4932,8 +5157,14 @@ function doLogin() {
       }
       ctx.globalAlpha = 1;
       var bpAngle = bp.facingAngle || 0;
+      if (bp._prevX == null) { bp._prevX = bp.x; bp._prevY = bp.y; }
+      var _bdx = bp.x - bp._prevX, _bdy = bp.y - bp._prevY;
+      var _bMoving = (_bdx * _bdx + _bdy * _bdy) > 0.04;
+      bp._prevX = bp.x; bp._prevY = bp.y;
+      if (_bMoving) bpAngle = Math.atan2(_bdy, _bdx);
       drawCharacterSprite(bp.x, bp.y, bp.radius, bp.characterType || 'warrior', bpAngle, {
-        isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default'
+        isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default',
+        animState: _bMoving ? 'walk' : 'idle'
       });
       // Name + level label — red for enemies
       ctx.fillStyle = isEnemy ? '#f88' : '#fff';
@@ -5800,7 +6031,7 @@ function doLogin() {
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
       ctx.strokeRect(W / 2 - 190, by, 380, 80);
       // Character sprite preview + emoji icon
-      drawCharacterSprite(W / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default' });
+      drawCharacterSprite(W / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
       ctx.font = '18px Arial'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
       ctx.fillText(cls.icon, W / 2 - 175, by + 20);
@@ -5895,7 +6126,7 @@ function doLogin() {
       ctx.lineWidth = isEquipped ? 2 : 1;
       ctx.strokeRect(skx, sky, skinSize, skinSize);
       // Character preview
-      drawCharacterSprite(skx + skinSize / 2, sky + skinSize / 2, 10, selectedClass, 0, { skinId: sk.id });
+      drawCharacterSprite(skx + skinSize / 2, sky + skinSize / 2, 10, selectedClass, 0, { skinId: sk.id, animState: 'idle' });
       // Lock icon for unowned
       if (!sk.owned && sk.id !== 'default') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(skx, sky, skinSize, skinSize);
