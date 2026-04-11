@@ -798,31 +798,207 @@ function doLogin() {
 
   // Sound system (US-208) — Web Audio API procedural sfx
   var soundEnabled = true;
+  var musicEnabled = true;
   var audioCtx = null;
+  var sfxMasterGain = null;
+  var musicMasterGain = null;
   function initAudio() {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sfxMasterGain = audioCtx.createGain();
+      sfxMasterGain.gain.value = 0.5;
+      sfxMasterGain.connect(audioCtx.destination);
+      musicMasterGain = audioCtx.createGain();
+      musicMasterGain.gain.value = 0.18;
+      musicMasterGain.connect(audioCtx.destination);
+    } catch(e) {}
+  }
+  // _playTone — single oscillator tone with ADSR-style envelope
+  function _playTone(freq, dur, type, vol, attack, destGain) {
+    if (!audioCtx) return;
+    try {
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(destGain || sfxMasterGain || audioCtx.destination);
+      var now = audioCtx.currentTime;
+      var a = attack || 0.005;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(vol, now + a);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      osc.start(now);
+      osc.stop(now + dur + 0.02);
+      return osc;
+    } catch(e) {}
+  }
+  // _playNoise — short filtered noise burst (for hits/explosions)
+  function _playNoise(dur, vol, lowpass) {
+    if (!audioCtx) return;
+    try {
+      var bufSize = Math.floor(audioCtx.sampleRate * dur);
+      var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      var gain = audioCtx.createGain();
+      gain.gain.value = vol;
+      var filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = lowpass || 1200;
+      src.connect(filter); filter.connect(gain); gain.connect(sfxMasterGain || audioCtx.destination);
+      src.start();
+    } catch(e) {}
   }
   function playSound(type) {
     if (!soundEnabled || !audioCtx) return;
     try {
-      var osc = audioCtx.createOscillator();
-      var gain = audioCtx.createGain();
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      gain.gain.value = 0.08;
-      switch (type) {
-        case 'shoot': osc.frequency.value = 800; gain.gain.value = 0.04; osc.type = 'square'; break;
-        case 'hit': osc.frequency.value = 200; osc.type = 'sawtooth'; break;
-        case 'kill': osc.frequency.value = 600; osc.type = 'sine'; break;
-        case 'levelup': osc.frequency.value = 1000; osc.type = 'sine'; break;
-        case 'death': osc.frequency.value = 100; osc.type = 'sawtooth'; break;
-        default: osc.frequency.value = 440; break;
-      }
       var now = audioCtx.currentTime;
-      osc.start(now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      osc.stop(now + 0.15);
+      switch (type) {
+        case 'shoot':
+          _playTone(820, 0.06, 'square', 0.08);
+          _playTone(600, 0.05, 'square', 0.04);
+          break;
+        case 'hit':
+          _playNoise(0.08, 0.25, 1800);
+          _playTone(180, 0.12, 'sawtooth', 0.1);
+          break;
+        case 'attack':
+          _playTone(500, 0.07, 'triangle', 0.1);
+          _playNoise(0.05, 0.12, 2400);
+          break;
+        case 'kill':
+          _playTone(440, 0.08, 'sine', 0.15);
+          _playTone(660, 0.12, 'sine', 0.1);
+          _playNoise(0.15, 0.15, 800);
+          break;
+        case 'levelup':
+          _playTone(523, 0.1, 'sine', 0.18);   // C5
+          _playTone(659, 0.1, 'sine', 0.16);   // E5
+          setTimeout(function() { _playTone(784, 0.18, 'sine', 0.2); }, 80); // G5
+          setTimeout(function() { _playTone(1047, 0.3, 'sine', 0.16); }, 180); // C6
+          break;
+        case 'pickup_gem':
+          _playTone(880, 0.08, 'sine', 0.14);
+          setTimeout(function() { _playTone(1320, 0.1, 'sine', 0.12); }, 40);
+          break;
+        case 'pickup_gold':
+          _playTone(1200, 0.05, 'square', 0.1);
+          setTimeout(function() { _playTone(1600, 0.06, 'square', 0.08); }, 30);
+          break;
+        case 'boss_warn':
+          // Low rumble with tremolo-like re-triggers
+          _playTone(70, 0.6, 'sawtooth', 0.25);
+          _playTone(110, 0.6, 'triangle', 0.15);
+          setTimeout(function() { _playTone(70, 0.4, 'sawtooth', 0.22); _playNoise(0.5, 0.15, 400); }, 200);
+          break;
+        case 'wave_start':
+          // Ascending horn two-tone fanfare
+          _playTone(392, 0.2, 'triangle', 0.18); // G4
+          _playTone(196, 0.25, 'sawtooth', 0.08);
+          setTimeout(function() { _playTone(523, 0.35, 'triangle', 0.2); _playTone(261, 0.35, 'sawtooth', 0.08); }, 180); // C5
+          break;
+        case 'death':
+          _playTone(180, 0.3, 'sawtooth', 0.2);
+          setTimeout(function() { _playTone(80, 0.5, 'sawtooth', 0.18); }, 120);
+          break;
+        case 'combo':
+          // Quick rising arpeggio
+          _playTone(523, 0.08, 'triangle', 0.12);
+          setTimeout(function() { _playTone(659, 0.08, 'triangle', 0.12); }, 40);
+          setTimeout(function() { _playTone(784, 0.1, 'triangle', 0.14); }, 80);
+          break;
+        default:
+          _playTone(440, 0.1, 'sine', 0.1);
+      }
     } catch(e) {}
   }
   function toggleSound() { soundEnabled = !soundEnabled; }
+
+  // === Procedural BGM (US-xxx — final polish) ===
+  // Schedules a short pentatonic loop using Web Audio oscillators. No files.
+  var bgmState = { started: false, nextNoteAt: 0, step: 0, _raf: null };
+  var BGM_BPM = 92;
+  var BGM_SECONDS_PER_BEAT = 60 / BGM_BPM;
+  // Pentatonic A minor scale pattern — calm exploration vibe
+  var BGM_MELODY = [
+    220.00, 0,      329.63, 0,      261.63, 0,      392.00, 0,      // A3 – E4 – C4 – G4
+    220.00, 0,      293.66, 0,      329.63, 0,      440.00, 0,      // A3 – D4 – E4 – A4
+    261.63, 0,      329.63, 0,      392.00, 0,      329.63, 0,      // C4 – E4 – G4 – E4
+    220.00, 196.00, 174.61, 196.00, 220.00, 0,      261.63, 0       // A3 – G3 – F3 – G3 – A3 – C4
+  ];
+  var BGM_BASS = [ // played every 4th step
+    110.00, 110.00, 146.83, 146.83, 164.81, 164.81, 110.00, 110.00
+  ];
+  function _scheduleBgm() {
+    if (!audioCtx || !musicEnabled || !bgmState.started) return;
+    var now = audioCtx.currentTime;
+    // Schedule up to 1 second ahead
+    while (bgmState.nextNoteAt < now + 1) {
+      var noteDur = BGM_SECONDS_PER_BEAT * 0.5; // eighth-note
+      var freq = BGM_MELODY[bgmState.step % BGM_MELODY.length];
+      if (freq > 0) {
+        // Melody voice
+        try {
+          var osc = audioCtx.createOscillator();
+          var gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(musicMasterGain);
+          gain.gain.setValueAtTime(0, bgmState.nextNoteAt);
+          gain.gain.linearRampToValueAtTime(0.22, bgmState.nextNoteAt + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, bgmState.nextNoteAt + noteDur * 0.9);
+          osc.start(bgmState.nextNoteAt);
+          osc.stop(bgmState.nextNoteAt + noteDur + 0.05);
+        } catch(e) {}
+      }
+      // Bass voice — plays on every other step (quarter-note cadence)
+      if (bgmState.step % 2 === 0) {
+        var bassFreq = BGM_BASS[Math.floor(bgmState.step / 4) % BGM_BASS.length];
+        try {
+          var bOsc = audioCtx.createOscillator();
+          var bGain = audioCtx.createGain();
+          bOsc.type = 'sawtooth';
+          bOsc.frequency.value = bassFreq;
+          var bFilt = audioCtx.createBiquadFilter();
+          bFilt.type = 'lowpass'; bFilt.frequency.value = 500;
+          bOsc.connect(bFilt); bFilt.connect(bGain);
+          bGain.connect(musicMasterGain);
+          bGain.gain.setValueAtTime(0, bgmState.nextNoteAt);
+          bGain.gain.linearRampToValueAtTime(0.15, bgmState.nextNoteAt + 0.015);
+          bGain.gain.exponentialRampToValueAtTime(0.0001, bgmState.nextNoteAt + noteDur * 1.8);
+          bOsc.start(bgmState.nextNoteAt);
+          bOsc.stop(bgmState.nextNoteAt + noteDur * 2);
+        } catch(e) {}
+      }
+      bgmState.nextNoteAt += noteDur;
+      bgmState.step++;
+    }
+  }
+  function startBgm() {
+    if (!audioCtx || bgmState.started) return;
+    bgmState.started = true;
+    bgmState.nextNoteAt = audioCtx.currentTime + 0.1;
+    bgmState.step = 0;
+    function loop() {
+      if (!bgmState.started) return;
+      _scheduleBgm();
+      bgmState._raf = setTimeout(loop, 250);
+    }
+    loop();
+  }
+  function stopBgm() {
+    bgmState.started = false;
+    if (bgmState._raf) { clearTimeout(bgmState._raf); bgmState._raf = null; }
+  }
+  function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    if (musicEnabled && audioCtx) startBgm();
+    else stopBgm();
+  }
 
   // World / camera system (US-185)
   var WORLD_SIZE = 1600;
@@ -841,6 +1017,147 @@ function doLogin() {
 
   // Kill streak multiplier (US-195)
   var killMultiplier = 1.0;
+
+  // Multi-kill combo (final polish) — kills within 1.5s window stack into Double/Triple/...
+  var comboState = { count: 0, timer: 0, window: 1.5, lastShownCount: 0, popupTimer: 0, popupText: '', popupColor: '#fff' };
+  var COMBO_NAMES = {
+    2: { text: 'DOUBLE KILL', color: '#ffcc44' },
+    3: { text: 'TRIPLE KILL', color: '#ff8844' },
+    4: { text: 'QUADRA KILL', color: '#ff4488' },
+    5: { text: 'PENTA KILL',  color: '#ff44ff' },
+    6: { text: 'HEXA SLAUGHTER', color: '#cc44ff' },
+    7: { text: 'LEGENDARY', color: '#44ccff' },
+    8: { text: 'GODLIKE', color: '#44ffaa' }
+  };
+  function registerCombo() {
+    comboState.count += 1;
+    comboState.timer = comboState.window;
+    if (comboState.count >= 2) {
+      var name = COMBO_NAMES[comboState.count] || COMBO_NAMES[Math.min(8, comboState.count)];
+      if (comboState.count > 8) name = { text: 'UNSTOPPABLE x' + comboState.count, color: '#ff2200' };
+      comboState.popupText = name.text;
+      comboState.popupColor = name.color;
+      comboState.popupTimer = 1.4;
+      comboState.lastShownCount = comboState.count;
+      if (typeof playSound === 'function') playSound('combo');
+    }
+  }
+  function updateComboState(dt) {
+    if (comboState.timer > 0) {
+      comboState.timer -= dt;
+      if (comboState.timer <= 0) { comboState.count = 0; comboState.lastShownCount = 0; }
+    }
+    if (comboState.popupTimer > 0) comboState.popupTimer -= dt;
+  }
+  // drawOffScreenEnemyArrows — direction indicators for hostile enemies outside the viewport
+  function drawOffScreenEnemyArrows() {
+    if (!player) return;
+    var cx = W / 2, cy = H / 2;
+    var margin = 48; // inset from edge
+    var maxDist = 900; // only show arrows for enemies within this world distance
+    var list = [];
+    // Collect offline enemies
+    if (typeof offlineEnemies !== 'undefined' && offlineEnemies) {
+      for (var _aei = 0; _aei < offlineEnemies.length; _aei++) {
+        var _ae = offlineEnemies[_aei];
+        if (!_ae || !_ae.alive || _ae.hostile === false) continue;
+        var _adx = _ae.x - player.x, _ady = _ae.y - player.y;
+        var _ad2 = _adx * _adx + _ady * _ady;
+        if (_ad2 > maxDist * maxDist) continue;
+        // Check if off-screen
+        var _sx = _ae.x - cameraX, _sy = _ae.y - cameraY;
+        if (_sx > -20 && _sx < W + 20 && _sy > -20 && _sy < H + 20) continue;
+        list.push({ x: _ae.x, y: _ae.y, type: _ae.type, dist: Math.sqrt(_ad2) });
+      }
+    }
+    // Sort nearest-first and cap total arrows
+    list.sort(function(a, b) { return a.dist - b.dist; });
+    if (list.length > 18) list.length = 18;
+    // Draw each arrow at screen edge pointing toward enemy
+    for (var _li = 0; _li < list.length; _li++) {
+      var _ee = list[_li];
+      var dx = _ee.x - player.x, dy = _ee.y - player.y;
+      var ang = Math.atan2(dy, dx);
+      // Find intersection of ray from center with rectangular viewport edge
+      var edgeX = W / 2 - margin, edgeY = H / 2 - margin;
+      var t = Math.min(edgeX / Math.max(0.001, Math.abs(Math.cos(ang))), edgeY / Math.max(0.001, Math.abs(Math.sin(ang))));
+      var ax = cx + Math.cos(ang) * t;
+      var ay = cy + Math.sin(ang) * t;
+      var isBoss = (_ee.type === 'boss');
+      var isMini = (_ee.type === 'miniBoss');
+      var size = isBoss ? 18 : (isMini ? 14 : 10);
+      var arrowColor = isBoss ? '#ff2020' : (isMini ? '#ff6020' : '#ff8866');
+      var alpha = Math.max(0.35, 1 - _ee.dist / maxDist);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(ax, ay);
+      ctx.rotate(ang);
+      // Arrow shadow / glow
+      ctx.shadowColor = arrowColor;
+      ctx.shadowBlur = isBoss ? 12 : (isMini ? 8 : 4);
+      ctx.fillStyle = arrowColor;
+      ctx.beginPath();
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.7, -size * 0.6);
+      ctx.lineTo(-size * 0.3, 0);
+      ctx.lineTo(-size * 0.7, size * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Outline
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+      // Distance text for bosses / minis
+      if (isBoss || isMini) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = arrowColor;
+        ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 3;
+        var label = (isBoss ? '👑 BOSS ' : '⚔ ') + Math.round(_ee.dist) + 'm';
+        // Offset the label inward from the arrow
+        var lbx = ax - Math.cos(ang) * 22;
+        var lby = ay - Math.sin(ang) * 22;
+        ctx.strokeText(label, lbx, lby);
+        ctx.fillText(label, lbx, lby);
+        ctx.restore();
+      }
+    }
+    ctx.lineWidth = 1;
+  }
+
+  function drawComboPopup() {
+    if (comboState.popupTimer <= 0) return;
+    var t = comboState.popupTimer / 1.4;
+    var ease = t < 0.2 ? (t / 0.2) : (t > 0.8 ? 1 : 1);
+    // Slide in from right for first 0.2s (t goes 1→0)
+    var slideX = (t > 0.85) ? (t - 0.85) / 0.15 * 80 : 0;
+    var alpha = t > 0.85 ? 1 - (t - 0.85) / 0.15 : (t < 0.2 ? t / 0.2 : 1);
+    var scale = 1 + Math.sin((1 - t) * Math.PI) * 0.1;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(W / 2 + slideX, H * 0.3);
+    ctx.scale(scale, scale);
+    // Shadow / glow
+    ctx.shadowColor = comboState.popupColor;
+    ctx.shadowBlur = 18;
+    ctx.font = 'bold 42px Arial';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = 6;
+    ctx.strokeText(comboState.popupText, 0, 0);
+    ctx.fillStyle = comboState.popupColor;
+    ctx.fillText(comboState.popupText, 0, 0);
+    // Combo counter below
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 28);
+    ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 28);
+    ctx.restore();
+    ctx.lineWidth = 1;
+  }
 
   // Enemy projectiles (US-197)
   var enemyProjectiles = [];
@@ -1739,7 +2056,9 @@ function doLogin() {
     }
     if (isBossWave) {
       if (typeof screenShake === 'function') screenShake(5, 240);
-      if (typeof playSound === 'function') playSound('hit');
+      if (typeof playSound === 'function') playSound('boss_warn');
+    } else {
+      if (typeof playSound === 'function') playSound('wave_start');
     }
   }
   function updateOfflineWaveSystem(dt) {
@@ -1964,6 +2283,8 @@ function doLogin() {
 
     // Wave-based spawning (MOBA-style)
     updateOfflineWaveSystem(dt);
+    // Combo window tick
+    updateComboState(dt);
 
     // === Class-based projectile FX update (trail particles) ===
     for (var _fxi = offlineSkillFx.length - 1; _fxi >= 0; _fxi--) {
@@ -2059,6 +2380,7 @@ function doLogin() {
         playerXP += _gg.xp || 10;
         emit(_gg.x, _gg.y, '#88ffff', 6, 60);
         floatText(player.x, player.y - 24, '+' + (_gg.xp || 10) + 'XP', { color: '#88ffdd', size: 11 });
+        playSound('pickup_gem');
         gems.splice(_gi, 1);
         if (playerXP >= xpToNextLevel) triggerLevelUp();
         continue;
@@ -2088,6 +2410,7 @@ function doLogin() {
         gold += _cc2.amount || 5;
         emit(_cc2.x, _cc2.y, '#ffd700', 8, 80);
         floatText(player.x, player.y - 36, '+' + (_cc2.amount || 5) + '💰', { color: '#ffd700', size: 12 });
+        playSound('pickup_gold');
         coins.splice(_ci2, 1);
         continue;
       }
@@ -2207,6 +2530,7 @@ function doLogin() {
         // Wave 1: hit feedback — hitStop + shake + damage number + particles + knockback
         triggerHitStop(_isCrit ? 'crit' : 'normal');
         screenShake(_isCrit ? 'medium' : 'light');
+        playSound('attack');
         // Particle type by class: warrior=melee, mage=magic, scout=ranged
         var _pType = selectedClass === 'warrior' ? 'melee' : (selectedClass === 'mage' ? 'magic' : 'ranged');
         var _pColor = selectedClass === 'warrior' ? '#dd2020' : (selectedClass === 'mage' ? '#a080ff' : '#ffaa33');
@@ -2222,6 +2546,8 @@ function doLogin() {
           triggerHitStop('kill');
           screenShake('medium');
           floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
+          playSound('kill');
+          registerCombo();
           // Wave 2: drop XP gems (magnetized in updateOfflineDemo) — bosses drop multiple
           var xpAmt = closest.type === 'boss' ? 80 : (closest.type === 'miniBoss' ? 40 : (closest.type === 'tank' ? 20 : 10));
           var gemCount = closest.type === 'boss' ? 6 : (closest.type === 'miniBoss' ? 3 : 1);
@@ -6928,6 +7254,10 @@ function doLogin() {
     drawWaveBanner();
     // Wave status HUD (offline mode MOBA-style wave system)
     drawWaveStatusHUD();
+    // Off-screen enemy direction arrows (final polish)
+    drawOffScreenEnemyArrows();
+    // Combo popup (Double/Triple/Penta/...)
+    drawComboPopup();
     // killMilestoneBanner (US-338): draw killBanner with slide animation
     if (killMilestoneBanner.active) {
       killMilestoneBanner.timer += 0.016;
@@ -8669,7 +8999,7 @@ function doLogin() {
     if (state === 'playing') useUltimate();
   });
   canvas.addEventListener('click', function(ev) {
-    if (!audioCtx) initAudio(); // Init audio on first click (browser policy)
+    if (!audioCtx) { initAudio(); if (musicEnabled) startBgm(); } // Init audio on first click (browser policy)
     var r = canvas.getBoundingClientRect();
     var cx = (ev.clientX - r.left) * W / r.width, cy = (ev.clientY - r.top) * H / r.height;
     // Wave 2: level-up card click
