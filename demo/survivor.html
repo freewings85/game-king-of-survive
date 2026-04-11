@@ -4701,9 +4701,12 @@ function doLogin() {
     }
 
     // XP gems with gemGlow + gem pulse animation (US-271)
-    // Despawn gems older than 12s, fade out in last 3s
+    // Despawn gems older than 12s, fade out in last 3s.
+    // _t is a frame counter incremented by 0.05 per render frame (see below).
+    // At 60fps: 12s → _t=36, fade start → _t=27 (last 9 _t units ≈ 3s).
+    // Old code used `12 / 0.05 = 240`, which at 60fps is ~80s not 12s.
     for (var i = gems.length - 1; i >= 0; i--) {
-      if (gems[i]._t > 12 / 0.05) { gems.splice(i, 1); continue; }
+      if (gems[i]._t > 36) { gems.splice(i, 1); continue; }
     }
     // Cap max gems to prevent visual clutter
     while (gems.length > 60) gems.shift();
@@ -4722,9 +4725,9 @@ function doLogin() {
         ctx.fillStyle = '#fff';
         ctx.beginPath(); ctx.arc(g.x, g.y, gs * 3.5, 0, Math.PI * 2); ctx.fill();
       }
-      // Outer glow ring (fade out in last 3s = last 60 ticks at 0.05/frame)
-      var gemAge = g._t; var gemMaxAge = 12 / 0.05;
-      var gemFade = gemAge > (gemMaxAge - 60) ? (gemMaxAge - gemAge) / 60 : 1;
+      // Outer glow ring (fade out in last 3s ≈ last 9 _t units at 60fps)
+      var gemAge = g._t; var gemMaxAge = 36;
+      var gemFade = gemAge > (gemMaxAge - 9) ? (gemMaxAge - gemAge) / 9 : 1;
       ctx.globalAlpha = (0.3 + Math.sin(g._t * 3) * 0.1) * gemFade;
       ctx.fillStyle = gemGlowColor;
       ctx.beginPath(); ctx.arc(g.x, g.y, gs * 2.5, 0, Math.PI * 2); ctx.fill();
