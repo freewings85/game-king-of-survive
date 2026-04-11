@@ -2227,13 +2227,19 @@ function doLogin() {
     if (mapData.zones && mapData.zones.length) {
       for (var i = 0; i < mapData.zones.length; i++) {
         var z = mapData.zones[i];
+        // Convert editor rect format (x,y,width,height) to bounds
+        var _zBounds = z.bounds;
+        if (!_zBounds && (z.x !== undefined && z.y !== undefined && z.width !== undefined)) {
+          _zBounds = { x: z.x, y: z.y, width: z.width, height: z.height };
+        }
         mapZones.push({
           id: z.id || z.name || ('zone_' + i),
           type: z.type || 'normal',
-          shape: z.shape || 'rect',
+          shape: z.shape || (z.center ? 'circle' : 'rect'),
           center: z.center || null,
           radius: z.radius || 0,
-          bounds: z.bounds || null,
+          bounds: _zBounds || null,
+          biome: z.biome || null,
           name: z.name || zoneTypeLabels[z.type] || z.type,
           spawnRate: z.spawnRate || 1,
           monsterLevelRange: z.monsterLevelRange || z.monsterLevel || [1, 5],
@@ -4223,18 +4229,44 @@ function doLogin() {
 
   // === BACKGROUND ===
   // === HoMM3-style terrain system (Sprint 3) ===
-  // Deterministic biome field using smooth cell interpolation; renders tiles,
-  // scattered decorations (trees/rocks/ruins), and an edge vignette.
+  // Deterministic biome field using smooth cell interpolation; renders tiles
+  // from an LPC-style tileset image (demo/assets/terrain/lpc_terrain.png),
+  // plus scattered decorations and an edge vignette. Biome regions painted
+  // in the map editor override the procedural biome pick when present.
   var TILE_SIZE = 64;
   var BIOME_CELL = 760;
   var TERRAIN_BIOMES = [
-    { id: 'grass',  name: '翠绿草原',  base: [58,108,52],   accent: [86,146,68],   decor: 'tree' },
-    { id: 'desert', name: '黄沙荒漠',  base: [214,178,104], accent: [234,200,130], decor: 'cactus' },
-    { id: 'snow',   name: '极寒雪原',  base: [216,226,238], accent: [244,250,255], decor: 'pine' },
-    { id: 'swamp',  name: '幽暗沼泽',  base: [60,80,52],    accent: [90,112,68],   decor: 'reed' },
-    { id: 'rocky',  name: '碎石高地',  base: [112,102,88],  accent: [142,130,112], decor: 'boulder' },
-    { id: 'ruins',  name: '古代废墟',  base: [130,120,100], accent: [162,152,130], decor: 'ruin' }
+    { id: 'grass',  name: '翠绿草原',  col: 0, base: [58,108,52],   accent: [86,146,68],   decor: 'tree' },
+    { id: 'desert', name: '黄沙荒漠',  col: 1, base: [214,178,104], accent: [234,200,130], decor: 'cactus' },
+    { id: 'snow',   name: '极寒雪原',  col: 2, base: [216,226,238], accent: [244,250,255], decor: 'pine' },
+    { id: 'swamp',  name: '幽暗沼泽',  col: 3, base: [60,80,52],    accent: [90,112,68],   decor: 'reed' },
+    { id: 'rocky',  name: '碎石高地',  col: 4, base: [112,102,88],  accent: [142,130,112], decor: 'boulder' },
+    { id: 'ruins',  name: '古代废墟',  col: 5, base: [130,120,100], accent: [162,152,130], decor: 'ruin' }
   ];
+  var TERRAIN_BIOME_BY_ID = {};
+  for (var _tbi = 0; _tbi < TERRAIN_BIOMES.length; _tbi++) TERRAIN_BIOME_BY_ID[TERRAIN_BIOMES[_tbi].id] = TERRAIN_BIOMES[_tbi];
+  var _terrainTilesetImg = new Image();
+  var _terrainTilesetReady = false;
+  _terrainTilesetImg.onload = function() { _terrainTilesetReady = true; };
+  _terrainTilesetImg.onerror = function() { _terrainTilesetReady = false; };
+  _terrainTilesetImg.src = 'assets/terrain/lpc_terrain.png';
+  var TERRAIN_TILESET_VARIANTS = 4;
+  // Editor-painted biome regions: { biome, bounds:{x,y,width,height} } or circle
+  function _biomeFromEditorRegions(wx, wy) {
+    if (!mapZones || !mapZones.length) return null;
+    for (var i = 0; i < mapZones.length; i++) {
+      var z = mapZones[i];
+      if (!z.biome) continue;
+      if (z.shape === 'circle' && z.center && z.radius) {
+        var ddx = wx - z.center.x, ddy = wy - z.center.y;
+        if (ddx * ddx + ddy * ddy <= z.radius * z.radius) return TERRAIN_BIOME_BY_ID[z.biome] || null;
+      } else if (z.bounds) {
+        var b = z.bounds;
+        if (wx >= b.x && wx < b.x + b.width && wy >= b.y && wy < b.y + b.height) return TERRAIN_BIOME_BY_ID[z.biome] || null;
+      }
+    }
+    return null;
+  }
   function _hash2i(x, y) {
     var h = ((x | 0) * 374761393 + (y | 0) * 668265263) | 0;
     h = (h ^ (h >>> 13)) * 1274126177;
@@ -4368,7 +4400,7 @@ function doLogin() {
         var wx = cx * DC + jx * DC;
         var wy = cy * DC + jy * DC;
         if (wx < 20 || wy < 20 || wx > WORLD_W - 20 || wy > WORLD_H - 20) continue;
-        var biome = _dominantBiomeAt(wx, wy);
+        var biome = _biomeFromEditorRegions(wx, wy) || _dominantBiomeAt(wx, wy);
         var kind = biome.decor;
         var mixRoll = _hash2i(cx + 7, cy + 11);
         if (mixRoll < 0.18) kind = (biome.id === 'grass' || biome.id === 'snow') ? 'flower' : 'bush';
@@ -4409,17 +4441,46 @@ function doLogin() {
   function drawBackground() {
     currentBiome = getBiome(wave || 1);
     var camXw = cameraX, camYw = cameraY;
-    // Step 1: Fill terrain tiles — sampled biome color with smooth blending
+    // Step 1: Fill terrain tiles — drawImage from LPC tileset when loaded,
+    //         otherwise fall back to smooth-blended sampled colors.
     var startTX = Math.floor(camXw / TILE_SIZE) - 1;
     var startTY = Math.floor(camYw / TILE_SIZE) - 1;
     var endTX = Math.ceil((camXw + W) / TILE_SIZE) + 1;
     var endTY = Math.ceil((camYw + H) / TILE_SIZE) + 1;
-    for (var ty = startTY; ty <= endTY; ty++) {
-      for (var tx = startTX; tx <= endTX; tx++) {
-        var wxc = tx * TILE_SIZE + TILE_SIZE / 2;
-        var wyc = ty * TILE_SIZE + TILE_SIZE / 2;
-        ctx.fillStyle = _sampleTerrainColor(wxc, wyc);
-        ctx.fillRect(tx * TILE_SIZE - camXw, ty * TILE_SIZE - camYw, TILE_SIZE + 1, TILE_SIZE + 1);
+    if (_terrainTilesetReady) {
+      for (var ty = startTY; ty <= endTY; ty++) {
+        for (var tx = startTX; tx <= endTX; tx++) {
+          var wxc = tx * TILE_SIZE + TILE_SIZE / 2;
+          var wyc = ty * TILE_SIZE + TILE_SIZE / 2;
+          var biome = _biomeFromEditorRegions(wxc, wyc) || _dominantBiomeAt(wxc, wyc);
+          var vh = _hash2i(tx + 131, ty + 59);
+          var variant = Math.floor(vh * TERRAIN_TILESET_VARIANTS);
+          ctx.drawImage(
+            _terrainTilesetImg,
+            biome.col * TILE_SIZE, variant * TILE_SIZE, TILE_SIZE, TILE_SIZE,
+            tx * TILE_SIZE - camXw, ty * TILE_SIZE - camYw, TILE_SIZE + 1, TILE_SIZE + 1
+          );
+        }
+      }
+      // Blend seams between biome regions with a soft feather overlay
+      ctx.globalAlpha = 0.35;
+      for (var ty2 = startTY; ty2 <= endTY; ty2++) {
+        for (var tx2 = startTX; tx2 <= endTX; tx2++) {
+          var wxc2 = tx2 * TILE_SIZE + TILE_SIZE / 2;
+          var wyc2 = ty2 * TILE_SIZE + TILE_SIZE / 2;
+          ctx.fillStyle = _sampleTerrainColor(wxc2, wyc2);
+          ctx.fillRect(tx2 * TILE_SIZE - camXw, ty2 * TILE_SIZE - camYw, TILE_SIZE + 1, TILE_SIZE + 1);
+        }
+      }
+      ctx.globalAlpha = 1;
+    } else {
+      for (var ty3 = startTY; ty3 <= endTY; ty3++) {
+        for (var tx3 = startTX; tx3 <= endTX; tx3++) {
+          var wxc3 = tx3 * TILE_SIZE + TILE_SIZE / 2;
+          var wyc3 = ty3 * TILE_SIZE + TILE_SIZE / 2;
+          ctx.fillStyle = _sampleTerrainColor(wxc3, wyc3);
+          ctx.fillRect(tx3 * TILE_SIZE - camXw, ty3 * TILE_SIZE - camYw, TILE_SIZE + 1, TILE_SIZE + 1);
+        }
       }
     }
     // Step 2: Subtle grid overlay for tactical feel

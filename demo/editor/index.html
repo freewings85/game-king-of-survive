@@ -184,6 +184,30 @@
       </div>
     </div>
     <div class="map-sidebar">
+      <!-- Terrain biome zones -->
+      <div class="panel">
+        <h3>地形区域 (biome) <button onclick="addTerrainZone()" style="float:right;font-size:11px;padding:2px 8px;background:#2a4a4a;color:#fff;border:1px solid #4aa;cursor:pointer;border-radius:3px;">+ 添加</button></h3>
+        <div id="terrain-zone-list" style="font-size:11px;color:#aaa;margin-bottom:6px;">未添加。留空则使用程序噪声生成地形。</div>
+      </div>
+      <div class="panel" id="terrain-zone-detail" style="display:none;">
+        <h3>地形区域详情</h3>
+        <div class="form-row"><label>名称:</label><input type="text" id="tz-name" onchange="updateTerrainZoneField('name',this.value)"></div>
+        <div class="form-row"><label>生物群系:</label>
+          <select id="tz-biome" onchange="updateTerrainZoneField('biome',this.value);renderMapCanvas()">
+            <option value="grass">翠绿草原 (grass)</option>
+            <option value="desert">黄沙荒漠 (desert)</option>
+            <option value="snow">极寒雪原 (snow)</option>
+            <option value="swamp">幽暗沼泽 (swamp)</option>
+            <option value="rocky">碎石高地 (rocky)</option>
+            <option value="ruins">古代废墟 (ruins)</option>
+          </select>
+        </div>
+        <div class="form-row"><label>X:</label><input type="number" id="tz-x" onchange="updateTerrainZoneField('x',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>Y:</label><input type="number" id="tz-y" onchange="updateTerrainZoneField('y',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>宽:</label><input type="number" id="tz-w" onchange="updateTerrainZoneField('width',+this.value);renderMapCanvas()"></div>
+        <div class="form-row"><label>高:</label><input type="number" id="tz-h" onchange="updateTerrainZoneField('height',+this.value);renderMapCanvas()"></div>
+        <button class="delete-btn" style="margin-top:8px;" onclick="deleteTerrainZone()">删除此区域</button>
+      </div>
       <!-- Spawn Camps -->
       <div class="panel">
         <h3>刷怪营地 <button onclick="addCamp()" style="float:right;font-size:11px;padding:2px 8px;background:#2a4a2a;color:#fff;border:1px solid #4a4;cursor:pointer;border-radius:3px;">+ 添加</button></h3>
@@ -261,6 +285,15 @@ var currentTab = 'skills';
 var undoStack = [], redoStack = [];
 var currentMap = null, selectedCampIdx = -1, mapList = [];
 var dragCamp = -1, mapScale = 1;
+var selectedTerrainZoneIdx = -1;
+var TERRAIN_BIOME_COLORS = {
+  grass:  '#4e8a38',
+  desert: '#d9b876',
+  snow:   '#e0e8f0',
+  swamp:  '#556b38',
+  rocky:  '#8c8272',
+  ruins:  '#a09080'
+};
 var expandedSkills = {}; // track which skill cards are expanded
 
 // ====== NAV ======
@@ -861,7 +894,9 @@ function loadSelectedMap() {
       document.getElementById('ambush-min-dist').value = amb.spawnMinDist || 80;
       document.getElementById('ambush-max-dist').value = amb.spawnMaxDist || 150;
       selectedCampIdx = -1;
+      selectedTerrainZoneIdx = -1;
       renderCampList();
+      renderTerrainZoneList();
       renderWaveComp();
       renderTrickleComp();
       renderMapCanvas();
@@ -909,20 +944,26 @@ function renderMapCanvas() {
   }
   ctx.lineWidth = 1;
 
-  // Zones
+  // Zones (including terrain biome zones painted via sidebar)
   var zones = currentMap.zones || [];
   for (var zi = 0; zi < zones.length; zi++) {
     var z = zones[zi];
     var zx = ox + (z.x || 0) * mapScale, zy = oy + (z.y || 0) * mapScale;
     var zw = (z.width || 200) * mapScale, zh = (z.height || 200) * mapScale;
-    ctx.globalAlpha = 0.15;
-    ctx.fillStyle = z.type === 'safe' ? '#0f0' : (z.type === 'hazard' ? '#f00' : '#88f');
+    var isBiomeZone = !!z.biome;
+    var isSelected = isBiomeZone && zi === selectedTerrainZoneIdx;
+    var color = isBiomeZone ? (TERRAIN_BIOME_COLORS[z.biome] || '#88f')
+                            : (z.type === 'safe' ? '#0f0' : (z.type === 'hazard' ? '#f00' : '#88f'));
+    ctx.globalAlpha = isBiomeZone ? 0.35 : 0.15;
+    ctx.fillStyle = color;
     ctx.fillRect(zx, zy, zw, zh);
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = z.type === 'safe' ? '#0f0' : (z.type === 'hazard' ? '#f00' : '#88f');
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isSelected ? 3 : 1;
     ctx.strokeRect(zx, zy, zw, zh);
+    ctx.lineWidth = 1;
     ctx.fillStyle = '#fff'; ctx.font = '10px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(z.name || z.type, zx + zw / 2, zy + zh / 2);
+    ctx.fillText((z.name || z.type) + (isBiomeZone ? ' [' + z.biome + ']' : ''), zx + zw / 2, zy + zh / 2);
   }
 
   // Spawn camps
@@ -1019,6 +1060,87 @@ function deleteCamp() {
   selectedCampIdx = -1;
   document.getElementById('camp-detail').style.display = 'none';
   renderCampList(); renderMapCanvas();
+}
+
+// ====== Terrain biome zones ======
+function _terrainZoneIndices() {
+  var out = [];
+  if (!currentMap || !currentMap.zones) return out;
+  for (var i = 0; i < currentMap.zones.length; i++) if (currentMap.zones[i].biome) out.push(i);
+  return out;
+}
+function renderTerrainZoneList() {
+  var div = document.getElementById('terrain-zone-list');
+  if (!div) return;
+  var idxs = _terrainZoneIndices();
+  if (idxs.length === 0) {
+    div.innerHTML = '<span style="color:#888;">未添加。留空则使用程序噪声生成地形。</span>';
+    return;
+  }
+  div.innerHTML = '';
+  for (var k = 0; k < idxs.length; k++) {
+    var zi = idxs[k];
+    var z = currentMap.zones[zi];
+    var el = document.createElement('div');
+    el.className = 'camp-item' + (zi === selectedTerrainZoneIdx ? ' selected' : '');
+    el.textContent = (z.name || 'zone_' + zi) + ' [' + (z.biome || '?') + '] ' + (z.width || 0) + '×' + (z.height || 0);
+    el.onclick = (function(idx) { return function() { selectTerrainZone(idx); }; })(zi);
+    div.appendChild(el);
+  }
+}
+function addTerrainZone() {
+  if (!currentMap) return;
+  if (!currentMap.zones) currentMap.zones = [];
+  var w = Math.floor((currentMap.width || 1200) * 0.3);
+  var h = Math.floor((currentMap.height || 1200) * 0.3);
+  currentMap.zones.push({
+    type: 'terrain',
+    biome: 'grass',
+    shape: 'rect',
+    name: '地形区' + (currentMap.zones.length + 1),
+    x: Math.floor(((currentMap.width || 1200) - w) / 2),
+    y: Math.floor(((currentMap.height || 1200) - h) / 2),
+    width: w,
+    height: h
+  });
+  selectedTerrainZoneIdx = currentMap.zones.length - 1;
+  renderTerrainZoneList();
+  selectTerrainZone(selectedTerrainZoneIdx);
+  renderMapCanvas();
+}
+function selectTerrainZone(idx) {
+  selectedTerrainZoneIdx = idx;
+  renderTerrainZoneList();
+  renderMapCanvas();
+  var detail = document.getElementById('terrain-zone-detail');
+  if (idx < 0 || !currentMap || !currentMap.zones[idx] || !currentMap.zones[idx].biome) {
+    detail.style.display = 'none';
+    return;
+  }
+  var z = currentMap.zones[idx];
+  detail.style.display = 'block';
+  document.getElementById('tz-name').value = z.name || '';
+  document.getElementById('tz-biome').value = z.biome || 'grass';
+  document.getElementById('tz-x').value = z.x || 0;
+  document.getElementById('tz-y').value = z.y || 0;
+  document.getElementById('tz-w').value = z.width || 0;
+  document.getElementById('tz-h').value = z.height || 0;
+}
+function updateTerrainZoneField(field, val) {
+  if (selectedTerrainZoneIdx < 0 || !currentMap) return;
+  var z = currentMap.zones[selectedTerrainZoneIdx];
+  if (!z) return;
+  z[field] = val;
+  renderTerrainZoneList();
+}
+function deleteTerrainZone() {
+  if (selectedTerrainZoneIdx < 0 || !currentMap) return;
+  if (!confirm('删除此地形区域？')) return;
+  currentMap.zones.splice(selectedTerrainZoneIdx, 1);
+  selectedTerrainZoneIdx = -1;
+  document.getElementById('terrain-zone-detail').style.display = 'none';
+  renderTerrainZoneList();
+  renderMapCanvas();
 }
 
 // Camp monsters

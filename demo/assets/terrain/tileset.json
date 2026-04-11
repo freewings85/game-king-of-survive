@@ -1,0 +1,13 @@
+{
+  "image": "lpc_terrain.png",
+  "tileSize": 64,
+  "variants": 4,
+  "biomes": [
+    { "id": "grass",  "col": 0, "name": "翠绿草原" },
+    { "id": "desert", "col": 1, "name": "黄沙荒漠" },
+    { "id": "snow",   "col": 2, "name": "极寒雪原" },
+    { "id": "swamp",  "col": 3, "name": "幽暗沼泽" },
+    { "id": "rocky",  "col": 4, "name": "碎石高地" },
+    { "id": "ruins",  "col": 5, "name": "古代废墟" }
+  ]
+}
