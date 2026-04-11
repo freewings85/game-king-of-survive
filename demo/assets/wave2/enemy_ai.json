@@ -1,0 +1,196 @@
+{
+  "_spec": "Sprint 3 Wave 2 enemy AI behaviors. 3 new AI types layered on top of existing enemy stat types.",
+  "_locked_by": "GameDesigner v1 doc 2026-04-11, PM approved",
+  "_principle": "AI behavior is orthogonal to enemy stats. An enemy can be (e.g.) tank+charger or fast+shooter. AI types and state names are locked.",
+  "_pmDecisions": {
+    "unlockWaves": { "charger": 3, "shooter": 5, "summoner": 7 },
+    "summonerHardLimit": 6,
+    "summonerDeathPenalty": 0.5
+  },
+
+  "aiTypes": {
+    "chase": {
+      "label": "追击者",
+      "_note": "Default behavior. All existing enemies. Direct path to player. No state machine.",
+      "isDefault": true
+    },
+
+    "charger": {
+      "label": "冲锋者",
+      "unlockWave": 3,
+      "visual": {
+        "edgeColor": "#ff3322",
+        "edgeWidth": 2,
+        "telegraphColor": "#ff3322",
+        "telegraphLineWidth": 3,
+        "_note": "Red edge glow always visible. During AIM state, draw red dashed line from enemy toward locked direction (length=300px) as charge telegraph."
+      },
+      "states": {
+        "WANDER": {
+          "behavior": "approach_player_keep_distance",
+          "targetDistance": 200,
+          "moveSpeed": "base",
+          "transitionTo": "AIM",
+          "transitionCondition": "distance(player) < 300"
+        },
+        "AIM": {
+          "behavior": "stop_lock_direction",
+          "durationSec": 0.7,
+          "moveSpeed": 0,
+          "lockTargetDirection": true,
+          "transitionTo": "CHARGE",
+          "transitionCondition": "duration_elapsed"
+        },
+        "CHARGE": {
+          "behavior": "dash_along_locked_direction",
+          "moveSpeed": 600,
+          "maxDurationSec": 0.6,
+          "transitionTo": "COOLDOWN",
+          "transitionCondition": "duration_elapsed OR collision(player) OR collision(wall)",
+          "_note": "If collides with player, deal damage = base damage * 1.5 (charge attack). If collides with wall, plays small impact effect."
+        },
+        "COOLDOWN": {
+          "behavior": "stop",
+          "durationSec": 1.2,
+          "moveSpeed": 0,
+          "transitionTo": "WANDER",
+          "transitionCondition": "duration_elapsed"
+        }
+      },
+      "initialState": "WANDER"
+    },
+
+    "shooter": {
+      "label": "远程射手",
+      "unlockWave": 5,
+      "visual": {
+        "edgeColor": "#aa55ff",
+        "edgeWidth": 2,
+        "auraColor": "#aa55ff",
+        "auraOpacity": 0.3,
+        "_note": "Purple aura ring around enemy. Forearm sprite extended (holding weapon)."
+      },
+      "states": {
+        "KITE": {
+          "behavior": "maintain_distance",
+          "targetDistanceMin": 250,
+          "targetDistanceMax": 400,
+          "moveSpeed": "base",
+          "transitionTo": "AIM",
+          "transitionCondition": "fire_cooldown_ready AND has_line_of_sight"
+        },
+        "AIM": {
+          "behavior": "stop_lock_target",
+          "durationSec": 0.4,
+          "moveSpeed": 0,
+          "transitionTo": "FIRE",
+          "transitionCondition": "duration_elapsed",
+          "_note": "Aim line drawn from enemy to player current position. Lock target snapshot at end of AIM state."
+        },
+        "FIRE": {
+          "behavior": "spawn_projectile",
+          "projectile": {
+            "speed": 200,
+            "maxDistance": 600,
+            "damageRatio": 0.5,
+            "_note": "Damage = playerATK * 0.5 (per PM, mid of 30%-80% range)"
+          },
+          "transitionTo": "KITE",
+          "fireCooldownSec": 1.8
+        }
+      },
+      "initialState": "KITE"
+    },
+
+    "summoner": {
+      "label": "召唤者",
+      "unlockWave": 7,
+      "visual": {
+        "edgeColor": "#33ddcc",
+        "edgeWidth": 2,
+        "footRuneColor": "#33ddcc",
+        "footRuneRadius": 30,
+        "_note": "Cyan rune circle rotating under feet. During CAST state, rune pulses brighter."
+      },
+      "states": {
+        "DRIFT": {
+          "behavior": "flee_player",
+          "targetDistance": 350,
+          "moveSpeed": "base * 0.6",
+          "moveSpeedMultiplier": 0.6,
+          "transitionTo": "CAST",
+          "transitionCondition": "owned_minions < hardLimit AND not in cooldown",
+          "_note": "Per PM 2026-04-11: consume moveSpeedMultiplier (numeric) at runtime; moveSpeed (string) is design-intent annotation only, do NOT eval."
+        },
+        "CAST": {
+          "behavior": "stop_channel",
+          "durationSec": 1.0,
+          "moveSpeed": 0,
+          "telegraphRadius": 30,
+          "transitionTo": "RECOVER",
+          "onComplete": {
+            "spawn": {
+              "type": "swarm",
+              "count": 3,
+              "trackOwnership": true
+            }
+          }
+        },
+        "RECOVER": {
+          "behavior": "stop",
+          "durationSec": 2.5,
+          "moveSpeed": 0,
+          "transitionTo": "DRIFT",
+          "transitionCondition": "duration_elapsed"
+        }
+      },
+      "initialState": "DRIFT",
+      "constraints": {
+        "hardLimitOwnedMinions": 6,
+        "_pmRequirement": "Per PM strict constraint (risk 4 mitigation): summoner._minionCount must never exceed 6. When summoner dies, all owned minions take -50% maxHp damage immediately."
+      },
+      "deathPenalty": {
+        "type": "minion_hp_loss",
+        "ratio": 0.5,
+        "_note": "When summoner dies, iterate owned minions and apply hp -= maxHp * 0.5"
+      }
+    }
+  },
+
+  "spawnRules": {
+    "_doc": "How AI types are assigned to spawned enemies. Layered on top of existing makeEnemy() spawn logic.",
+    "assignmentMode": "wave_unlock_random",
+    "rules": [
+      {
+        "fromWave": 3,
+        "aiTypes": ["chase", "charger"],
+        "weights": [70, 30]
+      },
+      {
+        "fromWave": 5,
+        "aiTypes": ["chase", "charger", "shooter"],
+        "weights": [55, 25, 20]
+      },
+      {
+        "fromWave": 7,
+        "aiTypes": ["chase", "charger", "shooter", "summoner"],
+        "weights": [45, 25, 20, 10]
+      }
+    ],
+    "exclusions": {
+      "_doc": "Enemy stat types that cannot have certain AI",
+      "boss": ["chase"],
+      "treasure": ["chase"],
+      "_note": "Bosses keep their custom AI from updateBossAbilities(). Treasure goblin keeps flee behavior."
+    }
+  },
+
+  "_knownGaps": [
+    {
+      "phase": "wave2",
+      "gap": "online-mode-ai-state-sync",
+      "severity": "P1",
+      "_note": "AI state machine runs server-side in multiplayer. Client only renders visual telegraph. Same epic as Phase 2 sync gap."
+    }
+  ]
+}

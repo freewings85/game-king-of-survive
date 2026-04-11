@@ -1879,6 +1879,13 @@ function doLogin() {
           triggerHitStop('kill');
           screenShake('medium');
           floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
+          // Wave 2: offline XP flow — gain XP on kill, trigger levelUp at threshold
+          var xpGain = closest.type === 'boss' ? 80 : (closest.type === 'miniBoss' ? 40 : (closest.type === 'tank' ? 20 : 10));
+          playerXP += xpGain;
+          floatText(closest.x, closest.y + 12, '+' + xpGain + 'XP', { color: '#88ff88', size: 12 });
+          if (playerXP >= xpToNextLevel) {
+            triggerLevelUp();
+          }
         }
         } // end immunity-window else
       }
@@ -1974,6 +1981,11 @@ function doLogin() {
       case 'xp_magnet': p.xpMagnetRange = 80 + lv * 50; break;
       case 'explosive': p._explosiveDmg = lv * 6; break;
       case 'max_hp': p.maxHp += 20; p.hp = Math.min(p.hp + 20, p.maxHp); break;
+      // Wave 2 new imbue skills (status effect hooks — Epic 2.2 will consume these flags)
+      case 'imbue_burn': p._imbueBurn = (p._imbueBurn || 0) + 1; break;
+      case 'imbue_freeze': p._imbueFreeze = (p._imbueFreeze || 0) + 1; break;
+      case 'imbue_poison': p._imbuePoison = (p._imbuePoison || 0) + 1; break;
+      case 'imbue_shock': p._imbueShock = (p._imbueShock || 0) + 1; break;
     }
     // Check evolution: when both skills in a recipe are >= 3, trigger evolution
     if (lv >= 3) checkEvolution();
@@ -3182,6 +3194,22 @@ function doLogin() {
             type: e.type,
             alive: !!e.alive
           };
+        },
+        // Sprint 3 Wave 2 Epic 2.1 — upgrade choice probes
+        getUpgradeChoices: function() {
+          if (typeof skillChoices === 'undefined' || !skillChoices || skillChoices.length === 0) return null;
+          return skillChoices.map(function(c) {
+            if (typeof c === 'string') return { id: c };
+            return { id: c.id, name: c.name, rarity: c.rarity, weight: c.weight, icon: c.icon };
+          });
+        },
+        forceLevelUp: function() {
+          if (typeof triggerLevelUp === 'function') { triggerLevelUp(); return true; }
+          return false;
+        },
+        getCardPool: function() {
+          if (typeof WAVE2_CARDS === 'undefined' || !WAVE2_CARDS) return null;
+          return { size: (WAVE2_CARDS.cards || []).length, rarities: Object.keys(WAVE2_CARDS.rarities || {}), loaded: true };
         }
       };
     } catch (e) { /* no-op */ }
@@ -4465,6 +4493,7 @@ function doLogin() {
     else if (state === 'spectating') { networkUpdate(logicDt); spectatorUpdate(); drawGame(); drawSpectatorHUD(); }
     else if (state === 'gameOver') { drawGame(); drawDeathRecap(); }
     else if (state === 'paused') { drawGame(); drawPause(); }
+    else if (state === 'levelUp') { drawGame(); drawLevelUp(); }
 
     // Particles — swap-and-pop removal (O(1) instead of splice O(n))
     var pLen = particles.length;
@@ -4699,14 +4728,137 @@ function doLogin() {
     checkAchievementUnlocks();
   }
 
+  // === SPRINT 3 WAVE 2: Upgrade Choice System (Epic 2.1) ===
+  // Data-driven card pool loaded from demo/assets/wave2/cards.json.
+  // Falls back to legacy random-3-from-SKILL_IDS if JSON fails to load.
+  var WAVE2_CARDS = null; // populated async from cards.json; null until loaded
+  (function loadWave2Cards() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'assets/wave2/cards.json', true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { WAVE2_CARDS = JSON.parse(xhr.responseText); }
+          catch (e) { WAVE2_CARDS = null; }
+        }
+      };
+      xhr.onerror = function() { WAVE2_CARDS = null; };
+      xhr.send();
+    } catch (e) { WAVE2_CARDS = null; }
+  })();
+
   function generateChoices() {
+    // Wave 2 path: weighted by rarity, uses cards.json pool
+    if (WAVE2_CARDS && WAVE2_CARDS.cards && WAVE2_CARDS.rarities) {
+      var eligible = [];
+      for (var ci = 0; ci < WAVE2_CARDS.cards.length; ci++) {
+        var card = WAVE2_CARDS.cards[ci];
+        if (card.rarity === 'evolution') continue; // never rolled normally
+        var cap = card.stackCap || 5;
+        if ((skillLevels[card.id] || 0) >= cap) continue; // cap reached
+        eligible.push(card);
+      }
+      if (eligible.length === 0) { skillChoices = []; return; }
+      // Weighted sample without replacement
+      var picks = [];
+      var pool = eligible.slice();
+      for (var p = 0; p < 3 && pool.length > 0; p++) {
+        var totalW = 0;
+        for (var k = 0; k < pool.length; k++) {
+          var rDef = WAVE2_CARDS.rarities[pool[k].rarity] || { weightMultiplier: 1 };
+          totalW += (pool[k].weight || 50) * (rDef.weightMultiplier || 1);
+        }
+        var roll = Math.random() * totalW;
+        var acc = 0, pickIdx = pool.length - 1;
+        for (var k2 = 0; k2 < pool.length; k2++) {
+          var rDef2 = WAVE2_CARDS.rarities[pool[k2].rarity] || { weightMultiplier: 1 };
+          acc += (pool[k2].weight || 50) * (rDef2.weightMultiplier || 1);
+          if (roll <= acc) { pickIdx = k2; break; }
+        }
+        picks.push(pool[pickIdx]);
+        pool.splice(pickIdx, 1);
+      }
+      // Evolution force-insert: if any recipe is fulfilled, replace the
+      // lowest-weight card with an evolution-marked card.
+      // (Wave 2 scope: check existing EVOLUTION_RECIPES; evolution cards are
+      //  not in cards.json but we synthesize a pseudo-card for UI.)
+      if (WAVE2_CARDS._pmDecisions && WAVE2_CARDS._pmDecisions.evolutionForceInsert) {
+        for (var ri = 0; ri < EVOLUTION_RECIPES.length; ri++) {
+          var rec = EVOLUTION_RECIPES[ri];
+          if (evolvedSkills[rec.result]) continue;
+          if ((skillLevels[rec.a] || 0) >= 3 && (skillLevels[rec.b] || 0) >= 3) {
+            // Find lowest-weight pick and replace
+            var lowIdx = 0, lowW = Infinity;
+            for (var pi = 0; pi < picks.length; pi++) {
+              var w = picks[pi].weight || 50;
+              if (w < lowW) { lowW = w; lowIdx = pi; }
+            }
+            picks[lowIdx] = {
+              id: '__evo_' + rec.result,
+              name: rec.name + ' (进化)',
+              icon: rec.icon || '⭐',
+              desc: rec.desc || '进化卡',
+              rarity: 'evolution',
+              _evolution: rec
+            };
+            break;
+          }
+        }
+      }
+      skillChoices = picks;
+      return;
+    }
+    // Fallback: legacy path (no cards.json)
     var pool = SKILL_IDS.filter(function(id) { return (skillLevels[id] || 0) < 5; });
-    // Shuffle
     for (var i = pool.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
     }
     skillChoices = pool.slice(0, 3);
+  }
+
+  // Wave 2: pick a card by index (0/1/2) from current skillChoices.
+  // Applies the effect and transitions state back to 'playing'.
+  function pickUpgradeCard(idx) {
+    if (state !== 'levelUp') return false;
+    if (!skillChoices || idx < 0 || idx >= skillChoices.length) return false;
+    var choice = skillChoices[idx];
+    var id;
+    if (typeof choice === 'string') {
+      id = choice;
+    } else if (choice && choice._evolution) {
+      // Evolution card — mark result as evolved and apply any related skill
+      evolvedSkills[choice._evolution.result] = true;
+      id = choice._evolution.result;
+      floatText(player ? player.x : W/2, player ? player.y - 40 : H/2, '⭐ 进化: ' + choice._evolution.name, '#ff44dd', 22);
+    } else if (choice && choice.id) {
+      id = choice.id;
+    }
+    if (id && typeof applySkill === 'function') {
+      // Ignore applySkill failure for synthesized evolution IDs
+      try { applySkill(id); } catch (e) {}
+    }
+    skillChoices = [];
+    state = 'playing';
+    // visual confirmation
+    if (player) {
+      emit(player.x, player.y, '#ffd700', 20, 140);
+      screenShake('medium');
+    }
+    return true;
+  }
+
+  // Wave 2: trigger a level-up. Used by offline XP and by debug hook.
+  function triggerLevelUp() {
+    if (state === 'levelUp') return;
+    playerLevel++;
+    playerXP = Math.max(0, playerXP - xpToNextLevel);
+    xpToNextLevel = Math.floor(xpToNextLevel * 1.25);
+    generateChoices();
+    if (!skillChoices || skillChoices.length === 0) return; // no cards available
+    skillCardAnim = { timer: 0, duration: 0.4, active: true };
+    state = 'levelUp';
+    if (typeof playSound === 'function') playSound('levelup');
   }
 
   // === DRAW ===
@@ -6568,20 +6720,104 @@ function doLogin() {
     ctx.fillText('← 返回', W / 2, H - 28);
   }
 
+  // Wave 2 layout: landscape cards 280x360, horizontal row, rarity-colored border
+  var WAVE2_CARD_RECTS = []; // [{x, y, w, h, idx}] — refreshed each drawLevelUp()
+
   function drawLevelUp() {
-    ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(0, 0, W, H);
+    var useWave2 = !!(WAVE2_CARDS && skillChoices && skillChoices.length > 0
+                      && typeof skillChoices[0] === 'object');
+    ctx.fillStyle = useWave2 ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.75)';
+    ctx.fillRect(0, 0, W, H);
     // skillCardAnim (US-303): update slide-in timer
     if (skillCardAnim.active) {
       skillCardAnim.timer += 0.016;
       if (skillCardAnim.timer >= skillCardAnim.duration) skillCardAnim.active = false;
     }
     var cardProgress = skillCardAnim.active ? Math.min(1, skillCardAnim.timer / skillCardAnim.duration) : 1;
-    // Ease-out bounce
     var cardEase = cardProgress < 1 ? 1 - Math.pow(1 - cardProgress, 3) : 1;
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center';
     ctx.globalAlpha = cardEase;
-    ctx.fillText('⬆ 选择技能', W / 2, H / 4 - 10);
+    ctx.fillText('⬆ LEVEL UP — 选择升级', W / 2, 80);
     ctx.globalAlpha = 1;
+
+    if (useWave2) {
+      // ---- Wave 2: 3 landscape cards, rarity-colored, keyboard 1/2/3 hints ----
+      WAVE2_CARD_RECTS.length = 0;
+      var cardW = 280, cardH = 360, gap = 24;
+      var totalW = cardW * skillChoices.length + gap * (skillChoices.length - 1);
+      var startX = (W - totalW) / 2;
+      var cardY = (H - cardH) / 2 + 20;
+      for (var i = 0; i < skillChoices.length; i++) {
+        var card = skillChoices[i];
+        var rDef = (WAVE2_CARDS.rarities && WAVE2_CARDS.rarities[card.rarity]) || { borderColor: '#888', nameColor: '#fff', tagBgColor: '#444', label: card.rarity };
+        var cardDelay = i * 0.08;
+        var cardT = Math.max(0, (skillCardAnim.timer - cardDelay) / (skillCardAnim.duration - cardDelay));
+        var slideEase = skillCardAnim.active ? Math.min(1, 1 - Math.pow(1 - cardT, 3)) : 1;
+        var cx = startX + i * (cardW + gap);
+        var cy = cardY + (1 - slideEase) * 40;
+        ctx.globalAlpha = slideEase;
+        // Card bg
+        ctx.fillStyle = '#0e0e1a';
+        ctx.fillRect(cx, cy, cardW, cardH);
+        // Rarity border (thick, glow)
+        ctx.save();
+        ctx.shadowColor = rDef.borderColor;
+        ctx.shadowBlur = card.rarity === 'epic' || card.rarity === 'evolution' ? 18 : 8;
+        ctx.strokeStyle = rDef.borderColor;
+        ctx.lineWidth = card.rarity === 'evolution' ? 4 : 3;
+        ctx.strokeRect(cx, cy, cardW, cardH);
+        ctx.restore();
+        // Rarity tag (top strip)
+        ctx.fillStyle = rDef.tagBgColor;
+        ctx.fillRect(cx, cy, cardW, 28);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+        ctx.fillText((rDef.label || card.rarity || '').toUpperCase(), cx + cardW / 2, cy + 19);
+        // Big icon
+        ctx.font = '80px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = rDef.nameColor || '#fff';
+        ctx.fillText(card.icon || '★', cx + cardW / 2, cy + 135);
+        // Name
+        ctx.font = 'bold 22px Arial'; ctx.fillStyle = rDef.nameColor || '#fff';
+        ctx.fillText(card.name || card.id || '?', cx + cardW / 2, cy + 185);
+        // Description
+        ctx.font = '14px Arial'; ctx.fillStyle = '#c8c8d8';
+        var desc = card.desc || '';
+        // Word-wrap (simple)
+        var words = desc.split('');
+        var line = '', lineY = cy + 220, lineH = 18, maxW = cardW - 40;
+        for (var wi = 0; wi < words.length; wi++) {
+          var test = line + words[wi];
+          if (ctx.measureText(test).width > maxW && line.length > 0) {
+            ctx.fillText(line, cx + cardW / 2, lineY);
+            line = words[wi]; lineY += lineH;
+          } else {
+            line = test;
+          }
+        }
+        if (line) ctx.fillText(line, cx + cardW / 2, lineY);
+        // Current stack indicator
+        var curLv = skillLevels[card.id] || 0;
+        var cap = card.stackCap || 1;
+        ctx.font = '11px Arial'; ctx.fillStyle = '#888';
+        ctx.fillText('当前 ' + curLv + ' / ' + cap, cx + cardW / 2, cy + cardH - 50);
+        // Keyboard hint circle
+        ctx.fillStyle = rDef.borderColor;
+        ctx.beginPath();
+        ctx.arc(cx + cardW / 2, cy + cardH - 24, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0e0e1a'; ctx.font = 'bold 16px Arial';
+        ctx.fillText(String(i + 1), cx + cardW / 2, cy + cardH - 18);
+        ctx.globalAlpha = 1;
+        // Store hit-rect for click handler
+        WAVE2_CARD_RECTS.push({ x: cx, y: cy, w: cardW, h: cardH, idx: i });
+      }
+      // Footer hint
+      ctx.fillStyle = '#888'; ctx.font = '13px Arial'; ctx.textAlign = 'center';
+      ctx.fillText('按 1 / 2 / 3 或点击卡牌选择（不可跳过）', W / 2, cardY + cardH + 30);
+      return; // done — skip legacy render
+    }
+
+    // ---- Legacy fallback (cards.json not loaded) ----
     for (var i = 0; i < skillChoices.length; i++) {
       var id = skillChoices[i];
       var sd = SKILL_DATA[id];
@@ -7133,6 +7369,19 @@ function doLogin() {
   // === INPUT ===
   // Keyboard: Q for ultimate, Escape for pause
   document.addEventListener('keydown', function(ev) {
+    // Wave 2: level-up card pick (1/2/3), ESC blocked per PM "no skip"
+    if (state === 'levelUp') {
+      if (ev.key === '1' || ev.key === '2' || ev.key === '3') {
+        pickUpgradeCard(parseInt(ev.key, 10) - 1);
+        ev.preventDefault();
+        return;
+      }
+      if (ev.key === 'Escape') {
+        // Swallow — level-up is mandatory per cards.json.rollRules.allowSkipLevelUp=false
+        ev.preventDefault();
+        return;
+      }
+    }
     if ((ev.key === 'q' || ev.key === 'Q') && state === 'playing') {
       useUltimate();
     }
@@ -7252,6 +7501,17 @@ function doLogin() {
     if (!audioCtx) initAudio(); // Init audio on first click (browser policy)
     var r = canvas.getBoundingClientRect();
     var cx = (ev.clientX - r.left) * W / r.width, cy = (ev.clientY - r.top) * H / r.height;
+    // Wave 2: level-up card click
+    if (state === 'levelUp' && WAVE2_CARD_RECTS.length > 0) {
+      for (var cri = 0; cri < WAVE2_CARD_RECTS.length; cri++) {
+        var rc = WAVE2_CARD_RECTS[cri];
+        if (cx >= rc.x && cx <= rc.x + rc.w && cy >= rc.y && cy <= rc.y + rc.h) {
+          pickUpgradeCard(rc.idx);
+          return;
+        }
+      }
+      return; // clicks outside cards are ignored — no skip
+    }
     if (state === 'menu') {
       // Solo mode button (left)
       if (cx > W / 2 - 90 && cx < W / 2 - 5 && cy > H / 2 + 30 && cy < H / 2 + 80) { gameMode = 'solo'; state = 'charSelect'; }

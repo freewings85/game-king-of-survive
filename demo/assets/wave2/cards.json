@@ -1,0 +1,294 @@
+{
+  "_spec": "Sprint 3 Wave 2 upgrade card pool. 18 existing skills (reuse applySkill) + 4 new status imbue skills.",
+  "_locked_by": "GameDesigner v1 doc 2026-04-11, PM approved",
+  "_principle": "Explicit field consumption. Unknown fields silently ignored. Field semantics locked: only add, never modify or rename.",
+  "_pmDecisions": {
+    "poolSize": 22,
+    "burnDamageMode": "percent",
+    "aiUnlockWaves": { "charger": 3, "shooter": 5, "summoner": 7 },
+    "evolutionForceInsert": true
+  },
+
+  "rarities": {
+    "common": {
+      "label": "普通",
+      "borderColor": "#bbbbbb",
+      "nameColor": "#ffffff",
+      "tagBgColor": "#666666",
+      "weightMultiplier": 1.0
+    },
+    "rare": {
+      "label": "稀有",
+      "borderColor": "#5b8dff",
+      "nameColor": "#88bbff",
+      "tagBgColor": "#1a3a8a",
+      "weightMultiplier": 1.0,
+      "_selfCheck": "Verified distinct from freeze color #66ddff. Rare blue is desaturated indigo, freeze is bright cyan — hue gap ~25 degrees, brightness gap ~30%."
+    },
+    "epic": {
+      "label": "史诗",
+      "borderColor": "#c44dff",
+      "nameColor": "#dd99ff",
+      "tagBgColor": "#5a1a8a",
+      "weightMultiplier": 1.0
+    },
+    "evolution": {
+      "label": "进化",
+      "borderColor": "#ff44dd",
+      "nameColor": "#ff99ee",
+      "tagBgColor": "#8a1a5a",
+      "weightMultiplier": 0.0,
+      "_note": "Never rolled normally. Force-inserted by checkEvolution() when prerequisites met, replacing the lowest-weight card of the 3 rolled."
+    }
+  },
+
+  "cards": [
+    {
+      "id": "attack_up",
+      "name": "力量增幅",
+      "icon": "⚔",
+      "desc": "攻击伤害 ×1.25 / 层",
+      "rarity": "common",
+      "stackCap": 5,
+      "weight": 100
+    },
+    {
+      "id": "attack_speed",
+      "name": "疾速攻击",
+      "icon": "💨",
+      "desc": "攻击冷却 ×0.85 / 层",
+      "rarity": "common",
+      "stackCap": 5,
+      "weight": 100
+    },
+    {
+      "id": "move_speed",
+      "name": "迅捷步伐",
+      "icon": "👟",
+      "desc": "移动速度 ×1.10 / 层",
+      "rarity": "common",
+      "stackCap": 5,
+      "weight": 100
+    },
+    {
+      "id": "max_hp",
+      "name": "强化体魄",
+      "icon": "❤",
+      "desc": "最大生命 +20 / 层",
+      "rarity": "common",
+      "stackCap": 5,
+      "weight": 100
+    },
+    {
+      "id": "hp_regen",
+      "name": "生命回复",
+      "icon": "✚",
+      "desc": "每秒回复 +3 HP / 层",
+      "rarity": "common",
+      "stackCap": 4,
+      "weight": 80
+    },
+    {
+      "id": "xp_magnet",
+      "name": "经验磁场",
+      "icon": "🧲",
+      "desc": "拾取范围 +50 / 层",
+      "rarity": "common",
+      "stackCap": 4,
+      "weight": 70
+    },
+
+    {
+      "id": "crit",
+      "name": "致命一击",
+      "icon": "🎯",
+      "desc": "暴击率 +5% / 层（上限 25%）",
+      "rarity": "rare",
+      "stackCap": 5,
+      "weight": 60
+    },
+    {
+      "id": "pierce",
+      "name": "穿透弹",
+      "icon": "➹",
+      "desc": "攻击穿透敌人",
+      "rarity": "rare",
+      "stackCap": 1,
+      "weight": 40
+    },
+    {
+      "id": "scatter",
+      "name": "散射弹",
+      "icon": "✦",
+      "desc": "投射物数 +1 / 层",
+      "rarity": "rare",
+      "stackCap": 4,
+      "weight": 50
+    },
+    {
+      "id": "shield",
+      "name": "能量护盾",
+      "icon": "🛡",
+      "desc": "周期生成护盾",
+      "rarity": "rare",
+      "stackCap": 1,
+      "weight": 40
+    },
+    {
+      "id": "lifesteal",
+      "name": "吸血",
+      "icon": "🩸",
+      "desc": "伤害的 5% 转化为生命 / 层",
+      "rarity": "rare",
+      "stackCap": 4,
+      "weight": 50
+    },
+    {
+      "id": "thorns_aura",
+      "name": "荆棘护甲",
+      "icon": "🌵",
+      "desc": "反伤光环 +15 / 层",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50
+    },
+    {
+      "id": "explosive",
+      "name": "爆裂弹",
+      "icon": "💥",
+      "desc": "投射物爆炸 +6 伤害 / 层",
+      "rarity": "rare",
+      "stackCap": 4,
+      "weight": 50
+    },
+
+    {
+      "id": "imbue_burn",
+      "name": "烈焰附魔",
+      "icon": "🔥",
+      "desc": "攻击 30% 几率施加燃烧",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50,
+      "stackEffect": [0.10, 0.20, 0.30],
+      "newInWave2": true
+    },
+    {
+      "id": "imbue_freeze",
+      "name": "寒冰附魔",
+      "icon": "❄",
+      "desc": "攻击 25% 几率施加冰冻",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50,
+      "stackEffect": [0.08, 0.16, 0.25],
+      "newInWave2": true
+    },
+    {
+      "id": "imbue_poison",
+      "name": "剧毒附魔",
+      "icon": "☠",
+      "desc": "攻击 100% 施加中毒（持续 +2s/层）",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50,
+      "stackEffect": [2, 4, 6],
+      "newInWave2": true
+    },
+    {
+      "id": "imbue_shock",
+      "name": "雷电附魔",
+      "icon": "⚡",
+      "desc": "攻击 20% 几率施加感电",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50,
+      "stackEffect": [0.08, 0.14, 0.20],
+      "newInWave2": true
+    },
+
+    {
+      "id": "chain_lightning",
+      "name": "连锁闪电",
+      "icon": "⚡",
+      "desc": "攻击触发链电（每层 +1 跳）",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    },
+    {
+      "id": "fire_trail",
+      "name": "火焰轨迹",
+      "icon": "🔥",
+      "desc": "移动留下燃烧地带",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    },
+    {
+      "id": "frost_aura",
+      "name": "寒霜光环",
+      "icon": "❄",
+      "desc": "减速光环 +20% / 层",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    },
+    {
+      "id": "orbit",
+      "name": "环绕利刃",
+      "icon": "🌀",
+      "desc": "周身飞剑 +1 / 层",
+      "rarity": "epic",
+      "stackCap": 4,
+      "weight": 25
+    },
+    {
+      "id": "time_warp",
+      "name": "时间扭曲",
+      "icon": "⏱",
+      "desc": "全场减速 + 攻速加成",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    }
+  ],
+
+  "rollRules": {
+    "cardsPerLevelUp": 3,
+    "allowSkipLevelUp": false,
+    "allowDuplicateInSameRoll": false,
+    "rerollEnabled": false,
+    "evolutionForceInsert": true,
+    "evolutionReplacesLowestWeight": true,
+    "_note": "Per PM 2026-04-11: poolSize=22, no skip, no reroll v1 (Wave 3 polish). Evolution cards forcibly inserted by replacing the lowest-weight rolled card."
+  },
+
+  "uiSpec": {
+    "cardSize": { "w": 280, "h": 360 },
+    "cardGap": 24,
+    "overlayColor": "rgba(0,0,0,0.7)",
+    "iconSize": 64,
+    "nameFontSize": 18,
+    "descFontSize": 12,
+    "enterAnimMs": 300,
+    "exitAnimMs": 400,
+    "exitSelectedScale": 1.1,
+    "keyBindings": ["1", "2", "3"],
+    "blockEscClose": true,
+    "blockOverlayClickClose": true
+  },
+
+  "_knownGaps": [
+    {
+      "phase": "wave2",
+      "gap": "online-mode-upgrade-choice-sync",
+      "issue": "TBD",
+      "owner": "Developer",
+      "severity": "P1",
+      "flaggedBy": "GameDesigner",
+      "flaggedDate": "2026-04-11",
+      "_note": "Same epic as Phase 2 online attack animation gap. Online mode level-up choice sync requires server protocol extension. Offline demo mode unaffected."
+    }
+  ]
+}

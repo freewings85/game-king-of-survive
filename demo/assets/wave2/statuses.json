@@ -1,0 +1,125 @@
+{
+  "_spec": "Sprint 3 Wave 2 status effect system. 4 base statuses + 2 combo reactions.",
+  "_locked_by": "GameDesigner v1 doc 2026-04-11, PM approved",
+  "_principle": "Explicit field consumption. Status keys (burn/freeze/poison/shock) are locked - never rename, only add new statuses.",
+  "_pmDecisions": {
+    "burnDamageMode": "percent",
+    "burnPercent": 0.05,
+    "burnMinDamage": 2,
+    "poisonMaxStacks": 5,
+    "detonateConsumes": true,
+    "shatterMultiplier": 2.0
+  },
+
+  "statuses": {
+    "burn": {
+      "label": "燃烧",
+      "color": "#ff6600",
+      "tickIntervalSec": 0.5,
+      "durationSec": 3.0,
+      "stackable": false,
+      "stackBehavior": "refresh",
+      "damageFormula": "max(2, 0.05 * enemy.maxHp)",
+      "damageMode": "percent",
+      "damagePercent": 0.05,
+      "damageMin": 2,
+      "floatTextKind": "burn",
+      "_note": "Percent-based per PM. Strong vs high-HP enemies. Re-applying refreshes duration but does not stack damage."
+    },
+    "freeze": {
+      "label": "冰冻",
+      "color": "#66ddff",
+      "tickIntervalSec": 0,
+      "durationSec": 1.5,
+      "stackable": false,
+      "stackBehavior": "refresh",
+      "moveSpeedMultiplier": 0.5,
+      "damagePerTick": 0,
+      "floatTextKind": "freeze",
+      "_note": "Pure CC. No damage. Re-applying refreshes duration. Visual: blue tint on enemy sprite."
+    },
+    "poison": {
+      "label": "中毒",
+      "color": "#88ee44",
+      "tickIntervalSec": 1.0,
+      "durationSec": 5.0,
+      "stackable": true,
+      "stackBehavior": "additive",
+      "maxStacks": 5,
+      "damageFormula": "5 * stack",
+      "damageMode": "fixed",
+      "damagePerStack": 5,
+      "floatTextKind": "poison",
+      "_note": "Linear stacking up to 5. Each stack adds 5 fixed damage per tick. Refresh on each application."
+    },
+    "shock": {
+      "label": "感电",
+      "color": "#ddddff",
+      "tickIntervalSec": 0,
+      "durationSec": 0,
+      "stackable": false,
+      "stackBehavior": "instant",
+      "chainTargets": 2,
+      "chainRadiusPx": 200,
+      "chainDamageRatio": 0.5,
+      "floatTextKind": "freeze",
+      "particleType": "magic_lightning",
+      "_note": "Instant trigger. Chains to chainTargets nearest enemies within chainRadiusPx, dealing chainDamageRatio * playerATK each. Not a persistent state. Per PM 2026-04-11: chainRadiusPx is the explicit field, not embedded in _note."
+    }
+  },
+
+  "reactions": {
+    "detonate": {
+      "label": "引爆",
+      "trigger": ["burn", "poison"],
+      "effect": "aoe_damage",
+      "damageFormula": "max(20, 0.15 * enemy.maxHp)",
+      "damageMode": "percent",
+      "damagePercent": 0.15,
+      "damageMin": 20,
+      "radius": 60,
+      "consumesStatuses": true,
+      "splashEffect": {
+        "type": "apply_status",
+        "status": "poison",
+        "stacks": 1
+      },
+      "particleType": "magic_fire",
+      "particleCount": 20,
+      "screenShake": "medium",
+      "floatText": "引爆",
+      "floatTextKind": "burn",
+      "_note": "Per PM: consumes both burn and poison to prevent infinite loops. AOE 60px applies 1 stack of poison to nearby enemies (allows chain detonation but cools down naturally)."
+    },
+    "shatter": {
+      "label": "碎冰",
+      "trigger": ["freeze", "shock"],
+      "effect": "damage_multiplier",
+      "multiplier": 2.0,
+      "consumesStatuses": ["freeze"],
+      "_note": "Consumes freeze only (shock is instant, nothing to consume). Doubles current damage instance. Triggers crit_ring visual + SHATTER text.",
+      "particleType": "crit_ring",
+      "floatText": "SHATTER",
+      "floatTextKind": "crit"
+    }
+  },
+
+  "implementation": {
+    "enemyStatusStruct": {
+      "_doc": "Flat object on each enemy: enemy._statuses = { burn: { until, lastTick }, freeze: { until }, poison: { until, lastTick, stacks }, shock: null }",
+      "_perfNote": "Per GD risk 3: avoid array iteration. Direct key lookup for all status checks."
+    },
+    "applyStatusHook": "damage() function entry checks _damageImmuneUntil first (Wave 1), then applies new status from imbue weapon, then checks reaction conditions",
+    "tickHook": "main game loop: for each enemy, check expired statuses and tick active dot statuses",
+    "reactionCheckHook": "after applying new status, immediately check if reaction conditions are met (burn+poison or freeze+shock)"
+  },
+
+  "_knownGaps": [
+    {
+      "phase": "wave2",
+      "gap": "online-mode-status-effect-sync",
+      "severity": "P1",
+      "_note": "Same online sync epic. Status effects are server-authoritative in multiplayer; client display only."
+    }
+  ]
+}
