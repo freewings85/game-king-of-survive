@@ -1733,6 +1733,16 @@ function doLogin() {
       var e = offlineEnemies[i];
       if (!e.alive) continue;
       e._moveTimer += dt;
+      // Wave 1: consume knockback velocity first (overrides movement this frame)
+      if (e._knockbackVx || e._knockbackVy) {
+        e.x += (e._knockbackVx || 0) * dt;
+        e.y += (e._knockbackVy || 0) * dt;
+        e._knockbackVx = (e._knockbackVx || 0) * 0.85;
+        e._knockbackVy = (e._knockbackVy || 0) * 0.85;
+        if (Math.abs(e._knockbackVx) < 1 && Math.abs(e._knockbackVy) < 1) {
+          e._knockbackVx = 0; e._knockbackVy = 0;
+        }
+      }
       var dx = player.x - e.x, dy = player.y - e.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (e.type === 'treasure') {
@@ -1830,6 +1840,10 @@ function doLogin() {
         if (ed < closestDist) { closest = e; closestDist = ed; }
       }
       if (closest) {
+        // Wave 1: damage immunity window (Plan A+C for normal enemies)
+        if (closest._damageImmuneUntil && gameTime < closest._damageImmuneUntil) {
+          // Skip this attack tick — visual: briefly don't fire
+        } else {
         var angle = Math.atan2(closest.y - player.y, closest.x - player.x);
         // Trigger sprite attack animation (PM decision 2026-04-11, Plan C:
         // movement can interrupt attack; re-triggering resets to col 0).
@@ -1842,20 +1856,37 @@ function doLogin() {
         var projSpeed = 350;
         var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 4, particleType: 'circle', _isProjectile: true });
-        // Deal damage to closest
-        closest.hp -= player.attackDamage;
+        // Wave 1: damage roll with crit chance
+        var _rawDmg = player.attackDamage;
+        var _isCrit = Math.random() < (player.critChance || 0);
+        var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
+        closest.hp -= _dmgValue;
+        // Wave 1: hit feedback — hitStop + shake + damage number + particles + knockback
+        triggerHitStop(_isCrit ? 'crit' : 'normal');
+        screenShake(_isCrit ? 'medium' : 'light');
+        // Particle type by class: warrior=melee, mage=magic, scout=ranged
+        var _pType = selectedClass === 'warrior' ? 'melee' : (selectedClass === 'mage' ? 'magic' : 'ranged');
+        var _pColor = selectedClass === 'warrior' ? '#dd2020' : (selectedClass === 'mage' ? '#a080ff' : '#ffaa33');
+        emit(closest.x, closest.y, _pType, { color: _pColor });
+        floatText(closest.x, closest.y - 20, _dmgValue + (_isCrit ? '!' : ''), { type: _isCrit ? 'crit' : 'normal' });
+        applyKnockback(closest, _dmgValue, player.x, player.y);
         if (closest.hp <= 0) {
           closest.alive = false;
           kills++;
           player.kills++;
-          emit(closest.x, closest.y, closest.color, 6, 60);
-          floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), '#ffd700', 16);
+          // Kill burst — bigger particles + hit-stop kill level + heavier shake
+          emit(closest.x, closest.y, 'kill', { color: closest.color });
+          triggerHitStop('kill');
+          screenShake('medium');
+          floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
         }
+        } // end immunity-window else
       }
     }
     // HP regen
     player.hp = Math.min(player.maxHp, player.hp + (player.hpRegen || 0.5) * dt);
     // Collision damage from enemies
+    // Wave 1: per-enemy hit cooldown so multi-frame touching doesn't spam 0.05 dmg/frame
     for (var i = 0; i < offlineEnemies.length; i++) {
       var e = offlineEnemies[i];
       if (!e.alive || !e.hostile) continue;
@@ -1863,6 +1894,16 @@ function doLogin() {
       var cd = Math.sqrt(cdx*cdx + cdy*cdy);
       if (cd < player.radius + e.radius + 2) {
         player.hp -= 3 * dt;
+        // Fire a discrete hit feedback at most every 0.4s per enemy
+        e._nextHitFxAt = e._nextHitFxAt || 0;
+        if (gameTime >= e._nextHitFxAt) {
+          e._nextHitFxAt = gameTime + 0.4;
+          var hurtDmg = Math.max(1, Math.round(3 * 0.4)); // ~1-2 per hit cycle
+          triggerHitStop('normal');
+          screenShake('heavy');
+          emit(player.x, player.y, 'melee', { color: '#ff3030', count: 6 });
+          floatText(player.x, player.y - 30, '-' + hurtDmg, { type: 'playerHurt' });
+        }
         if (player.hp <= 0) { player.hp = 0; player.alive = false; state = 'gameOver'; deathCause = '被怪物击败'; }
       }
     }
@@ -3096,6 +3137,51 @@ function doLogin() {
           p._attackUntil = p._attackStart + _atkDur;
           p._attackFacing = p.facingAngle || 0;
           return true;
+        },
+        // Wave 1 (Sprint 3) — combat feedback probes (PM hard requirement 2026-04-11)
+        triggerHitStop: function(level) {
+          if (typeof triggerHitStop === 'function') { triggerHitStop(level); return true; }
+          return false;
+        },
+        triggerShake: function(level) {
+          if (typeof screenShake === 'function') { screenShake(level); return true; }
+          return false;
+        },
+        getShakeState: function() {
+          return {
+            offsetX: (typeof shakeX !== 'undefined') ? shakeX : 0,
+            offsetY: (typeof shakeY !== 'undefined') ? shakeY : 0,
+            intensity: (typeof shakeX !== 'undefined') ? Math.max(Math.abs(shakeX), Math.abs(shakeY)) : 0,
+            durationRemaining: (typeof shakeDur !== 'undefined') ? shakeDur : 0
+          };
+        },
+        getHitStopTimer: function() {
+          if (typeof hitStop === 'undefined' || !hitStop) return 0;
+          return hitStop.active ? Math.round(hitStop.timer * 1000) : 0; // ms
+        },
+        getLastFloatText: function() {
+          if (typeof _lastFloatText === 'undefined' || !_lastFloatText) return null;
+          // Copy to prevent mutation
+          return {
+            text: _lastFloatText.text,
+            color: _lastFloatText.color,
+            size: _lastFloatText.size,
+            x: _lastFloatText.x,
+            y: _lastFloatText.y,
+            life: _lastFloatText.life,
+            crit: _lastFloatText.crit
+          };
+        },
+        getEnemyKnockback: function(idx) {
+          if (typeof offlineEnemies === 'undefined' || !offlineEnemies[idx]) return null;
+          var e = offlineEnemies[idx];
+          return {
+            vx: e._knockbackVx || 0,
+            vy: e._knockbackVy || 0,
+            immuneUntil: e._damageImmuneUntil || 0,
+            type: e.type,
+            alive: !!e.alive
+          };
         }
       };
     } catch (e) { /* no-op */ }
@@ -3712,25 +3798,91 @@ function doLogin() {
     ctx.closePath(); ctx.fill();
   }
   var MAX_PARTICLES = 300, MAX_FLOATS = 60, MAX_FIRE_TRAILS = 80, MAX_KILL_RINGS = 20;
-  function emit(x, y, color, count, speed) {
-    var c = count || 8;
-    // Skip if already at cap
+  // Wave 1 — particle type presets (GameDesigner spec)
+  //   melee  : red blood splatter, 8-12 particles
+  //   ranged : orange/yellow sparks, 4-6 particles
+  //   magic  : color-keyed runes, 6-10 particles
+  //   kill   : large burst 15-20 particles
+  //   default: legacy generic (8 circle+star)
+  var PARTICLE_PRESETS = {
+    melee:  { count: [8, 12], color: '#dd2020', speed: 110, size: [1.5, 3.5], life: [0.25, 0.4], shape: 'circle' },
+    ranged: { count: [4, 6],  color: '#ffaa33', speed: 140, size: [1.2, 2.5], life: [0.2, 0.35], shape: 'star'   },
+    magic:  { count: [6, 10], color: null,      speed: 95,  size: [1.5, 3.0], life: [0.3, 0.5],  shape: 'star'   },
+    kill:   { count: [15, 20],color: null,      speed: 180, size: [2.0, 4.0], life: [0.35, 0.6], shape: 'mixed'  }
+  };
+  function emit(x, y, colorOrType, countOrOpts, speed) {
+    // Back-compat: emit(x,y,color,count,speed) still works.
+    // New:         emit(x,y,typeString)  or emit(x,y,typeString,{color,count,speed})
     if (particles.length > MAX_PARTICLES) return;
-    for (var i = 0; i < c; i++) {
-      var a = Math.PI * 2 / c * i + Math.random() * 0.3;
-      var s = (speed || 80) * (0.5 + Math.random());
+    var preset = (typeof colorOrType === 'string' && PARTICLE_PRESETS[colorOrType]) ? PARTICLE_PRESETS[colorOrType] : null;
+    var overrides = (countOrOpts && typeof countOrOpts === 'object') ? countOrOpts : null;
+    if (preset) {
+      var minC = preset.count[0], maxC = preset.count[1];
+      var c = (overrides && overrides.count) || (minC + Math.floor(Math.random() * (maxC - minC + 1)));
+      var pColor = (overrides && overrides.color) || preset.color || colorOrType || '#fff';
+      var pSpeed = (overrides && overrides.speed) || preset.speed;
+      for (var i = 0; i < c; i++) {
+        var a = Math.PI * 2 / c * i + (Math.random() - 0.5) * 0.8;
+        var s = pSpeed * (0.5 + Math.random());
+        var sz = preset.size[0] + Math.random() * (preset.size[1] - preset.size[0]);
+        var lf = preset.life[0] + Math.random() * (preset.life[1] - preset.life[0]);
+        var shape = preset.shape === 'mixed' ? (Math.random() < 0.5 ? 'star' : 'circle') : preset.shape;
+        particles.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: lf, maxLife: lf, color: pColor, size: sz, particleType: shape });
+      }
+      return;
+    }
+    // Legacy path
+    var c2 = countOrOpts || 8;
+    var color2 = colorOrType || '#fff';
+    for (var j = 0; j < c2; j++) {
+      var a2 = Math.PI * 2 / c2 * j + Math.random() * 0.3;
+      var s2 = (speed || 80) * (0.5 + Math.random());
       var pType = Math.random() < 0.3 ? 'star' : 'circle';
-      particles.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.3 + Math.random() * 0.2, maxLife: 0.5, color: color, size: 1.5 + Math.random() * 2, particleType: pType });
+      particles.push({ x: x, y: y, vx: Math.cos(a2) * s2, vy: Math.sin(a2) * s2, life: 0.3 + Math.random() * 0.2, maxLife: 0.5, color: color2, size: 1.5 + Math.random() * 2, particleType: pType });
     }
   }
 
   var _xpBatch = { total: 0, timer: 0, x: 0, y: 0 };
   var _goldBatch = { total: 0, timer: 0, x: 0, y: 0 };
 
-  function floatText(x, y, text, color, size) {
+  // Damage number type presets (Wave 1 per GameDesigner spec)
+  var FLOAT_TYPE_PRESETS = {
+    normal:   { color: '#ffffff', size: 14 },
+    crit:     { color: '#ffd700', size: 20, crit: true },
+    heal:     { color: '#66ff66', size: 14 },
+    fire:     { color: '#ff6633', size: 14 },
+    ice:      { color: '#88ddff', size: 14 },
+    poison:   { color: '#aaff44', size: 14 },
+    lightning:{ color: '#ffff66', size: 14 },
+    playerHurt:{ color: '#ff4444', size: 16 }
+  };
+  var _lastFloatText = null; // exposed via __spriteDebug.getLastFloatText()
+  // Backward-compat signature: floatText(x, y, text, colorString, sizeNum)
+  // New signature:             floatText(x, y, text, optsObject)
+  //   opts: { color, size, crit, type }
+  function floatText(x, y, text, colorOrOpts, size) {
     if (floats.length >= MAX_FLOATS) floats.shift();
+    var opts;
+    if (colorOrOpts && typeof colorOrOpts === 'object') {
+      opts = colorOrOpts;
+    } else {
+      opts = { color: colorOrOpts, size: size };
+    }
+    var preset = opts.type ? FLOAT_TYPE_PRESETS[opts.type] : null;
+    var color = opts.color || (preset && preset.color) || '#fff';
+    var sz    = opts.size  || (preset && preset.size)  || 14;
+    var isCrit = opts.crit || (preset && preset.crit) || false;
     var jitterX = (Math.random() - 0.5) * 30;
-    floats.push({ x: x + jitterX, y: y, text: text, color: color || '#fff', size: size || 14, life: 0.7, maxLife: 0.7, vy: -60 - Math.random() * 20 });
+    var f = {
+      x: x + jitterX, y: y, text: text, color: color, size: sz,
+      life: 0.8, maxLife: 0.8,
+      vy: -80 - Math.random() * 20,
+      vy0: -80 - Math.random() * 20, // store initial for parabola
+      age: 0,
+      crit: isCrit
+    };
+    floats.push(f);
+    _lastFloatText = { text: text, color: color, size: sz, x: f.x, y: f.y, life: f.life, crit: isCrit };
   }
 
   function floatXP(x, y, amount) {
@@ -3762,7 +3914,67 @@ function doLogin() {
     }
   }
 
-  function screenShake(intensity, ms) { shakeDur = ms / 1000; shakeX = intensity; shakeY = intensity; }
+  // Wave 1 — screen shake with level presets (Sprint 3 per PM 2026-04-11).
+  // Accepts either a legacy raw intensity number or a level string.
+  // Levels: light (普通命中) / medium (暴击或精英攻击) / heavy (玩家被击) / boss (boss 技能)
+  var SHAKE_PRESETS = {
+    light:  { intensity: 2,  ms: 120 },
+    medium: { intensity: 4,  ms: 180 },
+    heavy:  { intensity: 6,  ms: 260 },
+    boss:   { intensity: 10, ms: 400 }
+  };
+  function screenShake(levelOrIntensity, msOverride) {
+    if (typeof levelOrIntensity === 'string') {
+      var preset = SHAKE_PRESETS[levelOrIntensity];
+      if (!preset) return;
+      // Accumulate, don't clobber — bigger shake wins, timer refreshes
+      if (preset.intensity > shakeX) { shakeX = preset.intensity; shakeY = preset.intensity; }
+      shakeDur = Math.max(shakeDur, preset.ms / 1000);
+      return;
+    }
+    shakeDur = (msOverride || 200) / 1000;
+    shakeX = levelOrIntensity; shakeY = levelOrIntensity;
+  }
+  // Wave 1 — hit-stop (freeze-frame) with level presets
+  // Levels: normal (~40ms) / crit (~80ms) / kill (~120ms)
+  var HITSTOP_PRESETS = {
+    normal: 0.04,
+    crit:   0.08,
+    kill:   0.12
+  };
+  function triggerHitStop(level) {
+    var dur = HITSTOP_PRESETS[level];
+    if (dur == null) return;
+    // Accumulate — longer hit-stop wins
+    if (!hitStop.active || hitStop.timer < dur) {
+      hitStop.active = true;
+      hitStop.timer = dur;
+    }
+  }
+  // Wave 1 — knockback system (PM decision 2026-04-11, scheme A+C mixed)
+  //   normal enemy:  can be knocked back + 0.15s damage immunity window
+  //   elite (miniBoss): 0.3x knockback, no immunity window
+  //   boss: fully immune, early return
+  // Formula: vel = baseKnockback * sqrt(damage / maxHp)
+  var KNOCKBACK_BASE = 50; // px/sec magnitude
+  function applyKnockback(enemy, damage, fromX, fromY) {
+    if (!enemy || !enemy.alive) return;
+    if (enemy.type === 'boss') return; // boss immune
+    var dx = enemy.x - fromX, dy = enemy.y - fromY;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 0.001) { dx = 1; dy = 0; d = 1; }
+    var nx = dx / d, ny = dy / d;
+    var maxHp = enemy.maxHp || 30;
+    var mag = KNOCKBACK_BASE * Math.sqrt(Math.max(0, damage) / maxHp);
+    if (enemy.type === 'miniBoss') mag *= 0.3;
+    // Velocity in px/sec; consumed by enemy update loop
+    enemy._knockbackVx = (enemy._knockbackVx || 0) + nx * mag * 6; // *6 so sqrt yields meaningful displacement
+    enemy._knockbackVy = (enemy._knockbackVy || 0) + ny * mag * 6;
+    // Damage immunity window — small enemies only (not elites/bosses)
+    if (enemy.type !== 'miniBoss' && enemy.type !== 'boss') {
+      enemy._damageImmuneUntil = (gameTime || 0) + 0.15;
+    }
+  }
 
   // Ultimate ability (US-199)
   function useUltimate() {
@@ -4183,8 +4395,21 @@ function doLogin() {
     var dt = Math.min((ts - lastTime) / 1000, 0.05);
     _dt = dt;
     lastTime = ts;
-    // screenFreezeFrame (US-345): skip frame during hitStop
-    if (hitStop.active) { hitStop.timer -= dt; if (hitStop.timer <= 0) hitStop.active = false; dt = 0; }
+    // Two-axis time model (Wave 1, PM 2026-04-11):
+    //   logicDt = game simulation dt (player, enemies, AI, collision) — 0 during hit-stop
+    //   dt      = render/visual dt (particles, floats, shake decay) — keeps flowing
+    // This makes hit-stop feel like "time freezes for combatants while blood still flies".
+    var logicDt = dt;
+    if (hitStop.active) {
+      hitStop.timer -= dt;
+      if (hitStop.timer <= 0) hitStop.active = false;
+      logicDt = 0;
+    }
+    // pauseLogic debug hook — freezes EVERYTHING including visuals (test determinism)
+    if (window.__spriteDebug && window.__spriteDebug._paused) {
+      logicDt = 0;
+      dt = 0;
+    }
     ctx.save();
     // cameraZoomBoss (US-347): apply camera zoom
     if (cameraZoomBoss.active) {
@@ -4193,7 +4418,13 @@ function doLogin() {
       else { var zp = cameraZoomBoss.timer / cameraZoomBoss.duration; cameraZoomBoss.zoomLevel = 1 - 0.15 * Math.sin(zp * Math.PI); }
       ctx.translate(W/2, H/2); ctx.scale(cameraZoomBoss.zoomLevel, cameraZoomBoss.zoomLevel); ctx.translate(-W/2, -H/2);
     }
-    if (shakeDur > 0) { shakeDur -= dt; ctx.translate((Math.random() - 0.5) * shakeX * 2, (Math.random() - 0.5) * shakeY * 2); }
+    if (shakeDur > 0) {
+      shakeDur -= dt;
+      ctx.translate((Math.random() - 0.5) * shakeX * 2, (Math.random() - 0.5) * shakeY * 2);
+      // Frame decay — shake intensity fades over its duration (* 0.85 per frame approx)
+      shakeX *= 0.85; shakeY *= 0.85;
+      if (shakeDur <= 0) { shakeX = 0; shakeY = 0; }
+    }
     // Gradient background for visual depth
     var bgGrad = ctx.createLinearGradient(0, 0, 0, H);
     var bCol1 = (currentBiome && currentBiome.bgColor) || '#0a0a1a';
@@ -4226,12 +4457,12 @@ function doLogin() {
       ctx.fillText('Connecting to ' + serverUrl, W / 2, H / 2 + 30);
     }
     else if (state === 'playing') {
-      if (offlineMode) { updateOfflineDemo(dt); offlinePlayerUpdate(dt); }
-      else { networkUpdate(dt); }
-      gameTime += dt;
+      if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); }
+      else { networkUpdate(logicDt); }
+      gameTime += logicDt;
       checkAchievements(); drawGame();
     }
-    else if (state === 'spectating') { networkUpdate(dt); spectatorUpdate(); drawGame(); drawSpectatorHUD(); }
+    else if (state === 'spectating') { networkUpdate(logicDt); spectatorUpdate(); drawGame(); drawSpectatorHUD(); }
     else if (state === 'gameOver') { drawGame(); drawDeathRecap(); }
     else if (state === 'paused') { drawGame(); drawPause(); }
 
@@ -4249,19 +4480,38 @@ function doLogin() {
     // Flush batched XP/gold floats before rendering
     flushBatchedFloats(dt);
     // Float texts — swap-and-pop + styledDamageNumbers (US-274)
+    // Wave 1: parabolic arc + crit pop animation
     var fLen = floats.length;
     for (var i = fLen - 1; i >= 0; i--) {
-      var f = floats[i]; f.y += f.vy * dt; f.life -= dt;
+      var f = floats[i];
+      f.age = (f.age || 0) + dt;
+      // Parabola: vy accelerates downward (gravity ~150)
+      f.vy += 150 * dt;
+      f.y += f.vy * dt;
+      f.life -= dt;
       if (f.life <= 0) { floats[i] = floats[--fLen]; continue; }
       var lifeRatio = f.life / f.maxLife;
       ctx.globalAlpha = lifeRatio;
       var dmgFontSize = f.size;
-      if (lifeRatio > 0.7) dmgFontSize = f.size * (1 + (lifeRatio - 0.7) * 1.5);
+      // Crit pop: first 0.1s grow to 1.3x then shrink back over next 0.1s
+      if (f.crit) {
+        if (f.age < 0.1) dmgFontSize = f.size * (1 + (f.age / 0.1) * 0.3);
+        else if (f.age < 0.2) dmgFontSize = f.size * (1.3 - ((f.age - 0.1) / 0.1) * 0.3);
+      } else if (lifeRatio > 0.7) {
+        dmgFontSize = f.size * (1 + (lifeRatio - 0.7) * 1.5);
+      }
       ctx.font = 'bold ' + Math.round(dmgFontSize) + 'px Arial'; ctx.textAlign = 'center';
-      ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 3;
       ctx.strokeText(f.text, f.x, f.y);
       ctx.fillStyle = f.color;
       ctx.fillText(f.text, f.x, f.y);
+      // Crit glow halo
+      if (f.crit && f.age < 0.25) {
+        ctx.save();
+        ctx.shadowColor = f.color; ctx.shadowBlur = 12;
+        ctx.fillText(f.text, f.x, f.y);
+        ctx.restore();
+      }
       ctx.lineWidth = 1;
     }
     floats.length = fLen;
