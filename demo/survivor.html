@@ -8005,6 +8005,8 @@ function doLogin() {
 
   // menuOverhaul: enhanced menu with character preview + best score + particles (US-268)
   var menuParticles = [];
+  // Shared button hit-rects — populated by drawMenu, consumed by click handler
+  var _menuBtns = { solo: null, team: null, daily: null, upgrade: null, multi: null, timed: null };
   function drawMenuParticles() {
     if (menuParticles.length < 30) {
       menuParticles.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.3, vy: -0.2 - Math.random() * 0.3, alpha: Math.random() * 0.5 + 0.2, size: 1 + Math.random() * 2 });
@@ -8190,6 +8192,15 @@ function doLogin() {
     var btnY2 = btnY1 + smH + gap;
     _drawMenuButton(W / 2 - btnW - gap / 2, btnY2, btnW, smH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
     _drawMenuButton(W / 2 + gap / 2, btnY2, btnW, smH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
+
+    // Store hit-rects for click handler (must match the draw coords above)
+    var _bL = W / 2 - btnW - gap / 2, _bR = W / 2 + gap / 2;
+    _menuBtns.solo    = { x: _bL, y: btnY0, w: btnW, h: btnH };
+    _menuBtns.team    = { x: _bR, y: btnY0, w: btnW, h: btnH };
+    _menuBtns.daily   = { x: _bL, y: btnY1, w: btnW, h: smH };
+    _menuBtns.upgrade = { x: _bR, y: btnY1, w: btnW, h: smH };
+    _menuBtns.multi   = { x: _bL, y: btnY2, w: btnW, h: smH };
+    _menuBtns.timed   = { x: _bR, y: btnY2, w: btnW, h: smH };
 
     // Daily best
     if (dailyBest > 0) {
@@ -9330,18 +9341,14 @@ function doLogin() {
       return; // clicks outside cards are ignored — no skip
     }
     if (state === 'menu') {
-      // Solo mode button (left)
-      if (cx > W / 2 - 90 && cx < W / 2 - 5 && cy > H / 2 + 30 && cy < H / 2 + 80) { gameMode = 'solo'; state = 'charSelect'; }
-      // Team mode button (right)
-      if (cx > W / 2 + 5 && cx < W / 2 + 90 && cy > H / 2 + 30 && cy < H / 2 + 80) { gameMode = 'team'; state = 'charSelect'; }
-      // Daily challenge button
-      if (cx > W / 2 - 90 && cx < W / 2 - 5 && cy > H / 2 + 100 && cy < H / 2 + 140) { isDailyMode = true; state = 'charSelect'; }
-      // Upgrade button
-      if (cx > W / 2 + 5 && cx < W / 2 + 90 && cy > H / 2 + 100 && cy < H / 2 + 140) state = 'upgrade';
-      // Local multiplayer button
-      if (cx > W / 2 - 90 && cx < W / 2 - 5 && cy > H / 2 + 145 && cy < H / 2 + 181) { localMultiplayer = true; state = 'charSelect'; }
-      // Timed mode button
-      if (cx > W / 2 + 5 && cx < W / 2 + 90 && cy > H / 2 + 145 && cy < H / 2 + 181) { countdownTimerMode = true; state = 'charSelect'; }
+      // Use scaled button rects from drawMenu (stored in _menuBtns)
+      function _hitBtn(b) { return b && cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h; }
+      if (_hitBtn(_menuBtns.solo))    { gameMode = 'solo'; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.team))    { gameMode = 'team'; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.daily))   { isDailyMode = true; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.upgrade)) { state = 'upgrade'; }
+      if (_hitBtn(_menuBtns.multi))   { localMultiplayer = true; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.timed))   { countdownTimerMode = true; state = 'charSelect'; }
     } else if (state === 'mapSelect') {
       // Map selection click handling
       var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
