@@ -207,9 +207,11 @@ function doLogin() {
     canvas.height = H;
     canvas.style.width = sw + 'px';
     canvas.style.height = sh + 'px';
-    // Scale touch UI elements proportionally
-    var uiBase = Math.min(W, H);
-    joystick.radius = Math.max(55, Math.round(uiBase * 0.07));
+    // Scale touch UI elements proportionally (guard: joystick declared later, undefined on first call)
+    if (typeof joystick !== 'undefined' && joystick) {
+      var uiBase = Math.min(W, H);
+      joystick.radius = Math.max(55, Math.round(uiBase * 0.07));
+    }
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
