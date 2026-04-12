@@ -2172,6 +2172,145 @@ function doLogin() {
     ctx.restore();
   }
 
+  // === BR tactical structures — buildings, walls, crates (PUBG-inspired) ===
+  var _brStructures = []; // { type, x, y, w, h, angle, color }
+  function _generateBRStructures() {
+    _brStructures = [];
+    var _rng = function(seed) { seed = ((seed | 0) * 1103515245 + 12345) & 0x7fffffff; return seed; };
+    var _seed = 7654;
+    function _rnd() { _seed = _rng(_seed); return (_seed & 0xffff) / 0xffff; }
+    // Central compound — large building cluster at map center
+    var cx = WORLD_W / 2, cy = WORLD_H / 2;
+    _brStructures.push({ type: 'building', x: cx - 60, y: cy - 50, w: 120, h: 100, color: '#555565' });
+    _brStructures.push({ type: 'wall', x: cx - 80, y: cy - 60, w: 8, h: 120, color: '#666675' });
+    _brStructures.push({ type: 'wall', x: cx + 72, y: cy - 40, w: 8, h: 80, color: '#666675' });
+    _brStructures.push({ type: 'crate', x: cx + 40, y: cy + 60, w: 20, h: 20, color: '#886633' });
+    _brStructures.push({ type: 'crate', x: cx - 45, y: cy + 55, w: 18, h: 18, color: '#886633' });
+    // 4 corner outposts
+    var _corners = [
+      [WORLD_W * 0.2, WORLD_H * 0.2], [WORLD_W * 0.8, WORLD_H * 0.2],
+      [WORLD_W * 0.2, WORLD_H * 0.8], [WORLD_W * 0.8, WORLD_H * 0.8]
+    ];
+    for (var ci = 0; ci < _corners.length; ci++) {
+      var _ox = _corners[ci][0], _oy = _corners[ci][1];
+      _brStructures.push({ type: 'building', x: _ox - 35, y: _oy - 30, w: 70, h: 60, color: '#505058' });
+      _brStructures.push({ type: 'wall', x: _ox + 45, y: _oy - 15, w: 6, h: 50, color: '#606068' });
+      _brStructures.push({ type: 'crate', x: _ox - 20 + _rnd() * 20, y: _oy + 35, w: 16, h: 16, color: '#886633' });
+    }
+    // Scattered shelters between corners
+    var _shelterCount = 12;
+    for (var si = 0; si < _shelterCount; si++) {
+      var sx = 120 + _rnd() * (WORLD_W - 240);
+      var sy = 120 + _rnd() * (WORLD_H - 240);
+      // Avoid map center compound (skip if too close)
+      if (Math.abs(sx - cx) < 150 && Math.abs(sy - cy) < 130) continue;
+      var sType = _rnd();
+      if (sType < 0.35) {
+        // L-shaped wall
+        var lw = 40 + _rnd() * 40, lh = 6;
+        _brStructures.push({ type: 'wall', x: sx, y: sy, w: lw, h: lh, color: '#606870' });
+        _brStructures.push({ type: 'wall', x: sx, y: sy, w: lh, h: lw * 0.7, color: '#606870' });
+      } else if (sType < 0.6) {
+        // Small shack
+        var bw = 30 + _rnd() * 30, bh = 25 + _rnd() * 25;
+        _brStructures.push({ type: 'building', x: sx, y: sy, w: bw, h: bh, color: '#4a4a58' });
+      } else if (sType < 0.8) {
+        // Crate cluster (2-3 crates)
+        for (var ci2 = 0; ci2 < 2 + Math.floor(_rnd() * 2); ci2++) {
+          var csz = 14 + _rnd() * 10;
+          _brStructures.push({ type: 'crate', x: sx + ci2 * (csz + 4), y: sy + _rnd() * 8, w: csz, h: csz, color: '#886633' });
+        }
+      } else {
+        // Sandbag barricade (short rounded wall)
+        _brStructures.push({ type: 'sandbag', x: sx, y: sy, w: 45 + _rnd() * 25, h: 10, color: '#8a7a5a' });
+      }
+    }
+    // Add all structures to terrainObstacles for collision
+    for (var sti = 0; sti < _brStructures.length; sti++) {
+      var _st = _brStructures[sti];
+      var _stcx = _st.x + _st.w / 2;
+      var _stcy = _st.y + _st.h / 2;
+      var _str = Math.max(_st.w, _st.h) / 2;
+      terrainObstacles.push({
+        x: _stcx, y: _stcy, radius: _str,
+        type: 'rock', // collision type = blocking
+        _rect: { x: _st.x, y: _st.y, width: _st.w, height: _st.h },
+        _brStruct: _st // reference for rendering
+      });
+    }
+  }
+  // Draw BR structures (called from drawTerrain area)
+  function drawBRStructures(ctx2, camX2, camY2) {
+    for (var i = 0; i < _brStructures.length; i++) {
+      var s = _brStructures[i];
+      var sx = s.x - camX2, sy = s.y - camY2;
+      if (sx + s.w < -10 || sx > W + 10 || sy + s.h < -10 || sy > H + 10) continue;
+      if (s.type === 'building') {
+        // Building — base + roof + shadow
+        ctx2.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx2.fillRect(sx + 4, sy + 4, s.w, s.h);
+        // Walls
+        ctx2.fillStyle = s.color;
+        ctx2.fillRect(sx, sy, s.w, s.h);
+        // Roof lines
+        ctx2.strokeStyle = 'rgba(255,255,255,0.15)'; ctx2.lineWidth = 1;
+        ctx2.beginPath();
+        ctx2.moveTo(sx, sy + s.h / 2); ctx2.lineTo(sx + s.w / 2, sy - 4);
+        ctx2.lineTo(sx + s.w, sy + s.h / 2);
+        ctx2.stroke();
+        // Window
+        ctx2.fillStyle = 'rgba(100,160,220,0.3)';
+        ctx2.fillRect(sx + s.w * 0.3, sy + s.h * 0.25, s.w * 0.2, s.h * 0.25);
+        ctx2.fillRect(sx + s.w * 0.6, sy + s.h * 0.25, s.w * 0.2, s.h * 0.25);
+        // Border
+        ctx2.strokeStyle = 'rgba(0,0,0,0.5)'; ctx2.lineWidth = 1.5;
+        ctx2.strokeRect(sx + 0.5, sy + 0.5, s.w - 1, s.h - 1);
+      } else if (s.type === 'wall') {
+        ctx2.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx2.fillRect(sx + 2, sy + 2, s.w, s.h);
+        ctx2.fillStyle = s.color;
+        ctx2.fillRect(sx, sy, s.w, s.h);
+        // Bricks pattern
+        ctx2.strokeStyle = 'rgba(0,0,0,0.2)'; ctx2.lineWidth = 0.5;
+        var brickH = 6;
+        for (var by2 = 0; by2 < s.h; by2 += brickH) {
+          ctx2.beginPath(); ctx2.moveTo(sx, sy + by2); ctx2.lineTo(sx + s.w, sy + by2); ctx2.stroke();
+          var offset = (Math.floor(by2 / brickH) % 2) * 8;
+          for (var bx2 = offset; bx2 < s.w; bx2 += 16) {
+            ctx2.beginPath(); ctx2.moveTo(sx + bx2, sy + by2); ctx2.lineTo(sx + bx2, sy + Math.min(by2 + brickH, s.h)); ctx2.stroke();
+          }
+        }
+        ctx2.strokeStyle = 'rgba(0,0,0,0.4)'; ctx2.lineWidth = 1;
+        ctx2.strokeRect(sx, sy, s.w, s.h);
+      } else if (s.type === 'crate') {
+        ctx2.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx2.fillRect(sx + 2, sy + 2, s.w, s.h);
+        ctx2.fillStyle = s.color;
+        ctx2.fillRect(sx, sy, s.w, s.h);
+        // Cross planks
+        ctx2.strokeStyle = '#6a5422'; ctx2.lineWidth = 1.5;
+        ctx2.beginPath(); ctx2.moveTo(sx + 2, sy + 2); ctx2.lineTo(sx + s.w - 2, sy + s.h - 2); ctx2.stroke();
+        ctx2.beginPath(); ctx2.moveTo(sx + s.w - 2, sy + 2); ctx2.lineTo(sx + 2, sy + s.h - 2); ctx2.stroke();
+        // Metallic band
+        ctx2.strokeStyle = '#aaa'; ctx2.lineWidth = 1;
+        ctx2.strokeRect(sx + 2, sy + 2, s.w - 4, s.h - 4);
+        ctx2.strokeRect(sx, sy, s.w, s.h);
+      } else if (s.type === 'sandbag') {
+        ctx2.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx2.fillRect(sx + 2, sy + 2, s.w, s.h);
+        // Sandbag lumps
+        var sCount = Math.floor(s.w / 12);
+        for (var _sbi = 0; _sbi < sCount; _sbi++) {
+          var _sbx = sx + _sbi * 12 + 2;
+          ctx2.fillStyle = s.color;
+          ctx2.beginPath(); ctx2.ellipse(_sbx + 6, sy + s.h / 2, 6, s.h / 2, 0, 0, Math.PI * 2); ctx2.fill();
+          ctx2.strokeStyle = 'rgba(0,0,0,0.3)'; ctx2.lineWidth = 0.5;
+          ctx2.stroke();
+        }
+      }
+    }
+  }
+
   function startOfflineDemo() {
     offlineMode = true;
     state = 'playing';
@@ -2223,6 +2362,9 @@ function doLogin() {
         _nextDecision: 0.5 + Math.random() * 2
       });
     }
+    // === Generate PUBG-style buildings, crates, walls across the map ===
+    _generateBRStructures();
+
     // Storm zone — starts shrinking after 60s, center = map center
     stormZone.active = true;
     stormZone.radius = Math.max(WORLD_W, WORLD_H) * 0.75;
@@ -6021,6 +6163,8 @@ function doLogin() {
     drawZoneOverlays(ctx, cameraX, cameraY);
     // Terrain obstacles — rocks, bushes, water, lava, etc.
     drawTerrain(ctx, cameraX, cameraY);
+    // BR structures — buildings, walls, crates (world-space)
+    drawBRStructures(ctx, cameraX, cameraY);
     // Fixed spawn points (MOBA-style) — drawn in world space over terrain
     drawSpawnPointMarkers(cameraX, cameraY);
 
