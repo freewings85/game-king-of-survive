@@ -1892,6 +1892,7 @@ function doLogin() {
       facingAngle: 0
     };
     allPlayers = [player];
+    player.factionId = 0; // player's own faction in solo mode
     localPlayerId = 0;
     player.isLocal = true;
     player.isBot = false;
@@ -2184,30 +2185,52 @@ function doLogin() {
     _waveState.phaseTimer = 0;
     offlineEnemies = [];
 
-    // Spawn some bot players with different classes and skins
-    var botClasses = ['warrior', 'mage', 'scout'];
-    var botSkins = ['warrior_inferno', 'mage_thunder', 'scout_ghost_assassin'];
-    for (var bi = 0; bi < 3; bi++) {
-      var bAngle = Math.PI * 2 * bi / 3 + 0.5;
-      var bDist = 200 + Math.random() * 100;
+    // === Spawn 7 AI bot players (8 total including local player) ===
+    var _botNames = ['铁壁', '雷霆', '幽灵', '寒冰', '烈焰', '疾风', '暗影'];
+    var _botClasses = ['warrior', 'mage', 'scout', 'warrior', 'mage', 'scout', 'warrior'];
+    var _botSkins = ['warrior_inferno', 'mage_thunder', 'scout_ghost_assassin', 'default', 'default', 'default', 'default'];
+    offlineBots = [];
+    for (var bi = 0; bi < 7; bi++) {
+      var bAngle = Math.PI * 2 * bi / 7;
+      var bDist = 350 + Math.random() * 200;
+      var _bc = _botClasses[bi];
+      var _botHP = _bc === 'warrior' ? 280 : (_bc === 'mage' ? 200 : 220);
+      var _botSpd = _bc === 'scout' ? 130 : (_bc === 'warrior' ? 100 : 110);
+      var _botDmg = _bc === 'warrior' ? 18 : (_bc === 'mage' ? 22 : 15);
       offlineBots.push({
-        x: player.x + Math.cos(bAngle) * bDist,
-        y: player.y + Math.sin(bAngle) * bDist,
-        playerClass: botClasses[bi],
-        skinId: botSkins[bi],
+        x: WORLD_W / 2 + Math.cos(bAngle) * bDist,
+        y: WORLD_H / 2 + Math.sin(bAngle) * bDist,
+        playerClass: _bc,
+        skinId: _botSkins[bi],
         isBot: true,
         alive: true,
-        hp: 200, maxHp: 200,
-        level: 3 + bi * 2,
-        name: ['铁壁战士', '雷霆法师', '幽灵斥候'][bi],
-        kills: bi * 5,
-        factionId: 0,
+        hp: _botHP, maxHp: _botHP,
+        speed: _botSpd,
+        attackDamage: _botDmg,
+        attackCooldown: _bc === 'mage' ? 1.2 : (_bc === 'scout' ? 0.7 : 0.9),
+        _attackTimer: Math.random() * 2,
+        level: 1,
+        name: _botNames[bi],
+        kills: 0,
+        factionId: gameMode === 'team' ? (bi < 3 ? 1 : 2) : bi + 1,
         shieldActive: false,
         radius: 14,
         facingAngle: bAngle + Math.PI,
-        _moveTimer: Math.random() * 10
+        _moveTimer: Math.random() * 10,
+        _aiState: 'patrol',    // patrol | engage | flee
+        _aiTarget: null,
+        _patrolAngle: Math.random() * Math.PI * 2,
+        _nextDecision: 0.5 + Math.random() * 2
       });
     }
+    // Storm zone — starts shrinking after 60s, center = map center
+    stormZone.active = true;
+    stormZone.radius = Math.max(WORLD_W, WORLD_H) * 0.75;
+    stormZone.centerX = WORLD_W / 2;
+    stormZone.centerY = WORLD_H / 2;
+    stormZone.shrinkRate = 12; // px/s
+    stormZone._shrinkDelay = 45; // don't shrink until 45s
+    stormZone._minRadius = 80;
   }
 
   function spawnOfflineEnemy(type, x, y) {
@@ -2270,15 +2293,174 @@ function doLogin() {
       e.y = Math.max(e.radius, Math.min(WORLD_H - e.radius, e.y));
     }
 
-    // Move bots (wander around)
+    // === BR AI bot update — patrol / engage / flee storm ===
+    var _allBR = [player].concat(offlineBots); // all 8 players
     for (var bi = 0; bi < offlineBots.length; bi++) {
       var b = offlineBots[bi];
+      if (!b.alive) continue;
       b._moveTimer += dt;
-      b.facingAngle += Math.sin(b._moveTimer * 0.5) * dt;
-      b.x += Math.cos(b.facingAngle) * 30 * dt;
-      b.y += Math.sin(b.facingAngle) * 30 * dt;
-      b.x = Math.max(50, Math.min(WORLD_W - 50, b.x));
-      b.y = Math.max(50, Math.min(WORLD_H - 50, b.y));
+      b._attackTimer -= dt;
+      b._nextDecision -= dt;
+
+      // --- Storm damage ---
+      if (stormZone.active) {
+        var _sDx = b.x - stormZone.centerX, _sDy = b.y - stormZone.centerY;
+        var _sD = Math.sqrt(_sDx * _sDx + _sDy * _sDy);
+        if (_sD > stormZone.radius) {
+          b.hp -= 8 * dt; // storm damage
+          if (b.hp <= 0) {
+            b.alive = false;
+            killFeed.push({ text: b.name + ' 被毒圈淘汰', color: '#f88', time: 4 });
+          }
+        }
+      }
+      if (!b.alive) continue;
+
+      // --- AI decision every 0.5-2s ---
+      if (b._nextDecision <= 0) {
+        b._nextDecision = 0.8 + Math.random() * 1.5;
+        // Check if outside storm → flee toward center
+        if (stormZone.active) {
+          var _sdBot = Math.sqrt((b.x - stormZone.centerX) * (b.x - stormZone.centerX) + (b.y - stormZone.centerY) * (b.y - stormZone.centerY));
+          if (_sdBot > stormZone.radius * 0.8) {
+            b._aiState = 'flee';
+            b._aiTarget = null;
+          }
+        }
+        if (b._aiState !== 'flee') {
+          // Look for nearest enemy player (different factionId)
+          var bestTarget = null, bestDist = 350;
+          for (var pi = 0; pi < _allBR.length; pi++) {
+            var _tgt = _allBR[pi];
+            if (_tgt === b || !_tgt.alive) continue;
+            if (gameMode === 'team' && _tgt.factionId === b.factionId) continue;
+            var _tdx = _tgt.x - b.x, _tdy = _tgt.y - b.y;
+            var _td = Math.sqrt(_tdx * _tdx + _tdy * _tdy);
+            if (_td < bestDist) { bestDist = _td; bestTarget = _tgt; }
+          }
+          if (bestTarget) {
+            b._aiState = 'engage';
+            b._aiTarget = bestTarget;
+          } else {
+            b._aiState = 'patrol';
+            b._aiTarget = null;
+          }
+        }
+      }
+
+      // --- Movement ---
+      var bSpeed = b.speed || 100;
+      if (b._aiState === 'flee') {
+        // Move toward storm center
+        var _fcx = stormZone.centerX - b.x, _fcy = stormZone.centerY - b.y;
+        var _fd = Math.sqrt(_fcx * _fcx + _fcy * _fcy);
+        if (_fd > 5) {
+          b.x += (_fcx / _fd) * bSpeed * 1.1 * dt;
+          b.y += (_fcy / _fd) * bSpeed * 1.1 * dt;
+          b.facingAngle = Math.atan2(_fcy, _fcx);
+        }
+        // Exit flee when safely inside
+        if (_fd < stormZone.radius * 0.5) b._aiState = 'patrol';
+      } else if (b._aiState === 'engage' && b._aiTarget && b._aiTarget.alive) {
+        var _edx = b._aiTarget.x - b.x, _edy = b._aiTarget.y - b.y;
+        var _ed = Math.sqrt(_edx * _edx + _edy * _edy);
+        b.facingAngle = Math.atan2(_edy, _edx);
+        // Approach to attack range (~120px), strafe slightly
+        var engageRange = b.playerClass === 'scout' ? 180 : (b.playerClass === 'mage' ? 160 : 80);
+        if (_ed > engageRange) {
+          b.x += (_edx / _ed) * bSpeed * dt;
+          b.y += (_edy / _ed) * bSpeed * dt;
+        } else if (_ed < engageRange * 0.5) {
+          // Too close — back up slightly
+          b.x -= (_edx / _ed) * bSpeed * 0.3 * dt;
+          b.y -= (_edy / _ed) * bSpeed * 0.3 * dt;
+        }
+        // --- Attack ---
+        if (_ed < engageRange + 30 && b._attackTimer <= 0) {
+          b._attackTimer = b.attackCooldown;
+          var _aDmg = b.attackDamage + Math.floor(Math.random() * 4);
+          b._aiTarget.hp -= _aDmg;
+          // Visual feedback
+          var _projAngle = Math.atan2(_edy, _edx);
+          particles.push({
+            x: b.x, y: b.y,
+            vx: Math.cos(_projAngle) * 300, vy: Math.sin(_projAngle) * 300,
+            life: 0.5, maxLife: 0.5,
+            color: b.playerClass === 'warrior' ? '#ffa' : (b.playerClass === 'mage' ? '#a6f' : '#8f8'),
+            size: 3, particleType: 'circle', _isProjectile: true
+          });
+          floatText(b._aiTarget.x, b._aiTarget.y - 16, '-' + _aDmg, { color: '#ff6666', size: 11 });
+          // Target killed?
+          if (b._aiTarget.hp <= 0 && b._aiTarget.alive) {
+            b._aiTarget.alive = false;
+            b.kills++;
+            var victimName = b._aiTarget.name || (b._aiTarget.isLocal ? '你' : '玩家');
+            var killerName = b.name || 'Bot';
+            killFeed.push({ text: killerName + ' 击杀了 ' + victimName, color: '#fa0', time: 5 });
+            emit(b._aiTarget.x, b._aiTarget.y, '#ff4444', 18, 100);
+            // Player killed by bot → spectator
+            if (b._aiTarget === player || b._aiTarget.isLocal) {
+              deathCause = '被 ' + killerName + ' 击杀';
+              deathTip = deathCause;
+              state = 'spectating';
+              spectatorTarget = offlineBots.indexOf(b);
+              if (spectatorTarget < 0) spectatorTarget = 0;
+              spectatorTarget += 1; // offset 1 because allPlayers[0]=player
+            }
+            b._aiTarget = null;
+            b._aiState = 'patrol';
+          }
+        }
+      } else {
+        // Patrol — wander randomly
+        b._patrolAngle = b._patrolAngle || 0;
+        b._patrolAngle += (Math.random() - 0.5) * 2 * dt;
+        b.x += Math.cos(b._patrolAngle) * bSpeed * 0.4 * dt;
+        b.y += Math.sin(b._patrolAngle) * bSpeed * 0.4 * dt;
+        b.facingAngle = b._patrolAngle;
+      }
+      // Keep in bounds
+      b.x = Math.max(b.radius + 5, Math.min(WORLD_W - b.radius - 5, b.x));
+      b.y = Math.max(b.radius + 5, Math.min(WORLD_H - b.radius - 5, b.y));
+    }
+
+    // === Storm zone shrink ===
+    if (stormZone.active && gameTime > (stormZone._shrinkDelay || 45)) {
+      stormZone.radius = Math.max(stormZone._minRadius || 80, stormZone.radius - stormZone.shrinkRate * dt);
+    }
+    // Player storm damage
+    if (stormZone.active && player.alive) {
+      var _psd = Math.sqrt((player.x - stormZone.centerX) * (player.x - stormZone.centerX) + (player.y - stormZone.centerY) * (player.y - stormZone.centerY));
+      if (_psd > stormZone.radius) {
+        player.hp -= 8 * dt;
+        if (player.hp <= 0 && player.alive) {
+          player.hp = 0; player.alive = false;
+          deathCause = '被毒圈击杀';
+          deathTip = deathCause;
+          state = 'spectating';
+          spectatorTarget = 1;
+        }
+      }
+    }
+    // === Victory check — last alive wins ===
+    var _aliveCount = 0;
+    var _lastAlive = null;
+    for (var _vi = 0; _vi < _allBR.length; _vi++) {
+      if (_allBR[_vi].alive) { _aliveCount++; _lastAlive = _allBR[_vi]; }
+    }
+    if (_aliveCount <= 1 && state === 'playing') {
+      if (_lastAlive === player) {
+        victoryWin = true;
+        finalizeGameRewards();
+        state = 'gameOver';
+      } else if (_aliveCount === 0 || (_lastAlive && _lastAlive !== player)) {
+        victoryWin = false;
+        finalizeGameRewards();
+        state = 'gameOver';
+      }
+    } else if (_aliveCount <= 1 && state === 'spectating') {
+      finalizeGameRewards();
+      state = 'gameOver';
     }
 
     // Wave-based spawning (MOBA-style)
