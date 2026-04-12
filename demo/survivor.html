@@ -1883,7 +1883,7 @@ function doLogin() {
     // Minimal local player placeholder (server will fill real values via snapshot)
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     player = {
-      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 22, speed: cls.speed,
+      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 36, speed: cls.speed,
       attackDamage: cls.attackDamage, attackCooldown: 0.4, _timer: 0,
       projectileCount: 1, pierce: false, critChance: 0, slowAura: 0,
       hpRegen: 0, xpMagnetRange: 300, shieldActive: false, _shieldTimer: 0,
@@ -2183,11 +2183,11 @@ function doLogin() {
     function _rnd() { _seed = _rng(_seed); return (_seed & 0xffff) / 0xffff; }
     // Central compound — large building cluster at map center
     var cx = WORLD_W / 2, cy = WORLD_H / 2;
-    _brStructures.push({ type: 'building', x: cx - 60, y: cy - 50, w: 120, h: 100, color: '#555565' });
-    _brStructures.push({ type: 'wall', x: cx - 80, y: cy - 60, w: 8, h: 120, color: '#666675' });
-    _brStructures.push({ type: 'wall', x: cx + 72, y: cy - 40, w: 8, h: 80, color: '#666675' });
-    _brStructures.push({ type: 'crate', x: cx + 40, y: cy + 60, w: 20, h: 20, color: '#886633' });
-    _brStructures.push({ type: 'crate', x: cx - 45, y: cy + 55, w: 18, h: 18, color: '#886633' });
+    _brStructures.push({ type: 'building', x: cx - 100, y: cy - 80, w: 200, h: 160, color: '#555565' });
+    _brStructures.push({ type: 'wall', x: cx - 130, y: cy - 100, w: 14, h: 200, color: '#666675' });
+    _brStructures.push({ type: 'wall', x: cx + 116, y: cy - 65, w: 14, h: 130, color: '#666675' });
+    _brStructures.push({ type: 'crate', x: cx + 65, y: cy + 90, w: 32, h: 32, color: '#886633' });
+    _brStructures.push({ type: 'crate', x: cx - 70, y: cy + 85, w: 28, h: 28, color: '#886633' });
     // 4 corner outposts
     var _corners = [
       [WORLD_W * 0.2, WORLD_H * 0.2], [WORLD_W * 0.8, WORLD_H * 0.2],
@@ -2195,9 +2195,9 @@ function doLogin() {
     ];
     for (var ci = 0; ci < _corners.length; ci++) {
       var _ox = _corners[ci][0], _oy = _corners[ci][1];
-      _brStructures.push({ type: 'building', x: _ox - 35, y: _oy - 30, w: 70, h: 60, color: '#505058' });
-      _brStructures.push({ type: 'wall', x: _ox + 45, y: _oy - 15, w: 6, h: 50, color: '#606068' });
-      _brStructures.push({ type: 'crate', x: _ox - 20 + _rnd() * 20, y: _oy + 35, w: 16, h: 16, color: '#886633' });
+      _brStructures.push({ type: 'building', x: _ox - 60, y: _oy - 50, w: 120, h: 100, color: '#505058' });
+      _brStructures.push({ type: 'wall', x: _ox + 70, y: _oy - 25, w: 12, h: 80, color: '#606068' });
+      _brStructures.push({ type: 'crate', x: _ox - 20 + _rnd() * 20, y: _oy + 55, w: 28, h: 28, color: '#886633' });
     }
     // Scattered shelters between corners
     var _shelterCount = 12;
@@ -2205,26 +2205,26 @@ function doLogin() {
       var sx = 120 + _rnd() * (WORLD_W - 240);
       var sy = 120 + _rnd() * (WORLD_H - 240);
       // Avoid map center compound (skip if too close)
-      if (Math.abs(sx - cx) < 150 && Math.abs(sy - cy) < 130) continue;
+      if (Math.abs(sx - cx) < 220 && Math.abs(sy - cy) < 190) continue;
       var sType = _rnd();
       if (sType < 0.35) {
         // L-shaped wall
-        var lw = 40 + _rnd() * 40, lh = 6;
+        var lw = 70 + _rnd() * 60, lh = 12;
         _brStructures.push({ type: 'wall', x: sx, y: sy, w: lw, h: lh, color: '#606870' });
         _brStructures.push({ type: 'wall', x: sx, y: sy, w: lh, h: lw * 0.7, color: '#606870' });
       } else if (sType < 0.6) {
         // Small shack
-        var bw = 30 + _rnd() * 30, bh = 25 + _rnd() * 25;
+        var bw = 55 + _rnd() * 50, bh = 45 + _rnd() * 40;
         _brStructures.push({ type: 'building', x: sx, y: sy, w: bw, h: bh, color: '#4a4a58' });
       } else if (sType < 0.8) {
         // Crate cluster (2-3 crates)
         for (var ci2 = 0; ci2 < 2 + Math.floor(_rnd() * 2); ci2++) {
-          var csz = 14 + _rnd() * 10;
-          _brStructures.push({ type: 'crate', x: sx + ci2 * (csz + 4), y: sy + _rnd() * 8, w: csz, h: csz, color: '#886633' });
+          var csz = 24 + _rnd() * 14;
+          _brStructures.push({ type: 'crate', x: sx + ci2 * (csz + 6), y: sy + _rnd() * 10, w: csz, h: csz, color: '#886633' });
         }
       } else {
         // Sandbag barricade (short rounded wall)
-        _brStructures.push({ type: 'sandbag', x: sx, y: sy, w: 45 + _rnd() * 25, h: 10, color: '#8a7a5a' });
+        _brStructures.push({ type: 'sandbag', x: sx, y: sy, w: 75 + _rnd() * 40, h: 16, color: '#8a7a5a' });
       }
     }
     // Add all structures to terrainObstacles for collision
@@ -2355,7 +2355,7 @@ function doLogin() {
         kills: 0,
         factionId: gameMode === 'team' ? (bi < 3 ? 1 : 2) : bi + 1,
         shieldActive: false,
-        radius: 20,
+        radius: 32,
         facingAngle: bAngle + Math.PI,
         _moveTimer: Math.random() * 10,
         _aiState: 'patrol',    // patrol | engage | flee
@@ -2380,7 +2380,7 @@ function doLogin() {
   function spawnOfflineEnemy(type, x, y) {
     var hp = { normal: 30, fast: 20, tank: 80, ranged: 25, swarm: 10, miniBoss: 200, boss: 500, treasure: 15 };
     var spd = { normal: 40, fast: 80, tank: 25, ranged: 35, swarm: 70, miniBoss: 30, boss: 20, treasure: 120 };
-    var rad = { normal: 14, fast: 11, tank: 22, ranged: 12, swarm: 9, miniBoss: 26, boss: 40, treasure: 10 };
+    var rad = { normal: 22, fast: 18, tank: 36, ranged: 20, swarm: 14, miniBoss: 42, boss: 60, treasure: 16 };
     var colors = { normal: '#5a8a3a', fast: '#442244', tank: '#777766', ranged: '#556677', swarm: '#885522', miniBoss: '#aa3355', boss: '#882222', treasure: '#aa8822' };
     offlineEnemies.push({
       x: x, y: y, hp: hp[type] || 30, maxHp: hp[type] || 30,
@@ -2531,7 +2531,7 @@ function doLogin() {
             vx: Math.cos(_projAngle) * 300, vy: Math.sin(_projAngle) * 300,
             life: 0.5, maxLife: 0.5,
             color: b.playerClass === 'warrior' ? '#ffa' : (b.playerClass === 'mage' ? '#a6f' : '#8f8'),
-            size: 3, particleType: 'circle', _isProjectile: true
+            size: 8, particleType: 'circle', _isProjectile: true
           });
           floatText(b._aiTarget.x, b._aiTarget.y - 16, '-' + _aDmg, { color: '#ff6666', size: 11 });
           // Target killed?
@@ -2833,7 +2833,7 @@ function doLogin() {
           _trailT: 0,
           targetX: closest.x, targetY: closest.y
         });
-        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 7, particleType: 'circle', _isProjectile: true });
+        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
         for (var _muz = 0; _muz < 6; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
@@ -3378,14 +3378,14 @@ function doLogin() {
     if (waveNum >= 20) scale *= 1 + (waveNum - 20) * 0.08; // exponential multiplier
     var base;
     switch (type) {
-      case 'fast':    base = { hp: 10, speed: 155, damage: 8, radius: 7, color: '#4cf', xp: 8 }; break;
-      case 'tank':    base = { hp: 60, speed: 50, damage: 14, radius: 18, color: '#f80', xp: 20 }; break;
-      case 'ranged':  base = { hp: 18, speed: 56, damage: 10, radius: 9, color: '#c6f', xp: 12 }; break;
-      case 'boss':    base = { hp: 300, speed: 38, damage: 22, radius: 26, color: '#f22', xp: 80 }; break;
-      case 'swarm':   base = { hp: 6, speed: 130, damage: 5, radius: 5, color: '#8f4', xp: 4 }; break;
-      case 'miniBoss': base = { hp: 150, speed: 65, damage: 18, radius: 20, color: '#f4a', xp: 45 }; break;
-      case 'treasure': base = { hp: 30, speed: 190, damage: 0, radius: 10, color: '#ffd700', xp: 50 }; break; // enemySpeedBoost
-      default:        base = { hp: 20, speed: 75, damage: 12, radius: 10, color: '#e55', xp: 10 }; break;
+      case 'fast':    base = { hp: 10, speed: 155, damage: 8, radius: 14, color: '#4cf', xp: 8 }; break;
+      case 'tank':    base = { hp: 60, speed: 50, damage: 14, radius: 30, color: '#f80', xp: 20 }; break;
+      case 'ranged':  base = { hp: 18, speed: 56, damage: 10, radius: 16, color: '#c6f', xp: 12 }; break;
+      case 'boss':    base = { hp: 300, speed: 38, damage: 22, radius: 48, color: '#f22', xp: 80 }; break;
+      case 'swarm':   base = { hp: 6, speed: 130, damage: 5, radius: 10, color: '#8f4', xp: 4 }; break;
+      case 'miniBoss': base = { hp: 150, speed: 65, damage: 18, radius: 36, color: '#f4a', xp: 45 }; break;
+      case 'treasure': base = { hp: 30, speed: 190, damage: 0, radius: 16, color: '#ffd700', xp: 50 }; break; // enemySpeedBoost
+      default:        base = { hp: 20, speed: 75, damage: 12, radius: 18, color: '#e55', xp: 10 }; break;
     }
     // Late-game: enemies also get speed and damage scaling
     var speedScale = 1 + (waveNum > 15 ? (waveNum - 15) * 0.02 : 0);
@@ -7102,7 +7102,7 @@ function doLogin() {
     }
 
     // HP bar — scaled for mobile visibility
-    var barW = 64, barH = 9;
+    var barW = 80, barH = 10;
     var barY = player.y - player.radius - 13;
     ctx.fillStyle = '#111'; ctx.fillRect(player.x - barW / 2 - 1, barY - 1, barW + 2, barH + 2);
     ctx.fillStyle = '#300'; ctx.fillRect(player.x - barW / 2, barY, barW, barH);
