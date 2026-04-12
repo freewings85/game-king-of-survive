@@ -1883,8 +1883,8 @@ function doLogin() {
     // Minimal local player placeholder (server will fill real values via snapshot)
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     player = {
-      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 14, speed: cls.speed,
-      attackDamage: cls.attackDamage, attackCooldown: 0.8, _timer: 0,
+      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 22, speed: cls.speed,
+      attackDamage: cls.attackDamage, attackCooldown: 0.4, _timer: 0,
       projectileCount: 1, pierce: false, critChance: 0, slowAura: 0,
       hpRegen: 0, xpMagnetRange: 300, shieldActive: false, _shieldTimer: 0,
       lifesteal: 0, _fireDmg: 0, _explosiveDmg: 0, _chainCount: 0,
@@ -2348,14 +2348,14 @@ function doLogin() {
         hp: _botHP, maxHp: _botHP,
         speed: _botSpd,
         attackDamage: _botDmg,
-        attackCooldown: _bc === 'mage' ? 1.2 : (_bc === 'scout' ? 0.7 : 0.9),
+        attackCooldown: _bc === 'mage' ? 0.5 : (_bc === 'scout' ? 0.35 : 0.45),
         _attackTimer: Math.random() * 2,
         level: 1,
         name: _botNames[bi],
         kills: 0,
         factionId: gameMode === 'team' ? (bi < 3 ? 1 : 2) : bi + 1,
         shieldActive: false,
-        radius: 14,
+        radius: 20,
         facingAngle: bAngle + Math.PI,
         _moveTimer: Math.random() * 10,
         _aiState: 'patrol',    // patrol | engage | flee
@@ -2380,7 +2380,7 @@ function doLogin() {
   function spawnOfflineEnemy(type, x, y) {
     var hp = { normal: 30, fast: 20, tank: 80, ranged: 25, swarm: 10, miniBoss: 200, boss: 500, treasure: 15 };
     var spd = { normal: 40, fast: 80, tank: 25, ranged: 35, swarm: 70, miniBoss: 30, boss: 20, treasure: 120 };
-    var rad = { normal: 8, fast: 6, tank: 14, ranged: 7, swarm: 5, miniBoss: 16, boss: 28, treasure: 7 };
+    var rad = { normal: 14, fast: 11, tank: 22, ranged: 12, swarm: 9, miniBoss: 26, boss: 40, treasure: 10 };
     var colors = { normal: '#5a8a3a', fast: '#442244', tank: '#777766', ranged: '#556677', swarm: '#885522', miniBoss: '#aa3355', boss: '#882222', treasure: '#aa8822' };
     offlineEnemies.push({
       x: x, y: y, hp: hp[type] || 30, maxHp: hp[type] || 30,
@@ -2833,7 +2833,7 @@ function doLogin() {
           _trailT: 0,
           targetX: closest.x, targetY: closest.y
         });
-        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 4, particleType: 'circle', _isProjectile: true });
+        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 7, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
         for (var _muz = 0; _muz < 6; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
@@ -7101,8 +7101,8 @@ function doLogin() {
       ctx.fillRect(bp.x - botBarW/2, bp.y - bp.radius - 8, botBarW * botHpR, 4);
     }
 
-    // HP bar (bigger, with border)
-    var barW = 50, barH = 7;
+    // HP bar — scaled for mobile visibility
+    var barW = 64, barH = 9;
     var barY = player.y - player.radius - 13;
     ctx.fillStyle = '#111'; ctx.fillRect(player.x - barW / 2 - 1, barY - 1, barW + 2, barH + 2);
     ctx.fillStyle = '#300'; ctx.fillRect(player.x - barW / 2, barY, barW, barH);
@@ -8048,172 +8048,157 @@ function doLogin() {
   }
 
   function drawMenu() {
+    // S = scale factor so layout fills any screen height (designed for 800)
+    var S = Math.max(0.8, H / 800);
+    var SW = Math.max(0.8, W / 600); // horizontal scale
+
     // === Animated cinematic background ===
-    // Deep radial gradient sky
     var bgGrad = ctx.createRadialGradient(W / 2, H * 0.35, 40, W / 2, H * 0.5, Math.max(W, H) * 0.8);
     bgGrad.addColorStop(0, '#1a1a4e');
     bgGrad.addColorStop(0.4, '#0c0c2a');
     bgGrad.addColorStop(1, '#04040e');
     ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
 
-    // Concentric nebula rings (slow rotating)
+    // Concentric nebula rings
     var ringT = Date.now() * 0.0003;
     ctx.save();
-    ctx.translate(W / 2, H * 0.42);
+    ctx.translate(W / 2, H * 0.35);
     for (var ri = 0; ri < 4; ri++) {
       ctx.globalAlpha = 0.08 + 0.04 * Math.sin(ringT * 2 + ri);
       ctx.strokeStyle = ri % 2 === 0 ? '#4488ff' : '#8844ff';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.5 * S;
       ctx.beginPath();
-      var rr = 120 + ri * 60 + Math.sin(ringT * 3 + ri) * 8;
+      var rr = (120 + ri * 60) * S + Math.sin(ringT * 3 + ri) * 8;
       ctx.ellipse(0, 0, rr, rr * 0.45, ringT * (0.4 + ri * 0.1), 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();
     ctx.globalAlpha = 1;
 
-    // Floating particles background
     drawMenuParticles();
 
-    // Far horizon silhouette (mountains)
+    // Mountain silhouette
     ctx.save();
     ctx.globalAlpha = 0.35;
     ctx.fillStyle = '#0a0a1e';
     ctx.beginPath();
     ctx.moveTo(0, H * 0.72);
-    var peakY = H * 0.6;
     for (var mx = 0; mx <= W; mx += 60) {
-      var py = peakY + Math.sin(mx * 0.013 + 0.7) * 28 + Math.cos(mx * 0.005) * 14;
-      ctx.lineTo(mx, py);
+      ctx.lineTo(mx, H * 0.6 + Math.sin(mx * 0.013 + 0.7) * 28 * S + Math.cos(mx * 0.005) * 14 * S);
     }
     ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
     ctx.restore();
 
-    // === Logo panel ===
+    // === Logo panel (scales with S) ===
     var logoPulse = 1 + Math.sin(Date.now() * 0.002) * 0.025;
-    var logoY = H / 6;
-    // Golden frame plate
-    var frameW = 340, frameH = 88;
-    var frameX = W / 2 - frameW / 2, frameY = logoY - 50;
+    var logoY = H * 0.1;
+    var frameW = Math.min(W * 0.85, 400 * SW), frameH = 88 * S;
+    var frameX = W / 2 - frameW / 2, frameY = logoY;
     ctx.save();
-    ctx.shadowColor = '#ffd700';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 20 * S;
     var framePanel = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameH);
     framePanel.addColorStop(0, 'rgba(40,30,10,0.85)');
     framePanel.addColorStop(1, 'rgba(15,10,4,0.85)');
     ctx.fillStyle = framePanel;
     ctx.fillRect(frameX, frameY, frameW, frameH);
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2 * S;
     ctx.strokeRect(frameX + 0.5, frameY + 0.5, frameW - 1, frameH - 1);
     ctx.restore();
-    // Inner line
     ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
     ctx.strokeRect(frameX + 5, frameY + 5, frameW - 10, frameH - 10);
-    // Corner ornaments
-    ctx.fillStyle = '#ffd700';
-    [[frameX, frameY], [frameX + frameW, frameY], [frameX, frameY + frameH], [frameX + frameW, frameY + frameH]].forEach(function(p) {
-      ctx.beginPath();
-      ctx.arc(p[0], p[1], 4, 0, Math.PI * 2); ctx.fill();
-    });
-    // Title with glow
+    // Title
     ctx.save();
-    ctx.translate(W / 2, logoY);
+    ctx.translate(W / 2, frameY + frameH * 0.5);
     ctx.scale(logoPulse, logoPulse);
-    ctx.shadowColor = '#ffcc00';
-    ctx.shadowBlur = 24;
-    ctx.font = 'bold 48px "KaiTi", "STKaiti", "SimHei", serif';
+    ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 24 * S;
+    var titleFontSize = Math.round(Math.min(48 * S, frameW * 0.14));
+    ctx.font = 'bold ' + titleFontSize + 'px "KaiTi", "STKaiti", "SimHei", serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#ffe066';
-    ctx.fillText('生存之王', 0, 0);
+    ctx.fillText('生存之王', 0, titleFontSize * 0.15);
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = '#fff2aa'; ctx.lineWidth = 1;
-    ctx.strokeText('生存之王', 0, 0);
     ctx.restore();
-    ctx.font = 'italic 14px Arial'; ctx.fillStyle = '#ffd966'; ctx.textAlign = 'center';
-    ctx.fillText('— King of Survive —', W / 2, logoY + 22);
+    ctx.font = Math.round(14 * S) + 'px Arial'; ctx.fillStyle = '#ffd966'; ctx.textAlign = 'center';
+    ctx.fillText('— King of Survive —', W / 2, frameY + frameH + 18 * S);
 
-    // === Character preview pedestal ===
+    // === Character preview (vertically centered in remaining space) ===
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
-    var charY = H / 3 + 40 + Math.sin(Date.now() * 0.002) * 6;
-    // Pedestal shadow ellipse
-    ctx.save();
-    ctx.globalAlpha = 0.4;
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(W / 2, charY + 80, 70, 14, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-    // Outer breathing halo
+    var charY = H * 0.36 + Math.sin(Date.now() * 0.002) * 6;
+    var portraitR = 60 * S;
+    // Breathing halo
     var breathe = 0.25 + 0.18 * Math.sin(Date.now() * 0.003);
     ctx.save();
-    var haloGrad = ctx.createRadialGradient(W / 2, charY, 10, W / 2, charY, 110);
+    var haloGrad = ctx.createRadialGradient(W / 2, charY, 10, W / 2, charY, portraitR * 1.8);
     haloGrad.addColorStop(0, cls.color);
     haloGrad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.globalAlpha = breathe;
     ctx.fillStyle = haloGrad;
-    ctx.beginPath(); ctx.arc(W / 2, charY, 110, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W / 2, charY, portraitR * 1.8, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
-    // Portrait ring (gold frame)
+    // Portrait ring
     ctx.save();
-    ctx.shadowColor = cls.color;
-    ctx.shadowBlur = 14;
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(W / 2, charY, 60, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowColor = cls.color; ctx.shadowBlur = 14 * S;
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3 * S;
+    ctx.beginPath(); ctx.arc(W / 2, charY, portraitR, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
-    // Character sprite — big (uses existing LPC sprite renderer)
+    // Sprite
     if (typeof drawCharacterSprite === 'function') {
-      drawCharacterSprite(W / 2, charY + 10, 48, selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
+      drawCharacterSprite(W / 2, charY + 10 * S, portraitR * 0.8, selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
     } else {
       ctx.fillStyle = cls.color;
-      ctx.beginPath(); ctx.arc(W / 2, charY, 42, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W / 2, charY, portraitR * 0.7, 0, Math.PI * 2); ctx.fill();
     }
-    // Class name tag below portrait
-    var tagW = 220, tagH = 30, tagX = W / 2 - tagW / 2, tagY = charY + 78;
+    // Class tag
+    var tagW = Math.min(W * 0.6, 260 * SW), tagH = 34 * S;
+    var tagX = W / 2 - tagW / 2, tagY = charY + portraitR + 16 * S;
     var tagGrad = ctx.createLinearGradient(tagX, tagY, tagX, tagY + tagH);
     tagGrad.addColorStop(0, 'rgba(30,30,60,0.85)');
     tagGrad.addColorStop(1, 'rgba(10,10,25,0.85)');
     ctx.fillStyle = tagGrad; ctx.fillRect(tagX, tagY, tagW, tagH);
     ctx.strokeStyle = cls.color; ctx.lineWidth = 1.5;
-    ctx.strokeRect(tagX + 0.5, tagY + 0.5, tagW - 1, tagH - 1);
-    ctx.fillStyle = cls.color; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(cls.icon + '  ' + cls.name, W / 2, tagY + 19);
-    ctx.font = '10px Arial'; ctx.fillStyle = '#aaa';
-    ctx.fillText(cls.passive, W / 2, tagY + 28);
+    ctx.strokeRect(tagX, tagY, tagW, tagH);
+    ctx.fillStyle = cls.color;
+    ctx.font = 'bold ' + Math.round(15 * S) + 'px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(cls.icon + '  ' + cls.name, W / 2, tagY + tagH * 0.58);
+    ctx.font = Math.round(11 * S) + 'px Arial'; ctx.fillStyle = '#aaa';
+    ctx.fillText(cls.passive, W / 2, tagY + tagH + 14 * S);
 
-    // Best record + gold strip
-    var stripY = tagY + 44;
+    // Best record + gold
     if (bestRecord.kills > 0 || gold > 0) {
-      ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-      var line = '';
-      if (bestRecord.kills > 0) line += '🏆 ' + bestRecord.kills + '杀 · ' + Math.floor(bestRecord.time) + 's · W' + bestRecord.wave;
-      if (gold > 0) { if (line) line += '    '; line += '💰 ' + gold; }
+      ctx.font = 'bold ' + Math.round(13 * S) + 'px Arial'; ctx.textAlign = 'center';
+      var recLine = '';
+      if (bestRecord.kills > 0) recLine += '🏆 ' + bestRecord.kills + '杀 · ' + Math.floor(bestRecord.time) + 's · W' + bestRecord.wave;
+      if (gold > 0) { if (recLine) recLine += '    '; recLine += '💰 ' + gold; }
       ctx.fillStyle = '#ffd700';
-      ctx.fillText(line, W / 2, stripY);
+      ctx.fillText(recLine, W / 2, tagY + tagH + 32 * S);
     }
 
-    // === Mode buttons ===
-    var btnY0 = H / 2 + 40;
-    var btnW = 100, btnH = 52;
-    ctx.font = 'bold 16px Arial';
-    _drawMenuButton(W / 2 - btnW - 6, btnY0, btnW, btnH, '单排模式', '#4a8a4a', '#1e4a1e', '#6fd66f');
-    _drawMenuButton(W / 2 + 6, btnY0, btnW, btnH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
+    // === Mode buttons — fill lower portion of screen ===
+    var btnW = Math.min(W * 0.38, 140 * SW), btnH = Math.max(48, 56 * S);
+    var gap = 10 * S;
+    var btnY0 = H * 0.6;
+    ctx.font = 'bold ' + Math.round(17 * S) + 'px Arial';
+    _drawMenuButton(W / 2 - btnW - gap / 2, btnY0, btnW, btnH, '单排模式', '#4a8a4a', '#1e4a1e', '#6fd66f');
+    _drawMenuButton(W / 2 + gap / 2, btnY0, btnW, btnH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
 
-    var btnY1 = btnY0 + btnH + 12;
-    var smW = 100, smH = 38;
-    ctx.font = 'bold 13px Arial';
-    _drawMenuButton(W / 2 - smW - 6, btnY1, smW, smH, '📅 每日挑战', '#3a5a9a', '#1a2a4e', '#7fa6e6');
-    _drawMenuButton(W / 2 + 6, btnY1, smW, smH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
+    var smH = Math.max(38, 44 * S);
+    var btnY1 = btnY0 + btnH + gap;
+    ctx.font = 'bold ' + Math.round(14 * S) + 'px Arial';
+    _drawMenuButton(W / 2 - btnW - gap / 2, btnY1, btnW, smH, '📅 每日挑战', '#3a5a9a', '#1a2a4e', '#7fa6e6');
+    _drawMenuButton(W / 2 + gap / 2, btnY1, btnW, smH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
 
-    var btnY2 = btnY1 + smH + 10;
-    _drawMenuButton(W / 2 - smW - 6, btnY2, smW, smH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
-    _drawMenuButton(W / 2 + 6, btnY2, smW, smH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
+    var btnY2 = btnY1 + smH + gap;
+    _drawMenuButton(W / 2 - btnW - gap / 2, btnY2, btnW, smH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
+    _drawMenuButton(W / 2 + gap / 2, btnY2, btnW, smH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
 
-    // Daily best (small)
+    // Daily best
     if (dailyBest > 0) {
-      ctx.font = '11px Arial'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
-      ctx.fillText('每日最佳: ' + dailyBest + '杀', W / 2, btnY2 + smH + 18);
+      ctx.font = Math.round(11 * S) + 'px Arial'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+      ctx.fillText('每日最佳: ' + dailyBest + '杀', W / 2, btnY2 + smH + 18 * S);
     }
     // Tutorial hint
-    ctx.font = '12px Arial'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
-    ctx.fillText('鼠标 / 触屏移动角色，自动攻击最近敌人', W / 2, H - 20);
+    ctx.font = Math.round(13 * S) + 'px Arial'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
+    ctx.fillText('鼠标 / 触屏移动角色，自动攻击最近敌人', W / 2, H - 18 * S);
   }
 
   function drawCharSelect() {
