@@ -187,29 +187,29 @@ function doLogin() {
   var W = 800, H = 600;
   var _dpr = 1;
 
+  // isMobile detection — used for scaling touch-friendly UI
+  // isMobile detection — used for scaling touch-friendly UI
+  var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || ('ontouchstart' in window);
+  // uiScale: factor for UI element sizes — 1.0 on desktop, larger on phones
+  function getUIScale() { return Math.max(1, Math.min(2, Math.min(W, H) / 600)); }
   function resizeCanvas() {
     var dpr = window.devicePixelRatio || 1;
     _dpr = dpr;
     var sw = window.innerWidth;
     var sh = window.innerHeight;
-    // Use logical 800x600 aspect ratio, scale to fit screen
-    var targetAspect = 800 / 600;
-    var screenAspect = sw / sh;
-    if (screenAspect > targetAspect) {
-      // Screen is wider — fit to height
-      H = Math.round(sh * dpr);
-      W = Math.round(H * targetAspect);
-    } else {
-      // Screen is taller — fit to width
-      W = Math.round(sw * dpr);
-      H = Math.round(W / targetAspect);
-    }
-    // Clamp minimum size
-    if (W < 400) { W = 400; H = Math.round(W / targetAspect); }
+    // Fill the entire screen — no aspect-ratio constraint
+    W = Math.round(sw * dpr);
+    H = Math.round(sh * dpr);
+    // Clamp minimum logical resolution to avoid too-low detail
+    if (W < 400) W = 400;
+    if (H < 300) H = 300;
     canvas.width = W;
     canvas.height = H;
     canvas.style.width = sw + 'px';
     canvas.style.height = sh + 'px';
+    // Scale touch UI elements proportionally
+    var uiBase = Math.min(W, H);
+    joystick.radius = Math.max(55, Math.round(uiBase * 0.07));
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
@@ -7012,17 +7012,20 @@ function doLogin() {
         ctx.fillStyle = '#fff'; ctx.fill();
         ctx.restore();
       } else {
+        var _joyAnchorX = Math.max(joystick.radius + 20, W * 0.1);
+        var _joyAnchorY = Math.min(H - joystick.radius - 20, H * 0.85);
         ctx.save();
-        ctx.globalAlpha = 0.15;
-        ctx.beginPath(); ctx.arc(90, H - 90, joystick.radius, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.18;
+        ctx.beginPath(); ctx.arc(_joyAnchorX, _joyAnchorY, joystick.radius, 0, Math.PI * 2);
         ctx.fillStyle = '#fff'; ctx.fill();
         ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.globalAlpha = 0.3;
-        ctx.beginPath(); ctx.arc(90, H - 90, 18, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath(); ctx.arc(_joyAnchorX, _joyAnchorY, joystick.radius * 0.3, 0, Math.PI * 2);
         ctx.fillStyle = '#fff'; ctx.fill();
-        ctx.globalAlpha = 0.4;
-        ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-        ctx.fillText('拖拽移动', 90, H - 50);
+        ctx.globalAlpha = 0.5;
+        var _joyFS = Math.max(10, Math.round(joystick.radius * 0.2));
+        ctx.font = _joyFS + 'px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+        ctx.fillText('拖拽移动', _joyAnchorX, _joyAnchorY + joystick.radius + _joyFS + 6);
         ctx.restore();
       }
     }
