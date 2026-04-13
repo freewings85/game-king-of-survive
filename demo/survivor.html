@@ -7184,140 +7184,175 @@ function doLogin() {
     // screenshotMode (US-306): skip HUD when in screenshot mode
     if (screenshotMode) { /* skip all HUD text in screenshot mode */ } else {
 
-    // === Polished HUD panel (Diablo/Archero-inspired) — compact for mobile ===
+    // === 3-ZONE HUD LAYOUT: Top 15% info | Middle 75% game | Bottom 10% items ===
+    var _zs = Math.min(W / 400, H / 700); // design-space scale factor
+    var _fs = Math.max(10, Math.round(14 * _zs)); // unified font size
+    var _fsSmall = Math.max(8, Math.round(11 * _zs));
+    var _fsBold = Math.max(12, Math.round(16 * _zs));
+    var topH = Math.round(H * 0.15);
+    var botH = Math.round(H * 0.10);
+    var botY = H - botH;
     var hudCls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior || { color: '#4af', icon: '★' };
-    // Scale HUD by ~0.7x for mobile compactness, anchored to corner
-    var _hs = Math.min(W / 400, H / 700) * 0.55;
-    ctx.save();
-    ctx.translate(4, 4);
-    ctx.scale(_hs, _hs);
-    var hudX = 0, hudY = 0, hudW = 260, hudH = 64;
-    // Panel base gradient
-    var hudGrad = ctx.createLinearGradient(hudX, hudY, hudX, hudY + hudH);
-    hudGrad.addColorStop(0, 'rgba(24,24,48,0.88)');
-    hudGrad.addColorStop(1, 'rgba(8,8,18,0.88)');
-    ctx.fillStyle = hudGrad;
-    ctx.fillRect(hudX, hudY, hudW, hudH);
-    // Panel border (gold)
-    ctx.strokeStyle = 'rgba(200,170,60,0.7)'; ctx.lineWidth = 1.5;
-    ctx.strokeRect(hudX + 0.5, hudY + 0.5, hudW - 1, hudH - 1);
-    // Inner line
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
-    ctx.strokeRect(hudX + 3, hudY + 3, hudW - 6, hudH - 6);
 
-    // Avatar circle (top-left of panel)
-    var avX = hudX + 32, avY = hudY + 32;
+    // ──── TOP BAR (15%) ────
     ctx.save();
-    ctx.shadowColor = hudCls.color; ctx.shadowBlur = 10;
-    ctx.strokeStyle = hudCls.color; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(avX, avY, 24, 0, Math.PI * 2); ctx.stroke();
+    var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
+    topGrad.addColorStop(0, 'rgba(8,8,20,0.92)');
+    topGrad.addColorStop(1, 'rgba(8,8,20,0.0)');
+    ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, topH);
+    // Bottom edge line
+    ctx.strokeStyle = 'rgba(255,215,0,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, topH); ctx.lineTo(W, topH); ctx.stroke();
+
+    // Left section: Avatar + HP + XP
+    var avR = Math.round(18 * _zs);
+    var avCx = Math.round(8 * _zs + avR), avCy = Math.round(topH * 0.45);
+    // Avatar ring
+    ctx.save();
+    ctx.shadowColor = hudCls.color; ctx.shadowBlur = 6 * _zs;
+    ctx.strokeStyle = hudCls.color; ctx.lineWidth = Math.max(2, 2 * _zs);
+    ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
     ctx.fillStyle = '#0a0a1a';
-    ctx.beginPath(); ctx.arc(avX, avY, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(avCx, avCy, avR - 2, 0, Math.PI * 2); ctx.fill();
     if (typeof drawCharacterSprite === 'function') {
       ctx.save();
-      ctx.beginPath(); ctx.arc(avX, avY + 2, 20, 0, Math.PI * 2); ctx.clip();
-      drawCharacterSprite(avX, avY + 8, 22, selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
+      ctx.beginPath(); ctx.arc(avCx, avCy + 2, avR - 4, 0, Math.PI * 2); ctx.clip();
+      drawCharacterSprite(avCx, avCy + Math.round(6 * _zs), Math.round(avR * 0.9), selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
       ctx.restore();
-    } else {
-      ctx.fillStyle = hudCls.color;
-      ctx.beginPath(); ctx.arc(avX, avY, 18, 0, Math.PI * 2); ctx.fill();
     }
     // Level badge
-    ctx.fillStyle = '#1a1a2e'; ctx.beginPath(); ctx.arc(avX + 16, avY + 16, 10, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(playerLevel, avX + 16, avY + 20);
+    var lvBx = avCx + Math.round(avR * 0.7), lvBy = avCy + Math.round(avR * 0.7);
+    ctx.fillStyle = '#1a1a2e'; ctx.beginPath(); ctx.arc(lvBx, lvBy, Math.round(8 * _zs), 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center';
+    ctx.fillText(playerLevel, lvBx, lvBy + Math.round(4 * _zs));
 
     // HP bar (right of avatar)
-    var hpBarX = hudX + 64, hpBarY = hudY + 10, hpBarW = hudW - 72, hpBarH = 14;
-    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(hpBarX - 1, hpBarY - 1, hpBarW + 2, hpBarH + 2);
-    ctx.fillStyle = '#2a0606'; ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+    var hpX = avCx + avR + Math.round(8 * _zs);
+    var hpW = Math.round(W * 0.38);
+    var hpBarH = Math.round(12 * _zs);
+    var hpY = avCy - Math.round(10 * _zs);
+    ctx.fillStyle = '#0a0a0a'; ctx.fillRect(hpX - 1, hpY - 1, hpW + 2, hpBarH + 2);
+    ctx.fillStyle = '#2a0606'; ctx.fillRect(hpX, hpY, hpW, hpBarH);
     var hpRatioHUD = Math.max(0, player.hp / player.maxHp);
-    // Gradient HP fill (red → orange → green based on ratio)
-    var hpGrad = ctx.createLinearGradient(hpBarX, hpBarY, hpBarX, hpBarY + hpBarH);
+    var hpGrad = ctx.createLinearGradient(hpX, hpY, hpX, hpY + hpBarH);
     if (hpRatioHUD > 0.5) { hpGrad.addColorStop(0, '#88ff66'); hpGrad.addColorStop(1, '#2a8a1a'); }
     else if (hpRatioHUD > 0.25) { hpGrad.addColorStop(0, '#ffd060'); hpGrad.addColorStop(1, '#a86000'); }
     else { hpGrad.addColorStop(0, '#ff6050'); hpGrad.addColorStop(1, '#801010'); }
-    ctx.fillStyle = hpGrad;
-    ctx.fillRect(hpBarX, hpBarY, hpBarW * hpRatioHUD, hpBarH);
-    // Top shine
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.fillRect(hpBarX, hpBarY + 1, hpBarW * hpRatioHUD, hpBarH * 0.4);
-    // Segment ticks
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    for (var _hi = 1; _hi < 8; _hi++) ctx.fillRect(hpBarX + hpBarW * _hi / 8, hpBarY, 1, hpBarH);
-    ctx.strokeStyle = '#442a1a'; ctx.lineWidth = 1; ctx.strokeRect(hpBarX + 0.5, hpBarY + 0.5, hpBarW - 1, hpBarH - 1);
-    // HP text (outlined)
-    ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
-    var hpStr = Math.floor(player.hp) + ' / ' + player.maxHp;
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 3;
-    ctx.strokeText(hpStr, hpBarX + hpBarW / 2, hpBarY + 11);
-    ctx.fillStyle = '#fff'; ctx.fillText(hpStr, hpBarX + hpBarW / 2, hpBarY + 11);
-    ctx.lineWidth = 1;
-
-    // Personal XP bar (below HP, thin)
+    ctx.fillStyle = hpGrad; ctx.fillRect(hpX, hpY, hpW * hpRatioHUD, hpBarH);
+    ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(hpX, hpY + 1, hpW * hpRatioHUD, hpBarH * 0.4);
+    ctx.strokeStyle = '#442a1a'; ctx.lineWidth = 1; ctx.strokeRect(hpX, hpY, hpW, hpBarH);
+    ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 2;
+    var hpStr = Math.floor(player.hp) + '/' + player.maxHp;
+    ctx.strokeText(hpStr, hpX + hpW / 2, hpY + hpBarH - Math.round(2 * _zs));
+    ctx.fillStyle = '#fff'; ctx.fillText(hpStr, hpX + hpW / 2, hpY + hpBarH - Math.round(2 * _zs));
+    // XP bar (thin, below HP)
+    var xpBarY = hpY + hpBarH + Math.round(3 * _zs);
+    var xpBarH = Math.round(5 * _zs);
     var pxpRatio = Math.min(1, playerXP / (xpToNextLevel > 0 ? xpToNextLevel : 100));
-    var pxpY = hpBarY + hpBarH + 4;
-    ctx.fillStyle = '#0a0a16'; ctx.fillRect(hpBarX, pxpY, hpBarW, 6);
-    var pxpGrad = ctx.createLinearGradient(hpBarX, pxpY, hpBarX + hpBarW, pxpY);
-    pxpGrad.addColorStop(0, '#44aaff'); pxpGrad.addColorStop(1, '#88eeff');
-    ctx.fillStyle = pxpGrad; ctx.fillRect(hpBarX, pxpY, hpBarW * pxpRatio, 6);
-    ctx.strokeStyle = 'rgba(120,200,255,0.4)'; ctx.strokeRect(hpBarX + 0.5, pxpY + 0.5, hpBarW - 1, 5);
+    ctx.fillStyle = '#0a0a16'; ctx.fillRect(hpX, xpBarY, hpW, xpBarH);
+    ctx.fillStyle = '#44aaff'; ctx.fillRect(hpX, xpBarY, hpW * pxpRatio, xpBarH);
 
-    // Stat row (wave, kills, time) — compact
-    var srY = pxpY + 16;
-    ctx.textAlign = 'left'; ctx.font = 'bold 12px Arial';
-    var statIcons = [
-      { icon: '⚔', label: kills,            color: '#ff8866' },
-      { icon: '▲', label: 'W' + wave,        color: '#ffd700' },
-      { icon: '⏱', label: Math.floor(gameTime) + 's', color: '#88ccff' }
-    ];
-    var sxBase = hudX + 70;
-    for (var _si = 0; _si < statIcons.length; _si++) {
-      var st = statIcons[_si];
-      var sxHere = sxBase + _si * 48;
-      ctx.fillStyle = st.color; ctx.font = '11px Arial';
-      ctx.fillText(st.icon, sxHere, srY);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Arial';
-      ctx.fillText(st.label, sxHere + 12, srY);
-    }
-    ctx.restore(); // end HUD scale transform
-
-    // Kill streak + multiplier display
+    // Right section: Stats (wave, kills, time, gold, streak)
+    var stX = hpX + hpW + Math.round(12 * _zs);
+    var stY1 = Math.round(topH * 0.28);
+    var stY2 = Math.round(topH * 0.62);
+    ctx.font = _fs + 'px Arial'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#ff8866'; ctx.fillText('⚔ ', stX, stY1);
+    ctx.fillStyle = '#fff'; ctx.fillText(kills, stX + Math.round(18 * _zs), stY1);
+    ctx.fillStyle = '#ffd700'; ctx.fillText('▲ ', stX + Math.round(55 * _zs), stY1);
+    ctx.fillStyle = '#fff'; ctx.fillText('W' + wave, stX + Math.round(72 * _zs), stY1);
+    ctx.fillStyle = '#88ccff'; ctx.fillText('⏱ ', stX, stY2);
+    ctx.fillStyle = '#fff'; ctx.fillText(Math.floor(gameTime) + 's', stX + Math.round(18 * _zs), stY2);
+    ctx.fillStyle = '#ffd700'; ctx.fillText('💰 ', stX + Math.round(55 * _zs), stY2);
+    ctx.fillStyle = '#fff'; ctx.fillText(gold, stX + Math.round(72 * _zs), stY2);
+    // Kill streak
     if (killStreak >= 5) {
       ctx.fillStyle = killStreak >= 30 ? '#f00' : killStreak >= 15 ? '#f80' : '#ff0';
-      ctx.font = 'bold 16px Arial'; ctx.textAlign = 'right';
-      ctx.fillText(killStreak + '连杀!', W - 10, 20);
+      ctx.font = 'bold ' + _fsBold + 'px Arial'; ctx.textAlign = 'right';
+      ctx.fillText(killStreak + '连杀!', W - Math.round(8 * _zs), stY1);
     }
-    // scoreMultiplierPopup (US-284): animated multiplier display
-    if (killMultiplier > 1.05) {
-      var multSize = Math.min(22, 13 + (killMultiplier - 1) * 20);
-      var multPulse = 1 + Math.sin(Date.now() * 0.008) * 0.08;
-      var multColor = killMultiplier >= 1.8 ? '#f44' : killMultiplier >= 1.4 ? '#fa0' : '#ffd700';
-      ctx.font = 'bold ' + Math.round(multSize * multPulse) + 'px Arial';
-      ctx.textAlign = 'left';
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
-      ctx.strokeText('x' + killMultiplier.toFixed(1) + ' XP', 8, 48);
-      ctx.fillStyle = multColor;
-      ctx.fillText('x' + killMultiplier.toFixed(1) + ' XP', 8, 48);
+    ctx.restore();
+
+    // ──── BOTTOM BAR (10%) — item/skill slots ────
+    ctx.save();
+    var botGrad = ctx.createLinearGradient(0, botY, 0, H);
+    botGrad.addColorStop(0, 'rgba(8,8,20,0.0)');
+    botGrad.addColorStop(0.3, 'rgba(8,8,20,0.85)');
+    botGrad.addColorStop(1, 'rgba(8,8,20,0.92)');
+    ctx.fillStyle = botGrad; ctx.fillRect(0, botY, W, botH);
+    ctx.strokeStyle = 'rgba(255,215,0,0.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, botY); ctx.lineTo(W, botY); ctx.stroke();
+
+    // Skill slots (center) — show owned skills as usable items
+    var slotSize = Math.round(Math.min(botH * 0.7, W / 8));
+    var slotGap = Math.round(slotSize * 0.2);
+    var buildSkills = selectedBuild && selectedBuild.length > 0 ? selectedBuild : [];
+    var slotCount = Math.min(buildSkills.length, 5);
+    var totalSlotsW = slotCount * slotSize + (slotCount - 1) * slotGap;
+    var slotStartX = Math.round((W - totalSlotsW) / 2);
+    var slotY = botY + Math.round((botH - slotSize) / 2);
+    for (var _bsi = 0; _bsi < slotCount; _bsi++) {
+      var _bsid = buildSkills[_bsi];
+      var _bsd = SKILL_DATA[_bsid];
+      var _bslv = skillLevels[_bsid] || 0;
+      var _bsx = slotStartX + _bsi * (slotSize + slotGap);
+      // Slot background
+      ctx.fillStyle = _bslv > 0 ? 'rgba(20,30,50,0.9)' : 'rgba(15,15,25,0.7)';
+      ctx.fillRect(_bsx, slotY, slotSize, slotSize);
+      ctx.strokeStyle = _bslv > 0 ? (_bsd ? _bsd.color : '#888') : '#333';
+      ctx.lineWidth = _bslv > 0 ? 2 : 1;
+      ctx.strokeRect(_bsx, slotY, slotSize, slotSize);
+      // Skill icon
+      if (_bsd) {
+        ctx.font = Math.round(slotSize * 0.5) + 'px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = _bslv > 0 ? '#fff' : '#555';
+        ctx.fillText(_bsd.icon, _bsx + slotSize / 2, slotY + slotSize * 0.6);
+      }
+      // Level indicator
+      if (_bslv > 0) {
+        ctx.font = 'bold ' + Math.round(slotSize * 0.22) + 'px Arial';
+        ctx.fillStyle = '#ffd700'; ctx.textAlign = 'right';
+        ctx.fillText('Lv' + _bslv, _bsx + slotSize - 2, slotY + slotSize - 3);
+      }
     }
-    // Kills/min (moved below panel)
-    var killsPerMin = gameTime > 0 ? Math.round(kills / (gameTime / 60)) : 0;
-    ctx.fillStyle = '#aaa'; ctx.font = '11px Arial'; ctx.textAlign = 'left';
-    ctx.fillText(killsPerMin + ' kills/min', 120, 92);
 
-    // Ultimate charge bar (US-199)
-    var ultBarW = 80, ultBarH = 8, ultBarX = W / 2 - ultBarW / 2, ultBarY = H - 18;
-    ctx.fillStyle = '#222'; ctx.fillRect(ultBarX, ultBarY, ultBarW, ultBarH);
-    var ultRatio = Math.min(1, ultCharge / ultChargeMax);
-    ctx.fillStyle = ultReady ? '#ffd700' : '#4488ff';
-    ctx.fillRect(ultBarX, ultBarY, ultBarW * ultRatio, ultBarH);
-    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(ultBarX, ultBarY, ultBarW, ultBarH);
-    ctx.fillStyle = ultReady ? '#ffd700' : '#888'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(ultReady ? '按Q/双击 释放大招!' : '大招 ' + ultCharge + '/' + ultChargeMax, W / 2, ultBarY - 3);
+    // Ult button (right of slots)
+    var ultBtnR = Math.round(slotSize * 0.45);
+    var ultBtnX = slotStartX + totalSlotsW + slotGap * 2 + ultBtnR;
+    var ultBtnY = slotY + slotSize / 2;
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = ultReady ? '#ffd700' : '#333';
+    ctx.beginPath(); ctx.arc(ultBtnX, ultBtnY, ultBtnR, 0, Math.PI * 2); ctx.fill();
+    if (!ultReady) {
+      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(ultBtnX, ultBtnY, ultBtnR, -Math.PI/2, -Math.PI/2 + (ultCharge/ultChargeMax) * Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(ultBtnR) + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('\u26A1', ultBtnX, ultBtnY);
+    ctx.textBaseline = 'alphabetic';
 
-    // MOBA-style skill upgrade bar (right side)
+    // Dodge button (left of slots)
+    var dodgeBtnX = slotStartX - slotGap * 2 - ultBtnR;
+    var dodgeBtnY = ultBtnY;
+    var dodgeReady = player._dodgeCooldown <= 0;
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = dodgeReady ? '#4af' : '#333';
+    ctx.beginPath(); ctx.arc(dodgeBtnX, dodgeBtnY, ultBtnR, 0, Math.PI * 2); ctx.fill();
+    if (!dodgeReady) {
+      ctx.strokeStyle = '#4af'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(dodgeBtnX, dodgeBtnY, ultBtnR, -Math.PI/2, -Math.PI/2 + (1 - player._dodgeCooldown/dodgeCooldown) * Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(ultBtnR * 0.8) + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F4A8}', dodgeBtnX, dodgeBtnY);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+
+    // MOBA-style skill upgrade bar (right side, middle zone)
     drawSkillBar();
 
     // waveProgressBar (US-330): thin bar at top showing time until next wave
@@ -7366,8 +7401,6 @@ function doLogin() {
     }
 
     drawMinimap();
-    // Player status panel — shows all players with HP bars
-    drawPlayerPanel();
     // PvP immunity countdown
     if (gameTime < 90) {
       var pvpLeft = Math.ceil(90 - gameTime);
@@ -7654,34 +7687,7 @@ function doLogin() {
     drawBiomeTransition();
     // Edge danger indicators (US-279)
     drawEdgeDangerIndicators();
-    // touchSkillButtons (US-343): draw on-screen buttons for ult and dodge
-    var ultBtnX = W - 55, ultBtnY = H - 55, btnR = 25;
-    var dodgeBtnX = W - 55, dodgeBtnY = H - 115;
-    // Ultimate button
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = ultReady ? '#ffd700' : '#333';
-    ctx.beginPath(); ctx.arc(ultBtnX, ultBtnY, btnR, 0, Math.PI * 2); ctx.fill();
-    // Ult charge progress ring
-    if (!ultReady) {
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(ultBtnX, ultBtnY, btnR, -Math.PI/2, -Math.PI/2 + (ultCharge/ultChargeMax) * Math.PI * 2); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('\u26A1', ultBtnX, ultBtnY);
-    // Dodge button
-    ctx.globalAlpha = 0.7;
-    var dodgeReady = player._dodgeCooldown <= 0;
-    ctx.fillStyle = dodgeReady ? '#4af' : '#333';
-    ctx.beginPath(); ctx.arc(dodgeBtnX, dodgeBtnY, btnR, 0, Math.PI * 2); ctx.fill();
-    if (!dodgeReady) {
-      ctx.strokeStyle = '#4af'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(dodgeBtnX, dodgeBtnY, btnR, -Math.PI/2, -Math.PI/2 + (1 - player._dodgeCooldown/dodgeCooldown) * Math.PI * 2); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial';
-    ctx.fillText('\u{1F4A8}', dodgeBtnX, dodgeBtnY);
-    ctx.textBaseline = 'alphabetic';
+    // Ult/dodge buttons now rendered in bottom bar above
 
     // Low HP vignette (US-218)
     drawVignette();
