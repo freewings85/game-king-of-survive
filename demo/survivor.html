@@ -2795,17 +2795,26 @@ function doLogin() {
       playerTrail.push({ x: player.x, y: player.y });
       if (playerTrail.length > playerTrailMax) playerTrail.shift();
     }
-    // Auto attack nearby enemies
+    // Auto attack nearby enemies + hostile bot players
     player._timer = (player._timer || 0) - dt;
     if (player._timer <= 0) {
       player._timer = player.attackCooldown;
       var closest = null, closestDist = 400;
+      // Scan wave-spawned enemies
       for (var i = 0; i < offlineEnemies.length; i++) {
         var e = offlineEnemies[i];
         if (!e.alive) continue;
         var edx = e.x - player.x, edy = e.y - player.y;
         var ed = Math.sqrt(edx*edx + edy*edy);
         if (ed < closestDist) { closest = e; closestDist = ed; }
+      }
+      // Scan hostile bot players (different faction)
+      for (var bi = 0; bi < offlineBots.length; bi++) {
+        var bot = offlineBots[bi];
+        if (!bot.alive || bot.factionId === player.factionId) continue;
+        var bdx = bot.x - player.x, bdy = bot.y - player.y;
+        var bd = Math.sqrt(bdx*bdx + bdy*bdy);
+        if (bd < closestDist) { closest = bot; closestDist = bd; }
       }
       if (closest) {
         // Wave 1: damage immunity window (Plan A+C for normal enemies)
@@ -8221,7 +8230,7 @@ function doLogin() {
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('选择角色', DDW / 2, 40);
+    ctx.fillText('选择角色', DW / 2, 40);
 
     var classKeys = ['warrior', 'mage', 'scout'];
     for (var i = 0; i < 3; i++) {
@@ -9358,14 +9367,16 @@ function doLogin() {
       if (_hitBtn(_menuBtns.multi))   { localMultiplayer = true; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.timed))   { countdownTimerMode = true; state = 'charSelect'; }
     } else if (state === 'mapSelect') {
+      // Convert screen coords to design space (400x700)
+      var _dc = _toDesignCoords(cx, cy); var dcx = _dc.x, dcy = _dc.y;
       // Map selection click handling
       var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
       for (var mi = 0; mi < mapsForLevel.length; mi++) {
         var my = 70 + mi * 55;
-        if (cx > W/2-120 && cx < W/2+120 && cy > my && cy < my + 48) { mapSelect.selectedIndex = mi; }
+        if (dcx > 200-120 && dcx < 200+120 && dcy > my && dcy < my + 48) { mapSelect.selectedIndex = mi; }
       }
       // Start button
-      if (cx > W/2-60 && cx < W/2+60 && cy > H-60 && cy < H-20) {
+      if (dcx > 200-60 && dcx < 200+60 && dcy > 700-60 && dcy < 700-20) {
         var selMaps = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
         currentMap = selMaps[mapSelect.selectedIndex] || mapConfig[0];
         mapBoundary = currentMap.boundary;
@@ -9373,12 +9384,14 @@ function doLogin() {
         selectedBuild = []; // reset build
       }
       // Back button
-      if (cx > W/2-60 && cx < W/2+60 && cy > H-110 && cy < H-74) { state = 'charSelect'; }
+      if (dcx > 200-60 && dcx < 200+60 && dcy > 700-110 && dcy < 700-74) { state = 'charSelect'; }
     } else if (state === 'charSelect') {
+      // Convert screen coords to design space (400x700)
+      var _dc2 = _toDesignCoords(cx, cy); var dcx2 = _dc2.x, dcy2 = _dc2.y;
       var classKeys = ['warrior', 'mage', 'scout'];
       for (var ci = 0; ci < 3; ci++) {
         var cby = 70 + ci * 90;
-        if (cx > W / 2 - 190 && cx < W / 2 + 190 && cy > cby && cy < cby + 80) {
+        if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 80) {
           selectedClass = classKeys[ci];
           state = 'mapSelect';
         }
@@ -9389,7 +9402,7 @@ function doLogin() {
       for (var ai = 0; ai < 4; ai++) {
         var ay = panelY + 25 + ai * 24;
         // "-" button
-        if (cx > W / 2 + 60 && cx < W / 2 + 84 && cy > ay && cy < ay + 18) {
+        if (dcx2 > 200 + 60 && dcx2 < 200 + 84 && dcy2 > ay && dcy2 < ay + 18) {
           var aKey = attrNames[ai];
           var initVal = (CLASS_DEFS[selectedClass].initialAttributes || {})[aKey] || 0;
           if (playerAttributes[aKey] > 0) {
@@ -9398,7 +9411,7 @@ function doLogin() {
           }
         }
         // "+" button
-        if (cx > W / 2 + 90 && cx < W / 2 + 114 && cy > ay && cy < ay + 18) {
+        if (dcx2 > 200 + 90 && dcx2 < 200 + 114 && dcy2 > ay && dcy2 < ay + 18) {
           if (attributePoints > 0) {
             playerAttributes[attrNames[ai]]++;
             attributePoints--;
@@ -9418,7 +9431,7 @@ function doLogin() {
       });
       var _skinSize = 28, _skinGap = 6;
       var _skinCols = Math.min(_applicableSkins.length, 8);
-      var _skinStartX = W / 2 - (_skinCols * (_skinSize + _skinGap) - _skinGap) / 2;
+      var _skinStartX = 200 - (_skinCols * (_skinSize + _skinGap) - _skinGap) / 2;
       var _skinRowY = _skinPanelY + 30;
       for (var si = 0; si < _applicableSkins.length && si < 16; si++) {
         var sk = _applicableSkins[si];
@@ -9426,20 +9439,22 @@ function doLogin() {
         var col = si % 8;
         var skx = _skinStartX + col * (_skinSize + _skinGap);
         var sky = _skinRowY + row * (_skinSize + _skinGap + 8);
-        if (cx > skx && cx < skx + _skinSize && cy > sky && cy < sky + _skinSize) {
+        if (dcx2 > skx && dcx2 < skx + _skinSize && dcy2 > sky && dcy2 < sky + _skinSize) {
           if (sk.owned || sk.id === 'default') {
             equippedSkin = sk.id;
           }
         }
       }
       // Back
-      if (cx > W / 2 - 50 && cx < W / 2 + 50 && cy > H - 50 && cy < H - 14) { state = 'menu'; isDailyMode = false; }
+      if (dcx2 > 200 - 50 && dcx2 < 200 + 50 && dcy2 > 700 - 50 && dcy2 < 700 - 14) { state = 'menu'; isDailyMode = false; }
     } else if (state === 'buildSelect') {
+      // Convert screen coords to design space (400x700)
+      var _dc3 = _toDesignCoords(cx, cy); var dcx3 = _dc3.x, dcy3 = _dc3.y;
       var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
       var available = cls.availableSkills || [];
       var cols = 2;
       var cardW = 180, cardH = 52, gapX = 12, gapY = 8;
-      var startX = W / 2 - (cols * cardW + (cols - 1) * gapX) / 2;
+      var startX = 200 - (cols * cardW + (cols - 1) * gapX) / 2;
       var startY = 80;
 
       // Check skill card clicks
@@ -9449,7 +9464,7 @@ function doLogin() {
         var row = Math.floor(bi / cols);
         var bx = startX + col * (cardW + gapX);
         var by = startY + row * (cardH + gapY);
-        if (cx > bx && cx < bx + cardW && cy > by && cy < by + cardH) {
+        if (dcx3 > bx && dcx3 < bx + cardW && dcy3 > by && dcy3 < by + cardH) {
           var existIdx = selectedBuild.indexOf(sid);
           if (existIdx >= 0) {
             // Deselect
@@ -9465,24 +9480,26 @@ function doLogin() {
       // Confirm button
       var buildPanelY = startY + Math.ceil(available.length / cols) * (cardH + gapY) + 15;
       var btnY = buildPanelY + 65;
-      if (selectedBuild.length === 5 && cx > W / 2 - 80 && cx < W / 2 + 80 && cy > btnY && cy < btnY + 40) {
+      if (selectedBuild.length === 5 && dcx3 > 200 - 80 && dcx3 < 200 + 80 && dcy3 > btnY && dcy3 < btnY + 40) {
         startGame(isDailyMode);
       }
 
       // Back button
-      if (cx > W / 2 - 50 && cx < W / 2 + 50 && cy > H - 50 && cy < H - 14) {
+      if (dcx3 > 200 - 50 && dcx3 < 200 + 50 && dcy3 > 700 - 50 && dcy3 < 700 - 14) {
         state = 'mapSelect';
       }
     } else if (state === 'upgrade') {
+      // Convert screen coords to design space (400x700)
+      var _dc4 = _toDesignCoords(cx, cy); var dcx4 = _dc4.x, dcy4 = _dc4.y;
       // Back button
-      if (cx > W / 2 - 50 && cx < W / 2 + 50 && cy > H - 50 && cy < H - 14) { state = 'menu'; }
+      if (dcx4 > 200 - 50 && dcx4 < 200 + 50 && dcy4 > 700 - 50 && dcy4 < 700 - 14) { state = 'menu'; }
       // Upgrade cards
       for (var i = 0; i < META_UPGRADE_DEFS.length; i++) {
         var def = META_UPGRADE_DEFS[i];
         var lv = metaUpgrades[def.id] || 0;
         var cost = def.cost * (lv + 1);
         var by = 85 + i * 70;
-        if (cx > W / 2 - 160 && cx < W / 2 + 160 && cy > by && cy < by + 58 && gold >= cost) {
+        if (dcx4 > 200 - 160 && dcx4 < 200 + 160 && dcy4 > by && dcy4 < by + 58 && gold >= cost) {
           gold -= cost;
           metaUpgrades[def.id] = lv + 1;
           prestigeLevel++; // prestigeSystem tracking
