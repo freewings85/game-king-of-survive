@@ -28,7 +28,7 @@
   #btn-login:hover { background: #3a3a5a; }
   #login-msg { font-size: 13px; color: #ff6b6b; margin-top: 8px; min-height: 20px; }
   #login-info { font-size: 12px; color: #666; margin-top: 20px; }
-  #player-bar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 50;
+  #player-bar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none;
     background: rgba(0,0,0,0.7); border: 1px solid #333; border-radius: 8px; padding: 4px 16px;
     font-family: Arial, sans-serif; color: #ddd; font-size: 13px; display: none; }
   #player-bar span { margin: 0 8px; }
@@ -360,44 +360,46 @@ function doLogin() {
   // mapSelect (US-002): map choice UI
   var mapSelect = { selectedIndex: 0, mapLevel: 1 };
   function drawMapSelect() {
-    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, W, H);
+    // Design space: 400x700 (called inside _applyUIScale)
+    var DW = 400, DH = 700;
+    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('选择地图', W/2, 40);
+    ctx.fillText('选择地图', DW/2, 40);
     var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
     for (var i = 0; i < mapsForLevel.length; i++) {
       var my = 70 + i * 55; var sel = i === mapSelect.selectedIndex;
-      ctx.fillStyle = sel ? '#3a5a3a' : '#1a2a3a'; ctx.fillRect(W/2-120, my, 240, 48);
+      ctx.fillStyle = sel ? '#3a5a3a' : '#1a2a3a'; ctx.fillRect(DW/2-120, my, 240, 48);
       ctx.fillStyle = sel ? '#fff' : '#aaa'; ctx.font = (sel ? 'bold ' : '') + '16px Arial';
-      ctx.fillText(mapsForLevel[i].name + ' (Lv.' + mapsForLevel[i].level + ')', W/2, my + 30);
-      // mapPreview: small shape icon
+      ctx.fillText(mapsForLevel[i].name + ' (Lv.' + mapsForLevel[i].level + ')', DW/2, my + 30);
       ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
-      ctx.strokeRect(W/2+90, my+8, 30, 30);
+      ctx.strokeRect(DW/2+90, my+8, 30, 30);
     }
-    ctx.fillStyle = '#4a4'; ctx.fillRect(W/2-60, H-60, 120, 40);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.fillText('开始', W/2, H-35);
-    // Back button
-    ctx.fillStyle = '#333'; ctx.fillRect(W/2-60, H-110, 120, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(W/2-58, H-108, 116, 32);
+    ctx.fillStyle = '#4a4'; ctx.fillRect(DW/2-60, DH-60, 120, 40);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.fillText('开始', DW/2, DH-35);
+    ctx.fillStyle = '#333'; ctx.fillRect(DW/2-60, DH-110, 120, 36);
+    ctx.fillStyle = '#888'; ctx.fillRect(DW/2-58, DH-108, 116, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial';
-    ctx.fillText('← 返回', W/2, H-88);
+    ctx.fillText('← 返回', DW/2, DH-88);
   }
 
   function drawBuildSelect() {
-    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, W, H);
+    // Design space: 400x700 (called inside _applyUIScale)
+    var DW = 400, DH = 700;
+    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('选择技能 (选择5个)', W / 2, 35);
+    ctx.fillText('选择技能 (选择5个)', DW / 2, 35);
 
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     var available = cls.availableSkills || [];
 
     // Show class info
     ctx.font = '14px Arial'; ctx.fillStyle = cls.color;
-    ctx.fillText(cls.icon + ' ' + cls.name + ' 可用技能', W / 2, 60);
+    ctx.fillText(cls.icon + ' ' + cls.name + ' 可用技能', DW / 2, 60);
 
     // Draw skill grid (2 columns, 5 rows)
     var cols = 2;
     var cardW = 180, cardH = 52, gapX = 12, gapY = 8;
-    var startX = W / 2 - (cols * cardW + (cols - 1) * gapX) / 2;
+    var startX = DW / 2 - (cols * cardW + (cols - 1) * gapX) / 2;
     var startY = 80;
 
     for (var i = 0; i < available.length; i++) {
@@ -442,15 +444,15 @@ function doLogin() {
 
     // Selected build display
     var buildY = startY + Math.ceil(available.length / cols) * (cardH + gapY) + 15;
-    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(W / 2 - 200, buildY, 400, 50);
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 200, buildY, 400, 50);
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 200, buildY, 400, 50);
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 200, buildY, 400, 50);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('已选: ' + selectedBuild.length + '/5', W / 2, buildY + 18);
+    ctx.fillText('已选: ' + selectedBuild.length + '/5', DW / 2, buildY + 18);
 
     // Show selected skill icons
     ctx.font = '18px Arial'; ctx.textAlign = 'left';
     for (var bi = 0; bi < 5; bi++) {
-      var bx = W / 2 - 90 + bi * 40;
+      var bx = DW / 2 - 90 + bi * 40;
       if (bi < selectedBuild.length) {
         var bsd = SKILL_DATA[selectedBuild[bi]];
         if (bsd) {
@@ -466,22 +468,22 @@ function doLogin() {
     // Confirm button (only when 5 selected)
     var btnY = buildY + 65;
     if (selectedBuild.length === 5) {
-      ctx.fillStyle = '#2a6a2a'; ctx.fillRect(W / 2 - 80, btnY, 160, 40);
-      ctx.strokeStyle = '#4f4'; ctx.lineWidth = 2; ctx.strokeRect(W / 2 - 80, btnY, 160, 40);
+      ctx.fillStyle = '#2a6a2a'; ctx.fillRect(DW / 2 - 80, btnY, 160, 40);
+      ctx.strokeStyle = '#4f4'; ctx.lineWidth = 2; ctx.strokeRect(DW / 2 - 80, btnY, 160, 40);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('开始游戏 ▶', W / 2, btnY + 27);
+      ctx.fillText('开始游戏 ▶', DW / 2, btnY + 27);
     } else {
-      ctx.fillStyle = '#222'; ctx.fillRect(W / 2 - 80, btnY, 160, 40);
-      ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 80, btnY, 160, 40);
+      ctx.fillStyle = '#222'; ctx.fillRect(DW / 2 - 80, btnY, 160, 40);
+      ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 80, btnY, 160, 40);
       ctx.fillStyle = '#666'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('再选' + (5 - selectedBuild.length) + '个技能', W / 2, btnY + 27);
+      ctx.fillText('再选' + (5 - selectedBuild.length) + '个技能', DW / 2, btnY + 27);
     }
 
     // Back button
-    ctx.fillStyle = '#333'; ctx.fillRect(W / 2 - 50, H - 50, 100, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(W / 2 - 48, H - 48, 96, 32);
+    ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
+    ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('← 返回', W / 2, H - 28);
+    ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
   // multiPlayerRender (US-004): all players in the game
@@ -5733,10 +5735,10 @@ function doLogin() {
     }
 
     if (state === 'menu') drawMenu();
-    else if (state === 'charSelect') drawCharSelect();
-    else if (state === 'mapSelect') drawMapSelect();
-    else if (state === 'buildSelect') drawBuildSelect();
-    else if (state === 'upgrade') drawUpgradeMenu();
+    else if (state === 'charSelect') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawCharSelect(); _restoreUIScale(); }
+    else if (state === 'mapSelect') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawMapSelect(); _restoreUIScale(); }
+    else if (state === 'buildSelect') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawBuildSelect(); _restoreUIScale(); }
+    else if (state === 'upgrade') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawUpgradeMenu(); _restoreUIScale(); }
     else if (state === 'connecting') {
       ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
       ctx.fillText('连接服务器中...', W / 2, H / 2);
@@ -8007,6 +8009,30 @@ function doLogin() {
   var menuParticles = [];
   // Shared button hit-rects — populated by drawMenu, consumed by click handler
   var _menuBtns = { solo: null, team: null, daily: null, upgrade: null, multi: null, timed: null };
+  // Generic menu-state scale transform — wraps charSelect/mapSelect/buildSelect/upgrade
+  // so their hardcoded 400-wide layouts fill the phone screen.
+  // _uiTransform stores the active {scale, ox, oy} for click coordinate inversion.
+  var _uiTransform = { scale: 1, ox: 0, oy: 0 };
+  function _applyUIScale() {
+    // Design reference: 400 wide, 700 tall (same as menu)
+    var s = Math.min(W / 400, H / 700);
+    var ox = (W - 400 * s) / 2;
+    var oy = (H - 700 * s) / 2;
+    _uiTransform = { scale: s, ox: ox, oy: oy };
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(s, s);
+  }
+  function _restoreUIScale() {
+    ctx.restore();
+  }
+  // Convert a screen-space click (cx,cy) into design-space coords
+  function _toDesignCoords(cx, cy) {
+    return {
+      x: (cx - _uiTransform.ox) / _uiTransform.scale,
+      y: (cy - _uiTransform.oy) / _uiTransform.scale
+    };
+  }
   function drawMenuParticles() {
     if (menuParticles.length < 30) {
       menuParticles.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.3, vy: -0.2 - Math.random() * 0.3, alpha: Math.random() * 0.5 + 0.2, size: 1 + Math.random() * 2 });
@@ -8191,9 +8217,11 @@ function doLogin() {
   }
 
   function drawCharSelect() {
-    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, W, H);
+    // Design space: 400x700 (called inside _applyUIScale)
+    var DW = 400, DH = 700;
+    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('选择角色', W / 2, 40);
+    ctx.fillText('选择角色', DDW / 2, 40);
 
     var classKeys = ['warrior', 'mage', 'scout'];
     for (var i = 0; i < 3; i++) {
@@ -8202,25 +8230,25 @@ function doLogin() {
       var isSelected = selectedClass === classKeys[i];
       // Card
       ctx.fillStyle = isSelected ? '#1a1a3e' : '#111118';
-      ctx.fillRect(W / 2 - 190, by, 380, 80);
+      ctx.fillRect(DW / 2 - 190, by, 380, 80);
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
-      ctx.strokeRect(W / 2 - 190, by, 380, 80);
+      ctx.strokeRect(DW / 2 - 190, by, 380, 80);
       // Character sprite preview + emoji icon
-      drawCharacterSprite(W / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
+      drawCharacterSprite(DW / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
       ctx.font = '18px Arial'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
-      ctx.fillText(cls.icon, W / 2 - 175, by + 20);
+      ctx.fillText(cls.icon, DW / 2 - 175, by + 20);
       ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#fff';
-      ctx.fillText(cls.name, W / 2 - 135, by + 30);
+      ctx.fillText(cls.name, DW / 2 - 135, by + 30);
       // Stats
       ctx.font = '11px Arial'; ctx.fillStyle = '#aaa';
-      ctx.fillText('HP:' + cls.hp + '  攻击:' + cls.attackDamage + '  移速:' + cls.speed, W / 2 - 135, by + 48);
+      ctx.fillText('HP:' + cls.hp + '  攻击:' + cls.attackDamage + '  移速:' + cls.speed, DW / 2 - 135, by + 48);
       // Passive
       ctx.fillStyle = '#888'; ctx.font = '10px Arial';
-      ctx.fillText(cls.passive, W / 2 - 135, by + 65);
+      ctx.fillText(cls.passive, DW / 2 - 135, by + 65);
       // Click hint
       ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px Arial';
-      ctx.fillText('▶', W / 2 + 170, by + 45);
+      ctx.fillText('▶', DW / 2 + 170, by + 45);
     }
 
     // === Attribute Panel (US-009) ===
@@ -8236,44 +8264,44 @@ function doLogin() {
     var attrNames = ['INT', 'STR', 'AGI', 'STA'];
     var attrLabels = { INT: '智力(法术强度↑)', STR: '力量(攻击+护甲↑)', AGI: '敏捷(速度+暴击↑)', STA: '耐力(生命+回血↑)' };
     var panelY = 350;
-    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(W / 2 - 190, panelY - 5, 380, 130);
-    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 190, panelY - 5, 380, 130);
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 190, panelY - 5, 380, 130);
+    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 190, panelY - 5, 380, 130);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('属性分配 (剩余:' + attributePoints + ')', W / 2, panelY + 12);
+    ctx.fillText('属性分配 (剩余:' + attributePoints + ')', DW / 2, panelY + 12);
     for (var ai = 0; ai < 4; ai++) {
       var aKey = attrNames[ai];
       var aVal = playerAttributes[aKey];
       var ay = panelY + 25 + ai * 24;
       ctx.font = '12px Arial'; ctx.textAlign = 'left'; ctx.fillStyle = '#ccc';
-      ctx.fillText(attrLabels[aKey] + ': ' + aVal, W / 2 - 170, ay + 12);
+      ctx.fillText(attrLabels[aKey] + ': ' + aVal, DW / 2 - 170, ay + 12);
       // "-" button
-      ctx.fillStyle = aVal > 0 ? '#a44' : '#333'; ctx.fillRect(W / 2 + 60, ay, 24, 18);
+      ctx.fillStyle = aVal > 0 ? '#a44' : '#333'; ctx.fillRect(DW / 2 + 60, ay, 24, 18);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('-', W / 2 + 72, ay + 14);
+      ctx.fillText('-', DW / 2 + 72, ay + 14);
       // "+" button
-      ctx.fillStyle = attributePoints > 0 ? '#4a4' : '#333'; ctx.fillRect(W / 2 + 90, ay, 24, 18);
-      ctx.fillStyle = '#fff'; ctx.fillText('+', W / 2 + 102, ay + 14);
+      ctx.fillStyle = attributePoints > 0 ? '#4a4' : '#333'; ctx.fillRect(DW / 2 + 90, ay, 24, 18);
+      ctx.fillStyle = '#fff'; ctx.fillText('+', DW / 2 + 102, ay + 14);
     }
     // Derived stats preview
     var derivedStats = (typeof RPGEngine !== 'undefined' && RPGEngine.calculateDerivedStats)
       ? RPGEngine.calculateDerivedStats(playerAttributes, selCls, 1) : null;
     if (derivedStats) {
       var dsY = panelY + 128;
-      ctx.fillStyle = '#111'; ctx.fillRect(W / 2 - 190, dsY, 380, 50);
-      ctx.strokeStyle = '#333'; ctx.strokeRect(W / 2 - 190, dsY, 380, 50);
+      ctx.fillStyle = '#111'; ctx.fillRect(DW / 2 - 190, dsY, 380, 50);
+      ctx.strokeStyle = '#333'; ctx.strokeRect(DW / 2 - 190, dsY, 380, 50);
       ctx.font = '10px Arial'; ctx.fillStyle = '#8f8'; ctx.textAlign = 'left';
       var atkLabel = selectedClass === 'mage' ? '法术强度' : '攻击力';
       var atkValue = selectedClass === 'mage' ? derivedStats.skillPower : derivedStats.physicalAttack;
-      ctx.fillText('生命:' + derivedStats.maxHP + '  ' + atkLabel + ':' + atkValue.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), W / 2 - 180, dsY + 16);
-      ctx.fillText('暴击:' + (derivedStats.critRate * 100).toFixed(1) + '%  护甲:' + derivedStats.armor.toFixed(1) + '  回血:' + derivedStats.hpRegen.toFixed(1) + '/s', W / 2 - 180, dsY + 34);
+      ctx.fillText('生命:' + derivedStats.maxHP + '  ' + atkLabel + ':' + atkValue.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), DW / 2 - 180, dsY + 16);
+      ctx.fillText('暴击:' + (derivedStats.critRate * 100).toFixed(1) + '%  护甲:' + derivedStats.armor.toFixed(1) + '  回血:' + derivedStats.hpRegen.toFixed(1) + '/s', DW / 2 - 180, dsY + 34);
     }
 
     // === Skin Selection Panel ===
     var skinPanelY = (derivedStats ? panelY + 185 : panelY + 135);
-    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(W / 2 - 190, skinPanelY, 380, 110);
-    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 190, skinPanelY, 380, 110);
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 190, skinPanelY, 380, 110);
+    ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 190, skinPanelY, 380, 110);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('🎨 皮肤选择', W / 2, skinPanelY + 16);
+    ctx.fillText('🎨 皮肤选择', DW / 2, skinPanelY + 16);
     // Get skins applicable to selected class
     var applicableSkins = skinCollection.filter(function(sk) {
       var sd = skinsData[sk.id];
@@ -8283,7 +8311,7 @@ function doLogin() {
     var skinCols = Math.min(applicableSkins.length, 8);
     var skinSize = 28;
     var skinGap = 6;
-    var skinStartX = W / 2 - (skinCols * (skinSize + skinGap) - skinGap) / 2;
+    var skinStartX = DW / 2 - (skinCols * (skinSize + skinGap) - skinGap) / 2;
     var skinRowY = skinPanelY + 30;
     var tierColors = { C: '#aaa', B: '#4a9eff', A: '#c44aff', S: '#ffd700' };
     for (var si = 0; si < applicableSkins.length && si < 16; si++) {
@@ -8317,28 +8345,30 @@ function doLogin() {
     // Show equipped skin name
     var eqSkinData = skinsData[equippedSkin] || {};
     ctx.fillStyle = '#ccc'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('当前: ' + (eqSkinData.name || '默认'), W / 2, skinPanelY + 103);
+    ctx.fillText('当前: ' + (eqSkinData.name || '默认'), DW / 2, skinPanelY + 103);
 
     // Back
-    ctx.fillStyle = '#333'; ctx.fillRect(W / 2 - 50, H - 50, 100, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(W / 2 - 48, H - 48, 96, 32);
+    ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
+    ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('← 返回', W / 2, H - 28);
+    ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
   function drawUpgradeMenu() {
-    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, W, H);
+    // Design space: 400x700
+    var DW = 400, DH = 700;
+    ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('⚔ 永久强化', W / 2, 40);
+    ctx.fillText('⚔ 永久强化', DW / 2, 40);
     ctx.fillStyle = '#ffd700'; ctx.font = '14px Arial';
-    ctx.fillText('💰 ' + gold + ' 金币', W / 2, 65);
+    ctx.fillText('💰 ' + gold + ' 金币', DW / 2, 65);
 
     for (var i = 0; i < META_UPGRADE_DEFS.length; i++) {
       var def = META_UPGRADE_DEFS[i];
       var lv = metaUpgrades[def.id] || 0;
       var cost = def.cost * (lv + 1);
       var canBuy = gold >= cost;
-      var bx = W / 2 - 160, by = 85 + i * 70;
+      var bx = DW / 2 - 160, by = 85 + i * 70;
       // Card
       ctx.fillStyle = canBuy ? '#1a1a2e' : '#111118';
       ctx.fillRect(bx, by, 320, 58);
@@ -8361,10 +8391,10 @@ function doLogin() {
     }
 
     // Back button
-    ctx.fillStyle = '#333'; ctx.fillRect(W / 2 - 50, H - 50, 100, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(W / 2 - 48, H - 48, 96, 32);
+    ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
+    ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
-    ctx.fillText('← 返回', W / 2, H - 28);
+    ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
   // Wave 2 layout: landscape cards 280x360, horizontal row, rarity-colored border
