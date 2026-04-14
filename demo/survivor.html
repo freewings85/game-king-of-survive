@@ -7180,12 +7180,15 @@ function doLogin() {
     var rowY2 = Math.round(topH * 0.72); // lower row
     var capH = Math.round(topH * 0.38);
 
-    // ──── TOP BAR (15%) ────
+    // ──── TOP BAR (15%) — solid opaque, zero game overlap ────
     ctx.save();
     var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
-    topGrad.addColorStop(0, 'rgba(10,10,22,0.88)');
-    topGrad.addColorStop(1, 'rgba(10,10,22,0.15)');
+    topGrad.addColorStop(0, '#14142a');
+    topGrad.addColorStop(1, '#0a0a1a');
     ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, topH);
+    // Gold bottom edge divider
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(0, topH - 2, W, 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, topH, W, 1);
 
     // Left: Avatar (round, with level badge)
     var avR = Math.round(topH * 0.30);
@@ -7265,7 +7268,8 @@ function doLogin() {
 
     // Right: Gold capsule (top-right, before minimap)
     var goldCapW = Math.round(90 * _zs);
-    var goldCapX = W - goldCapW - padX - Math.round(160 * _zs); // leave space for minimap
+    var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
+    var goldCapX = W - goldCapW - padX - _miniW - Math.round(6 * _zs);
     var goldCapY = capY;
     ctx.save();
     ctx.fillStyle = 'rgba(20,20,35,0.92)';
@@ -7296,12 +7300,15 @@ function doLogin() {
     }
     ctx.restore();
 
-    // ──── BOTTOM BAR (10%) — big rounded buttons with Chinese labels ────
+    // ──── BOTTOM BAR (10%) — solid opaque, zero game overlap ────
     ctx.save();
     var botGrad = ctx.createLinearGradient(0, botY, 0, H);
-    botGrad.addColorStop(0, 'rgba(10,10,22,0.15)');
-    botGrad.addColorStop(1, 'rgba(10,10,22,0.95)');
+    botGrad.addColorStop(0, '#0a0a1a');
+    botGrad.addColorStop(1, '#14142a');
     ctx.fillStyle = botGrad; ctx.fillRect(0, botY, W, botH);
+    // Gold top edge divider
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, botY - 1, W, 1);
+    ctx.fillStyle = '#ffd700'; ctx.fillRect(0, botY, W, 2);
 
     // Layout: [闪避] [技能1...技能5] [大招] with Chinese labels below each
     var buildSkills = selectedBuild && selectedBuild.length > 0 ? selectedBuild : [];
@@ -7973,8 +7980,13 @@ function doLogin() {
   // Minimap (US-204) — shows full world with all players
   function drawMinimap() {
     // Top-right position with gold frame (moved from bottom-right per UX rev)
-    var mmW = 150, mmH = 150;
-    var mmX = W - mmW - 12, mmY = 12;
+    // Sized to fit within top bar (15% of H), positioned top-right
+    var _mmZs = Math.min(W / 400, H / 700);
+    var _topBarH = Math.round(H * 0.15);
+    var mmW = Math.min(Math.round(80 * _mmZs), _topBarH - Math.round(8 * _mmZs));
+    var mmH = mmW;
+    var mmX = W - mmW - Math.round(6 * _mmZs);
+    var mmY = Math.round((_topBarH - mmH) / 2);
     ctx.save();
     // Outer glow
     ctx.shadowColor = 'rgba(255,215,0,0.4)';
