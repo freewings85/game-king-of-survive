@@ -6137,12 +6137,26 @@ function doLogin() {
   function drawGame() {
     if (!player) return;
 
-    // multiPlayerRender (US-004): camera follow local player
+    // 3-zone HUD layout: top 15% / middle 75% game / bottom 10%
+    var _gameZoneTop = Math.round(H * 0.15);
+    var _gameZoneBot = Math.round(H * 0.90);
+    var _gameZoneH = _gameZoneBot - _gameZoneTop;
+
+    // Clear HUD zones so stale pixels from prior frames don't bleed through semi-transparent bars
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, _gameZoneTop);
+    ctx.fillRect(0, _gameZoneBot, W, H - _gameZoneBot);
+
+    // multiPlayerRender (US-004): camera follow local player — center in MIDDLE zone
     cameraX = player.x - W/2;
-    cameraY = player.y - H/2;
+    cameraY = player.y - (_gameZoneTop + _gameZoneH / 2);
     cameraX = Math.max(0, Math.min(WORLD_W - W, cameraX));
-    cameraY = Math.max(0, Math.min(WORLD_H - H, cameraY));
+    cameraY = Math.max(-_gameZoneTop, Math.min(WORLD_H - _gameZoneBot, cameraY));
     ctx.save();
+    // Clip game rendering to middle zone so entities never overlap HUD bars
+    ctx.beginPath();
+    ctx.rect(0, _gameZoneTop, W, _gameZoneH);
+    ctx.clip();
     ctx.translate(-cameraX, -cameraY);
 
     // auroraBackground (US-314): flowing aurora light bands
@@ -7180,11 +7194,12 @@ function doLogin() {
     var rowY2 = Math.round(topH * 0.72); // lower row
     var capH = Math.round(topH * 0.38);
 
-    // ──── TOP BAR (15%) — solid opaque, zero game overlap ────
+    // ──── TOP BAR (15%) — 50% opacity, consistent tone with bottom bar ────
     ctx.save();
+    // 50% alpha gradient with same tone as bottom bar (#14142a → #0a0a1a)
     var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
-    topGrad.addColorStop(0, '#14142a');
-    topGrad.addColorStop(1, '#0a0a1a');
+    topGrad.addColorStop(0, 'rgba(20,20,42,0.5)');
+    topGrad.addColorStop(1, 'rgba(10,10,26,0.5)');
     ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, topH);
     // Gold bottom edge divider
     ctx.fillStyle = '#ffd700'; ctx.fillRect(0, topH - 2, W, 2);
