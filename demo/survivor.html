@@ -2169,7 +2169,7 @@ function doLogin() {
     var _whs = Math.min(W / 400, H / 700);
     var _wfs = Math.round(22 * _whs);
     var _wfsSmall = Math.round(19 * _whs);
-    var _wby = Math.round(H * 0.15) + Math.round(30 * _whs);
+    var _wby = Math.round(H * 0.105) + Math.round(30 * _whs);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(3, 4 * _whs);
     var txt, color;
@@ -5800,7 +5800,7 @@ function doLogin() {
     var _needCam = (state === 'playing' || state === 'gameOver' || state === 'paused' || state === 'levelUp' || state === 'spectating') && player;
     if (_needCam) {
       ctx.save();
-      var _pzTop = Math.round(H * 0.15);
+      var _pzTop = Math.round(H * 0.105);
       var _pzBot = Math.round(H * 0.90);
       ctx.beginPath(); ctx.rect(0, _pzTop, W, _pzBot - _pzTop); ctx.clip();
       ctx.translate(-cameraX, -cameraY);
@@ -6182,7 +6182,7 @@ function doLogin() {
     if (!player) return;
 
     // 3-zone HUD layout: top 15% / middle 75% game / bottom 10%
-    var _gameZoneTop = Math.round(H * 0.15);
+    var _gameZoneTop = Math.round(H * 0.105);
     var _gameZoneBot = Math.round(H * 0.90);
     var _gameZoneH = _gameZoneBot - _gameZoneTop;
 
@@ -7324,7 +7324,7 @@ function doLogin() {
     var _fs = Math.max(11, Math.round(15 * _zs));
     var _fsSmall = Math.max(9, Math.round(12 * _zs));
     var _fsBold = Math.max(13, Math.round(17 * _zs));
-    var topH = Math.round(H * 0.15);
+    var topH = Math.round(H * 0.105);
     var botH = Math.round(H * 0.10);
     var botY = H - botH;
     var hudCls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior || { color: '#4af', icon: '★' };
@@ -8132,7 +8132,7 @@ function doLogin() {
     // Top-right position with gold frame (moved from bottom-right per UX rev)
     // Sized to fit within top bar (15% of H), positioned top-right
     var _mmZs = Math.min(W / 400, H / 700);
-    var _topBarH = Math.round(H * 0.15);
+    var _topBarH = Math.round(H * 0.105);
     var mmW = Math.min(Math.round(80 * _mmZs), _topBarH - Math.round(8 * _mmZs));
     var mmH = mmW;
     var mmX = W - mmW - Math.round(6 * _mmZs);
