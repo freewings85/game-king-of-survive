@@ -1893,7 +1893,7 @@ function doLogin() {
     // Minimal local player placeholder (server will fill real values via snapshot)
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     player = {
-      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 36, speed: cls.speed,
+      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 47, speed: cls.speed,
       attackDamage: cls.attackDamage, attackCooldown: 0.4, _timer: 0,
       projectileCount: 1, pierce: false, critChance: 0, slowAura: 0,
       hpRegen: 0, xpMagnetRange: 300, shieldActive: false, _shieldTimer: 0,
