@@ -6487,6 +6487,11 @@ function doLogin() {
       var _frfx = offlineSkillFx[_fri];
       var _frAlpha = Math.min(1, _frfx.life / _frfx.maxLife);
       if (_frfx.kind === 'fireball') {
+        // Friendly cyan halo ring (marks player projectile)
+        ctx.globalAlpha = 0.5 * _frAlpha;
+        ctx.strokeStyle = '#aef6ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 14, 0, Math.PI * 2); ctx.stroke();
         // Outer heat distortion
         ctx.globalAlpha = 0.25 * _frAlpha;
         ctx.fillStyle = '#f40';
@@ -6505,10 +6510,20 @@ function doLogin() {
         ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 4, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 2, 0, Math.PI * 2); ctx.fill();
+        // Outline the whole orb in bright white
+        ctx.globalAlpha = 0.9 * _frAlpha;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 9, 0, Math.PI * 2); ctx.stroke();
       } else if (_frfx.kind === 'arrow') {
         ctx.save();
         ctx.translate(_frfx.x, _frfx.y);
         ctx.rotate(_frfx.angle);
+        // Friendly cyan halo on arrow tip (marks player projectile)
+        ctx.globalAlpha = 0.5 * _frAlpha;
+        ctx.strokeStyle = '#aef6ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
         // Trail streak
         ctx.globalAlpha = 0.35 * _frAlpha;
         ctx.fillStyle = '#aaffaa';
@@ -6539,6 +6554,11 @@ function doLogin() {
         ctx.globalAlpha = 0.3 * _frAlpha;
         ctx.fillStyle = '#ffaa40';
         ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+        // Friendly cyan halo (marks player projectile)
+        ctx.globalAlpha = 0.45 * _frAlpha;
+        ctx.strokeStyle = '#aef6ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
         // Crescent blade
         ctx.globalAlpha = _frAlpha;
         ctx.fillStyle = '#ffdd60';
@@ -6547,7 +6567,7 @@ function doLogin() {
         ctx.quadraticCurveTo(10, 0, -8, 8);
         ctx.quadraticCurveTo(4, 0, -8, -8);
         ctx.fill();
-        ctx.strokeStyle = '#ffff99'; ctx.lineWidth = 1;
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
       }
@@ -6920,16 +6940,38 @@ function doLogin() {
       }
     }
 
-    // Enemy projectiles (US-197)
+    // Enemy projectiles (US-197) — spiky dark-violet menacing orb (visually distinct from player's clean bright projectiles)
     for (var epi = 0; epi < enemyProjectiles.length; epi++) {
       var ep = enemyProjectiles[epi];
-      ctx.globalAlpha = 0.3; ctx.fillStyle = '#f4a';
-      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 2.5, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1; ctx.fillStyle = '#f8a';
-      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 0.4, 0, Math.PI * 2); ctx.fill();
+      var _epSpin = gameTime * 6 + epi;
+      // Outer dark haze
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = '#4a0066';
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 2.6, 0, Math.PI * 2); ctx.fill();
+      // Spiky star body (8 points, rotating)
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#8a1aff';
+      ctx.strokeStyle = '#2a0040';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (var _sp = 0; _sp < 16; _sp++) {
+        var _spA = _epSpin + _sp * Math.PI / 8;
+        var _spR = (_sp % 2 === 0) ? ep.radius * 1.6 : ep.radius * 0.9;
+        var _spX = ep.x + Math.cos(_spA) * _spR;
+        var _spY = ep.y + Math.sin(_spA) * _spR;
+        if (_sp === 0) ctx.moveTo(_spX, _spY); else ctx.lineTo(_spX, _spY);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Sickly core (pulsing green)
+      var _epPulse = 0.7 + Math.sin(gameTime * 10) * 0.3;
+      ctx.fillStyle = '#00ff88';
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 0.45 * _epPulse, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#220044';
+      ctx.beginPath(); ctx.arc(ep.x, ep.y, ep.radius * 0.2, 0, Math.PI * 2); ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
     // Player glow aura (fury = red pulsing)
     var isFury = player._furyBonus > 1;
@@ -7022,6 +7064,22 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 4, 0, Math.PI * 2); ctx.stroke();
       ctx.globalAlpha = 1; ctx.lineWidth = 1;
     }
+    // HERO MARKER — rotating arcane ring under player's feet (unique to player, never on enemies)
+    ctx.save();
+    var _heroRingR = player.radius * 1.35;
+    var _heroRingY = player.y + player.radius * 0.55;
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.lineDashOffset = -gameTime * 18;
+    ctx.beginPath(); ctx.ellipse(player.x, _heroRingY, _heroRingR, _heroRingR * 0.35, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    // Inner filled disc (softer cyan)
+    ctx.globalAlpha = 0.18 + Math.sin(gameTime * 2.5) * 0.06;
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath(); ctx.ellipse(player.x, _heroRingY, _heroRingR * 0.8, _heroRingR * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
     // Character sprite — class-specific visual
     var localFacing = Math.atan2((mouseY + cameraY) - player.y, (mouseX + cameraX) - player.x);
     // Walk/idle detection from frame-to-frame position delta
@@ -7053,6 +7111,43 @@ function doLogin() {
       _debugOut: player._spriteDebugFrame
     });
     player._spriteAnimState = _pAnimState; // exposed for __spriteDebug
+
+    // HERO CROWN — floating golden chevron above player head (clear friendly marker)
+    (function(){
+      var _crownY = player.y - player.radius * 1.9 + Math.sin(gameTime * 2.2) * 1.5;
+      var _crownW = player.radius * 0.6;
+      var _crownH = player.radius * 0.45;
+      ctx.save();
+      // Outer glow
+      ctx.globalAlpha = 0.4 + Math.sin(gameTime * 3) * 0.15;
+      ctx.fillStyle = '#ffe066';
+      ctx.beginPath();
+      ctx.arc(player.x, _crownY + _crownH * 0.3, _crownW * 1.1, 0, Math.PI * 2);
+      ctx.fill();
+      // Crown body (3-point)
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#ffd700';
+      ctx.strokeStyle = '#8a6a00';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(player.x - _crownW, _crownY + _crownH);
+      ctx.lineTo(player.x - _crownW, _crownY + _crownH * 0.35);
+      ctx.lineTo(player.x - _crownW * 0.5, _crownY + _crownH * 0.6);
+      ctx.lineTo(player.x, _crownY);
+      ctx.lineTo(player.x + _crownW * 0.5, _crownY + _crownH * 0.6);
+      ctx.lineTo(player.x + _crownW, _crownY + _crownH * 0.35);
+      ctx.lineTo(player.x + _crownW, _crownY + _crownH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Gem dots
+      ctx.fillStyle = '#ff4d6d';
+      ctx.beginPath(); ctx.arc(player.x, _crownY + _crownH * 0.55, 1.3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4dd2ff';
+      ctx.beginPath(); ctx.arc(player.x - _crownW * 0.65, _crownY + _crownH * 0.75, 1.1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(player.x + _crownW * 0.65, _crownY + _crownH * 0.75, 1.1, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    })();
 
     // localMultiplayer (US-344): draw player2
     if (localMultiplayer && player2 && player2.alive) {
@@ -7221,59 +7316,88 @@ function doLogin() {
     ctx.fillStyle = '#ffd700'; ctx.fillRect(0, topH - 2, W, 2);
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, topH, W, 1);
 
-    // Left: Avatar (round, with level badge)
-    var avR = Math.round(topH * 0.30);
+    // ═══ LEFT: Avatar (1/2 size) + Name + Level — combined unit ═══
+    var avR = Math.round(topH * 0.18); // half of previous 0.30
     var avCx = padX + avR, avCy = Math.round(topH * 0.50);
     ctx.save();
-    ctx.shadowColor = hudCls.color; ctx.shadowBlur = 8 * _zs;
-    ctx.strokeStyle = hudCls.color; ctx.lineWidth = Math.max(2, 2.5 * _zs);
+    ctx.shadowColor = hudCls.color; ctx.shadowBlur = 5 * _zs;
+    ctx.strokeStyle = hudCls.color; ctx.lineWidth = Math.max(1.5, 2 * _zs);
     ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
     ctx.fillStyle = '#0a0a1a';
-    ctx.beginPath(); ctx.arc(avCx, avCy, avR - 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(avCx, avCy, avR - 1.5, 0, Math.PI * 2); ctx.fill();
     if (typeof drawCharacterSprite === 'function') {
       ctx.save();
-      ctx.beginPath(); ctx.arc(avCx, avCy + 2, avR - 4, 0, Math.PI * 2); ctx.clip();
-      drawCharacterSprite(avCx, avCy + Math.round(6 * _zs), Math.round(avR * 0.9), selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
+      ctx.beginPath(); ctx.arc(avCx, avCy + 1, avR - 3, 0, Math.PI * 2); ctx.clip();
+      drawCharacterSprite(avCx, avCy + Math.round(3 * _zs), Math.round(avR * 0.85), selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
       ctx.restore();
     }
-    // Level badge
-    var lvBx = avCx + Math.round(avR * 0.72), lvBy = avCy + Math.round(avR * 0.72);
-    ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(lvBx, lvBy, Math.round(9 * _zs), 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#000'; ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center';
-    ctx.fillText(playerLevel, lvBx, lvBy + Math.round(4 * _zs));
+    // Name + Level text block to the right of avatar
+    var nameX = avCx + avR + Math.round(6 * _zs);
+    var playerName = (player && player.name) || (_currentPlayer && _currentPlayer.nickname) || '玩家';
+    if (playerName.length > 8) playerName = playerName.substring(0, 7) + '…';
+    // Name (top line)
+    ctx.font = 'bold ' + _fs + 'px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2.5;
+    ctx.strokeText(playerName, nameX, avCy - Math.round(7 * _zs));
+    ctx.fillStyle = '#fff';
+    ctx.fillText(playerName, nameX, avCy - Math.round(7 * _zs));
+    // Level (bottom line, with gold "Lv" prefix)
+    ctx.font = 'bold ' + _fsSmall + 'px Arial';
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText('Lv.' + playerLevel, nameX, avCy + Math.round(8 * _zs));
+    ctx.textBaseline = 'alphabetic';
 
-    // Center: Wave capsule "第X波"
-    var capW = Math.round(90 * _zs);
-    var capX = (W - capW) / 2;
-    var capY = Math.round(topH * 0.08);
+    // Measure right side reserved space: minimap
+    var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
+    var centerLeft = nameX + Math.round(64 * _zs); // after name block
+    var centerRight = W - _miniW - Math.round(10 * _zs);
+    var centerW = centerRight - centerLeft;
+
+    // ═══ CENTER: Gold (top row), HP bar (middle), Wave status (bottom) ═══
+    // --- Gold capsule (top row, left of center) ---
+    var cellY1 = Math.round(topH * 0.10);
+    var cellY2 = Math.round(topH * 0.52);
+    var capRoundH = Math.round(topH * 0.34);
+    var goldCapW = Math.round(Math.min(centerW * 0.48, 100 * _zs));
+    var goldCapX = centerLeft;
     ctx.save();
-    ctx.fillStyle = 'rgba(20,20,35,0.92)';
-    var r = capH / 2;
-    ctx.beginPath();
-    ctx.moveTo(capX + r, capY);
-    ctx.lineTo(capX + capW - r, capY);
-    ctx.arcTo(capX + capW, capY, capX + capW, capY + r, r);
-    ctx.lineTo(capX + capW, capY + capH - r);
-    ctx.arcTo(capX + capW, capY + capH, capX + capW - r, capY + capH, r);
-    ctx.lineTo(capX + r, capY + capH);
-    ctx.arcTo(capX, capY + capH, capX, capY + capH - r, r);
-    ctx.lineTo(capX, capY + r);
-    ctx.arcTo(capX, capY, capX + r, capY, r);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold ' + _fs + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('第 ' + wave + ' 波', W / 2, capY + capH / 2);
+    var _drawCapsule = function(bx, by, bw, bh, fillColor, strokeColor) {
+      var rr = bh / 2;
+      ctx.beginPath();
+      ctx.moveTo(bx + rr, by);
+      ctx.lineTo(bx + bw - rr, by);
+      ctx.arcTo(bx + bw, by, bx + bw, by + rr, rr);
+      ctx.lineTo(bx + bw, by + bh - rr);
+      ctx.arcTo(bx + bw, by + bh, bx + bw - rr, by + bh, rr);
+      ctx.lineTo(bx + rr, by + bh);
+      ctx.arcTo(bx, by + bh, bx, by + bh - rr, rr);
+      ctx.lineTo(bx, by + rr);
+      ctx.arcTo(bx, by, bx + rr, by, rr);
+      ctx.closePath();
+      if (fillColor) { ctx.fillStyle = fillColor; ctx.fill(); }
+      if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5; ctx.stroke(); }
+    };
+    _drawCapsule(goldCapX, cellY1, goldCapW, capRoundH, 'rgba(20,20,35,0.92)', '#ffd700');
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold ' + _fs + 'px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('💰 ' + gold, goldCapX + goldCapW / 2, cellY1 + capRoundH / 2);
+    // --- Wave/status capsule (top row, right of gold) ---
+    var statusCapW = centerW - goldCapW - Math.round(8 * _zs);
+    var statusCapX = goldCapX + goldCapW + Math.round(8 * _zs);
+    _drawCapsule(statusCapX, cellY1, statusCapW, capRoundH, 'rgba(20,20,35,0.92)', '#88ccff');
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fs + 'px Arial';
+    // Status text: wave + time + kills combined
+    var statusText = '第' + wave + '波  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
+    ctx.fillText(statusText, statusCapX + statusCapW / 2, cellY1 + capRoundH / 2);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
 
-    // HP bar (right of avatar, first row)
-    var hpX = avCx + avR + padX;
-    var hpW = W - hpX - Math.round(110 * _zs); // leave space for kills/time on right
-    var hpBarH = Math.round(14 * _zs);
-    var hpY = rowY2 - hpBarH;
+    // --- HP bar (bottom row of center) ---
+    var hpX = centerLeft;
+    var hpW = centerW;
+    var hpBarH = Math.round(topH * 0.22);
+    var hpY = cellY2;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(hpX - 1, hpY - 1, hpW + 2, hpBarH + 2);
     ctx.fillStyle = '#2a0606'; ctx.fillRect(hpX, hpY, hpW, hpBarH);
     var hpRatioHUD = Math.max(0, player.hp / player.maxHp);
@@ -7284,50 +7408,19 @@ function doLogin() {
     ctx.fillStyle = hpGrad; ctx.fillRect(hpX, hpY, hpW * hpRatioHUD, hpBarH);
     ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(hpX, hpY + 1, hpW * hpRatioHUD, hpBarH * 0.4);
     ctx.strokeStyle = '#442a1a'; ctx.lineWidth = 1; ctx.strokeRect(hpX, hpY, hpW, hpBarH);
-    ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 2;
-    var hpStr = Math.floor(player.hp) + '/' + player.maxHp;
-    ctx.strokeText(hpStr, hpX + hpW / 2, hpY + hpBarH - Math.round(3 * _zs));
-    ctx.fillStyle = '#fff'; ctx.fillText(hpStr, hpX + hpW / 2, hpY + hpBarH - Math.round(3 * _zs));
-
-    // Stats row above HP bar (kills, time)
-    ctx.textAlign = 'left'; ctx.font = _fs + 'px Arial';
-    ctx.fillStyle = '#ff8866'; ctx.fillText('⚔ ', hpX, rowY1);
-    ctx.fillStyle = '#fff'; ctx.fillText(kills, hpX + Math.round(20 * _zs), rowY1);
-    ctx.fillStyle = '#88ccff'; ctx.fillText('⏱ ', hpX + Math.round(70 * _zs), rowY1);
-    ctx.fillStyle = '#fff'; ctx.fillText(Math.floor(gameTime) + 's', hpX + Math.round(90 * _zs), rowY1);
-
-    // Right: Gold capsule (top-right, before minimap)
-    var goldCapW = Math.round(90 * _zs);
-    var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
-    var goldCapX = W - goldCapW - padX - _miniW - Math.round(6 * _zs);
-    var goldCapY = capY;
-    ctx.save();
-    ctx.fillStyle = 'rgba(20,20,35,0.92)';
-    var gr = capH / 2;
-    ctx.beginPath();
-    ctx.moveTo(goldCapX + gr, goldCapY);
-    ctx.lineTo(goldCapX + goldCapW - gr, goldCapY);
-    ctx.arcTo(goldCapX + goldCapW, goldCapY, goldCapX + goldCapW, goldCapY + gr, gr);
-    ctx.lineTo(goldCapX + goldCapW, goldCapY + capH - gr);
-    ctx.arcTo(goldCapX + goldCapW, goldCapY + capH, goldCapX + goldCapW - gr, goldCapY + capH, gr);
-    ctx.lineTo(goldCapX + gr, goldCapY + capH);
-    ctx.arcTo(goldCapX, goldCapY + capH, goldCapX, goldCapY + capH - gr, gr);
-    ctx.lineTo(goldCapX, goldCapY + gr);
-    ctx.arcTo(goldCapX, goldCapY, goldCapX + gr, goldCapY, gr);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold ' + _fs + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('💰 ' + gold, goldCapX + goldCapW / 2, goldCapY + capH / 2);
+    // HP text centered on bar
+    ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var hpStr = '❤ ' + Math.floor(player.hp) + ' / ' + player.maxHp;
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2;
+    ctx.strokeText(hpStr, hpX + hpW / 2, hpY + hpBarH / 2);
+    ctx.fillStyle = '#fff'; ctx.fillText(hpStr, hpX + hpW / 2, hpY + hpBarH / 2);
     ctx.textBaseline = 'alphabetic';
-    ctx.restore();
 
-    // Kill streak (only if active)
+    // Kill streak (only if active, overlay on top)
     if (killStreak >= 5) {
       ctx.fillStyle = killStreak >= 30 ? '#f00' : killStreak >= 15 ? '#f80' : '#ff0';
       ctx.font = 'bold ' + _fsBold + 'px Arial'; ctx.textAlign = 'right';
-      ctx.fillText(killStreak + '连杀!', W - padX, rowY1);
+      ctx.fillText(killStreak + '连杀!', W - padX - _miniW - Math.round(10 * _zs), Math.round(topH * 0.45));
     }
     ctx.restore();
 
