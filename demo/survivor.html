@@ -1148,20 +1148,20 @@ function doLogin() {
     ctx.scale(scale * _cps, scale * _cps);
     // Shadow / glow
     ctx.shadowColor = comboState.popupColor;
-    ctx.shadowBlur = 18;
-    ctx.font = 'bold 48px Arial';
+    ctx.shadowBlur = 12;
+    ctx.font = 'bold 32px Arial'; // 2/3 of previous 48px
     ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 4;
     ctx.strokeText(comboState.popupText, 0, 0);
     ctx.fillStyle = comboState.popupColor;
     ctx.fillText(comboState.popupText, 0, 0);
     // Combo counter below
     ctx.shadowBlur = 0;
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 16px Arial'; // 2/3 of previous 24px
     ctx.fillStyle = '#fff';
-    ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 36);
-    ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 36);
+    ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 24);
+    ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 24);
     ctx.restore();
     ctx.lineWidth = 1;
   }
@@ -1221,23 +1221,25 @@ function doLogin() {
     if (!waveBanner.active) return;
     waveBanner.timer -= 1 / 60;
     if (waveBanner.timer <= 0) { waveBanner.active = false; return; }
+    // Clamp total visible duration to 1s regardless of initial timer
+    var maxDur = 1.0;
+    if (waveBanner.timer > maxDur) waveBanner.timer = maxDur;
     var t = waveBanner.timer;
-    // Scale by design-space factor so text is readable on all DPR
     var _wbs = Math.min(W / 400, H / 700);
     var fontPx = Math.round(44 * _wbs);
-    var bannerH = Math.round(100 * _wbs);
-    var slideY = t > 1.7 ? (H / 4 * (2 - t) / 0.3) : H / 4;
-    var alpha = t < 0.5 ? t * 2 : 1;
-    ctx.globalAlpha = alpha * 0.85;
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, slideY - bannerH / 2, W, bannerH);
+    // Fade out in last 0.3s
+    var alpha = t < 0.3 ? t / 0.3 : 1;
+    // Center vertically in middle game zone
+    var centerY = H / 2;
+    ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = waveBanner.color;
     ctx.font = 'bold ' + fontPx + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(4, 5 * _wbs);
-    ctx.strokeText(waveBanner.text, W / 2, slideY);
-    ctx.fillText(waveBanner.text, W / 2, slideY);
+    ctx.strokeText(waveBanner.text, W / 2, centerY);
+    ctx.fillText(waveBanner.text, W / 2, centerY);
     ctx.textBaseline = 'alphabetic';
+    ctx.restore();
     ctx.lineWidth = 1; ctx.globalAlpha = 1;
   }
 
@@ -2056,7 +2058,7 @@ function doLogin() {
       var tmp = _waveState.spawnQueue[si]; _waveState.spawnQueue[si] = _waveState.spawnQueue[sj]; _waveState.spawnQueue[sj] = tmp;
     }
     // Banner announcement
-    waveBanner.active = true; waveBanner.timer = 2.2;
+    waveBanner.active = true; waveBanner.timer = 1.0;
     waveBanner.text = isBigBoss ? ('⚠ 巨型BOSS 第' + num + '波 ⚠')
                     : isBossWave ? ('⚠ BOSS 第' + num + '波 ⚠')
                                  : ('— 第' + num + '波 —');
@@ -2149,40 +2151,48 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(sx, sy, 5 + pulse * 1.5, 0, Math.PI * 2); ctx.fill();
     }
   }
+  // Track phase transitions so the banner only shows for 1s after entering each phase
+  var _waveHudLastPhase = null, _waveHudStartT = 0;
   function drawWaveStatusHUD() {
     if (!offlineMode) return;
+    // Detect phase change → restart 1s visibility window
+    if (_waveState.phase !== _waveHudLastPhase) {
+      _waveHudLastPhase = _waveState.phase;
+      _waveHudStartT = gameTime || 0;
+    }
+    var elapsed = (gameTime || 0) - _waveHudStartT;
+    if (elapsed > 1.0) return; // hide after 1 second
+    var alpha = elapsed > 0.7 ? (1 - (elapsed - 0.7) / 0.3) : 1; // fade in last 0.3s
     ctx.save();
+    ctx.globalAlpha = alpha;
     var _whs = Math.min(W / 400, H / 700);
     var _wfs = Math.round(22 * _whs);
     var _wfsSmall = Math.round(19 * _whs);
-    // Place below the top HUD bar so it doesn't clash with the status capsule
-    var _wby = Math.round(H * 0.15) + Math.round(10 * _whs);
+    var _wby = Math.round(H * 0.15) + Math.round(30 * _whs);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(3, 4 * _whs);
+    var txt, color;
     if (_waveState.phase === 'intermission') {
       var secs = Math.max(0, Math.ceil(_waveState.phaseTimer));
-      var bw = Math.round(340 * _whs), bh = Math.round(48 * _whs);
-      var bx = W / 2 - bw / 2, by = _wby;
-      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = '#fa0'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, bh);
-      ctx.fillStyle = '#fa0'; ctx.font = 'bold ' + _wfs + 'px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's', W / 2, by + bh / 2);
+      txt = '下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's';
+      color = '#fa0';
+      ctx.font = 'bold ' + _wfs + 'px Arial';
     } else if (_waveState.phase === 'spawning') {
-      var bw2 = Math.round(280 * _whs), bh2 = Math.round(42 * _whs);
-      var bx2 = W / 2 - bw2 / 2, by2 = _wby;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx2, by2, bw2, bh2);
-      ctx.fillStyle = '#ff6'; ctx.font = 'bold ' + _wfsSmall + 'px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       var remain = _waveState.spawnQueue.length;
-      ctx.fillText('第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain, W / 2, by2 + bh2 / 2);
+      txt = '第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain;
+      color = '#ff6';
+      ctx.font = 'bold ' + _wfsSmall + 'px Arial';
     } else if (_waveState.phase === 'fighting') {
-      var bw3 = Math.round(240 * _whs), bh3 = Math.round(40 * _whs);
-      var bx3 = W / 2 - bw3 / 2, by3 = _wby;
-      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(bx3, by3, bw3, bh3);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _wfsSmall + 'px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       var stillAlive = 0;
       for (var ai = 0; ai < offlineEnemies.length; ai++) if (offlineEnemies[ai].alive && offlineEnemies[ai].hostile) stillAlive++;
-      ctx.fillText('第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive, W / 2, by3 + bh3 / 2);
+      txt = '第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive;
+      color = '#fff';
+      ctx.font = 'bold ' + _wfsSmall + 'px Arial';
+    }
+    if (txt) {
+      ctx.strokeText(txt, W / 2, _wby);
+      ctx.fillStyle = color;
+      ctx.fillText(txt, W / 2, _wby);
     }
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
@@ -5619,7 +5629,7 @@ function doLogin() {
         if (d.wave) {
           wave = d.wave;
           var isBossWave = wave % 5 === 0;
-          waveBanner.active = true; waveBanner.timer = 2;
+          waveBanner.active = true; waveBanner.timer = 1.0;
           waveBanner.text = isBossWave ? '⚠ BOSS 第' + wave + '波 ⚠' : '— 第' + wave + '波 —';
           waveBanner.color = isBossWave ? '#f44' : (wave > 10 ? '#fa0' : '#fff');
           if (isBossWave) {
