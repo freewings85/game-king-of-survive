@@ -1897,7 +1897,7 @@ function doLogin() {
       lifesteal: 0, _fireDmg: 0, _explosiveDmg: 0, _chainCount: 0,
       thornsDamage: cls.thornsDamage || 0, dodgeChance: cls.dodgeChance || 0,
       rangeBonus: cls.rangeBonus || 0, playerClass: selectedClass,
-      kills: 0, factionId: 0, name: 'Player 1', skinId: equippedSkin || 'default',
+      kills: 0, factionId: 0, name: (_currentPlayer && _currentPlayer.nickname) || 'Player 1', skinId: equippedSkin || 'default',
       facingAngle: 0
     };
     allPlayers = [player];
@@ -7342,35 +7342,41 @@ function doLogin() {
       drawCharacterSprite(avCx, avCy + Math.round(3 * _zs), Math.round(avR * 0.85), selectedClass, Math.PI * 1.5, { skinId: equippedSkin || 'default', animState: 'idle' });
       ctx.restore();
     }
-    // Name + Level text block to the right of avatar
+    // Name + Level + Gold text block to the right of avatar (all merged left)
     var nameX = avCx + avR + Math.round(6 * _zs);
-    var playerName = (player && player.name) || (_currentPlayer && _currentPlayer.nickname) || '玩家';
+    var playerName = (_currentPlayer && _currentPlayer.nickname) || (player && player.name) || '玩家';
     if (playerName.length > 8) playerName = playerName.substring(0, 7) + '…';
     // Name (top line)
     ctx.font = 'bold ' + _fs + 'px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2.5;
-    ctx.strokeText(playerName, nameX, avCy - Math.round(7 * _zs));
+    ctx.strokeText(playerName, nameX, avCy - Math.round(8 * _zs));
     ctx.fillStyle = '#fff';
-    ctx.fillText(playerName, nameX, avCy - Math.round(7 * _zs));
-    // Level (bottom line, with gold "Lv" prefix)
+    ctx.fillText(playerName, nameX, avCy - Math.round(8 * _zs));
+    // Bottom line: Lv + gold combined
     ctx.font = 'bold ' + _fsSmall + 'px Arial';
     ctx.fillStyle = '#ffd700';
-    ctx.fillText('Lv.' + playerLevel, nameX, avCy + Math.round(8 * _zs));
+    ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 2;
+    var lvGoldStr = 'Lv.' + playerLevel + '  💰' + gold;
+    ctx.strokeText(lvGoldStr, nameX, avCy + Math.round(8 * _zs));
+    ctx.fillText(lvGoldStr, nameX, avCy + Math.round(8 * _zs));
     ctx.textBaseline = 'alphabetic';
 
     // Measure right side reserved space: minimap
     var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
-    var centerLeft = nameX + Math.round(64 * _zs); // after name block
+    // Measure the width of the name+level+gold block to start center after it
+    ctx.font = 'bold ' + _fs + 'px Arial';
+    var nameW = ctx.measureText(playerName).width;
+    ctx.font = 'bold ' + _fsSmall + 'px Arial';
+    var lvGoldW = ctx.measureText(lvGoldStr).width;
+    var leftBlockRight = nameX + Math.max(nameW, lvGoldW) + Math.round(10 * _zs);
+    var centerLeft = leftBlockRight;
     var centerRight = W - _miniW - Math.round(10 * _zs);
-    var centerW = centerRight - centerLeft;
+    var centerW = Math.max(100, centerRight - centerLeft);
 
-    // ═══ CENTER: Gold (top row), HP bar (middle), Wave status (bottom) ═══
-    // --- Gold capsule (top row, left of center) ---
+    // ═══ CENTER: single status capsule (wave + kills + time) + HP bar ═══
     var cellY1 = Math.round(topH * 0.10);
     var cellY2 = Math.round(topH * 0.52);
     var capRoundH = Math.round(topH * 0.34);
-    var goldCapW = Math.round(Math.min(centerW * 0.48, 100 * _zs));
-    var goldCapX = centerLeft;
     ctx.save();
     var _drawCapsule = function(bx, by, bw, bh, fillColor, strokeColor) {
       var rr = bh / 2;
@@ -7388,22 +7394,16 @@ function doLogin() {
       if (fillColor) { ctx.fillStyle = fillColor; ctx.fill(); }
       if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = 1.5; ctx.stroke(); }
     };
-    _drawCapsule(goldCapX, cellY1, goldCapW, capRoundH, 'rgba(20,20,35,0.92)', '#ffd700');
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold ' + _fs + 'px Arial';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('💰 ' + gold, goldCapX + goldCapW / 2, cellY1 + capRoundH / 2);
-    // --- Wave/status capsule (top row, right of gold) ---
-    var statusCapW = centerW - goldCapW - Math.round(8 * _zs);
-    var statusCapX = goldCapX + goldCapW + Math.round(8 * _zs);
-    _drawCapsule(statusCapX, cellY1, statusCapW, capRoundH, 'rgba(20,20,35,0.92)', '#88ccff');
+    // Status capsule spans full center width
+    _drawCapsule(centerLeft, cellY1, centerW, capRoundH, 'rgba(20,20,35,0.92)', '#88ccff');
     ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fs + 'px Arial';
-    // Status text: wave + time + kills combined
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     var statusText = '第' + wave + '波  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
-    ctx.fillText(statusText, statusCapX + statusCapW / 2, cellY1 + capRoundH / 2);
+    ctx.fillText(statusText, centerLeft + centerW / 2, cellY1 + capRoundH / 2);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
 
-    // --- HP bar (bottom row of center) ---
+    // --- HP bar (bottom row of center, same width as status capsule) ---
     var hpX = centerLeft;
     var hpW = centerW;
     var hpBarH = Math.round(topH * 0.22);
