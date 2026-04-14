@@ -5768,6 +5768,15 @@ function doLogin() {
     else if (state === 'levelUp') { drawGame(); drawLevelUp(); }
 
     // Particles — swap-and-pop removal (O(1) instead of splice O(n))
+    // Particles are in WORLD coordinates; apply camera transform + game-zone clip
+    var _needCam = (state === 'playing' || state === 'gameOver' || state === 'paused' || state === 'levelUp' || state === 'spectating') && player;
+    if (_needCam) {
+      ctx.save();
+      var _pzTop = Math.round(H * 0.15);
+      var _pzBot = Math.round(H * 0.90);
+      ctx.beginPath(); ctx.rect(0, _pzTop, W, _pzBot - _pzTop); ctx.clip();
+      ctx.translate(-cameraX, -cameraY);
+    }
     var pLen = particles.length;
     for (var i = pLen - 1; i >= 0; i--) {
       var p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
@@ -5778,10 +5787,16 @@ function doLogin() {
       else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2); ctx.fill(); }
     }
     particles.length = pLen;
+    if (_needCam) ctx.restore();
     // Flush batched XP/gold floats before rendering
     flushBatchedFloats(dt);
     // Float texts — swap-and-pop + styledDamageNumbers (US-274)
     // Wave 1: parabolic arc + crit pop animation
+    if (_needCam) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, _pzTop, W, _pzBot - _pzTop); ctx.clip();
+      ctx.translate(-cameraX, -cameraY);
+    }
     var fLen = floats.length;
     for (var i = fLen - 1; i >= 0; i--) {
       var f = floats[i];
@@ -5816,6 +5831,7 @@ function doLogin() {
       ctx.lineWidth = 1;
     }
     floats.length = fLen;
+    if (_needCam) ctx.restore(); // end floats camera transform
     ctx.globalAlpha = 1; ctx.restore();
     requestAnimationFrame(loop);
   }
