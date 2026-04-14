@@ -1044,7 +1044,7 @@ function doLogin() {
       if (comboState.count > 8) name = { text: 'UNSTOPPABLE x' + comboState.count, color: '#ff2200' };
       comboState.popupText = name.text;
       comboState.popupColor = name.color;
-      comboState.popupTimer = 1.4;
+      comboState.popupTimer = 0.93; // 1.4 × 2/3
       comboState.lastShownCount = comboState.count;
       if (typeof playSound === 'function') playSound('combo');
     }
@@ -1136,7 +1136,7 @@ function doLogin() {
 
   function drawComboPopup() {
     if (comboState.popupTimer <= 0) return;
-    var t = comboState.popupTimer / 1.4;
+    var t = comboState.popupTimer / 0.93;
     var ease = t < 0.2 ? (t / 0.2) : (t > 0.8 ? 1 : 1);
     // Slide in from right for first 0.2s (t goes 1→0)
     var slideX = (t > 0.85) ? (t - 0.85) / 0.15 * 80 : 0;
@@ -1149,20 +1149,20 @@ function doLogin() {
     ctx.scale(scale * _cps, scale * _cps);
     // Shadow / glow
     ctx.shadowColor = comboState.popupColor;
-    ctx.shadowBlur = 12;
-    ctx.font = 'bold 32px Arial'; // 2/3 of previous 48px
+    ctx.shadowBlur = 8;
+    ctx.font = 'bold 19px Arial'; // 32 × 60%
     ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.strokeText(comboState.popupText, 0, 0);
     ctx.fillStyle = comboState.popupColor;
     ctx.fillText(comboState.popupText, 0, 0);
     // Combo counter below
     ctx.shadowBlur = 0;
-    ctx.font = 'bold 16px Arial'; // 2/3 of previous 24px
+    ctx.font = 'bold 10px Arial'; // 16 × 60%
     ctx.fillStyle = '#fff';
-    ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 24);
-    ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 24);
+    ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
+    ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
     ctx.restore();
     ctx.lineWidth = 1;
   }
