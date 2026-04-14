@@ -731,6 +731,7 @@ function doLogin() {
   // Tutorial system
   var tutorialDone = false;
   var tutorialTimer = 0;
+  var tutorialRealTime = 0; // real-time progression (uses dt, not logicDt) so tutorial animates while game is paused
   var _tutorialSkipRect = null; // {x,y,w,h} for skip button hit detection
   var _hudBtnRects = { dodge: null, ult: null }; // bottom-bar button rects for click detection
   var TUTORIAL_STEPS = [
@@ -5725,6 +5726,13 @@ function doLogin() {
       if (hitStop.timer <= 0) hitStop.active = false;
       logicDt = 0;
     }
+    // Pause game logic while tutorial is showing (player must click 跳过 to start)
+    if (!tutorialDone && state === 'playing') {
+      logicDt = 0;
+      tutorialRealTime += dt;
+      // Keep player at full HP until tutorial dismissed
+      if (player) player.hp = player.maxHp;
+    }
     // pauseLogic debug hook — freezes EVERYTHING including visuals (test determinism)
     if (window.__spriteDebug && window.__spriteDebug._paused) {
       logicDt = 0;
@@ -5864,7 +5872,7 @@ function doLogin() {
 
 
   function onEnemyKill(e) {
-    if (!tutorialDone) { tutorialDone = true; /* tutorialAutoDismiss: dismiss on first kill */ }
+    // Tutorial dismisses only when player clicks "跳过" (game is paused during tutorial)
     // Sync player kills to allPlayers[0] for leaderboard
     if (player && allPlayers[0]) allPlayers[0].kills = kills + 1;
     killDisplayPulse = 0.3;
@@ -7649,11 +7657,11 @@ function doLogin() {
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, W, H);
 
-    // Tutorial overlay (first 10 seconds of first game, steps appear progressively)
-    if (!tutorialDone && gameTime < 15) {
-      tutorialTimer = gameTime;
-      var visibleSteps = Math.min(TUTORIAL_STEPS.length, Math.floor(gameTime / 1.5) + 1);
-      var fadeAlpha = gameTime < 12 ? 0.88 : Math.max(0, 0.88 - (gameTime - 12) * 0.3);
+    // Tutorial overlay — game is paused while showing; player must click "跳过" to start
+    if (!tutorialDone) {
+      var _trt = tutorialRealTime;
+      var visibleSteps = Math.min(TUTORIAL_STEPS.length, Math.floor(_trt / 0.4) + 1);
+      var fadeAlpha = 0.92;
       // Use design-space scaling (400x700) so text is readable on high-DPR screens
       var _tutS = Math.min(W / 400, H / 700);
       var _tutOx = (W - 400 * _tutS) / 2;
@@ -7674,7 +7682,7 @@ function doLogin() {
       ctx.fillStyle = '#fff'; ctx.font = '18px Arial';
       for (var ti = 0; ti < visibleSteps; ti++) {
         var step = TUTORIAL_STEPS[ti];
-        var stepAlpha = Math.min(1, (gameTime - ti * 1.5) * 2);
+        var stepAlpha = Math.min(1, (_trt - ti * 0.4) * 3);
         ctx.globalAlpha = fadeAlpha * stepAlpha;
         ctx.fillText(step.icon + ' ' + step.text, 200, 350 - panelH / 2 + 55 + ti * 40);
       }
@@ -7695,8 +7703,6 @@ function doLogin() {
         h: skipBtnH * _tutS
       };
       ctx.restore();
-    } else if (!tutorialDone) {
-      tutorialDone = true;
     }
 
     // Boss health bar UI at top of screen
