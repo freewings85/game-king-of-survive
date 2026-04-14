@@ -5800,8 +5800,9 @@ function doLogin() {
     var _needCam = (state === 'playing' || state === 'gameOver' || state === 'paused' || state === 'levelUp' || state === 'spectating') && player;
     if (_needCam) {
       ctx.save();
-      var _pzTop = Math.round(H * 0.105);
-      var _pzBot = Math.round(H * 0.90);
+      var _pzPad = Math.round(70 * Math.min(W / 400, H / 700));
+      var _pzTop = Math.max(0, Math.round(H * 0.105) - _pzPad);
+      var _pzBot = Math.min(H, Math.round(H * 0.90) + _pzPad);
       ctx.beginPath(); ctx.rect(0, _pzTop, W, _pzBot - _pzTop); ctx.clip();
       ctx.translate(-cameraX, -cameraY);
     }
@@ -6185,6 +6186,12 @@ function doLogin() {
     var _gameZoneTop = Math.round(H * 0.105);
     var _gameZoneBot = Math.round(H * 0.90);
     var _gameZoneH = _gameZoneBot - _gameZoneTop;
+    // Clip padding: expand by max entity radius so sprites near the boundary
+    // display their full body (HUD bars draw on top and cover any spillover)
+    var _clipPad = Math.round(70 * Math.min(W / 400, H / 700));
+    var _clipTop = Math.max(0, _gameZoneTop - _clipPad);
+    var _clipBot = Math.min(H, _gameZoneBot + _clipPad);
+    var _clipH = _clipBot - _clipTop;
 
     // Clear HUD zones so stale pixels from prior frames don't bleed through semi-transparent bars
     ctx.fillStyle = '#000';
@@ -6197,9 +6204,9 @@ function doLogin() {
     cameraX = Math.max(0, Math.min(WORLD_W - W, cameraX));
     cameraY = Math.max(-_gameZoneTop, Math.min(WORLD_H - _gameZoneBot, cameraY));
     ctx.save();
-    // Clip game rendering to middle zone so entities never overlap HUD bars
+    // Padded clip — entities at the boundary stay fully visible; HUD covers spillover
     ctx.beginPath();
-    ctx.rect(0, _gameZoneTop, W, _gameZoneH);
+    ctx.rect(0, _clipTop, W, _clipH);
     ctx.clip();
     ctx.translate(-cameraX, -cameraY);
 
