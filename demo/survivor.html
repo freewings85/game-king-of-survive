@@ -1221,20 +1221,22 @@ function doLogin() {
     waveBanner.timer -= 1 / 60;
     if (waveBanner.timer <= 0) { waveBanner.active = false; return; }
     var t = waveBanner.timer;
-    // Slide in from top for first 0.3s, stay, then fade out last 0.5s
-    var slideY = t > 1.7 ? (H / 4 * (2 - t) / 0.3) : (t < 0.5 ? H / 4 : H / 4);
+    // Scale by design-space factor so text is readable on all DPR
+    var _wbs = Math.min(W / 400, H / 700);
+    var fontPx = Math.round(44 * _wbs);
+    var bannerH = Math.round(100 * _wbs);
+    var slideY = t > 1.7 ? (H / 4 * (2 - t) / 0.3) : H / 4;
     var alpha = t < 0.5 ? t * 2 : 1;
     ctx.globalAlpha = alpha * 0.85;
-    // Dark banner background
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0, slideY - 25, W, 50);
-    // Banner text
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, slideY - bannerH / 2, W, bannerH);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = waveBanner.color;
-    ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3;
-    ctx.strokeText(waveBanner.text, W / 2, slideY + 8);
-    ctx.fillText(waveBanner.text, W / 2, slideY + 8);
+    ctx.font = 'bold ' + fontPx + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(4, 5 * _wbs);
+    ctx.strokeText(waveBanner.text, W / 2, slideY);
+    ctx.fillText(waveBanner.text, W / 2, slideY);
+    ctx.textBaseline = 'alphabetic';
     ctx.lineWidth = 1; ctx.globalAlpha = 1;
   }
 
@@ -2149,32 +2151,39 @@ function doLogin() {
   function drawWaveStatusHUD() {
     if (!offlineMode) return;
     ctx.save();
+    var _whs = Math.min(W / 400, H / 700);
+    var _wfs = Math.round(22 * _whs);
+    var _wfsSmall = Math.round(19 * _whs);
+    // Place below the top HUD bar so it doesn't clash with the status capsule
+    var _wby = Math.round(H * 0.15) + Math.round(10 * _whs);
     if (_waveState.phase === 'intermission') {
       var secs = Math.max(0, Math.ceil(_waveState.phaseTimer));
-      var bx = W / 2 - 150, by = 40, bw = 300, bh = 36;
-      ctx.fillStyle = 'rgba(0,0,0,0.55)';
-      ctx.fillRect(bx, by, bw, bh);
-      ctx.strokeStyle = '#fa0'; ctx.lineWidth = 2;
-      ctx.strokeRect(bx, by, bw, bh);
-      ctx.fillStyle = '#fa0';
-      ctx.font = 'bold 17px Arial'; ctx.textAlign = 'center';
-      ctx.fillText('下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's', W / 2, by + 24);
+      var bw = Math.round(340 * _whs), bh = Math.round(48 * _whs);
+      var bx = W / 2 - bw / 2, by = _wby;
+      ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = '#fa0'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, bh);
+      ctx.fillStyle = '#fa0'; ctx.font = 'bold ' + _wfs + 'px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's', W / 2, by + bh / 2);
     } else if (_waveState.phase === 'spawning') {
-      var bx2 = W / 2 - 120, by2 = 40, bw2 = 240, bh2 = 28;
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(bx2, by2, bw2, bh2);
-      ctx.fillStyle = '#ff6'; ctx.font = 'bold 15px Arial'; ctx.textAlign = 'center';
+      var bw2 = Math.round(280 * _whs), bh2 = Math.round(42 * _whs);
+      var bx2 = W / 2 - bw2 / 2, by2 = _wby;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(bx2, by2, bw2, bh2);
+      ctx.fillStyle = '#ff6'; ctx.font = 'bold ' + _wfsSmall + 'px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       var remain = _waveState.spawnQueue.length;
-      ctx.fillText('第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain, W / 2, by2 + 20);
+      ctx.fillText('第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain, W / 2, by2 + bh2 / 2);
     } else if (_waveState.phase === 'fighting') {
-      var bx3 = W / 2 - 100, by3 = 40, bw3 = 200, bh3 = 26;
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.fillRect(bx3, by3, bw3, bh3);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+      var bw3 = Math.round(240 * _whs), bh3 = Math.round(40 * _whs);
+      var bx3 = W / 2 - bw3 / 2, by3 = _wby;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(bx3, by3, bw3, bh3);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _wfsSmall + 'px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       var stillAlive = 0;
       for (var ai = 0; ai < offlineEnemies.length; ai++) if (offlineEnemies[ai].alive && offlineEnemies[ai].hostile) stillAlive++;
-      ctx.fillText('第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive, W / 2, by3 + 18);
+      ctx.fillText('第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive, W / 2, by3 + bh3 / 2);
     }
+    ctx.textBaseline = 'alphabetic';
     ctx.restore();
   }
 
