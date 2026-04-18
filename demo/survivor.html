@@ -2424,6 +2424,23 @@ function doLogin() {
     var _botClasses = ['warrior', 'mage', 'scout', 'warrior', 'mage', 'scout', 'warrior'];
     var _botSkins = ['warrior_inferno', 'mage_thunder', 'scout_ghost_assassin', 'default', 'default', 'default', 'default'];
     offlineBots = [];
+    // Experiment A (2026-04-18): each bot rolls a random build archetype so
+    // every match plays differently. Stat multipliers translate into visible
+    // behavior changes (tanky bot heals, glass-cannon swings fast, etc.).
+    var _botArchetypes = [
+      { id: 'assassin',  name: '刺客',   hpMul: 0.80, spdMul: 1.35, dmgMul: 1.20, cdMul: 0.85, color: '#c04040' },
+      { id: 'bruiser',   name: '战士',   hpMul: 1.30, spdMul: 0.90, dmgMul: 1.10, cdMul: 1.05, color: '#d88040' },
+      { id: 'glasscannon',name: '炮手',  hpMul: 0.70, spdMul: 1.00, dmgMul: 1.60, cdMul: 0.75, color: '#c040c0' },
+      { id: 'tank',      name: '坦克',   hpMul: 1.70, spdMul: 0.75, dmgMul: 0.90, cdMul: 1.10, color: '#6060c0' },
+      { id: 'speedster', name: '疾风',   hpMul: 0.85, spdMul: 1.50, dmgMul: 0.95, cdMul: 0.90, color: '#40c080' },
+      { id: 'sharpshooter',name:'神射',  hpMul: 0.90, spdMul: 0.95, dmgMul: 1.30, cdMul: 0.85, color: '#40a0c0' },
+      { id: 'duelist',   name: '决斗家', hpMul: 1.05, spdMul: 1.10, dmgMul: 1.15, cdMul: 0.95, color: '#c0a040' }
+    ];
+    // Shuffle so each match picks a different 7-subset ordering
+    for (var _si = _botArchetypes.length - 1; _si > 0; _si--) {
+      var _sj = Math.floor(Math.random() * (_si + 1));
+      var _tmp = _botArchetypes[_si]; _botArchetypes[_si] = _botArchetypes[_sj]; _botArchetypes[_sj] = _tmp;
+    }
     for (var bi = 0; bi < 7; bi++) {
       // BR spawn: spread around the world at 0.75 × half-diagonal so bots
       // start at the map perimeter. They converge when the storm shrinks.
@@ -2431,10 +2448,15 @@ function doLogin() {
       var _halfDiag = Math.min(WORLD_W, WORLD_H) * 0.38;
       var bDist = _halfDiag + Math.random() * _halfDiag * 0.25;
       var _bc = _botClasses[bi];
-      var _botHP = _bc === 'warrior' ? 280 : (_bc === 'mage' ? 200 : 220);
-      var _botSpd = _bc === 'scout' ? 130 : (_bc === 'warrior' ? 100 : 110);
-      var _botDmg = _bc === 'warrior' ? 18 : (_bc === 'mage' ? 22 : 15);
+      var _arch = _botArchetypes[bi % _botArchetypes.length];
+      var _botHP = Math.round((_bc === 'warrior' ? 280 : (_bc === 'mage' ? 200 : 220)) * _arch.hpMul);
+      var _botSpd = Math.round((_bc === 'scout' ? 130 : (_bc === 'warrior' ? 100 : 110)) * _arch.spdMul);
+      var _botDmg = Math.round((_bc === 'warrior' ? 18 : (_bc === 'mage' ? 22 : 15)) * _arch.dmgMul);
+      var _botCd = (_bc === 'mage' ? 0.5 : (_bc === 'scout' ? 0.35 : 0.45)) * _arch.cdMul;
       offlineBots.push({
+        archetype: _arch.id,
+        archetypeName: _arch.name,
+        archetypeColor: _arch.color,
         x: WORLD_W / 2 + Math.cos(bAngle) * bDist,
         y: WORLD_H / 2 + Math.sin(bAngle) * bDist,
         playerClass: _bc,
@@ -2444,7 +2466,7 @@ function doLogin() {
         hp: _botHP, maxHp: _botHP,
         speed: _botSpd,
         attackDamage: _botDmg,
-        attackCooldown: _bc === 'mage' ? 0.5 : (_bc === 'scout' ? 0.35 : 0.45),
+        attackCooldown: _botCd,
         _attackTimer: Math.random() * 2,
         level: 1,
         name: _botNames[bi],
@@ -3230,8 +3252,34 @@ function doLogin() {
         if (closest.hp <= 0) {
           closest.alive = false;
           // Only player-vs-player kills count as "kills"; mob kills roll into farmKills.
-          if (closest.isBot) { kills++; player.kills++; }
+          if (closest.isBot) {
+            kills++; player.kills++;
+            // Experiment B: PVP kill restores 30% of maxHp + kill-cinema shake
+            var _heal = Math.round(player.maxHp * 0.30);
+            player.hp = Math.min(player.maxHp, player.hp + _heal);
+            floatText(player.x, player.y - 56, '+' + _heal + ' HP', { color: '#4fff80', size: 14 });
+            screenFlash.color = '#f44'; screenFlash.alpha = 0.22;
+            triggerHitStop('crit');
+            // Boss ('bossTypeId' present on offlineEnemies, not bots, but handled below)
+          }
           else { farmKills++; player._farmKills = (player._farmKills || 0) + 1; }
+          // Boss kill bonus (Experiment B): legendary XP shard + screen flash
+          if (closest.bossTypeId) {
+            var _bossXP = 120;
+            floatText(closest.x, closest.y - 30, '★ BOSS SHARD +' + _bossXP + ' XP', { color: '#ffd700', size: 18 });
+            screenFlash.color = '#ffd700'; screenFlash.alpha = 0.4;
+            playerXP += _bossXP;
+            // Also drop extra gems around the boss
+            for (var _bsi = 0; _bsi < 8; _bsi++) {
+              var _bsa = Math.PI * 2 * _bsi / 8;
+              gems.push({
+                x: closest.x + Math.cos(_bsa) * 8,
+                y: closest.y + Math.sin(_bsa) * 8,
+                xp: 15, radius: 5, _t: 0, gemTier: 'large',
+                vx: Math.cos(_bsa) * 120, vy: Math.sin(_bsa) * 120 - 40, magnetized: false
+              });
+            }
+          }
           // Kill burst — bigger particles + hit-stop kill level + heavier shake
           emit(closest.x, closest.y, 'kill', { color: closest.color });
           triggerHitStop('kill');
@@ -9839,6 +9887,35 @@ function doLogin() {
         ctx.arc(cx + cardW / 2, cy + cardH - 24, 16, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = '#0e0e1a'; ctx.font = 'bold 17px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(String(i + 1), cx + cardW / 2, cy + cardH - 18);
+        // Synergy preview (Experiment A): if picking this card at its next
+        // stack level would fulfil an EVOLUTION_RECIPE partner, badge the
+        // card with "⭐ 进化预备 → <target>". Helps players see build paths.
+        var _nextLvl = (skillLevels[card.id] || 0) + 1;
+        var _synergyTarget = null;
+        for (var _si = 0; _si < EVOLUTION_RECIPES.length; _si++) {
+          var _rec = EVOLUTION_RECIPES[_si];
+          if (evolvedSkills[_rec.result]) continue;
+          var _partner = null;
+          if (_rec.a === card.id) _partner = _rec.b;
+          else if (_rec.b === card.id) _partner = _rec.a;
+          if (!_partner) continue;
+          if (_nextLvl >= 3 && (skillLevels[_partner] || 0) >= 3) {
+            _synergyTarget = _rec; break;
+          }
+        }
+        if (_synergyTarget) {
+          ctx.save();
+          var _syY = cy - 12;
+          ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(Date.now() / 320));
+          ctx.fillStyle = _synergyTarget.color || '#ffd700';
+          ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+          ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          var _syT = '⭐ 进化 ' + (_synergyTarget.name || '');
+          ctx.strokeText(_syT, cx + cardW / 2, _syY);
+          ctx.fillText(_syT, cx + cardW / 2, _syY);
+          ctx.restore();
+        }
         ctx.restore(); // end hover scale transform
         ctx.globalAlpha = 1;
         // Store hit-rect for click handler (use unscaled coords so clicks remain accurate)
