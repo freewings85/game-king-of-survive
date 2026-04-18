@@ -2705,6 +2705,8 @@ function doLogin() {
         }
       }
       if (!b.alive) continue;
+      // Snapshot pre-move position for collision slide + stuck detection.
+      var _bPreX = b.x, _bPreY = b.y;
 
       // --- AI decision every 0.5-2s ---
       if (b._nextDecision <= 0) {
@@ -2864,6 +2866,26 @@ function doLogin() {
         b.x += ((_lpcx / _lpd) * 0.6 + Math.cos(b._patrolAngle) * 0.4) * bSpeed * 0.55 * dt;
         b.y += ((_lpcy / _lpd) * 0.6 + Math.sin(b._patrolAngle) * 0.4) * bSpeed * 0.55 * dt;
         b.facingAngle = b._patrolAngle;
+      }
+      // Decor collision — slide on obstacles so bots don't clip through houses
+      var _bMove = moveWithCollision(_bPreX, _bPreY, b.x, b.y, (b.radius || 32) * 0.55);
+      b.x = _bMove.x; b.y = _bMove.y;
+      // Stuck detection: if blocked and haven't moved noticeably for 1s,
+      // pick a random tangent direction for the next decision.
+      if (_bMove.blocked) {
+        b._stuckTimer = (b._stuckTimer || 0) + dt;
+        if (b._stuckTimer > 1.0) {
+          b._stuckTimer = 0;
+          b._patrolAngle = Math.random() * Math.PI * 2;
+          b._nextDecision = 0.2; // re-decide soon
+          // Nudge away along the random direction to break contact
+          var _nudge = 18;
+          var nx = b.x + Math.cos(b._patrolAngle) * _nudge;
+          var ny = b.y + Math.sin(b._patrolAngle) * _nudge;
+          if (!isBlockedByDecor(nx, ny, (b.radius || 32) * 0.55)) { b.x = nx; b.y = ny; }
+        }
+      } else {
+        b._stuckTimer = 0;
       }
       // Keep in bounds
       b.x = Math.max(b.radius + 5, Math.min(WORLD_W - b.radius - 5, b.x));
@@ -3099,8 +3121,14 @@ function doLogin() {
       var pdist = Math.sqrt(pdx*pdx + pdy*pdy);
       if (pdist > 15) { moveX = pdx/pdist; moveY = pdy/pdist; }
     }
-    player.x += moveX * player.speed * dt;
-    player.y += moveY * player.speed * dt;
+    var _pOldX = player.x, _pOldY = player.y;
+    var _pNewX = player.x + moveX * player.speed * dt;
+    var _pNewY = player.y + moveY * player.speed * dt;
+    // Decor collision — slide on walls so movement isn't fully blocked.
+    // Radius uses a smaller collision radius than visual (player.radius*0.55)
+    // so sprite can visually hug walls but collider only catches the body core.
+    var _pMove = moveWithCollision(_pOldX, _pOldY, _pNewX, _pNewY, player.radius * 0.55);
+    player.x = _pMove.x; player.y = _pMove.y;
     player.x = Math.max(player.radius, Math.min(WORLD_W - player.radius, player.x));
     player.y = Math.max(player.radius, Math.min(WORLD_H - player.radius, player.y));
     if (Math.abs(moveX) > 0.01 || Math.abs(moveY) > 0.01) {
@@ -4660,11 +4688,15 @@ function doLogin() {
     var items = HOMM3_ART.decorMeta.items;
     var _seed = 91011;
     function rnd() { _seed = ((_seed | 0) * 1103515245 + 12345) & 0x7fffffff; return (_seed & 0xffff) / 0xffff; }
-    // Weights — trees most common, houses rare
+    // Weights (Leo 2026-04-18 step 1) — blockers ~50% so bots have real
+    // obstacles. Uses ArtDesigner's new fence_cluster + tree_dense as the
+    // primary hard-wall pieces; single-fence/tree keep visual variety.
     var pool = [
-      { name: 'tree_big', w: 4 }, { name: 'tree_small', w: 6 },
-      { name: 'rock', w: 3 }, { name: 'house', w: 1 },
-      { name: 'fence', w: 2 }, { name: 'crate', w: 2 }
+      { name: 'tree_big', w: 2 }, { name: 'tree_small', w: 4 },
+      { name: 'tree_dense', w: 3 },
+      { name: 'rock', w: 4 }, { name: 'house', w: 3 },
+      { name: 'fence_cluster', w: 4 }, { name: 'fence', w: 2 },
+      { name: 'crate', w: 2 }
     ];
     var poolTotal = 0; for (var pi = 0; pi < pool.length; pi++) poolTotal += pool[pi].w;
     function pickName() {
@@ -4721,6 +4753,75 @@ function doLogin() {
       if (hit) continue;
       _decorItems.push({ name: name, x: dx, y: dy, meta: it });
     }
+    _rebuildDecorBlockAABBs();
+  }
+
+  // Hard-collider decor (Leo 2026-04-18 step 1 — no FoW yet). Prefers the
+  // `hardBarrier` flag from decor/index.json (ArtDesigner 2026-04-18);
+  // falls back to a name-list for older assets.
+  var _DECOR_BLOCKER_FALLBACK = { house: true, rock: true, fence_cluster: true, tree_dense: true };
+  function _isBarrier(item) {
+    if (!item || !item.meta) return false;
+    if (typeof item.meta.hardBarrier === 'boolean') return item.meta.hardBarrier;
+    return !!_DECOR_BLOCKER_FALLBACK[item.name];
+  }
+  // Cached world-space AABB list + spatial hash for fast queries.
+  var _decorBlockAABBs = null;
+  var _decorBlockGrid = null; // { cell: 256, map: Map<cellKey, AABB[]> }
+  var _DECOR_CELL = 256;
+  function _rebuildDecorBlockAABBs() {
+    _decorBlockAABBs = [];
+    _decorBlockGrid = new Map();
+    if (!_decorItems) return;
+    for (var i = 0; i < _decorItems.length; i++) {
+      var d = _decorItems[i];
+      if (!_isBarrier(d) || !d.meta || !d.meta.collider) continue;
+      var ax = d.meta.anchor ? d.meta.anchor.x : d.meta.w / 2;
+      var ay = d.meta.anchor ? d.meta.anchor.y : d.meta.h;
+      var cbx = d.x - ax + d.meta.collider.x;
+      var cby = d.y - ay + d.meta.collider.y;
+      var aabb = { x: cbx, y: cby, w: d.meta.collider.w, h: d.meta.collider.h, name: d.name };
+      _decorBlockAABBs.push(aabb);
+      // Insert into every cell it overlaps
+      var gx0 = Math.floor(cbx / _DECOR_CELL);
+      var gy0 = Math.floor(cby / _DECOR_CELL);
+      var gx1 = Math.floor((cbx + aabb.w) / _DECOR_CELL);
+      var gy1 = Math.floor((cby + aabb.h) / _DECOR_CELL);
+      for (var gy = gy0; gy <= gy1; gy++) for (var gx = gx0; gx <= gx1; gx++) {
+        var key = gx + ',' + gy;
+        var list = _decorBlockGrid.get(key);
+        if (!list) { list = []; _decorBlockGrid.set(key, list); }
+        list.push(aabb);
+      }
+    }
+  }
+  // Circle (cx,cy,r) vs decor AABBs — O(neighbors) via spatial hash.
+  function isBlockedByDecor(cx, cy, r) {
+    if (!_decorBlockGrid) return false;
+    var gx0 = Math.floor((cx - r) / _DECOR_CELL);
+    var gy0 = Math.floor((cy - r) / _DECOR_CELL);
+    var gx1 = Math.floor((cx + r) / _DECOR_CELL);
+    var gy1 = Math.floor((cy + r) / _DECOR_CELL);
+    for (var gy = gy0; gy <= gy1; gy++) for (var gx = gx0; gx <= gx1; gx++) {
+      var list = _decorBlockGrid.get(gx + ',' + gy);
+      if (!list) continue;
+      for (var i = 0; i < list.length; i++) {
+        var b = list[i];
+        var qx = Math.max(b.x, Math.min(cx, b.x + b.w));
+        var qy = Math.max(b.y, Math.min(cy, b.y + b.h));
+        var dx = cx - qx, dy = cy - qy;
+        if (dx * dx + dy * dy < r * r) return true;
+      }
+    }
+    return false;
+  }
+  // Axis-separated move: try full, then X-only, then Y-only, else stay put.
+  // Returns the new (x, y) — callers assign directly.
+  function moveWithCollision(oldX, oldY, newX, newY, radius) {
+    if (!isBlockedByDecor(newX, newY, radius)) return { x: newX, y: newY, blocked: false };
+    if (!isBlockedByDecor(newX, oldY, radius)) return { x: newX, y: oldY, blocked: true };
+    if (!isBlockedByDecor(oldX, newY, radius)) return { x: oldX, y: newY, blocked: true };
+    return { x: oldX, y: oldY, blocked: true };
   }
 
   // Draw decor in world space; y-sorted so further items render behind.
@@ -4729,6 +4830,7 @@ function doLogin() {
     // fired before the decor/index.json fetch completed.
     if (!_decorItems.length && HOMM3_ART.decorMeta && offlineMode) _generateHomm3Decor();
     if (!_decorItems.length) return;
+    if (_decorBlockAABBs === null || _decorBlockGrid === null) _rebuildDecorBlockAABBs();
     var pad = 80;
     var camL = camX - pad, camR = camX + W + pad, camT = camY - pad, camB = camY + H + pad;
     // Cull + sort by anchor y
