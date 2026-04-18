@@ -3238,7 +3238,8 @@ function doLogin() {
           screenShake('medium');
           floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
           playSound('kill');
-          registerCombo();
+          // Combo popups (DOUBLE KILL / TRIPLE KILL / ...) are PVP-only
+          if (closest.isBot) registerCombo();
           // Wave 2: drop XP gems (magnetized in updateOfflineDemo) — bosses drop multiple
           // XP reward: bot kills are worth ~3× a normal mob so PVP is the fastest leveling path.
           var xpAmt = closest.isBot ? 30
@@ -4688,11 +4689,23 @@ function doLogin() {
   // corridors between regions so players/bots have clean travel lanes.
   // Sparse non-blocker scatter (tree_small / crate) fills open ground.
   var _decorRegions = []; // {cx, cy, radius, type} — exposed for QA
+  // Regions are intentionally LARGE (≥1/4 screen worth) and dense so each
+  // reads as a terrain block rather than a decor cluster. Leo 2026-04-18.
+  // Uses ArtDesigner's 2026-04-18 variant pack (pine/autumn/spiky/flat/
+  // thatch/fence_long + broken_wall + stone_pile + tree_row) so no region
+  // looks monotone. Items with the same barrier hitbox read as texture
+  // variety rather than gameplay changes.
+  // Target: each region ≥1/4 viewport (≈r 430+). Forest goes widest,
+  // stones/ruins slightly smaller, village between.
   var _REGION_TEMPLATES = {
-    forest:  { items: ['tree_dense', 'tree_dense', 'tree_big'],           rMin: 150, rMax: 250, countMin: 10, countMax: 20, spacing: 36 },
-    stones:  { items: ['rock', 'rock', 'tree_big'],                       rMin: 100, rMax: 180, countMin: 6,  countMax: 12, spacing: 42 },
-    village: { items: ['house', 'fence_cluster', 'fence_cluster', 'fence'], rMin: 120, rMax: 200, countMin: 5, countMax: 10, spacing: 52 },
-    ruins:   { items: ['rock', 'fence_cluster', 'fence', 'house'],        rMin: 100, rMax: 150, countMin: 5,  countMax: 8,  spacing: 44 }
+    forest:  { items: ['tree_dense', 'tree_dense_pine', 'tree_dense_autumn', 'tree_row', 'tree_row', 'tree_big'],
+               rMin: 460, rMax: 620, countMin: 30, countMax: 55, spacing: 28 },
+    stones:  { items: ['rock', 'rock', 'stone_pile', 'stone_pile', 'rock_spiky', 'rock_flat'],
+               rMin: 440, rMax: 560, countMin: 20, countMax: 36, spacing: 30 },
+    village: { items: ['house', 'house_thatch', 'fence_long', 'fence_long', 'fence_cluster', 'fence'],
+               rMin: 440, rMax: 560, countMin: 12, countMax: 20, spacing: 48 },
+    ruins:   { items: ['broken_wall', 'broken_wall', 'rock', 'stone_pile', 'fence_cluster', 'house'],
+               rMin: 440, rMax: 560, countMin: 16, countMax: 28, spacing: 36 }
   };
   function _generateHomm3Decor() {
     _decorItems = [];
@@ -4708,19 +4721,29 @@ function doLogin() {
     function rnd() { _seed = ((_seed | 0) * 1103515245 + 12345) & 0x7fffffff; return (_seed & 0xffff) / 0xffff; }
 
     var cx = WORLD_W / 2, cy = WORLD_H / 2;
-    var SPAWN_CLEAR_R = 320;  // circular exclusion around player spawn
-    var CHANNEL = 200;        // min corridor between any two regions
+    var SPAWN_CLEAR_R = 360;
+    var CHANNEL = 100;        // 100px corridor — regions are big, this keeps 4-6 fitting
     var waveSpawns = (typeof _waveSpawnPoints !== 'undefined' && _waveSpawnPoints) ? _waveSpawnPoints : [];
 
-    // 1) Choose 6-10 region centers with distance-packed placement.
-    // Guarantee each of the 4 templates appears at least once before
-    // rolling random types for the remainder — otherwise a seed can easily
-    // produce, e.g., "all stones" and the map loses variety.
-    var targetRegions = 6 + Math.floor(rnd() * 5);
+    // 1) Place 4-6 big regions on a jittered 2×3 grid. Random placement
+    // is unreliable at this scale (regions cover ~5% of world each);
+    // grid-based ensures 4-6 always fit.
     var typeKeys = Object.keys(_REGION_TEMPLATES);
-    var attempts = 0;
-    while (_decorRegions.length < targetRegions && attempts < targetRegions * 30) {
-      attempts++;
+    var targetRegions = 4 + Math.floor(rnd() * 3); // 4-6
+    var GRID_COLS = 2, GRID_ROWS = 3;
+    var cellW = WORLD_W / GRID_COLS;
+    var cellH = WORLD_H / GRID_ROWS;
+    // Order cells by their distance from world center, farthest first, so
+    // the central cell (which would touch spawn clearance) is tried last.
+    var cellsOrder = [];
+    for (var gy = 0; gy < GRID_ROWS; gy++) for (var gx = 0; gx < GRID_COLS; gx++) {
+      var ccx = (gx + 0.5) * cellW, ccy = (gy + 0.5) * cellH;
+      cellsOrder.push({ gx: gx, gy: gy, ccx: ccx, ccy: ccy, d: Math.hypot(ccx - cx, ccy - cy) });
+    }
+    cellsOrder.sort(function(a, b) { return b.d - a.d; });
+    for (var ci = 0; ci < cellsOrder.length && _decorRegions.length < targetRegions; ci++) {
+      var cell = cellsOrder[ci];
+      // Round-robin type for first 4, then random
       var type;
       if (_decorRegions.length < typeKeys.length) {
         type = typeKeys[_decorRegions.length];
@@ -4728,38 +4751,44 @@ function doLogin() {
         type = typeKeys[Math.floor(rnd() * typeKeys.length)];
       }
       var spec = _REGION_TEMPLATES[type];
-      var radius = spec.rMin + rnd() * (spec.rMax - spec.rMin);
-      var rx = radius + 40 + rnd() * (WORLD_W - radius * 2 - 80);
-      var ry = radius + 40 + rnd() * (WORLD_H - radius * 2 - 80);
-      // Respect spawn clearance
-      var ddx = rx - cx, ddy = ry - cy;
-      if (ddx * ddx + ddy * ddy < (SPAWN_CLEAR_R + radius) * (SPAWN_CLEAR_R + radius)) continue;
-      // Respect wave-spawn points
-      var tooClose = false;
-      for (var wi = 0; wi < waveSpawns.length; wi++) {
-        var wp = waveSpawns[wi];
-        var wdx = rx - wp.x, wdy = ry - wp.y;
-        if (wdx * wdx + wdy * wdy < (radius + 80) * (radius + 80)) { tooClose = true; break; }
+      // Try several random positions within this cell
+      var placed = false;
+      for (var tryI = 0; tryI < 30 && !placed; tryI++) {
+        var radius = spec.rMin + rnd() * (spec.rMax - spec.rMin);
+        // Clamp radius so region fits inside the cell with some margin
+        var maxR = Math.min(cellW, cellH) * 0.48;
+        if (radius > maxR) radius = maxR;
+        var jitterX = (rnd() - 0.5) * (cellW - radius * 2 - 40);
+        var jitterY = (rnd() - 0.5) * (cellH - radius * 2 - 40);
+        var rx = cell.ccx + jitterX;
+        var ry = cell.ccy + jitterY;
+        // Clamp to world bounds
+        rx = Math.max(radius + 40, Math.min(WORLD_W - radius - 40, rx));
+        ry = Math.max(radius + 40, Math.min(WORLD_H - radius - 40, ry));
+        // Respect spawn clearance
+        var ddx = rx - cx, ddy = ry - cy;
+        if (ddx * ddx + ddy * ddy < (SPAWN_CLEAR_R + radius) * (SPAWN_CLEAR_R + radius)) continue;
+        // Respect wave-spawn points (relaxed — 30px cushion)
+        var tooClose = false;
+        for (var wi = 0; wi < waveSpawns.length; wi++) {
+          var wp = waveSpawns[wi];
+          var wdx = rx - wp.x, wdy = ry - wp.y;
+          if (wdx * wdx + wdy * wdy < (radius + 30) * (radius + 30)) { tooClose = true; break; }
+        }
+        if (tooClose) continue;
+        // Corridor between regions
+        var overlap = false;
+        for (var ri = 0; ri < _decorRegions.length; ri++) {
+          var o = _decorRegions[ri];
+          var dr = Math.sqrt((rx - o.cx) * (rx - o.cx) + (ry - o.cy) * (ry - o.cy));
+          if (dr < o.radius + radius + CHANNEL) { overlap = true; break; }
+        }
+        if (overlap) continue;
+        // Note: no BR-structure check at region-level — buildings just
+        // coexist inside a region; per-item placement skips their AABBs.
+        _decorRegions.push({ cx: rx, cy: ry, radius: radius, type: type });
+        placed = true;
       }
-      if (tooClose) continue;
-      // Corridor between regions
-      var overlap = false;
-      for (var ri = 0; ri < _decorRegions.length; ri++) {
-        var o = _decorRegions[ri];
-        var dr = Math.sqrt((rx - o.cx) * (rx - o.cx) + (ry - o.cy) * (ry - o.cy));
-        if (dr < o.radius + radius + CHANNEL) { overlap = true; break; }
-      }
-      if (overlap) continue;
-      // Respect BR structure footprints (buildings from _brStructures)
-      var brHit = false;
-      for (var si = 0; si < _brStructures.length; si++) {
-        var s = _brStructures[si];
-        var sbx = Math.max(s.x - 40, Math.min(rx, s.x + s.w + 40));
-        var sby = Math.max(s.y - 40, Math.min(ry, s.y + s.h + 40));
-        if ((rx - sbx) * (rx - sbx) + (ry - sby) * (ry - sby) < radius * radius) { brHit = true; break; }
-      }
-      if (brHit) continue;
-      _decorRegions.push({ cx: rx, cy: ry, radius: radius, type: type });
     }
 
     // 2) Fill each region. Polar sampling with sqrt(rnd) concentrates toward
@@ -6421,30 +6450,29 @@ function doLogin() {
     var localId = NetworkClient.getLocalPlayerId();
     switch (evt.type) {
       case 'kill':
-        // Enemy killed — visual effects at kill location
+        // Mob kill — visuals only, goes to farm stat not kills/killStreak.
         if (d.x !== undefined) {
           emit(d.x, d.y, '#f44', 10, 80);
           if (d.xp) floatXP(d.x, d.y, d.xp);
         }
-        // Increment kill counter if this player got the kill
         if (d.killerId === localId) {
-          kills++;
-          killStreak++;
-          if (killStreak > maxStreak) maxStreak = killStreak;
-          player._streakTimer = 0;
-          killDisplayPulse = 0.3;
+          farmKills++;
+          if (player) player._farmKills = (player._farmKills || 0) + 1;
           if (d.x !== undefined) {
             killFlashRings.push({ x: d.x, y: d.y, radius: 0, maxRadius: 40, life: 0.2, maxLife: 0.2 });
             if (killFlashRings.length > 20) killFlashRings.shift();
           }
-          if (allPlayers[0]) allPlayers[0].kills = kills;
         }
         break;
       case 'player_kill':
-        // Kill feed for all viewers
         addKillFeed(d.killerName || 'Player', d.victimName || 'Player', d.killerColor || '#f44');
         if (d.killerId === localId) {
           kills++;
+          killStreak++;
+          if (killStreak > maxStreak) maxStreak = killStreak;
+          if (player) player._streakTimer = 0;
+          killDisplayPulse = 0.3;
+          if (allPlayers[0]) allPlayers[0].kills = kills;
           floatText(player.x, player.y - 40, 'PLAYER KILL!', '#f44', 22);
           screenShake(6, 400);
           playSound('hit');
@@ -6716,31 +6744,36 @@ function doLogin() {
 
 
   function onEnemyKill(e) {
-    // Tutorial dismisses only when player clicks "跳过" (game is paused during tutorial)
-    // Sync player kills to allPlayers[0] for leaderboard
-    if (player && allPlayers[0]) allPlayers[0].kills = kills + 1;
+    // kills / killStreak / maxStreak are PVP only (Leo 2026-04-18). Mob
+    // kills go to farmKills. isBot flag (or isPlayer) distinguishes them.
+    var _isPvp = !!(e && e.isBot);
     killDisplayPulse = 0.3;
-    // killFlashRing (US-329): expanding deathRipple at kill position
     killFlashRings.push({ x: e.x, y: e.y, radius: 0, maxRadius: 40, life: 0.2, maxLife: 0.2 });
-    if (killFlashRings.length > 20) killFlashRings.shift(); // cap pool
-    kills++;
-    killsThisFrame++;
-    // instantAction (US-300): mark first kill timing
+    if (killFlashRings.length > 20) killFlashRings.shift();
+    if (_isPvp) {
+      if (player && allPlayers[0]) allPlayers[0].kills = kills + 1;
+      kills++;
+      killsThisFrame++;
+      killStreak++;
+      if (player) player._streakTimer = 0;
+      if (killStreak > maxStreak) maxStreak = killStreak;
+    } else {
+      farmKills++;
+      if (player) player._farmKills = (player._farmKills || 0) + 1;
+    }
+    // instantAction (US-300): mark first kill timing — applies to both paths
     if (!instantAction.firstKillDone) {
       instantAction.firstKillDone = true;
       if (instantAction.firstKillTimer < 2) {
         floatText(player.x, player.y - 60, 'INSTANT KILL!', '#ffd700', 16);
       }
     }
-    // Trigger slow motion when 3+ kills in one frame
+    // Trigger slow motion when 3+ kills in one frame — keep as-is (dramatic moment)
     if (killsThisFrame >= 3 && !massKillSlow.active) {
       massKillSlow.active = true;
       massKillSlow.timer = massKillSlow.duration;
       screenFlash.color = '#fff'; screenFlash.alpha = 0.15;
     }
-    killStreak++;
-    player._streakTimer = 0;
-    if (killStreak > maxStreak) maxStreak = killStreak;
     // autoHighlight (US-313): detect spectacular moments
     if (e.enemyType === 'boss') {
       autoHighlight.events.push({ type: 'boss_kill', time: gameTime, text: 'Boss击杀!' });
@@ -10850,6 +10883,8 @@ function doLogin() {
     get HOMM3_ART() { return HOMM3_ART; },
     get decorItems() { return _decorItems; },
     get decorRegions() { return _decorRegions; },
+    get waveSpawnPoints() { return _waveSpawnPoints; },
+    get brStructures() { return _brStructures; },
     get tutorialDone() { return tutorialDone; },
     set tutorialDone(v) { tutorialDone = !!v; if (v) _tutorialSkipRect = null; },
     get gameMode() { return gameMode; },
