@@ -4682,77 +4682,145 @@ function doLogin() {
 
   // Decor scatter — deterministic layout with collision filtering.
   var _decorItems = []; // { name, x, y, meta }
+  // Region-based layout (Leo 2026-04-18 step 1.5): instead of uniform
+  // scatter, seed 6-10 thematic regions (forest/stones/village/ruins),
+  // pack their decor tightly inside a radius, and leave ≥200px open
+  // corridors between regions so players/bots have clean travel lanes.
+  // Sparse non-blocker scatter (tree_small / crate) fills open ground.
+  var _decorRegions = []; // {cx, cy, radius, type} — exposed for QA
+  var _REGION_TEMPLATES = {
+    forest:  { items: ['tree_dense', 'tree_dense', 'tree_big'],           rMin: 150, rMax: 250, countMin: 10, countMax: 20, spacing: 36 },
+    stones:  { items: ['rock', 'rock', 'tree_big'],                       rMin: 100, rMax: 180, countMin: 6,  countMax: 12, spacing: 42 },
+    village: { items: ['house', 'fence_cluster', 'fence_cluster', 'fence'], rMin: 120, rMax: 200, countMin: 5, countMax: 10, spacing: 52 },
+    ruins:   { items: ['rock', 'fence_cluster', 'fence', 'house'],        rMin: 100, rMax: 150, countMin: 5,  countMax: 8,  spacing: 44 }
+  };
   function _generateHomm3Decor() {
     _decorItems = [];
-    if (!HOMM3_ART.decorMeta) return; // will retry next startOfflineDemo
+    _decorRegions = [];
+    if (!HOMM3_ART.decorMeta) return;
     var items = HOMM3_ART.decorMeta.items;
+    function findMeta(name) {
+      for (var i = 0; i < items.length; i++) if (items[i].name === name) return items[i];
+      return null;
+    }
+    // Deterministic seeded RNG (same seed => same layout across matches for QA)
     var _seed = 91011;
     function rnd() { _seed = ((_seed | 0) * 1103515245 + 12345) & 0x7fffffff; return (_seed & 0xffff) / 0xffff; }
-    // Weights (Leo 2026-04-18 step 1) — blockers ~50% so bots have real
-    // obstacles. Uses ArtDesigner's new fence_cluster + tree_dense as the
-    // primary hard-wall pieces; single-fence/tree keep visual variety.
-    var pool = [
-      { name: 'tree_big', w: 2 }, { name: 'tree_small', w: 4 },
-      { name: 'tree_dense', w: 3 },
-      { name: 'rock', w: 4 }, { name: 'house', w: 3 },
-      { name: 'fence_cluster', w: 4 }, { name: 'fence', w: 2 },
-      { name: 'crate', w: 2 }
-    ];
-    var poolTotal = 0; for (var pi = 0; pi < pool.length; pi++) poolTotal += pool[pi].w;
-    function pickName() {
-      var r = rnd() * poolTotal;
-      for (var i = 0; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) return pool[i].name; }
-      return pool[0].name;
-    }
-    // Target density: ~1 per 200×200 world → +44% vs prior 240×240.
-    // Density varies by position: storm-ring (where late game converges) denser,
-    // spawn + wave-spawn points sparser so they don't block sightlines.
-    var target = Math.round((WORLD_W * WORLD_H) / (200 * 200));
+
     var cx = WORLD_W / 2, cy = WORLD_H / 2;
-    var SPAWN_CLEAR_R = 240;        // radius around player spawn with no decor
-    var WAVE_CLEAR_R = 110;         // radius around each wave-spawn point
-    var STORM_RING_INNER = 260;     // ring [inner, outer] gets +40% accept rate
-    var STORM_RING_OUTER = Math.min(WORLD_W, WORLD_H) * 0.45;
+    var SPAWN_CLEAR_R = 320;  // circular exclusion around player spawn
+    var CHANNEL = 200;        // min corridor between any two regions
     var waveSpawns = (typeof _waveSpawnPoints !== 'undefined' && _waveSpawnPoints) ? _waveSpawnPoints : [];
+
+    // 1) Choose 6-10 region centers with distance-packed placement.
+    // Guarantee each of the 4 templates appears at least once before
+    // rolling random types for the remainder — otherwise a seed can easily
+    // produce, e.g., "all stones" and the map loses variety.
+    var targetRegions = 6 + Math.floor(rnd() * 5);
+    var typeKeys = Object.keys(_REGION_TEMPLATES);
     var attempts = 0;
-    while (_decorItems.length < target && attempts < target * 8) {
+    while (_decorRegions.length < targetRegions && attempts < targetRegions * 30) {
       attempts++;
-      var name = pickName();
-      var it = null;
-      for (var ii = 0; ii < items.length; ii++) if (items[ii].name === name) { it = items[ii]; break; }
-      if (!it) continue;
-      var dx = 40 + rnd() * (WORLD_W - 80);
-      var dy = 40 + rnd() * (WORLD_H - 80);
-      var rdx = dx - cx, rdy = dy - cy;
-      var rFromCenter = Math.sqrt(rdx * rdx + rdy * rdy);
-      // Keep player spawn clear (circular, larger than before)
-      if (rFromCenter < SPAWN_CLEAR_R) continue;
-      // Keep each wave-spawn point clear
+      var type;
+      if (_decorRegions.length < typeKeys.length) {
+        type = typeKeys[_decorRegions.length];
+      } else {
+        type = typeKeys[Math.floor(rnd() * typeKeys.length)];
+      }
+      var spec = _REGION_TEMPLATES[type];
+      var radius = spec.rMin + rnd() * (spec.rMax - spec.rMin);
+      var rx = radius + 40 + rnd() * (WORLD_W - radius * 2 - 80);
+      var ry = radius + 40 + rnd() * (WORLD_H - radius * 2 - 80);
+      // Respect spawn clearance
+      var ddx = rx - cx, ddy = ry - cy;
+      if (ddx * ddx + ddy * ddy < (SPAWN_CLEAR_R + radius) * (SPAWN_CLEAR_R + radius)) continue;
+      // Respect wave-spawn points
       var tooClose = false;
       for (var wi = 0; wi < waveSpawns.length; wi++) {
         var wp = waveSpawns[wi];
-        var wdx = dx - wp.x, wdy = dy - wp.y;
-        if (wdx * wdx + wdy * wdy < WAVE_CLEAR_R * WAVE_CLEAR_R) { tooClose = true; break; }
+        var wdx = rx - wp.x, wdy = ry - wp.y;
+        if (wdx * wdx + wdy * wdy < (radius + 80) * (radius + 80)) { tooClose = true; break; }
       }
       if (tooClose) continue;
-      // Density biasing: storm-ring always accepts; outside accepts 70%.
-      var inRing = rFromCenter >= STORM_RING_INNER && rFromCenter <= STORM_RING_OUTER;
-      if (!inRing && rnd() > 0.7) continue;
-      // Avoid BR structure footprints
-      var hit = false;
+      // Corridor between regions
+      var overlap = false;
+      for (var ri = 0; ri < _decorRegions.length; ri++) {
+        var o = _decorRegions[ri];
+        var dr = Math.sqrt((rx - o.cx) * (rx - o.cx) + (ry - o.cy) * (ry - o.cy));
+        if (dr < o.radius + radius + CHANNEL) { overlap = true; break; }
+      }
+      if (overlap) continue;
+      // Respect BR structure footprints (buildings from _brStructures)
+      var brHit = false;
       for (var si = 0; si < _brStructures.length; si++) {
         var s = _brStructures[si];
-        if (dx > s.x - 24 && dx < s.x + s.w + 24 && dy > s.y - 24 && dy < s.y + s.h + 24) { hit = true; break; }
+        var sbx = Math.max(s.x - 40, Math.min(rx, s.x + s.w + 40));
+        var sby = Math.max(s.y - 40, Math.min(ry, s.y + s.h + 40));
+        if ((rx - sbx) * (rx - sbx) + (ry - sby) * (ry - sby) < radius * radius) { brHit = true; break; }
       }
-      if (hit) continue;
-      // Avoid other decor (loose spacing)
-      for (var di = 0; di < _decorItems.length; di++) {
-        var d = _decorItems[di];
-        if (Math.abs(dx - d.x) < 48 && Math.abs(dy - d.y) < 48) { hit = true; break; }
-      }
-      if (hit) continue;
-      _decorItems.push({ name: name, x: dx, y: dy, meta: it });
+      if (brHit) continue;
+      _decorRegions.push({ cx: rx, cy: ry, radius: radius, type: type });
     }
+
+    // 2) Fill each region. Polar sampling with sqrt(rnd) concentrates toward
+    //    center, edges are looser — natural soft-edge look.
+    for (var rj = 0; rj < _decorRegions.length; rj++) {
+      var region = _decorRegions[rj];
+      var tmpl = _REGION_TEMPLATES[region.type];
+      var count = tmpl.countMin + Math.floor(rnd() * (tmpl.countMax - tmpl.countMin + 1));
+      var placed = 0, regionAttempts = 0;
+      while (placed < count && regionAttempts < count * 8) {
+        regionAttempts++;
+        var angle = rnd() * Math.PI * 2;
+        var dist = region.radius * Math.sqrt(rnd()); // uniform areal density
+        var px = region.cx + Math.cos(angle) * dist;
+        var py = region.cy + Math.sin(angle) * dist;
+        if (px < 40 || py < 40 || px > WORLD_W - 40 || py > WORLD_H - 40) continue;
+        var name = tmpl.items[Math.floor(rnd() * tmpl.items.length)];
+        var it = findMeta(name);
+        if (!it) continue;
+        // Minimum spacing within region
+        var hit = false;
+        for (var di = 0; di < _decorItems.length; di++) {
+          var d = _decorItems[di];
+          if (Math.abs(px - d.x) < tmpl.spacing && Math.abs(py - d.y) < tmpl.spacing) { hit = true; break; }
+        }
+        if (hit) continue;
+        _decorItems.push({ name: name, x: px, y: py, meta: it, regionId: rj });
+        placed++;
+      }
+    }
+
+    // 3) Sparse scatter in open areas — non-blocker decor only (visual flavour).
+    var sparseTarget = Math.round((WORLD_W * WORLD_H) / (320 * 320));
+    var sparsePlaced = 0, sparseTries = 0;
+    while (sparsePlaced < sparseTarget && sparseTries < sparseTarget * 10) {
+      sparseTries++;
+      var sx = 60 + rnd() * (WORLD_W - 120);
+      var sy = 60 + rnd() * (WORLD_H - 120);
+      var sDx = sx - cx, sDy = sy - cy;
+      if (sDx * sDx + sDy * sDy < (SPAWN_CLEAR_R - 40) * (SPAWN_CLEAR_R - 40)) continue;
+      var inRegion = false;
+      for (var rk = 0; rk < _decorRegions.length; rk++) {
+        var reg = _decorRegions[rk];
+        var rrDx = sx - reg.cx, rrDy = sy - reg.cy;
+        if (rrDx * rrDx + rrDy * rrDy < (reg.radius + 20) * (reg.radius + 20)) { inRegion = true; break; }
+      }
+      if (inRegion) continue;
+      var sparseName = rnd() < 0.55 ? 'tree_small' : 'crate';
+      var sm = findMeta(sparseName);
+      if (!sm) continue;
+      // loose spacing
+      var sparseHit = false;
+      for (var _sdi = 0; _sdi < _decorItems.length; _sdi++) {
+        var _sd = _decorItems[_sdi];
+        if (Math.abs(sx - _sd.x) < 52 && Math.abs(sy - _sd.y) < 52) { sparseHit = true; break; }
+      }
+      if (sparseHit) continue;
+      _decorItems.push({ name: sparseName, x: sx, y: sy, meta: sm, regionId: -1 });
+      sparsePlaced++;
+    }
+
     _rebuildDecorBlockAABBs();
   }
 
@@ -10781,6 +10849,7 @@ function doLogin() {
     get offlineEnemies() { return offlineEnemies; },
     get HOMM3_ART() { return HOMM3_ART; },
     get decorItems() { return _decorItems; },
+    get decorRegions() { return _decorRegions; },
     get tutorialDone() { return tutorialDone; },
     set tutorialDone(v) { tutorialDone = !!v; if (v) _tutorialSkipRect = null; },
     get gameMode() { return gameMode; },
