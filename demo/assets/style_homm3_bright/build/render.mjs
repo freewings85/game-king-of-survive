@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -21,11 +21,13 @@ async function main() {
 
   const jobs = [];
 
-  if (target === 'all' || target === 'tileset') jobs.push(() => buildTileset(page));
-  if (target === 'all' || target === 'mage')    jobs.push(() => buildMage(page));
-  if (target === 'all' || target === 'orc')     jobs.push(() => buildOrc(page));
-  if (target === 'all' || target === 'ui')      jobs.push(() => buildUI(page));
-  if (target === 'all' || target === 'decor')   jobs.push(() => buildDecor(page));
+  if (target === 'all' || target === 'tileset')  jobs.push(() => buildTileset(page));
+  if (target === 'all' || target === 'mage')     jobs.push(() => buildMage(page));
+  if (target === 'all' || target === 'orc')      jobs.push(() => buildOrc(page));
+  if (target === 'all' || target === 'ui')       jobs.push(() => buildUI(page));
+  if (target === 'all' || target === 'decor')    jobs.push(() => buildDecor(page));
+  if (target === 'all' || target === 'warrior')  jobs.push(() => buildChar(page, 'warrior', warriorFrame));
+  if (target === 'all' || target === 'scout')    jobs.push(() => buildChar(page, 'scout',   scoutFrame));
 
   for (const j of jobs) await j();
 
@@ -87,23 +89,80 @@ async function writeJSON(rel, obj) {
   console.log(`  wrote ${rel}`);
 }
 
-// ── TILESET ──────────────────────────────────────────────────
+function blank64() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"></svg>`;
+}
+
+// ── TILESET (autotile) ──────────────────────────────────────
+// Layout (8 cols × 5 rows, 64px tile = 512×320):
+//   row 0: grass0 grass1 dirt0 dirt1 stone0 stone1 _ _
+//   row 1: gd_0..gd_7     (grass→dirt autotile, masks 0..7)
+//   row 2: gd_8..gd_15    (grass→dirt autotile, masks 8..15)
+//   row 3: gs_0..gs_7
+//   row 4: gs_8..gs_15
 async function buildTileset(page) {
   console.log('[tileset] …');
-  const order = ['grass0','grass1','dirt0','dirt1','stone0','stone1','gd_E','gd_W','gd_N','gd_S','gs_E','gs_S'];
-  const cells = order.map(id => TILES[id]());
-  const sheet = await composite(page, cells, 64, 64, 6); // 6x2 grid → 384x128
+  const COLS = 8, ROWS = 5;
+  const cells = new Array(COLS * ROWS).fill(null).map(() => blank64());
+  const putAt = (col, row, svg) => { cells[row * COLS + col] = svg; };
+  // Row 0: base variants
+  putAt(0, 0, TILES.grass0());
+  putAt(1, 0, TILES.grass1());
+  putAt(2, 0, TILES.dirt0());
+  putAt(3, 0, TILES.dirt1());
+  putAt(4, 0, TILES.stone0());
+  putAt(5, 0, TILES.stone1());
+  // Rows 1-2: gd_0..gd_15
+  for (let m = 0; m < 16; m++) {
+    const row = 1 + Math.floor(m / 8);
+    const col = m % 8;
+    putAt(col, row, autotileGrassDirt(m));
+  }
+  // Rows 3-4: gs_0..gs_15
+  for (let m = 0; m < 16; m++) {
+    const row = 3 + Math.floor(m / 8);
+    const col = m % 8;
+    putAt(col, row, autotileGrassStone(m));
+  }
+  const sheet = await composite(page, cells, 64, 64, COLS);
   await writeFile('tileset.png', sheet);
+
+  // Atlas JSON with new schema (variants + seams) + legacy tiles[] for back-compat.
   const atlas = {
     image: 'tileset.png',
-    tileW: 64, tileH: 64, cols: 6, rows: 2,
-    tiles: order.map((id, i) => ({
-      id, col: i % 6, row: Math.floor(i / 6),
-      px: { x: (i % 6) * 64, y: Math.floor(i / 6) * 64, w: 64, h: 64 },
-    })),
+    tileW: 64, tileH: 64, cols: COLS, rows: ROWS,
+    maskBits: { N: 1, E: 2, S: 4, W: 8 },
+    variants: {
+      grass: [px(0, 0), px(1, 0)],
+      dirt:  [px(2, 0), px(3, 0)],
+      stone: [px(4, 0), px(5, 0)],
+    },
+    seams: {
+      grass_dirt:  Object.fromEntries(
+        Array.from({ length: 16 }, (_, m) => [String(m), px(m % 8, 1 + Math.floor(m / 8))])
+      ),
+      grass_stone: Object.fromEntries(
+        Array.from({ length: 16 }, (_, m) => [String(m), px(m % 8, 3 + Math.floor(m / 8))])
+      ),
+    },
+    // Legacy flat list (kept for f2fac0f integration; new consumers use `variants` + `seams`).
+    tiles: (() => {
+      const out = [];
+      out.push({ id: 'grass0', col: 0, row: 0, px: { x: 0, y: 0, w: 64, h: 64 } });
+      out.push({ id: 'grass1', col: 1, row: 0, px: { x: 64, y: 0, w: 64, h: 64 } });
+      out.push({ id: 'dirt0',  col: 2, row: 0, px: { x: 128, y: 0, w: 64, h: 64 } });
+      out.push({ id: 'dirt1',  col: 3, row: 0, px: { x: 192, y: 0, w: 64, h: 64 } });
+      out.push({ id: 'stone0', col: 4, row: 0, px: { x: 256, y: 0, w: 64, h: 64 } });
+      out.push({ id: 'stone1', col: 5, row: 0, px: { x: 320, y: 0, w: 64, h: 64 } });
+      return out;
+    })(),
     style: 'homm3_bright',
   };
   await writeJSON('tileset.json', atlas);
+}
+
+function px(col, row) {
+  return { col, row, px: { x: col * 64, y: row * 64, w: 64, h: 64 } };
 }
 
 // ── MAGE SPRITE SHEET ───────────────────────────────────────
@@ -142,6 +201,33 @@ function mageAtlas() {
     previewFrame: { row: 2, col: 0 },
     style: 'homm3_bright',
   };
+}
+
+// Shared builder for any mage-layout character (4×4 walk + attack 3 + death 3).
+async function buildChar(page, name, frameFn) {
+  console.log(`[${name}] …`);
+  const dirs = ['U', 'L', 'D', 'R'];
+  const cells = [];
+  for (const d of dirs) {
+    for (let f = 0; f < 4; f++) cells.push(frameFn(d, 'walk', f));
+  }
+  for (let f = 0; f < 4; f++) cells.push(f < 3 ? frameFn('D', 'attack', f) : blank64());
+  for (let f = 0; f < 4; f++) cells.push(f < 3 ? frameFn('D', 'death', f) : blank64());
+  const sheet = await composite(page, cells, 64, 64, 4);
+  await writeFile(`player_${name}.png`, sheet);
+  await writeJSON(`player_${name}.json`, {
+    image: `player_${name}.png`,
+    frameW: 64, frameH: 64,
+    sheetCols: 4, sheetRows: 6,
+    directionOrder: ['up', 'left', 'down', 'right'],
+    anims: {
+      walk:   { rowBase: 0, rowFromDir: true,  frames: 4, fps: 10, skipFrame0: false },
+      attack: { rowBase: 4, rowFromDir: false, frames: 3, fps: 12, skipFrame0: false },
+      death:  { rowBase: 5, rowFromDir: false, frames: 3, fps: 8,  skipFrame0: false, loop: false },
+    },
+    previewFrame: { row: 2, col: 0 },
+    style: 'homm3_bright',
+  });
 }
 
 // ── ORC SPRITE SHEET ────────────────────────────────────────
@@ -231,10 +317,6 @@ async function buildDecor(page) {
         : null,
     })),
   });
-}
-
-function blank64() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"></svg>`;
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

@@ -418,3 +418,262 @@ export const TILES = {
   gs_E:   () => edgeTile(P.grassMid, P.stoneMid, 'E', 11),
   gs_S:   () => edgeTile(P.grassMid, P.stoneMid, 'S', 12),
 };
+
+// ─────────────────────────────────────────────────────────────
+// AUTOTILE 4-bit MASK  (N=1, E=2, S=4, W=8; 0..15)
+// Current cell is `fromColor`. Bits flag which neighbor is
+// `toColor` — that side gets a wavy seam with `to` bleeding in.
+// ─────────────────────────────────────────────────────────────
+export function autotileMask(fromColor, toColor, mask, seed = 0) {
+  const rnd = mulberry(seed + mask * 101 + 17);
+  const parts = [`<rect width="64" height="64" fill="${fromColor}"/>`];
+
+  // Draw "to" overlay on each direction bit that's set.
+  // Overlap at corners produces natural concave seams.
+  if (mask & 1) parts.push(seamPolygon('N', toColor, rnd));
+  if (mask & 2) parts.push(seamPolygon('E', toColor, rnd));
+  if (mask & 4) parts.push(seamPolygon('S', toColor, rnd));
+  if (mask & 8) parts.push(seamPolygon('W', toColor, rnd));
+
+  // Decor along the seam (only if mask ≠ 0 and not full coverage).
+  if (mask !== 0) parts.push(seamDecor(fromColor, toColor, mask, rnd));
+
+  return svg(64, 64, parts.join(''));
+}
+
+function seamPolygon(side, color, rnd) {
+  // Irregular wavy seam, ~20-26 px deep, 7 segments.
+  const steps = 7;
+  const baseDepth = 20 + rnd() * 6;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const j = (rnd() - 0.5) * 6;
+    const d = baseDepth + j;
+    if (side === 'N') pts.push([t * 64, d]);
+    if (side === 'S') pts.push([t * 64, 64 - d]);
+    if (side === 'E') pts.push([64 - d, t * 64]);
+    if (side === 'W') pts.push([d, t * 64]);
+  }
+  const asStr = arr => arr.map(p => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L ');
+
+  // Build a closed polygon covering the "to" side.
+  let path;
+  if (side === 'N') {
+    // (0,0) → (64,0) → seam right-to-left → back to (0,0)
+    const rev = pts.slice().reverse();
+    path = `M0 0 L64 0 L${asStr(rev)} Z`;
+  } else if (side === 'S') {
+    // (0,64) → seam left-to-right → (64,64) → close
+    path = `M0 64 L${asStr(pts)} L64 64 Z`;
+  } else if (side === 'E') {
+    // (64,0) → seam top-to-bottom → (64,64) → close
+    path = `M64 0 L${asStr(pts)} L64 64 Z`;
+  } else {
+    // W: (0,64) → seam bottom-to-top → (0,0) → close
+    const rev = pts.slice().reverse();
+    path = `M0 64 L${asStr(rev)} L0 0 Z`;
+  }
+  return `<path d="${path}" fill="${color}"/>`;
+}
+
+function seamDecor(fromColor, toColor, mask, rnd) {
+  const d = [];
+  // grass tufts (dark) scattered — visual noise to hide straight-line feel
+  if (fromColor === P.grassMid) {
+    for (let i = 0; i < 5; i++) {
+      d.push(`<circle cx="${(rnd()*54+4).toFixed(1)}" cy="${(rnd()*54+4).toFixed(1)}" r="${(0.6+rnd()*0.8).toFixed(1)}" fill="${P.grassDark}" opacity="0.55"/>`);
+    }
+  }
+  // pebbles on the "to" side (if to is dirt/stone)
+  const pebbleColor = toColor === P.dirtMid ? P.dirtLight : P.stoneLight;
+  const pebbleStroke = toColor === P.dirtMid ? P.dirtDark : P.stoneDark;
+  for (let i = 0; i < 3; i++) {
+    // Bias pebble placement toward a "to" edge (pick one enabled bit)
+    const enabled = [];
+    if (mask & 1) enabled.push('N');
+    if (mask & 2) enabled.push('E');
+    if (mask & 4) enabled.push('S');
+    if (mask & 8) enabled.push('W');
+    const side = enabled[Math.floor(rnd() * enabled.length)] || 'N';
+    let cx = 32, cy = 32;
+    if (side === 'N') { cx = rnd()*48+8; cy = rnd()*12+4; }
+    if (side === 'S') { cx = rnd()*48+8; cy = 64-(rnd()*12+4); }
+    if (side === 'E') { cx = 64-(rnd()*12+4); cy = rnd()*48+8; }
+    if (side === 'W') { cx = rnd()*12+4; cy = rnd()*48+8; }
+    const r = 0.9 + rnd() * 0.6;
+    d.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${pebbleColor}" stroke="${pebbleStroke}" stroke-width="0.3" opacity="0.75"/>`);
+  }
+  return d.join('');
+}
+
+// Convenience: generate all 32 seam tiles for two biome pairs.
+export function autotileGrassDirt(mask)  { return autotileMask(P.grassMid, P.dirtMid, mask, 1000); }
+export function autotileGrassStone(mask) { return autotileMask(P.grassMid, P.stoneMid, mask, 2000); }
+
+// ─────────────────────────────────────────────────────────────
+// WARRIOR (mage-like pipeline). Hammer + shield, wide shoulders.
+// Same sheet layout as mage (4 dirs walk + attack + death).
+// ─────────────────────────────────────────────────────────────
+export function warriorFrame(dir, anim, f) {
+  if (anim === 'death') return warriorDeath(f);
+  if (anim === 'attack') return warriorAttack(dir, f);
+  const bob = [0, -1.2, 0, 1.2][f % 4];
+  const legStep = [0, 3, 0, -3][f % 4];
+  return warriorWalk(dir, bob, legStep);
+}
+
+function warriorWalk(dir, B, legStep) {
+  const steel = '#a8a8b0', steelHi = '#d4d4dc', steelLo = '#4a4a52';
+  // Helmet (steel with gold trim) varies by direction
+  const helmet = (() => {
+    if (dir === 'D') return `<path d="M24 ${16+B} Q32 ${10+B} 40 ${16+B} L40 ${24+B} Q32 ${26+B} 24 ${24+B} Z" fill="${steel}" stroke="${P.black}" stroke-width="1"/><path d="M24 ${16+B} Q32 ${12+B} 40 ${16+B}" stroke="${P.gold}" stroke-width="1.2" fill="none"/><path d="M28 ${16+B} L28 ${24+B}" stroke="${steelLo}" stroke-width="1"/><path d="M36 ${16+B} L36 ${24+B}" stroke="${steelLo}" stroke-width="1"/>`;
+    if (dir === 'U') return `<path d="M24 ${16+B} Q32 ${10+B} 40 ${16+B} L40 ${24+B} Q32 ${26+B} 24 ${24+B} Z" fill="${steelLo}" stroke="${P.black}" stroke-width="1"/>`;
+    if (dir === 'L') return `<path d="M26 ${16+B} Q30 ${10+B} 38 ${16+B} L38 ${24+B} Q30 ${26+B} 26 ${24+B} Z" fill="${steel}" stroke="${P.black}" stroke-width="1"/><circle cx="30" cy="${19+B}" r="0.8" fill="${P.black}"/>`;
+    return `<path d="M26 ${16+B} Q34 ${10+B} 38 ${16+B} L38 ${24+B} Q34 ${26+B} 26 ${24+B} Z" fill="${steel}" stroke="${P.black}" stroke-width="1"/><circle cx="34" cy="${19+B}" r="0.8" fill="${P.black}"/>`;
+  })();
+
+  // Big shoulder pauldrons (silhouette hook)
+  const pauldrons = `<ellipse cx="20" cy="${30+B}" rx="7" ry="6" fill="${steel}" stroke="${P.black}" stroke-width="0.8"/>` +
+    `<ellipse cx="44" cy="${30+B}" rx="7" ry="6" fill="${steel}" stroke="${P.black}" stroke-width="0.8"/>` +
+    `<polygon points="18,${24+B} 21,${22+B} 22,${26+B}" fill="${P.goldHi}" stroke="${P.goldLo}" stroke-width="0.4"/>` +
+    `<polygon points="42,${24+B} 45,${22+B} 46,${26+B}" fill="${P.goldHi}" stroke="${P.goldLo}" stroke-width="0.4"/>`;
+
+  // Chest plate (steel + gold trim + red tabard)
+  const torso = `<path d="M22 ${30+B} Q32 ${28+B} 42 ${30+B} L44 ${46+B} Q32 ${50+B} 20 ${46+B} Z" fill="${steel}" stroke="${P.black}" stroke-width="1"/>` +
+    `<path d="M24 ${31+B} Q32 ${30+B} 40 ${31+B} L41 ${36+B} Q32 ${37+B} 23 ${36+B} Z" fill="${steelHi}" opacity="0.7"/>` +
+    `<path d="M28 ${32+B} Q32 ${30+B} 36 ${32+B} L36 ${48+B} L28 ${48+B} Z" fill="${P.blood}" stroke="${P.robeRedLo}" stroke-width="0.6"/>` +
+    `<path d="M22 ${39+B} Q32 ${38+B} 42 ${39+B}" stroke="${P.gold}" stroke-width="1" fill="none"/>`;
+
+  // Legs (steel greaves) — step animation
+  const legs = `<rect x="${26 + legStep * 0.3}" y="${50 + B}" width="4" height="7" fill="${steelLo}" stroke="${P.black}" stroke-width="0.4"/>` +
+    `<rect x="${34 - legStep * 0.3}" y="${50 + B}" width="4" height="7" fill="${steelLo}" stroke="${P.black}" stroke-width="0.4"/>`;
+
+  // SHIELD (large round, left side)
+  const shield = dir === 'R'
+    ? '' // hidden behind body when facing right
+    : `<circle cx="${dir === 'L' ? 52 : 14}" cy="${34 + B}" r="7" fill="${P.blood}" stroke="${P.goldLo}" stroke-width="1"/><circle cx="${dir === 'L' ? 52 : 14}" cy="${34 + B}" r="4" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.6"/><polygon points="${dir === 'L' ? 52 : 14},${30+B} ${(dir === 'L' ? 53 : 15)},${33+B} ${(dir === 'L' ? 55 : 17)},${33+B} ${(dir === 'L' ? 53 : 15)},${35+B} ${(dir === 'L' ? 54 : 16)},${38+B} ${(dir === 'L' ? 52 : 14)},${36+B} ${(dir === 'L' ? 50 : 12)},${38+B} ${(dir === 'L' ? 51 : 13)},${35+B} ${(dir === 'L' ? 49 : 11)},${33+B} ${(dir === 'L' ? 51 : 13)},${33+B}" fill="${P.blood}"/>`;
+
+  // HAMMER (right side) — big blunt head
+  const hammer = dir === 'L'
+    ? `<rect x="8" y="${28+B}" width="2" height="18" fill="${P.wood}" transform="rotate(-15 9 36)"/><rect x="4" y="${22+B}" width="10" height="8" fill="${steelLo}" stroke="${P.black}" stroke-width="0.8"/>`
+    : dir === 'R'
+    ? `<rect x="54" y="${28+B}" width="2" height="18" fill="${P.wood}" transform="rotate(15 55 36)"/><rect x="50" y="${22+B}" width="10" height="8" fill="${steelLo}" stroke="${P.black}" stroke-width="0.8"/>`
+    : dir === 'U'
+    ? `<rect x="44" y="${18+B}" width="2" height="20" fill="${P.wood}"/><rect x="40" y="${12+B}" width="10" height="8" fill="${steelLo}" stroke="${P.black}" stroke-width="0.8"/>`
+    : `<rect x="46" y="${28+B}" width="2" height="22" fill="${P.wood}"/><rect x="42" y="${22+B}" width="10" height="8" fill="${steelLo}" stroke="${P.black}" stroke-width="0.8"/>`;
+
+  return svg(64, 64,
+    `<ellipse cx="32" cy="60" rx="13" ry="2.5" fill="${P.black}" opacity="0.4"/>` +
+    legs + torso + pauldrons + helmet + shield + hammer
+  );
+}
+
+function warriorAttack(dir, f) {
+  const base = warriorWalk(dir, 0, 0);
+  // On frame 1: flash hammer head + impact radial
+  const fx = f === 1
+    ? `<circle cx="45" cy="26" r="9" fill="${P.goldHi}" opacity="0.45"/><circle cx="45" cy="26" r="4" fill="${P.white}" opacity="0.9"/>`
+    : f === 2
+    ? `<line x1="48" y1="22" x2="56" y2="14" stroke="${P.gold}" stroke-width="1.2"/><line x1="50" y1="28" x2="58" y2="28" stroke="${P.gold}" stroke-width="1.2"/>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+function warriorDeath(f) {
+  const rot = [0, 45, 80][f] || 0;
+  const op = [1.0, 0.8, 0.5][f] || 0.5;
+  const base = warriorWalk('D', 4, 0);
+  return svg(64, 64,
+    `<g transform="rotate(${rot} 32 40)" opacity="${op}">${stripSvgWrapper(base)}</g>` +
+    (f === 2 ? `<text x="32" y="20" text-anchor="middle" font-family="serif" font-size="10" fill="${P.gold}" opacity="0.7">†</text>` : '')
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// SCOUT (mage-like pipeline). Green hood + short bow, slim.
+// ─────────────────────────────────────────────────────────────
+export function scoutFrame(dir, anim, f) {
+  if (anim === 'death') return scoutDeath(f);
+  if (anim === 'attack') return scoutAttack(dir, f);
+  const bob = [0, -1.5, 0, 1.5][f % 4];
+  const legStep = [0, 3, 0, -3][f % 4];
+  return scoutWalk(dir, bob, legStep);
+}
+
+function scoutWalk(dir, B, legStep) {
+  const hoodGreen = '#2a5a22', hoodGreenHi = '#4a8a2e', tunic = '#6aa02a';
+
+  // Hood (varies by direction)
+  const hood = (() => {
+    if (dir === 'D') return `<path d="M22 ${14+B} Q32 ${4+B} 42 ${14+B} L40 ${24+B} Q32 ${26+B} 24 ${24+B} Z" fill="${hoodGreen}" stroke="${P.black}" stroke-width="1"/><path d="M24 ${15+B} Q32 ${8+B} 40 ${15+B}" stroke="${hoodGreenHi}" stroke-width="0.8" fill="none"/>`;
+    if (dir === 'U') return `<path d="M22 ${14+B} Q32 ${4+B} 42 ${14+B} L40 ${24+B} Q32 ${26+B} 24 ${24+B} Z" fill="${hoodGreenHi}" stroke="${P.black}" stroke-width="1"/>`;
+    if (dir === 'L') return `<path d="M20 ${14+B} Q28 ${2+B} 40 ${14+B} L38 ${24+B} Q28 ${26+B} 24 ${24+B} Z" fill="${hoodGreen}" stroke="${P.black}" stroke-width="1"/>`;
+    return `<path d="M24 ${14+B} Q36 ${2+B} 44 ${14+B} L40 ${24+B} Q36 ${26+B} 26 ${24+B} Z" fill="${hoodGreen}" stroke="${P.black}" stroke-width="1"/>`;
+  })();
+
+  // Face peeking
+  const face = dir === 'D'
+    ? `<circle cx="32" cy="${22 + B}" r="4" fill="${P.skin}"/><circle cx="30" cy="${22+B}" r="0.7" fill="${P.black}"/><circle cx="34" cy="${22+B}" r="0.7" fill="${P.black}"/>`
+    : dir === 'L'
+    ? `<circle cx="30" cy="${22 + B}" r="3.5" fill="${P.skin}"/><circle cx="28" cy="${22+B}" r="0.6" fill="${P.black}"/>`
+    : dir === 'R'
+    ? `<circle cx="34" cy="${22 + B}" r="3.5" fill="${P.skin}"/><circle cx="36" cy="${22+B}" r="0.6" fill="${P.black}"/>`
+    : '';
+
+  // Tunic body (slim)
+  const body = `<path d="M24 ${28+B} Q32 ${26+B} 40 ${28+B} L42 ${44+B} Q32 ${47+B} 22 ${44+B} Z" fill="${tunic}" stroke="${hoodGreen}" stroke-width="1"/>` +
+    `<path d="M26 ${29+B} Q32 ${27+B} 38 ${29+B} L38 ${38+B} Q32 ${40+B} 26 ${38+B} Z" fill="${hoodGreenHi}" opacity="0.45"/>` +
+    // brown belt
+    `<rect x="24" y="${40+B}" width="16" height="3" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.3"/>` +
+    `<rect x="30" y="${40+B}" width="4" height="3" fill="${P.gold}"/>`;
+
+  // Quiver at back (visible on D/L/R)
+  const quiver = dir === 'U' ? '' :
+    `<rect x="${dir === 'R' ? 40 : dir === 'L' ? 20 : 38}" y="${30+B}" width="4" height="12" fill="${P.leatherLo}"/>` +
+    `<rect x="${dir === 'R' ? 41 : dir === 'L' ? 21 : 39}" y="${28+B}" width="1" height="3" fill="${P.goldHi}"/>` +
+    `<rect x="${dir === 'R' ? 42 : dir === 'L' ? 22 : 40}" y="${28+B}" width="1" height="3" fill="${P.goldHi}"/>`;
+
+  // Legs
+  const legs = `<rect x="${26 + legStep * 0.3}" y="${47 + B}" width="3" height="6" fill="${P.leather}" stroke="${P.black}" stroke-width="0.4"/>` +
+    `<rect x="35 - legStep * 0.3}" y="${47 + B}" width="3" height="6" fill="${P.leather}" stroke="${P.black}" stroke-width="0.4"/>`
+    .replace('35 - legStep * 0.3}', (35 - legStep * 0.3).toString() + '}');
+  // fallback proper legs (string templating for second leg):
+  const legs2 = `<rect x="${(26 + legStep * 0.3).toFixed(1)}" y="${47 + B}" width="3" height="6" fill="${P.leather}" stroke="${P.black}" stroke-width="0.4"/>` +
+    `<rect x="${(35 - legStep * 0.3).toFixed(1)}" y="${47 + B}" width="3" height="6" fill="${P.leather}" stroke="${P.black}" stroke-width="0.4"/>`;
+
+  // Short bow (curved, smaller than mage staff)
+  const bow = dir === 'L'
+    ? `<path d="M18 ${22+B} Q12 ${34+B} 18 ${46+B}" fill="none" stroke="${P.wood}" stroke-width="1.5" stroke-linecap="round"/><path d="M18 ${22+B} L18 ${46+B}" stroke="${P.white}" stroke-width="0.6"/>`
+    : dir === 'R'
+    ? `<path d="M46 ${22+B} Q52 ${34+B} 46 ${46+B}" fill="none" stroke="${P.wood}" stroke-width="1.5" stroke-linecap="round"/><path d="M46 ${22+B} L46 ${46+B}" stroke="${P.white}" stroke-width="0.6"/>`
+    : dir === 'U'
+    ? `<path d="M22 ${34+B} Q32 ${28+B} 42 ${34+B}" fill="none" stroke="${P.wood}" stroke-width="1.5" stroke-linecap="round"/>`
+    : `<path d="M22 ${36+B} Q32 ${42+B} 42 ${36+B}" fill="none" stroke="${P.wood}" stroke-width="1.5" stroke-linecap="round"/>`;
+
+  return svg(64, 64,
+    `<ellipse cx="32" cy="57" rx="10" ry="2" fill="${P.black}" opacity="0.35"/>` +
+    legs2 + body + quiver + hood + face + bow
+  );
+}
+
+function scoutAttack(dir, f) {
+  const base = scoutWalk(dir, 0, 0);
+  // Frame 1: draw string back + arrow; Frame 2: release flash
+  const fx = f === 1
+    ? `<line x1="32" y1="30" x2="32" y2="10" stroke="${P.wood}" stroke-width="0.8"/><polygon points="30,10 32,6 34,10" fill="${P.blood}"/>`
+    : f === 2
+    ? `<line x1="32" y1="28" x2="32" y2="0" stroke="${P.wood}" stroke-width="1"/><polygon points="30,2 32,-2 34,2" fill="${P.blood}"/>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+function scoutDeath(f) {
+  const rot = [0, 40, 70][f] || 0;
+  const op = [1.0, 0.8, 0.5][f] || 0.5;
+  const base = scoutWalk('D', 4, 0);
+  return svg(64, 64,
+    `<g transform="rotate(${rot} 32 40)" opacity="${op}">${stripSvgWrapper(base)}</g>` +
+    (f === 2 ? `<text x="32" y="20" text-anchor="middle" font-family="serif" font-size="10" fill="${P.grassDark}" opacity="0.7">✦</text>` : '')
+  );
+}
