@@ -1,0 +1,36 @@
+{
+  "image": "mob_goblin.png",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 4,
+  "sheetRows": 5,
+  "directionOrder": [
+    "up",
+    "left",
+    "down",
+    "right"
+  ],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 8,
+      "skipFrame0": false
+    },
+    "death": {
+      "rowBase": 4,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 8,
+      "skipFrame0": false,
+      "loop": false
+    }
+  },
+  "previewFrame": {
+    "row": 2,
+    "col": 0
+  },
+  "style": "homm3_bright",
+  "kind": "small_mob"
+}

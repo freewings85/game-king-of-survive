@@ -1,0 +1,53 @@
+{
+  "image": "boss_troll.png",
+  "frameW": 128,
+  "frameH": 128,
+  "sheetCols": 4,
+  "sheetRows": 6,
+  "directionOrder": [
+    "up",
+    "left",
+    "down",
+    "right"
+  ],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 6,
+      "skipFrame0": false
+    },
+    "attack": {
+      "rowBase": 4,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 8,
+      "skipFrame0": false
+    },
+    "death": {
+      "rowBase": 5,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 6,
+      "skipFrame0": false,
+      "loop": false
+    }
+  },
+  "previewFrame": {
+    "row": 2,
+    "col": 0
+  },
+  "style": "homm3_bright",
+  "kind": "boss",
+  "collider": {
+    "x": 32,
+    "y": 64,
+    "w": 64,
+    "h": 56
+  },
+  "anchor": {
+    "x": 64,
+    "y": 112
+  }
+}

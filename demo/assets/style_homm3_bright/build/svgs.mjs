@@ -677,3 +677,246 @@ function scoutDeath(f) {
     (f === 2 ? `<text x="32" y="20" text-anchor="middle" font-family="serif" font-size="10" fill="${P.grassDark}" opacity="0.7">✦</text>` : '')
   );
 }
+
+// ─────────────────────────────────────────────────────────────
+// SMALL MOBS — 64×64, 4-dir walk + 3-frame death.
+// All follow the same schema:
+//   row 0: up    walk × 4
+//   row 1: left  walk × 4
+//   row 2: down  walk × 4
+//   row 3: right walk × 4
+//   row 4: death × 3 (col 3 blank) — shared across directions
+// ─────────────────────────────────────────────────────────────
+
+// helper: death overlay (rotate+fade)
+function mobDeath(baseFrame, f, tint) {
+  const rot = [0, 35, 70][f] || 0;
+  const op = [1.0, 0.8, 0.5][f] || 0.5;
+  return svg(64, 64,
+    `<g transform="rotate(${rot} 32 40)" opacity="${op}">${stripSvgWrapper(baseFrame)}</g>` +
+    (f === 2 ? `<text x="32" y="14" text-anchor="middle" font-family="serif" font-size="10" fill="${tint}" opacity="0.75">✦</text>` : '')
+  );
+}
+
+// ── GOBLIN (small, green, hunched, dagger) ──────────────────
+export function goblinFrame(dir, anim, f) {
+  if (anim === 'death') return mobDeath(goblinWalk('D', 0, 0), f, P.blood);
+  const B = [0, -1, 0, 1][f % 4];
+  const leg = [0, 2, 0, -2][f % 4];
+  return goblinWalk(dir, B, leg);
+}
+function goblinWalk(dir, B, legStep) {
+  const skin = '#5aa048', skinDark = '#3a7028';
+  const head = `<ellipse cx="32" cy="${26 + B}" rx="7" ry="6" fill="${skin}" stroke="${skinDark}" stroke-width="0.7"/>`;
+  const ears = `<polygon points="25,${23+B} 22,${19+B} 28,${24+B}" fill="${skin}" stroke="${skinDark}" stroke-width="0.4"/>` +
+    `<polygon points="39,${23+B} 42,${19+B} 36,${24+B}" fill="${skin}" stroke="${skinDark}" stroke-width="0.4"/>`;
+  const eyes = dir === 'D'
+    ? `<ellipse cx="29" cy="${26+B}" rx="1.8" ry="1.3" fill="${P.gold}"/><circle cx="29" cy="${26+B}" r="0.6" fill="${P.black}"/><ellipse cx="35" cy="${26+B}" rx="1.8" ry="1.3" fill="${P.gold}"/><circle cx="35" cy="${26+B}" r="0.6" fill="${P.black}"/>`
+    : dir === 'L' ? `<circle cx="28" cy="${26+B}" r="1" fill="${P.gold}"/>`
+    : dir === 'R' ? `<circle cx="36" cy="${26+B}" r="1" fill="${P.gold}"/>`
+    : '';
+  const body = `<path d="M24 ${34+B} Q32 ${31+B} 40 ${34+B} L42 ${48+B} Q32 ${51+B} 22 ${48+B} Z" fill="${skin}" stroke="${skinDark}" stroke-width="0.8"/>` +
+    `<path d="M24 ${38+B} Q32 ${42+B} 40 ${38+B}" stroke="${skinDark}" stroke-width="0.6" fill="none"/>` +
+    `<rect x="26" y="${44+B}" width="12" height="4" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.4"/>`;
+  const legs = `<rect x="${(27 + legStep * 0.3).toFixed(1)}" y="${48 + B}" width="3" height="6" fill="${skinDark}"/>` +
+    `<rect x="${(34 - legStep * 0.3).toFixed(1)}" y="${48 + B}" width="3" height="6" fill="${skinDark}"/>`;
+  // dagger
+  const dagger = dir === 'L'
+    ? `<rect x="18" y="${32+B}" width="2" height="10" fill="#b8b8c2" stroke="${P.black}" stroke-width="0.4"/><rect x="17" y="${40+B}" width="4" height="2" fill="${P.wood}"/>`
+    : dir === 'R'
+    ? `<rect x="44" y="${32+B}" width="2" height="10" fill="#b8b8c2" stroke="${P.black}" stroke-width="0.4"/><rect x="43" y="${40+B}" width="4" height="2" fill="${P.wood}"/>`
+    : dir === 'U'
+    ? `<rect x="41" y="${24+B}" width="2" height="10" fill="#b8b8c2" stroke="${P.black}" stroke-width="0.4"/><rect x="40" y="${32+B}" width="4" height="2" fill="${P.wood}"/>`
+    : `<rect x="42" y="${34+B}" width="2" height="10" fill="#b8b8c2" stroke="${P.black}" stroke-width="0.4"/><rect x="41" y="${42+B}" width="4" height="2" fill="${P.wood}"/>`;
+  return svg(64, 64,
+    `<ellipse cx="32" cy="56" rx="9" ry="2" fill="${P.black}" opacity="0.35"/>` +
+    legs + body + ears + head + eyes + dagger
+  );
+}
+
+// ── SLIME (blob, no legs; walk = squash/stretch pulse) ──────
+export function slimeFrame(dir, anim, f) {
+  if (anim === 'death') return mobDeath(slimeWalk('D', 0), f, '#6aaaff');
+  const pulse = [0, 2, 0, -2][f % 4];
+  return slimeWalk(dir, pulse);
+}
+function slimeWalk(dir, pulse) {
+  const body = '#6aaaff', hi = '#c8e4ff', lo = '#1c5a9a';
+  // body dimensions shift with pulse — wider when squashed, taller when stretched
+  const rx = 18 + pulse, ry = 14 - pulse * 0.5;
+  const cy = 42 + pulse * 0.3;
+  // eye position shifts with direction to show gaze
+  const eyeDX = dir === 'L' ? -3 : dir === 'R' ? 3 : 0;
+  const eyeDY = dir === 'U' ? -1 : dir === 'D' ? 1 : 0;
+  return svg(64, 64,
+    `<ellipse cx="32" cy="58" rx="${rx * 0.7}" ry="2" fill="${P.black}" opacity="0.4"/>` +
+    // gelatinous body
+    `<ellipse cx="32" cy="${cy}" rx="${rx}" ry="${ry}" fill="${body}" stroke="${lo}" stroke-width="1.2"/>` +
+    // highlight (top-left)
+    `<ellipse cx="${26 + eyeDX * 0.3}" cy="${cy - ry * 0.45}" rx="${rx * 0.35}" ry="${ry * 0.3}" fill="${hi}" opacity="0.7"/>` +
+    // eye whites
+    `<circle cx="${27 + eyeDX}" cy="${cy - 2 + eyeDY}" r="2.5" fill="${P.white}" stroke="${lo}" stroke-width="0.5"/>` +
+    `<circle cx="${37 + eyeDX}" cy="${cy - 2 + eyeDY}" r="2.5" fill="${P.white}" stroke="${lo}" stroke-width="0.5"/>` +
+    // pupils
+    `<circle cx="${27 + eyeDX + eyeDX * 0.15}" cy="${cy - 2 + eyeDY}" r="1" fill="${P.black}"/>` +
+    `<circle cx="${37 + eyeDX + eyeDX * 0.15}" cy="${cy - 2 + eyeDY}" r="1" fill="${P.black}"/>` +
+    // smile (dir=down) or flat (side) — keeps it cute-creepy
+    (dir === 'D' || dir === 'U'
+      ? `<path d="M26 ${cy + 4} Q32 ${cy + 8} 38 ${cy + 4}" stroke="${lo}" stroke-width="1.2" fill="none"/>`
+      : `<line x1="28" y1="${cy + 5}" x2="36" y2="${cy + 5}" stroke="${lo}" stroke-width="1"/>`)
+  );
+}
+
+// ── WOLF (quadruped, fur, menacing) ────────────────────────
+export function wolfFrame(dir, anim, f) {
+  if (anim === 'death') return mobDeath(wolfWalk('D', 0, 0), f, P.blood);
+  const B = [0, -1.5, 0, 1.5][f % 4];
+  const legAlt = [0, 3, 0, -3][f % 4];
+  return wolfWalk(dir, B, legAlt);
+}
+function wolfWalk(dir, B, legAlt) {
+  const fur = '#7a6a52', furDark = '#3a2e1e', furHi = '#a89474';
+  const head = `<ellipse cx="32" cy="${22 + B}" rx="8" ry="7" fill="${fur}" stroke="${furDark}" stroke-width="0.9"/>`;
+  // ears (pointed)
+  const ears = `<polygon points="26,${18+B} 22,${12+B} 30,${17+B}" fill="${fur}" stroke="${furDark}" stroke-width="0.5"/>` +
+    `<polygon points="38,${18+B} 42,${12+B} 34,${17+B}" fill="${fur}" stroke="${furDark}" stroke-width="0.5"/>`;
+  const snout = `<ellipse cx="32" cy="${27 + B}" rx="4" ry="3" fill="${furHi}" stroke="${furDark}" stroke-width="0.5"/><ellipse cx="32" cy="${26 + B}" rx="1" ry="1" fill="${P.black}"/>`;
+  const eyes = dir === 'D' ? `<circle cx="29" cy="${22+B}" r="0.9" fill="${P.gold}"/><circle cx="35" cy="${22+B}" r="0.9" fill="${P.gold}"/>`
+    : dir === 'L' ? `<circle cx="28" cy="${22+B}" r="0.9" fill="${P.gold}"/>`
+    : dir === 'R' ? `<circle cx="36" cy="${22+B}" r="0.9" fill="${P.gold}"/>`
+    : '';
+  // body (elongated, long axis along direction of travel — we keep top-down cylinder)
+  const body = `<ellipse cx="32" cy="${40 + B}" rx="10" ry="11" fill="${fur}" stroke="${furDark}" stroke-width="1"/>` +
+    `<ellipse cx="32" cy="${40 + B}" rx="6" ry="9" fill="${furHi}" opacity="0.4"/>` +
+    // fur clumps / back ridge
+    `<line x1="32" y1="${30+B}" x2="32" y2="${50+B}" stroke="${furDark}" stroke-width="0.6" opacity="0.7"/>` +
+    `<line x1="28" y1="${32+B}" x2="28" y2="${48+B}" stroke="${furDark}" stroke-width="0.4" opacity="0.5"/>` +
+    `<line x1="36" y1="${32+B}" x2="36" y2="${48+B}" stroke="${furDark}" stroke-width="0.4" opacity="0.5"/>`;
+  // four paws — front pair + back pair, alternating
+  const paws = `<rect x="${(22 + legAlt * 0.3).toFixed(1)}" y="${32 + B}" width="3" height="5" fill="${furDark}"/>` +
+    `<rect x="${(39 - legAlt * 0.3).toFixed(1)}" y="${32 + B}" width="3" height="5" fill="${furDark}"/>` +
+    `<rect x="${(22 - legAlt * 0.3).toFixed(1)}" y="${48 + B}" width="3" height="5" fill="${furDark}"/>` +
+    `<rect x="${(39 + legAlt * 0.3).toFixed(1)}" y="${48 + B}" width="3" height="5" fill="${furDark}"/>`;
+  // tail (back of body)
+  const tail = `<path d="M32 ${50+B} Q${34 + legAlt * 0.2} ${56+B} ${36 + legAlt * 0.4} ${55+B}" stroke="${fur}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  return svg(64, 64,
+    `<ellipse cx="32" cy="58" rx="13" ry="2.5" fill="${P.black}" opacity="0.35"/>` +
+    paws + tail + body + head + ears + snout + eyes
+  );
+}
+
+// ── SKELETON (small, bony, short sword) ────────────────────
+export function skeletonFrame(dir, anim, f) {
+  if (anim === 'death') return mobDeath(skeletonWalk('D', 0, 0), f, '#d8cdb5');
+  const B = [0, -1.2, 0, 1.2][f % 4];
+  const leg = [0, 2.5, 0, -2.5][f % 4];
+  return skeletonWalk(dir, B, leg);
+}
+function skeletonWalk(dir, B, legStep) {
+  const bone = '#e4d9bf', boneDark = '#8a7458';
+  // skull
+  const skull = `<ellipse cx="32" cy="${22 + B}" rx="6" ry="6.5" fill="${bone}" stroke="${boneDark}" stroke-width="0.7"/>`;
+  // eye sockets (glowing)
+  const eyes = `<ellipse cx="${dir === 'R' ? 35 : 29}" cy="${22+B}" rx="1.5" ry="2" fill="${P.black}"/>` +
+    `<circle cx="${dir === 'R' ? 35 : 29}" cy="${22+B}" r="0.6" fill="${P.blood}"/>` +
+    (dir !== 'L' && dir !== 'R'
+      ? `<ellipse cx="${dir === 'L' ? 29 : 35}" cy="${22+B}" rx="1.5" ry="2" fill="${P.black}"/><circle cx="${dir === 'L' ? 29 : 35}" cy="${22+B}" r="0.6" fill="${P.blood}"/>`
+      : '');
+  // teeth
+  const teeth = `<line x1="28" y1="${27+B}" x2="28" y2="${29+B}" stroke="${boneDark}" stroke-width="0.6"/><line x1="31" y1="${27+B}" x2="31" y2="${29+B}" stroke="${boneDark}" stroke-width="0.6"/><line x1="34" y1="${27+B}" x2="34" y2="${29+B}" stroke="${boneDark}" stroke-width="0.6"/>`;
+  // ribcage
+  const ribs = `<ellipse cx="32" cy="${40 + B}" rx="8" ry="9" fill="${bone}" stroke="${boneDark}" stroke-width="0.8"/>` +
+    `<line x1="25" y1="${36+B}" x2="39" y2="${36+B}" stroke="${boneDark}" stroke-width="0.7"/>` +
+    `<line x1="24" y1="${40+B}" x2="40" y2="${40+B}" stroke="${boneDark}" stroke-width="0.7"/>` +
+    `<line x1="25" y1="${44+B}" x2="39" y2="${44+B}" stroke="${boneDark}" stroke-width="0.7"/>` +
+    `<line x1="32" y1="${32+B}" x2="32" y2="${48+B}" stroke="${boneDark}" stroke-width="0.8"/>`;
+  // pelvis
+  const pelvis = `<path d="M25 ${48+B} L32 ${50+B} L39 ${48+B} L37 ${52+B} L27 ${52+B} Z" fill="${bone}" stroke="${boneDark}" stroke-width="0.7"/>`;
+  // leg bones
+  const legs = `<rect x="${(27 + legStep * 0.3).toFixed(1)}" y="${52 + B}" width="2" height="7" fill="${bone}" stroke="${boneDark}" stroke-width="0.4"/>` +
+    `<rect x="${(35 - legStep * 0.3).toFixed(1)}" y="${52 + B}" width="2" height="7" fill="${bone}" stroke="${boneDark}" stroke-width="0.4"/>`;
+  // short rusty sword
+  const sword = dir === 'L'
+    ? `<rect x="19" y="${34+B}" width="2" height="12" fill="#7a6240" stroke="${P.black}" stroke-width="0.3"/><rect x="18" y="${44+B}" width="4" height="2" fill="${P.wood}"/>`
+    : dir === 'R'
+    ? `<rect x="43" y="${34+B}" width="2" height="12" fill="#7a6240" stroke="${P.black}" stroke-width="0.3"/><rect x="42" y="${44+B}" width="4" height="2" fill="${P.wood}"/>`
+    : dir === 'U'
+    ? `<rect x="41" y="${26+B}" width="2" height="12" fill="#7a6240" stroke="${P.black}" stroke-width="0.3"/><rect x="40" y="${36+B}" width="4" height="2" fill="${P.wood}"/>`
+    : `<rect x="42" y="${34+B}" width="2" height="12" fill="#7a6240" stroke="${P.black}" stroke-width="0.3"/><rect x="41" y="${44+B}" width="4" height="2" fill="${P.wood}"/>`;
+  return svg(64, 64,
+    `<ellipse cx="32" cy="58" rx="10" ry="2" fill="${P.black}" opacity="0.35"/>` +
+    legs + pelvis + ribs + skull + eyes + teeth + sword
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// BOSS TROLL (128×128 frames, bigger + club + fangs)
+// Layout: 4×6 grid (walk 4dir × 4f, attack × 3, death × 3)
+// ─────────────────────────────────────────────────────────────
+export function trollFrame(dir, anim, f) {
+  if (anim === 'death') return trollDeath(f);
+  if (anim === 'attack') return trollAttack(dir, f);
+  const B = [0, -2, 0, 2][f % 4];
+  const legStep = [0, 4, 0, -4][f % 4];
+  return trollWalk(dir, B, legStep);
+}
+function trollWalk(dir, B, legStep) {
+  const skin = '#4a7028', skinDark = '#2a4618', skinHi = '#6aa036';
+  const head = `<ellipse cx="64" cy="${42 + B}" rx="18" ry="17" fill="${skin}" stroke="${skinDark}" stroke-width="1.5"/>`;
+  const headHi = `<ellipse cx="58" cy="${36 + B}" rx="8" ry="6" fill="${skinHi}" opacity="0.6"/>`;
+  // horn nubs
+  const horns = `<polygon points="52,${28+B} 54,${18+B} 58,${30+B}" fill="${skinHi}" stroke="${skinDark}" stroke-width="0.9"/>` +
+    `<polygon points="76,${28+B} 74,${18+B} 70,${30+B}" fill="${skinHi}" stroke="${skinDark}" stroke-width="0.9"/>`;
+  // big eyes
+  const eyes = dir === 'D'
+    ? `<ellipse cx="56" cy="${40+B}" rx="3" ry="2.5" fill="${P.gold}"/><circle cx="57" cy="${40+B}" r="1.4" fill="${P.blood}"/><ellipse cx="72" cy="${40+B}" rx="3" ry="2.5" fill="${P.gold}"/><circle cx="71" cy="${40+B}" r="1.4" fill="${P.blood}"/>`
+    : dir === 'L' ? `<ellipse cx="54" cy="${40+B}" rx="2.5" ry="2" fill="${P.gold}"/><circle cx="53" cy="${40+B}" r="1" fill="${P.blood}"/>`
+    : dir === 'R' ? `<ellipse cx="74" cy="${40+B}" rx="2.5" ry="2" fill="${P.gold}"/><circle cx="75" cy="${40+B}" r="1" fill="${P.blood}"/>`
+    : '';
+  // lower fangs (only visible when facing D/L/R)
+  const fangs = dir !== 'U'
+    ? `<polygon points="58,${52+B} 56,${62+B} 60,${58+B}" fill="${P.white}" stroke="${P.black}" stroke-width="0.5"/><polygon points="70,${52+B} 72,${62+B} 68,${58+B}" fill="${P.white}" stroke="${P.black}" stroke-width="0.5"/>`
+    : '';
+  // hulking body
+  const body = `<path d="M36 ${70+B} Q64 ${64+B} 92 ${70+B} L96 ${100+B} Q64 ${106+B} 32 ${100+B} Z" fill="${skin}" stroke="${skinDark}" stroke-width="1.5"/>` +
+    `<path d="M42 ${74+B} Q64 ${70+B} 86 ${74+B} L86 ${96+B} Q64 ${100+B} 42 ${96+B} Z" fill="${skinHi}" opacity="0.45"/>` +
+    // belt
+    `<rect x="36" y="${94+B}" width="56" height="6" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<rect x="60" y="${92+B}" width="8" height="10" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.8"/>`;
+  // arms (one holds club, other dangles)
+  const armFree = dir === 'R' ? 'R' : dir === 'L' ? 'L' : 'R';
+  // legs
+  const legs = `<rect x="${(50 + legStep * 0.3).toFixed(1)}" y="${100 + B}" width="8" height="14" fill="${skinDark}" stroke="${P.black}" stroke-width="0.5"/>` +
+    `<rect x="${(70 - legStep * 0.3).toFixed(1)}" y="${100 + B}" width="8" height="14" fill="${skinDark}" stroke="${P.black}" stroke-width="0.5"/>`;
+  // HUGE club
+  const club = dir === 'L'
+    ? `<rect x="18" y="${60+B}" width="4" height="36" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="1" transform="rotate(-20 20 78)"/><ellipse cx="12" cy="${50+B}" rx="10" ry="8" fill="${P.leatherHi}" stroke="${P.black}" stroke-width="1.2"/><polygon points="6,${42+B} 10,${48+B} 4,${50+B}" fill="${P.stoneDark}" stroke="${P.black}" stroke-width="0.6"/><polygon points="20,${42+B} 16,${48+B} 22,${50+B}" fill="${P.stoneDark}" stroke="${P.black}" stroke-width="0.6"/>`
+    : dir === 'R'
+    ? `<rect x="106" y="${60+B}" width="4" height="36" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="1" transform="rotate(20 108 78)"/><ellipse cx="116" cy="${50+B}" rx="10" ry="8" fill="${P.leatherHi}" stroke="${P.black}" stroke-width="1.2"/><polygon points="122,${42+B} 118,${48+B} 124,${50+B}" fill="${P.stoneDark}"/><polygon points="108,${42+B} 112,${48+B} 106,${50+B}" fill="${P.stoneDark}"/>`
+    : dir === 'U'
+    ? `<rect x="92" y="${42+B}" width="4" height="36" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="1"/><ellipse cx="94" cy="${34+B}" rx="9" ry="7" fill="${P.leatherHi}" stroke="${P.black}" stroke-width="1.2"/>`
+    : `<rect x="94" y="${62+B}" width="4" height="40" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="1"/><ellipse cx="96" cy="${56+B}" rx="9" ry="7" fill="${P.leatherHi}" stroke="${P.black}" stroke-width="1.2"/>`;
+  return svg(128, 128,
+    `<ellipse cx="64" cy="118" rx="26" ry="5" fill="${P.black}" opacity="0.45"/>` +
+    legs + body + horns + head + headHi + eyes + fangs + club
+  );
+}
+function trollAttack(dir, f) {
+  const base = trollWalk(dir, 0, 0);
+  // impact ring + club glow on frame 1
+  const fx = f === 1
+    ? `<circle cx="96" cy="48" r="18" fill="${P.goldHi}" opacity="0.4"/><circle cx="96" cy="48" r="10" fill="${P.white}" opacity="0.85"/>`
+    : f === 2
+    ? `<g stroke="${P.gold}" stroke-width="1.5"><line x1="110" y1="34" x2="120" y2="24"/><line x1="114" y1="48" x2="126" y2="48"/><line x1="110" y1="62" x2="120" y2="72"/></g>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+function trollDeath(f) {
+  const rot = [0, 50, 85][f] || 0;
+  const op = [1.0, 0.82, 0.5][f] || 0.5;
+  const base = trollWalk('D', 8, 0);
+  return svg(128, 128,
+    `<g transform="rotate(${rot} 64 72)" opacity="${op}">${stripSvgWrapper(base)}</g>` +
+    (f === 2 ? `<text x="64" y="30" text-anchor="middle" font-family="serif" font-size="18" fill="${P.gold}" opacity="0.75">†</text>` : '')
+  );
+}

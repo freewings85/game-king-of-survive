@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -28,6 +28,8 @@ async function main() {
   if (target === 'all' || target === 'decor')    jobs.push(() => buildDecor(page));
   if (target === 'all' || target === 'warrior')  jobs.push(() => buildChar(page, 'warrior', warriorFrame));
   if (target === 'all' || target === 'scout')    jobs.push(() => buildChar(page, 'scout',   scoutFrame));
+  if (target === 'all' || target === 'mobs')     jobs.push(() => buildMobs(page));
+  if (target === 'all' || target === 'boss')     jobs.push(() => buildBoss(page));
 
   for (const j of jobs) await j();
 
@@ -317,6 +319,74 @@ async function buildDecor(page) {
         : null,
     })),
   });
+}
+
+// ── SMALL MOBS ──────────────────────────────────────────────
+// 4×5 grid, 64×64 frames = 256×320.
+//   rows 0-3: U/L/D/R walk × 4 frames each
+//   row 4:    death × 3 frames (col 3 blank)
+async function buildMobs(page) {
+  const mobs = [
+    { name: 'goblin',   fn: goblinFrame },
+    { name: 'slime',    fn: slimeFrame },
+    { name: 'wolf',     fn: wolfFrame },
+    { name: 'skeleton', fn: skeletonFrame },
+  ];
+  for (const m of mobs) {
+    console.log(`[mob:${m.name}] …`);
+    const cells = [];
+    const dirs = ['U', 'L', 'D', 'R'];
+    for (const d of dirs) for (let f = 0; f < 4; f++) cells.push(m.fn(d, 'walk', f));
+    for (let f = 0; f < 4; f++) cells.push(f < 3 ? m.fn('D', 'death', f) : blank64());
+    const sheet = await composite(page, cells, 64, 64, 4);
+    await writeFile(`mob_${m.name}.png`, sheet);
+    await writeJSON(`mob_${m.name}.json`, {
+      image: `mob_${m.name}.png`,
+      frameW: 64, frameH: 64,
+      sheetCols: 4, sheetRows: 5,
+      directionOrder: ['up', 'left', 'down', 'right'],
+      anims: {
+        walk:  { rowBase: 0, rowFromDir: true,  frames: 4, fps: 8, skipFrame0: false },
+        death: { rowBase: 4, rowFromDir: false, frames: 3, fps: 8, skipFrame0: false, loop: false },
+      },
+      previewFrame: { row: 2, col: 0 },
+      style: 'homm3_bright',
+      kind: 'small_mob',
+    });
+  }
+}
+
+// ── BOSS TROLL ──────────────────────────────────────────────
+// 4×6 grid, 128×128 frames = 512×768.
+async function buildBoss(page) {
+  console.log('[boss:troll] …');
+  const cells = [];
+  const dirs = ['U', 'L', 'D', 'R'];
+  for (const d of dirs) for (let f = 0; f < 4; f++) cells.push(trollFrame(d, 'walk', f));
+  for (let f = 0; f < 4; f++) cells.push(f < 3 ? trollFrame('D', 'attack', f) : blank128());
+  for (let f = 0; f < 4; f++) cells.push(f < 3 ? trollFrame('D', 'death', f)  : blank128());
+  const sheet = await composite(page, cells, 128, 128, 4);
+  await writeFile('boss_troll.png', sheet);
+  await writeJSON('boss_troll.json', {
+    image: 'boss_troll.png',
+    frameW: 128, frameH: 128,
+    sheetCols: 4, sheetRows: 6,
+    directionOrder: ['up', 'left', 'down', 'right'],
+    anims: {
+      walk:   { rowBase: 0, rowFromDir: true,  frames: 4, fps: 6,  skipFrame0: false },
+      attack: { rowBase: 4, rowFromDir: false, frames: 3, fps: 8,  skipFrame0: false },
+      death:  { rowBase: 5, rowFromDir: false, frames: 3, fps: 6,  skipFrame0: false, loop: false },
+    },
+    previewFrame: { row: 2, col: 0 },
+    style: 'homm3_bright',
+    kind: 'boss',
+    collider: { x: 32, y: 64, w: 64, h: 56 },
+    anchor:   { x: 64, y: 112 },
+  });
+}
+
+function blank128() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"></svg>`;
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

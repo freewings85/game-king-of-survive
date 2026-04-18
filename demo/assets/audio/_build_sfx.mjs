@@ -288,6 +288,34 @@ function sfxKillConfirmed() {
   return out;
 }
 
+function sfxLevelUp() {
+  // MOBA-style "power-up": bright rising shimmer — 4-note arpeggio C5-G5-C6-E6
+  // with octave harmonic, quick decay — rewarding but short (≤ 400ms).
+  const each = 0.09;
+  const total = each * 4 + 0.03;
+  const out = make(total);
+  const freqs = [523.25, 783.99, 1046.5, 1318.5];
+  for (let k = 0; k < 4; k++) {
+    const b = tone(freqs[k], each, 'tri');
+    adsr(b, 0.008, 0.02, 0.85, 0.04, 0.85);
+    gain(b, 0.45);
+    add(out, b, 1, Math.round(k * each * SR));
+    // octave sparkle
+    const h = tone(freqs[k] * 2, each * 0.8, 'sine');
+    adsr(h, 0.008, 0.015, 0.7, 0.03, 0.7);
+    gain(h, 0.22);
+    add(out, h, 1, Math.round(k * each * SR));
+  }
+  // tail shimmer: noise burst HP-filtered
+  const s = noise(0.06, 211);
+  highpass(s, 4000);
+  expDecay(s, 0.015);
+  gain(s, 0.25);
+  add(out, s, 1, Math.round((each * 3) * SR));
+  softClip(out);
+  return out;
+}
+
 function sfxVictory() {
   // Fanfare: ascending arpeggio C E G C' then held C-major chord
   const notes = [
@@ -326,6 +354,7 @@ const jobs = [
   ['explosion.wav',      sfxExplosion],
   ['storm_alert.wav',    sfxStormAlert],
   ['kill_confirmed.wav', sfxKillConfirmed],
+  ['level_up.wav',       sfxLevelUp],
   ['victory.wav',        sfxVictory],
 ];
 
