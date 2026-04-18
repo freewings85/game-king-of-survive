@@ -4,15 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>生存之王 King of Survive</title>
+<!-- Web font: guarantees CJK rendering even when system fonts are missing -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { border: none; cursor: crosshair; display: block; width: 100vw; height: 100vh; touch-action: none; }
+  body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
+    font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif; }
+  canvas { border: none; cursor: crosshair; display: block; width: 100vw; height: 100vh; touch-action: none;
+    font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif; }
   #login-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(ellipse at center, #1a1a3a 0%, #0a0a1a 70%);
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    z-index: 100; font-family: Arial, sans-serif; color: #fff;
+    z-index: 100; font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif; color: #fff;
   }
   #login-overlay.hidden { display: none; }
   #login-overlay h1 { font-size: 48px; color: #ffd700; text-shadow: 0 0 20px #ff8c00; margin-bottom: 8px; }
@@ -30,7 +36,7 @@
   #login-info { font-size: 12px; color: #666; margin-top: 20px; }
   #player-bar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none;
     background: rgba(0,0,0,0.7); border: 1px solid #333; border-radius: 8px; padding: 4px 16px;
-    font-family: Arial, sans-serif; color: #ddd; font-size: 13px; display: none; }
+    font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif; color: #ddd; font-size: 13px; display: none; }
   #player-bar span { margin: 0 8px; }
   #player-bar .gold { color: #ffd700; }
   #player-bar .rank { color: #4a9eff; }
@@ -364,22 +370,22 @@ function doLogin() {
     // Design space: 400x700 (called inside _applyUIScale)
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('选择地图', DW/2, 40);
     var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
     for (var i = 0; i < mapsForLevel.length; i++) {
       var my = 70 + i * 55; var sel = i === mapSelect.selectedIndex;
       ctx.fillStyle = sel ? '#3a5a3a' : '#1a2a3a'; ctx.fillRect(DW/2-120, my, 240, 48);
-      ctx.fillStyle = sel ? '#fff' : '#aaa'; ctx.font = (sel ? 'bold ' : '') + '16px Arial';
+      ctx.fillStyle = sel ? '#fff' : '#aaa'; ctx.font = (sel ? 'bold ' : '') + '16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText(mapsForLevel[i].name + ' (Lv.' + mapsForLevel[i].level + ')', DW/2, my + 30);
       ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
       ctx.strokeRect(DW/2+90, my+8, 30, 30);
     }
     ctx.fillStyle = '#4a4'; ctx.fillRect(DW/2-60, DH-60, 120, 40);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.fillText('开始', DW/2, DH-35);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillText('开始', DW/2, DH-35);
     ctx.fillStyle = '#333'; ctx.fillRect(DW/2-60, DH-110, 120, 36);
     ctx.fillStyle = '#888'; ctx.fillRect(DW/2-58, DH-108, 116, 32);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillText('← 返回', DW/2, DH-88);
   }
 
@@ -387,14 +393,14 @@ function doLogin() {
     // Design space: 400x700 (called inside _applyUIScale)
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('选择技能 (选择5个)', DW / 2, 35);
 
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     var available = cls.availableSkills || [];
 
     // Show class info
-    ctx.font = '14px Arial'; ctx.fillStyle = cls.color;
+    ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = cls.color;
     ctx.fillText(cls.icon + ' ' + cls.name + ' 可用技能', DW / 2, 60);
 
     // Draw skill grid (2 columns, 5 rows)
@@ -425,21 +431,21 @@ function doLogin() {
       // Selected number badge
       if (isSelected) {
         ctx.fillStyle = '#4f4';
-        ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+        ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(String(selIdx + 1), cx + cardW - 14, cy + 18);
       }
 
       // Icon
-      ctx.font = '20px Arial'; ctx.textAlign = 'left';
+      ctx.font = '20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
       ctx.fillStyle = sd.color;
       ctx.fillText(sd.icon, cx + 8, cy + 30);
 
       // Name
-      ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#fff';
+      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
       ctx.fillText(sd.name, cx + 34, cy + 22);
 
       // Desc
-      ctx.font = '10px Arial'; ctx.fillStyle = '#aaa';
+      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
       ctx.fillText(sd.desc, cx + 34, cy + 40);
     }
 
@@ -447,11 +453,11 @@ function doLogin() {
     var buildY = startY + Math.ceil(available.length / cols) * (cardH + gapY) + 15;
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 200, buildY, 400, 50);
     ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 200, buildY, 400, 50);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('已选: ' + selectedBuild.length + '/5', DW / 2, buildY + 18);
 
     // Show selected skill icons
-    ctx.font = '18px Arial'; ctx.textAlign = 'left';
+    ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
     for (var bi = 0; bi < 5; bi++) {
       var bx = DW / 2 - 90 + bi * 40;
       if (bi < selectedBuild.length) {
@@ -471,19 +477,19 @@ function doLogin() {
     if (selectedBuild.length === 5) {
       ctx.fillStyle = '#2a6a2a'; ctx.fillRect(DW / 2 - 80, btnY, 160, 40);
       ctx.strokeStyle = '#4f4'; ctx.lineWidth = 2; ctx.strokeRect(DW / 2 - 80, btnY, 160, 40);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('开始游戏 ▶', DW / 2, btnY + 27);
     } else {
       ctx.fillStyle = '#222'; ctx.fillRect(DW / 2 - 80, btnY, 160, 40);
       ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 80, btnY, 160, 40);
-      ctx.fillStyle = '#666'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#666'; ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('再选' + (5 - selectedBuild.length) + '个技能', DW / 2, btnY + 27);
     }
 
     // Back button
     ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
     ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
@@ -1120,7 +1126,7 @@ function doLogin() {
         ctx.save();
         ctx.globalAlpha = alpha;
         ctx.fillStyle = arrowColor;
-        ctx.font = 'bold 11px Arial'; ctx.textAlign = 'center';
+        ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 3;
         var label = (isBoss ? '👑 BOSS ' : '⚔ ') + Math.round(_ee.dist) + 'm';
         // Offset the label inward from the arrow
@@ -1150,7 +1156,7 @@ function doLogin() {
     // Shadow / glow
     ctx.shadowColor = comboState.popupColor;
     ctx.shadowBlur = 8;
-    ctx.font = 'bold 19px Arial'; // 32 × 60%
+    ctx.font = 'bold 19px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; // 32 × 60%
     ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)';
     ctx.lineWidth = 3;
@@ -1159,7 +1165,7 @@ function doLogin() {
     ctx.fillText(comboState.popupText, 0, 0);
     // Combo counter below
     ctx.shadowBlur = 0;
-    ctx.font = 'bold 10px Arial'; // 16 × 60%
+    ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; // 16 × 60%
     ctx.fillStyle = '#fff';
     ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
     ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
@@ -1235,7 +1241,7 @@ function doLogin() {
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.fillStyle = waveBanner.color;
-    ctx.font = 'bold ' + fontPx + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + fontPx + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(4, 5 * _wbs);
     ctx.strokeText(waveBanner.text, W / 2, centerY);
     ctx.fillText(waveBanner.text, W / 2, centerY);
@@ -1448,13 +1454,13 @@ function doLogin() {
     ctx.globalAlpha = nameAlpha;
     ctx.translate(W / 2, H / 2);
     ctx.scale(nameScale, nameScale);
-    ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 36px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4;
     ctx.strokeText(evo.name, 0, 0);
     ctx.fillStyle = evo.color || '#ffd700';
     ctx.fillText(evo.name, 0, 0);
     // Sub-label
-    ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
     ctx.fillText('EVOLUTION', 0, -30);
     ctx.restore();
     // Light beam particles
@@ -1489,7 +1495,7 @@ function doLogin() {
       var scale = 0.8 + progress * 0.4;
       ctx.save();
       ctx.globalAlpha = nameAlpha;
-      ctx.font = 'bold ' + Math.round(40 * scale) + 'px Arial';
+      ctx.font = 'bold ' + Math.round(40 * scale) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4;
       ctx.strokeText(biomeTransition.name, W / 2, H / 2);
@@ -2177,18 +2183,18 @@ function doLogin() {
       var secs = Math.max(0, Math.ceil(_waveState.phaseTimer));
       txt = '下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's';
       color = '#fa0';
-      ctx.font = 'bold ' + _wfs + 'px Arial';
+      ctx.font = 'bold ' + _wfs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     } else if (_waveState.phase === 'spawning') {
       var remain = _waveState.spawnQueue.length;
       txt = '第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain;
       color = '#ff6';
-      ctx.font = 'bold ' + _wfsSmall + 'px Arial';
+      ctx.font = 'bold ' + _wfsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     } else if (_waveState.phase === 'fighting') {
       var stillAlive = 0;
       for (var ai = 0; ai < offlineEnemies.length; ai++) if (offlineEnemies[ai].alive && offlineEnemies[ai].hostile) stillAlive++;
       txt = '第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive;
       color = '#fff';
-      ctx.font = 'bold ' + _wfsSmall + 'px Arial';
+      ctx.font = 'bold ' + _wfsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     }
     if (txt) {
       ctx.strokeText(txt, W / 2, _wby);
@@ -3189,7 +3195,7 @@ function doLogin() {
         ctx.stroke();
         // Label
         ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
-        ctx.font = '11px Arial'; ctx.textAlign = 'center';
+        ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(z.name, z.center.x, z.center.y - z.radius - 5);
       } else if (z.bounds) {
         ctx.fillRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
@@ -3199,7 +3205,7 @@ function doLogin() {
         ctx.strokeRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
         // Label
         ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
-        ctx.font = '11px Arial'; ctx.textAlign = 'center';
+        ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(z.name, z.bounds.x + z.bounds.width / 2, z.bounds.y - 5);
       }
     }
@@ -6102,9 +6108,9 @@ function doLogin() {
     else if (state === 'buildSelect') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawBuildSelect(); _restoreUIScale(); }
     else if (state === 'upgrade') { ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H); _applyUIScale(); drawUpgradeMenu(); _restoreUIScale(); }
     else if (state === 'connecting') {
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('连接服务器中...', W / 2, H / 2);
-      ctx.font = '14px Arial'; ctx.fillStyle = '#888';
+      ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888';
       ctx.fillText('Connecting to ' + serverUrl, W / 2, H / 2 + 30);
     }
     else if (state === 'playing') {
@@ -6168,7 +6174,7 @@ function doLogin() {
       } else if (lifeRatio > 0.7) {
         dmgFontSize = f.size * (1 + (lifeRatio - 0.7) * 1.5);
       }
-      ctx.font = 'bold ' + Math.round(dmgFontSize) + 'px Arial'; ctx.textAlign = 'center';
+      ctx.font = 'bold ' + Math.round(dmgFontSize) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 3;
       ctx.strokeText(f.text, f.x, f.y);
       ctx.fillStyle = f.color;
@@ -6954,7 +6960,7 @@ function doLogin() {
       ctx.beginPath(); ctx.ellipse(_crc.x, _crc.y, 5, 5 * (0.3 + _crSpin * 0.7), 0, 0, Math.PI * 2); ctx.fill();
       // "$" mark when facing
       if (_crSpin > 0.6) {
-        ctx.fillStyle = '#885800'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#885800'; ctx.font = 'bold 9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('$', _crc.x, _crc.y + 3);
       }
       // Magnet trail
@@ -7017,7 +7023,7 @@ function doLogin() {
       }
       // chestSparkle: floating '!' indicator
       ctx.globalAlpha = 0.6 + Math.sin(gameTime * 4) * 0.3;
-      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('!', chest.x, chest.y - 12 - Math.sin(gameTime * 3) * 3);
       ctx.globalAlpha = 1;
     }
@@ -7094,7 +7100,7 @@ function doLogin() {
         }
         // Red/green name label
         var nameLabel = isHostile ? (e.enemyType || 'enemy') : '✦';
-        ctx.font = '9px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
         ctx.fillStyle = isHostile ? '#f44' : '#4f4';
         ctx.fillText(nameLabel, e.x, e.y - e.radius - (e.hp < e.maxHp ? 7 : 2));
         // bossAuraRing (US-328): rotating magic circle under boss for dramatic presence
@@ -7515,7 +7521,7 @@ function doLogin() {
     if (localMultiplayer && player2 && player2.alive) {
       ctx.fillStyle = '#48f';
       ctx.beginPath(); ctx.arc(player2.x, player2.y, player2.radius, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('P2', player2.x, player2.y);
       ctx.textBaseline = 'alphabetic';
       // P2 HP bar
@@ -7524,7 +7530,7 @@ function doLogin() {
     } else if (localMultiplayer && player2 && !player2.alive) {
       // Show revive countdown
       ctx.globalAlpha = 0.5;
-      ctx.fillStyle = '#48f'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#48f'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('P2 \u590D\u6D3B: ' + Math.ceil(player2._reviveTimer) + 's', W / 2, H - 30);
       ctx.globalAlpha = 1;
     }
@@ -7591,7 +7597,7 @@ function doLogin() {
       });
       // Name + level label — red for enemies
       ctx.fillStyle = isEnemy ? '#f88' : '#fff';
-      ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+      ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(bp.name + ' L' + (bp.level || 1), bp.x, bp.y - bp.radius - 14);
       // HP bar
       var botBarW = 34;
@@ -7699,13 +7705,13 @@ function doLogin() {
     var playerName = (_currentPlayer && _currentPlayer.nickname) || (player && player.name) || '玩家';
     if (playerName.length > 8) playerName = playerName.substring(0, 7) + '…';
     // Name (top line)
-    ctx.font = 'bold ' + _fs + 'px Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + _fs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2.5;
     ctx.strokeText(playerName, nameX, avCy - Math.round(8 * _zs));
     ctx.fillStyle = '#fff';
     ctx.fillText(playerName, nameX, avCy - Math.round(8 * _zs));
     // Bottom line: Lv + gold combined
-    ctx.font = 'bold ' + _fsSmall + 'px Arial';
+    ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillStyle = '#ffd700';
     ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 2;
     var lvGoldStr = 'Lv.' + playerLevel + '  💰' + gold;
@@ -7716,9 +7722,9 @@ function doLogin() {
     // Measure right side reserved space: minimap
     var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
     // Measure the width of the name+level+gold block to start center after it
-    ctx.font = 'bold ' + _fs + 'px Arial';
+    ctx.font = 'bold ' + _fs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     var nameW = ctx.measureText(playerName).width;
-    ctx.font = 'bold ' + _fsSmall + 'px Arial';
+    ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     var lvGoldW = ctx.measureText(lvGoldStr).width;
     var leftBlockRight = nameX + Math.max(nameW, lvGoldW) + Math.round(10 * _zs);
     var centerLeft = leftBlockRight;
@@ -7748,7 +7754,7 @@ function doLogin() {
     };
     // Status capsule spans full center width
     _drawCapsule(centerLeft, cellY1, centerW, capRoundH, 'rgba(20,20,35,0.92)', '#88ccff');
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fs + 'px Arial';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     var statusText = '第' + wave + '波  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
     ctx.fillText(statusText, centerLeft + centerW / 2, cellY1 + capRoundH / 2);
@@ -7771,7 +7777,7 @@ function doLogin() {
     ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(hpX, hpY + 1, hpW * hpRatioHUD, hpBarH * 0.4);
     ctx.strokeStyle = '#442a1a'; ctx.lineWidth = 1; ctx.strokeRect(hpX, hpY, hpW, hpBarH);
     // HP text centered on bar
-    ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     var hpStr = '❤ ' + Math.floor(player.hp) + ' / ' + player.maxHp;
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2;
     ctx.strokeText(hpStr, hpX + hpW / 2, hpY + hpBarH / 2);
@@ -7781,7 +7787,7 @@ function doLogin() {
     // Kill streak (only if active, overlay on top)
     if (killStreak >= 5) {
       ctx.fillStyle = killStreak >= 30 ? '#f00' : killStreak >= 15 ? '#f80' : '#ff0';
-      ctx.font = 'bold ' + _fsBold + 'px Arial'; ctx.textAlign = 'right';
+      ctx.font = 'bold ' + _fsBold + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'right';
       ctx.fillText(killStreak + '连杀!', W - padX - _miniW - Math.round(10 * _zs), Math.round(topH * 0.45));
     }
     ctx.restore();
@@ -7845,13 +7851,13 @@ function doLogin() {
         ctx.restore();
       }
       // Icon
-      ctx.fillStyle = '#fff'; ctx.font = Math.round(sz * 0.55) + 'px Arial';
+      ctx.fillStyle = '#fff'; ctx.font = Math.round(sz * 0.55) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(iconChar, bx + sz / 2, by + sz / 2);
       ctx.textBaseline = 'alphabetic';
       // Label below
       if (label) {
-        ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fsSmall + 'px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2;
         ctx.strokeText(label, bx + sz / 2, labelY);
         ctx.fillText(label, bx + sz / 2, labelY);
@@ -7941,7 +7947,7 @@ function doLogin() {
         ctx.fillStyle = '#fff'; ctx.fill();
         ctx.globalAlpha = 0.5;
         var _joyFS = Math.max(10, Math.round(joystick.radius * 0.2));
-        ctx.font = _joyFS + 'px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+        ctx.font = _joyFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
         ctx.fillText('拖拽移动', _joyAnchorX, _joyAnchorY + joystick.radius + _joyFS + 6);
         ctx.restore();
       }
@@ -7955,7 +7961,7 @@ function doLogin() {
       ctx.save();
       ctx.globalAlpha = pvpAlpha;
       ctx.fillStyle = pvpLeft <= 3 ? '#f44' : '#4af';
-      ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+      ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('🛡 新手保护 ' + pvpLeft + '秒', W / 2, 20);
       ctx.restore();
     }
@@ -7970,7 +7976,7 @@ function doLogin() {
       ctx.globalAlpha = kfAlpha * 0.85;
       ctx.fillStyle = '#000'; ctx.fillRect(W - 180, kfY - 10, 170, 16);
       ctx.globalAlpha = kfAlpha;
-      ctx.fillStyle = killFeed[kfi].color; ctx.font = 'bold 11px Arial'; ctx.textAlign = 'right';
+      ctx.fillStyle = killFeed[kfi].color; ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'right';
       ctx.fillText(killFeed[kfi].text, W - 15, kfY + 2);
       ctx.restore();
     }
@@ -7980,7 +7986,7 @@ function doLogin() {
     ctx.save();
     ctx.globalAlpha = 0.12;
     ctx.fillStyle = '#fff';
-    ctx.font = '14px Arial'; ctx.textAlign = 'right';
+    ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'right';
     ctx.fillText('生存之王', W - 10, H - 10);
     ctx.restore(); // end gameplayWatermark
 
@@ -8011,9 +8017,9 @@ function doLogin() {
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
       ctx.strokeRect(200 - panelW / 2, 350 - panelH / 2 - 14, panelW, panelH + 70);
       ctx.globalAlpha = fadeAlpha + 0.12;
-      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 26px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('新手指南', 200, 350 - panelH / 2 + 22);
-      ctx.fillStyle = '#fff'; ctx.font = '18px Arial';
+      ctx.fillStyle = '#fff'; ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       for (var ti = 0; ti < visibleSteps; ti++) {
         var step = TUTORIAL_STEPS[ti];
         var stepAlpha = Math.min(1, (_trt - ti * 0.4) * 3);
@@ -8027,7 +8033,7 @@ function doLogin() {
       ctx.fillStyle = '#444'; ctx.fillRect(200 - skipBtnW / 2, skipBtnY, skipBtnW, skipBtnH);
       ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5;
       ctx.strokeRect(200 - skipBtnW / 2, skipBtnY, skipBtnW, skipBtnH);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('跳过 ▶', 200, skipBtnY + 30);
       // Store skip button rect in SCREEN coords for click detection
       _tutorialSkipRect = {
@@ -8102,7 +8108,7 @@ function doLogin() {
         ctx.restore();
         // Warning text
         ctx.save();
-        ctx.globalAlpha = 0.8; ctx.fillStyle = '#f44'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+        ctx.globalAlpha = 0.8; ctx.fillStyle = '#f44'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('⚠ 你在毒圈外! 正在持续掉血! 向箭头方向移动!', W / 2, H / 2 + 110);
         ctx.restore();
       }
@@ -8130,9 +8136,9 @@ function doLogin() {
       ctx.fillStyle = '#1a1a0a'; ctx.fillRect(W / 2 - 120, ay, 240, 40);
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 120, ay, 240, 40);
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('🏆 成就: ' + ach.name, W / 2, ay + 17);
-      ctx.fillStyle = '#aaa'; ctx.font = '11px Arial';
+      ctx.fillStyle = '#aaa'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText(ach.desc + '  +' + ach.reward + '金币', W / 2, ay + 33);
       ctx.globalAlpha = 1;
     }
@@ -8145,9 +8151,9 @@ function doLogin() {
       ctx.fillRect(0, 0, W, 4); ctx.fillRect(0, H - 4, W, 4);
       ctx.fillRect(0, 0, 4, H); ctx.fillRect(W - 4, 0, 4, H);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = '#f00'; ctx.font = 'bold 24px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#f00'; ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('WARNING: BOSS APPROACHING!', W / 2, H / 2 - 30);
-      ctx.fillStyle = '#f88'; ctx.font = '14px Arial';
+      ctx.fillStyle = '#f88'; ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('准备迎战!', W / 2, H / 2 - 5);
     }
 
@@ -8169,7 +8175,7 @@ function doLogin() {
       } else {
         ctx.fillStyle = cStyle.color;
       }
-      ctx.font = 'bold ' + Math.round(megaSize * megaPulse) + 'px Arial'; ctx.textAlign = 'right';
+      ctx.font = 'bold ' + Math.round(megaSize * megaPulse) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'right';
       ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4;
       var comboLabel = comboKills + 'x ' + cStyle.label + '!';
       ctx.strokeText(comboLabel, comboDisplayPos.x, comboDisplayPos.y);
@@ -8178,9 +8184,9 @@ function doLogin() {
     }
     // Combo kill display (US-215)
     if (comboKills >= 3 && comboKills < 10 && comboTimer > 0) {
-      ctx.fillStyle = '#f0f'; ctx.font = 'bold ' + Math.min(24, 14 + comboKills) + 'px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#f0f'; ctx.font = 'bold ' + Math.min(24, 14 + comboKills) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(comboKills + 'x COMBO!', W / 2, H - 40);
-      ctx.fillStyle = '#c8c'; ctx.font = '11px Arial';
+      ctx.fillStyle = '#c8c'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       var barW = comboTimer / comboWindow * 80;
       ctx.fillRect(W / 2 - 40, H - 32, barW, 3);
     }
@@ -8206,7 +8212,7 @@ function doLogin() {
       else if (kbProgress > 0.85) kbX = W / 2 + (W + 200) * ((kbProgress - 0.85) / 0.15);
       var kbAlpha = kbProgress < 0.15 ? kbProgress / 0.15 : (kbProgress > 0.85 ? 1 - (kbProgress - 0.85) / 0.15 : 1);
       ctx.globalAlpha = kbAlpha * 0.9;
-      ctx.fillStyle = killMilestoneBanner.color; ctx.font = 'bold 48px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = killMilestoneBanner.color; ctx.font = 'bold 48px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 5;
       ctx.strokeText(killMilestoneBanner.text, kbX, H / 2 + 15);
       ctx.fillText(killMilestoneBanner.text, kbX, H / 2 + 15);
@@ -8279,15 +8285,15 @@ function doLogin() {
       // Icon box (colored square)
       ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(barX + 6, sy + 6, 26, 26);
       ctx.strokeStyle = sd.color || '#888'; ctx.lineWidth = 1; ctx.strokeRect(barX + 6.5, sy + 6.5, 25, 25);
-      ctx.font = '18px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = sd.color || '#fff';
+      ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = sd.color || '#fff';
       ctx.fillText(sd.icon, barX + 19, sy + 26);
       // Name + level
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 11px Arial';
+      ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText(sd.name, barX + 36, sy + 15);
       ctx.fillStyle = lv >= maxLv ? '#ffd700' : '#aaa';
-      ctx.font = '10px Arial';
+      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('Lv.' + lv + (lv >= maxLv ? ' MAX' : '/' + maxLv), barX + 36, sy + 28);
 
       // Level progress dots
@@ -8310,7 +8316,7 @@ function doLogin() {
         ctx.lineWidth = 2;
         ctx.strokeRect(btnX, btnY2, 22, 28);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 18px Arial';
+        ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('+', btnX + 11, btnY2 + 21);
       }
@@ -8337,7 +8343,7 @@ function doLogin() {
       ctx.globalAlpha = 1;
       // Text
       ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 13px Arial';
+      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.textAlign = 'left';
       ctx.fillText('\u25B2 技能点: ' + pendingSkillPoints + ' \u25C0点击+加点', barX, barY - 8);
     }
@@ -8356,7 +8362,7 @@ function doLogin() {
       var arrowX = barX - 40 + hintBounce;
       var arrowY = barY + 60;
       ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
+      ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('\u25B6', arrowX, arrowY);
       // Tutorial text box
       ctx.fillStyle = 'rgba(0,0,0,0.85)';
@@ -8364,10 +8370,10 @@ function doLogin() {
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
       ctx.strokeRect(barX - 200, arrowY - 40, 160, 55);
       ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('点击右侧 + 按钮', barX - 120, arrowY - 18);
       ctx.fillText('升级技能!', barX - 120, arrowY);
-      ctx.fillStyle = '#aaa'; ctx.font = '10px Arial';
+      ctx.fillStyle = '#aaa'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('每次升级消耗1技能点', barX - 120, arrowY + 14);
       ctx.globalAlpha = 1; ctx.lineWidth = 1;
     }
@@ -8392,10 +8398,10 @@ function doLogin() {
     ctx.globalAlpha = 1;
     // Boss name + phase
     var bossName = '👑 BOSS - Phase ' + (boss.bossPhase || 1);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(bossName, W / 2, bossHpBar.y - 4);
     // HP percentage
-    ctx.fillStyle = '#ccc'; ctx.font = '10px Arial';
+    ctx.fillStyle = '#ccc'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillText(Math.round(hpPct * 100) + '%', W / 2, bossHpBar.y + 12);
   }
 
@@ -8416,31 +8422,31 @@ function doLogin() {
       ctx.fillRect(panelX - 2, panelY - 4, barW + 50, panelH);
       ctx.globalAlpha = 1;
     }
-    ctx.font = '10px Arial'; ctx.textAlign = 'left';
+    ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
     var rowOffset = 0;
     for (var pi = 0; pi < allPlayers.length; pi++) {
       // Team mode: add separator between teams
       if (gameMode === 'team' && pi === 4) {
         ctx.fillStyle = '#555';
         ctx.fillRect(panelX, panelY + rowOffset + 2, barW + 30, 1);
-        ctx.fillStyle = '#888'; ctx.font = '8px Arial';
+        ctx.fillStyle = '#888'; ctx.font = '8px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.fillText('— 敌方 —', panelX + 20, panelY + rowOffset + 11);
         rowOffset += 14;
-        ctx.font = '10px Arial';
+        ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       }
       var ap = allPlayers[pi];
       var ry = panelY + pi * rowH + rowOffset;
       // Class icon indicator
       var apClass = ap.isLocal ? (player.playerClass || selectedClass) : (ap.characterType || 'warrior');
       var classIcon = apClass === 'mage' ? '🔮' : (apClass === 'scout' ? '🏹' : '🛡');
-      ctx.font = '9px Arial'; ctx.fillStyle = ap.color;
+      ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = ap.color;
       ctx.fillText(classIcon, panelX, ry + 7);
       // Level badge + Name (highlight local player)
       var lvText = 'L' + (ap.level || 1);
-      ctx.fillStyle = '#fd0'; ctx.font = 'bold 8px Arial';
+      ctx.fillStyle = '#fd0'; ctx.font = 'bold 8px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText(lvText, panelX + 10, ry + 7);
       ctx.fillStyle = ap.isLocal ? '#4af' : (ap.alive ? '#ccc' : '#666');
-      ctx.font = '10px Arial';
+      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       var dispName = ap.name || ('P' + (ap.id + 1));
       ctx.fillText(dispName, panelX + 26, ry + 7);
       // HP bar + HP fraction
@@ -8451,14 +8457,14 @@ function doLogin() {
         ctx.fillStyle = hpRatio > 0.5 ? '#4a4' : (hpRatio > 0.25 ? '#fa0' : '#f44');
         ctx.fillRect(hpX, hpY, (barW - 10) * hpRatio, barH);
         // HP fraction text
-        ctx.fillStyle = '#fff'; ctx.font = '8px Arial';
+        ctx.fillStyle = '#fff'; ctx.font = '8px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.fillText(Math.floor(ap.hp) + '/' + Math.floor(ap.maxHp), hpX + barW - 7, ry + 7);
-        ctx.font = '10px Arial';
+        ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       } else {
         // Dead indicator
-        ctx.fillStyle = '#f44'; ctx.font = '9px Arial';
+        ctx.fillStyle = '#f44'; ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.fillText('DEAD', panelX + 46, ry + 7);
-        ctx.font = '10px Arial';
+        ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       }
     }
     ctx.restore();
@@ -8578,7 +8584,7 @@ function doLogin() {
       }
       // Name label for other players on minimap
       if (!mp.isLocal) {
-        ctx.fillStyle = '#fff'; ctx.font = '7px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff'; ctx.font = '7px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(mp.name, mpx, mpy - 5);
       }
       // Pulse effect for local player
@@ -8590,7 +8596,7 @@ function doLogin() {
     }
     // Player count label
     var aliveCount = allPlayers.filter(function(p) { return p.alive; }).length;
-    ctx.fillStyle = '#fff'; ctx.font = '9px Arial'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff'; ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText('👥 ' + aliveCount + '/8', mmX + 2, mmY - 3);
     ctx.restore();
   }
@@ -8726,12 +8732,12 @@ function doLogin() {
     ctx.translate(200, frameY + frameH / 2);
     ctx.scale(logoPulse, logoPulse);
     ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 20;
-    ctx.font = 'bold 42px "KaiTi", "STKaiti", "SimHei", serif';
+    ctx.font = 'bold 42px "KaiTi", "STKaiti", "SimHei", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", serif';
     ctx.textAlign = 'center'; ctx.fillStyle = '#ffe066';
     ctx.fillText('生存之王', 0, 6);
     ctx.shadowBlur = 0;
     ctx.restore();
-    ctx.font = '13px Arial'; ctx.fillStyle = '#ffd966'; ctx.textAlign = 'center';
+    ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#ffd966'; ctx.textAlign = 'center';
     ctx.fillText('— King of Survive —', 200, frameY + frameH + 16);
 
     // --- Character portrait (y: 140-320) ---
@@ -8765,13 +8771,13 @@ function doLogin() {
     ctx.fillRect(100, tgY, 200, 28);
     ctx.strokeStyle = cls.color; ctx.lineWidth = 1.5;
     ctx.strokeRect(100, tgY, 200, 28);
-    ctx.fillStyle = cls.color; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(cls.icon + '  ' + cls.name, 200, tgY + 18);
-    ctx.font = '10px Arial'; ctx.fillStyle = '#aaa';
+    ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
     ctx.fillText(cls.passive, 200, tgY + 40);
     // Best record
     if (bestRecord.kills > 0 || gold > 0) {
-      ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center';
+      ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#ffd700'; ctx.textAlign = 'center';
       var recLine = '';
       if (bestRecord.kills > 0) recLine += '🏆 ' + bestRecord.kills + '杀 · ' + Math.floor(bestRecord.time) + 's';
       if (gold > 0) { if (recLine) recLine += '  '; recLine += '💰 ' + gold; }
@@ -8782,11 +8788,11 @@ function doLogin() {
     var bW = 160, bH = 48, bGap = 10;
     var bXl = 200 - bW - bGap / 2, bXr = 200 + bGap / 2;
     var bY0 = 430;
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     _drawMenuButton(bXl, bY0, bW, bH, '单排模式', '#4a8a4a', '#1e4a1e', '#6fd66f');
     _drawMenuButton(bXr, bY0, bW, bH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
     var bY1 = bY0 + bH + bGap;
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     _drawMenuButton(bXl, bY1, bW, bH, '📅 每日挑战', '#3a5a9a', '#1a2a4e', '#7fa6e6');
     _drawMenuButton(bXr, bY1, bW, bH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
     var bY2 = bY1 + bH + bGap;
@@ -8794,7 +8800,7 @@ function doLogin() {
     _drawMenuButton(bXr, bY2, bW, bH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
 
     // Tutorial hint
-    ctx.font = '12px Arial'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
+    ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
     ctx.fillText('鼠标 / 触屏移动角色，自动攻击最近敌人', 200, 680);
 
     ctx.restore(); // exit design-space transform
@@ -8813,7 +8819,7 @@ function doLogin() {
     // Design space: 400x700 (called inside _applyUIScale)
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('选择角色', DW / 2, 40);
 
     var classKeys = ['warrior', 'mage', 'scout'];
@@ -8828,19 +8834,19 @@ function doLogin() {
       ctx.strokeRect(DW / 2 - 190, by, 380, 80);
       // Character sprite preview + emoji icon
       drawCharacterSprite(DW / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
-      ctx.font = '18px Arial'; ctx.textAlign = 'left';
+      ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
       ctx.fillText(cls.icon, DW / 2 - 175, by + 20);
-      ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
       ctx.fillText(cls.name, DW / 2 - 135, by + 30);
       // Stats
-      ctx.font = '11px Arial'; ctx.fillStyle = '#aaa';
+      ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
       ctx.fillText('HP:' + cls.hp + '  攻击:' + cls.attackDamage + '  移速:' + cls.speed, DW / 2 - 135, by + 48);
       // Passive
-      ctx.fillStyle = '#888'; ctx.font = '10px Arial';
+      ctx.fillStyle = '#888'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText(cls.passive, DW / 2 - 135, by + 65);
       // Click hint
-      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('▶', DW / 2 + 170, by + 45);
     }
 
@@ -8859,17 +8865,17 @@ function doLogin() {
     var panelY = 350;
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 190, panelY - 5, 380, 130);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 190, panelY - 5, 380, 130);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('属性分配 (剩余:' + attributePoints + ')', DW / 2, panelY + 12);
     for (var ai = 0; ai < 4; ai++) {
       var aKey = attrNames[ai];
       var aVal = playerAttributes[aKey];
       var ay = panelY + 25 + ai * 24;
-      ctx.font = '12px Arial'; ctx.textAlign = 'left'; ctx.fillStyle = '#ccc';
+      ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#ccc';
       ctx.fillText(attrLabels[aKey] + ': ' + aVal, DW / 2 - 170, ay + 12);
       // "-" button
       ctx.fillStyle = aVal > 0 ? '#a44' : '#333'; ctx.fillRect(DW / 2 + 60, ay, 24, 18);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('-', DW / 2 + 72, ay + 14);
       // "+" button
       ctx.fillStyle = attributePoints > 0 ? '#4a4' : '#333'; ctx.fillRect(DW / 2 + 90, ay, 24, 18);
@@ -8882,7 +8888,7 @@ function doLogin() {
       var dsY = panelY + 128;
       ctx.fillStyle = '#111'; ctx.fillRect(DW / 2 - 190, dsY, 380, 50);
       ctx.strokeStyle = '#333'; ctx.strokeRect(DW / 2 - 190, dsY, 380, 50);
-      ctx.font = '10px Arial'; ctx.fillStyle = '#8f8'; ctx.textAlign = 'left';
+      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#8f8'; ctx.textAlign = 'left';
       var atkLabel = selectedClass === 'mage' ? '法术强度' : '攻击力';
       var atkValue = selectedClass === 'mage' ? derivedStats.skillPower : derivedStats.physicalAttack;
       ctx.fillText('生命:' + derivedStats.maxHP + '  ' + atkLabel + ':' + atkValue.toFixed(1) + '  移速:' + derivedStats.moveSpeed.toFixed(1), DW / 2 - 180, dsY + 16);
@@ -8893,7 +8899,7 @@ function doLogin() {
     var skinPanelY = (derivedStats ? panelY + 185 : panelY + 135);
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 190, skinPanelY, 380, 110);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 190, skinPanelY, 380, 110);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('🎨 皮肤选择', DW / 2, skinPanelY + 16);
     // Get skins applicable to selected class
     var applicableSkins = skinCollection.filter(function(sk) {
@@ -8926,24 +8932,24 @@ function doLogin() {
       // Lock icon for unowned
       if (!sk.owned && sk.id !== 'default') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(skx, sky, skinSize, skinSize);
-        ctx.fillStyle = '#888'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#888'; ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('🔒', skx + skinSize / 2, sky + skinSize / 2 + 4);
       }
       // Tier badge
       if (sd.tier && sd.tier !== 'C') {
-        ctx.fillStyle = tierColors[sd.tier] || '#888'; ctx.font = 'bold 8px Arial'; ctx.textAlign = 'left';
+        ctx.fillStyle = tierColors[sd.tier] || '#888'; ctx.font = 'bold 8px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
         ctx.fillText(sd.tier, skx + 2, sky + 9);
       }
     }
     // Show equipped skin name
     var eqSkinData = skinsData[equippedSkin] || {};
-    ctx.fillStyle = '#ccc'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ccc'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('当前: ' + (eqSkinData.name || '默认'), DW / 2, skinPanelY + 103);
 
     // Back
     ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
     ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
@@ -8951,9 +8957,9 @@ function doLogin() {
     // Design space: 400x700
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('⚔ 永久强化', DW / 2, 40);
-    ctx.fillStyle = '#ffd700'; ctx.font = '14px Arial';
+    ctx.fillStyle = '#ffd700'; ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillText('💰 ' + gold + ' 金币', DW / 2, 65);
 
     for (var i = 0; i < META_UPGRADE_DEFS.length; i++) {
@@ -8968,25 +8974,25 @@ function doLogin() {
       ctx.strokeStyle = canBuy ? '#ffd700' : '#333'; ctx.lineWidth = 1;
       ctx.strokeRect(bx, by, 320, 58);
       // Icon + name
-      ctx.font = '20px Arial'; ctx.textAlign = 'left';
+      ctx.font = '20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
       ctx.fillStyle = canBuy ? '#fff' : '#555';
       ctx.fillText(def.icon + ' ' + def.name, bx + 12, by + 25);
       // Level
-      ctx.font = '12px Arial'; ctx.fillStyle = '#888';
+      ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888';
       ctx.fillText('Lv.' + lv + ' → Lv.' + (lv + 1), bx + 12, by + 45);
       // Desc
       ctx.fillText(def.desc, bx + 140, by + 25);
       // Cost
       ctx.textAlign = 'right';
       ctx.fillStyle = canBuy ? '#ffd700' : '#664400';
-      ctx.font = 'bold 14px Arial';
+      ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('💰' + cost, bx + 310, by + 45);
     }
 
     // Back button
     ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
     ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('← 返回', DW / 2, DH - 28);
   }
 
@@ -9005,7 +9011,7 @@ function doLogin() {
     }
     var cardProgress = skillCardAnim.active ? Math.min(1, skillCardAnim.timer / skillCardAnim.duration) : 1;
     var cardEase = cardProgress < 1 ? 1 - Math.pow(1 - cardProgress, 3) : 1;
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.globalAlpha = cardEase;
     ctx.fillText('⬆ LEVEL UP — 选择升级', W / 2, 80);
     ctx.globalAlpha = 1;
@@ -9088,7 +9094,7 @@ function doLogin() {
         // Strip shine
         ctx.fillStyle = 'rgba(255,255,255,0.18)';
         ctx.fillRect(cx + 2, cy + 2, cardW - 4, 14);
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
         ctx.strokeText((rDef.label || card.rarity || '').toUpperCase(), cx + cardW / 2, cy + 21);
         ctx.fillText((rDef.label || card.rarity || '').toUpperCase(), cx + cardW / 2, cy + 21);
@@ -9109,7 +9115,7 @@ function doLogin() {
         ctx.save();
         ctx.shadowColor = rDef.borderColor;
         ctx.shadowBlur = rareEpic ? 16 : 6;
-        ctx.font = '70px Arial'; ctx.textAlign = 'center';
+        ctx.font = '70px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillStyle = rDef.nameColor || '#fff';
         ctx.fillText(card.icon || '★', cx + cardW / 2, iconCY + 22);
         ctx.restore();
@@ -9127,14 +9133,14 @@ function doLogin() {
           ctx.globalAlpha = slideEase;
         }
         // --- Name ---
-        ctx.font = 'bold 22px Arial'; ctx.textAlign = 'center';
+        ctx.font = 'bold 22px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3;
         ctx.strokeText(card.name || card.id || '?', cx + cardW / 2, cy + 202);
         ctx.fillStyle = rDef.nameColor || '#fff';
         ctx.fillText(card.name || card.id || '?', cx + cardW / 2, cy + 202);
         ctx.lineWidth = 1;
         // --- Description (word-wrapped) ---
-        ctx.font = '14px Arial'; ctx.fillStyle = '#c8c8d8';
+        ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#c8c8d8';
         var desc = card.desc || '';
         var words = desc.split('');
         var line = '', lineY = cy + 230, lineH = 18, maxW = cardW - 40;
@@ -9151,7 +9157,7 @@ function doLogin() {
         // --- Current stack indicator ---
         var curLv = skillLevels[card.id] || 0;
         var cap = card.stackCap || 1;
-        ctx.font = '11px Arial'; ctx.fillStyle = '#888';
+        ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888';
         ctx.fillText('当前 ' + curLv + ' / ' + cap, cx + cardW / 2, cy + cardH - 54);
         // --- Keyboard hint circle (bottom) ---
         ctx.save();
@@ -9165,7 +9171,7 @@ function doLogin() {
         ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(cx + cardW / 2, cy + cardH - 24, 16, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = '#0e0e1a'; ctx.font = 'bold 17px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#0e0e1a'; ctx.font = 'bold 17px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(String(i + 1), cx + cardW / 2, cy + cardH - 18);
         ctx.restore(); // end hover scale transform
         ctx.globalAlpha = 1;
@@ -9173,7 +9179,7 @@ function doLogin() {
         WAVE2_CARD_RECTS.push({ x: cx, y: cy, w: cardW, h: cardH, idx: i });
       }
       // Footer hint
-      ctx.fillStyle = '#aaa'; ctx.font = '13px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#aaa'; ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('按 1 / 2 / 3 或点击卡牌选择（不可跳过）', W / 2, cardY + cardH + 32);
       return; // done — skip legacy render
     }
@@ -9195,13 +9201,13 @@ function doLogin() {
       ctx.fillStyle = '#1a1a2e'; ctx.fillRect(bx, by, 280, 65);
       ctx.strokeStyle = sd.color; ctx.lineWidth = 2; ctx.strokeRect(bx, by, 280, 65);
       // Icon
-      ctx.font = '24px Arial'; ctx.textAlign = 'left'; ctx.fillStyle = sd.color;
+      ctx.font = '24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = sd.color;
       ctx.fillText(sd.icon, bx + 15, by + 38);
       // Name + level
-      ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
       ctx.fillText(sd.name + ' Lv.' + lv, bx + 50, by + 28);
       // Description
-      ctx.font = '12px Arial'; ctx.fillStyle = '#aaa';
+      ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
       ctx.fillText(sd.desc, bx + 50, by + 48);
       // skillTooltipDps (US-335): show estimated DPS/survival impact per skill
       // Use per-level desc from async-loaded skills data
@@ -9212,7 +9218,7 @@ function doLogin() {
       } else {
         damagePreview = sd.desc || '';
       }
-      ctx.font = '10px Arial'; ctx.fillStyle = '#8f8';
+      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#8f8';
       ctx.fillText(damagePreview, bx + 50, by + 60);
       // Level dots
       for (var d = 0; d < 5; d++) {
@@ -9241,7 +9247,7 @@ function doLogin() {
       if (evoHint) break;
     }
     if (evoHint) {
-      ctx.fillStyle = '#c8f'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#c8f'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText(evoHint, W / 2, H / 4 + 10);
     }
 
@@ -9250,13 +9256,13 @@ function doLogin() {
       var tapY = H / 4 + 20 + skillChoices.length * 80 + 5;
       ctx.fillStyle = '#1a2a1a'; ctx.fillRect(W / 2 - 140, tapY, 280, 28);
       ctx.strokeStyle = '#4a4'; ctx.lineWidth = 1; ctx.strokeRect(W / 2 - 140, tapY, 280, 28);
-      ctx.fillStyle = '#8f8'; ctx.font = '11px Arial'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#8f8'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
       ctx.fillText('临时属性点 +1 (剩余:' + tempAttributePoints + ')', W / 2, tapY + 12);
       var tapBtnNames = ['INT', 'STR', 'AGI', 'STA'];
       for (var ti = 0; ti < 4; ti++) {
         var tbx = W / 2 - 130 + ti * 66;
         ctx.fillStyle = '#2a3a2a'; ctx.fillRect(tbx, tapY + 14, 60, 12);
-        ctx.fillStyle = '#8f8'; ctx.font = '10px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#8f8'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('+1 ' + tapBtnNames[ti], tbx + 30, tapY + 24);
       }
     }
@@ -9270,7 +9276,7 @@ function doLogin() {
     ctx.fillRect(rbx, rby, 120, 36);
     ctx.strokeStyle = canReroll ? '#ffd700' : '#333'; ctx.lineWidth = 1;
     ctx.strokeRect(rbx, rby, 120, 36);
-    ctx.fillStyle = canReroll ? '#ffd700' : '#555'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = canReroll ? '#ffd700' : '#555'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('🔄 重摇 💰' + rerollCost, W / 2, rby + 23);
   }
 
@@ -9308,7 +9314,7 @@ function doLogin() {
     ctx.restore(); ctx.globalAlpha = 1;
     // Title bar
     ctx.fillStyle = borderColor + '30'; ctx.fillRect(cardX, cardY, cardW, 35);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('幸存者 — 战绩卡', W / 2, cardY + 22);
     // gradeAnimation (US-308): dramatic grade reveal — flip through D→C→B→A→S
     var grade = getGrade();
@@ -9327,29 +9333,29 @@ function doLogin() {
       }
       var displayGrade = GRADE_ORDER[Math.min(gradeAnimation.currentGrade, GRADE_ORDER.length - 1)];
       var gradeScale = gradeAnimation.currentGrade >= gradeAnimation.finalGrade ? (1 + Math.sin(gradeAnimation.timer * 8) * 0.1) : 1.2;
-      ctx.font = 'bold ' + Math.round(48 * gradeScale) + 'px Arial'; ctx.fillStyle = grade.color;
+      ctx.font = 'bold ' + Math.round(48 * gradeScale) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = grade.color;
       ctx.fillText(displayGrade, W / 2, cardY + 70);
       // Particle burst when final grade revealed
       if (gradeAnimation.currentGrade >= gradeAnimation.finalGrade && Math.random() < 0.2) {
         particles.push({ x: W / 2 + (Math.random() - 0.5) * 60, y: cardY + 55, vx: (Math.random() - 0.5) * 80, vy: -30 - Math.random() * 40, life: 0.5, maxLife: 0.5, color: grade.color, radius: 2 });
       }
     } else {
-      ctx.font = 'bold 48px Arial'; ctx.fillStyle = grade.color;
+      ctx.font = 'bold 48px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = grade.color;
       ctx.fillText(grade.letter, W / 2, cardY + 70);
     }
     // Stats row
-    ctx.font = 'bold 18px Arial'; ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
     ctx.fillText(Math.floor(gameTime) + 's  |  ' + kills + '杀  |  W' + wave, W / 2, cardY + 105);
     // Build name
-    ctx.font = '13px Arial'; ctx.fillStyle = '#8cf';
+    ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#8cf';
     var buildLabel = buildNameSystem.detected ? buildNameSystem.currentName : 'Lv.' + playerLevel + ' ' + selectedClass;
     ctx.fillText(buildLabel, W / 2, cardY + 125);
     // Best streak
-    ctx.font = '12px Arial'; ctx.fillStyle = '#fa8';
+    ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fa8';
     ctx.fillText('最高连杀: ' + maxStreak + '  |  DPS: ' + maxDps, W / 2, cardY + 145);
     // tauntSystem: dynamic challenge text based on grade
     var tauntText = getTaunt(grade.letter);
-    ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#ffd700';
     ctx.fillText(tauntText, W / 2, cardY + 170);
   }
 
@@ -9404,7 +9410,7 @@ function doLogin() {
     // Banner at top
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(0, 0, W, 40);
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillStyle = '#f44';
     ctx.textAlign = 'center';
     ctx.fillText('💀 你已阵亡 — 观战模式 (' + remaining + 's 后自动退出)', W / 2, 26);
@@ -9413,7 +9419,7 @@ function doLogin() {
       // Show target info
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.fillRect(W / 2 - 100, 44, 200, 24);
-      ctx.font = '13px Arial';
+      ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillStyle = '#4af';
       ctx.fillText('观战: ' + (target.nickname || target.id || '???') + ' Lv' + (target.level || 1), W / 2, 60);
     }
@@ -9422,7 +9428,7 @@ function doLogin() {
     var pulse = 0.5 + 0.5 * Math.sin(Date.now() / 500);
     ctx.globalAlpha = 0.6 + pulse * 0.4;
     ctx.fillStyle = '#aaa';
-    ctx.font = '14px Arial';
+    ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillText('点击任意位置或按 ESC 立即跳过', W / 2, H - 30);
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -9450,7 +9456,7 @@ function doLogin() {
       // "DEATH REWIND" text
       if (rewindProgress < 0.5) {
         ctx.globalAlpha = 1 - rewindProgress * 2;
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText('💀 最后时刻...', W / 2, H / 2);
         ctx.globalAlpha = 1;
       }
@@ -9507,7 +9513,7 @@ function doLogin() {
           }
         }
         var victPulse = 1 + Math.sin(Date.now() * 0.004) * 0.1;
-        ctx.font = 'bold ' + Math.round(36 * victPulse) + 'px Arial';
+        ctx.font = 'bold ' + Math.round(36 * victPulse) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 4;
         var victTitle = gameMode === 'team' ? '团队胜利!' : '大吉大利，今晚吃鸡!';
@@ -9516,7 +9522,7 @@ function doLogin() {
         ctx.fillText(victTitle, 200, 150);
         ctx.lineWidth = 1;
       } else {
-        ctx.font = 'bold 28px Arial'; ctx.textAlign = 'center';
+        ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
         ctx.strokeText('惨胜 — 同归于尽!', 200, 150);
         ctx.fillStyle = '#fa0';
@@ -9539,7 +9545,7 @@ function doLogin() {
         }
       }
       var recordPulse = 1 + Math.sin(Date.now() * 0.006) * 0.15;
-      ctx.font = 'bold ' + Math.round(24 * recordPulse) + 'px Arial';
+      ctx.font = 'bold ' + Math.round(24 * recordPulse) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 3;
       ctx.strokeText('🏆 NEW RECORD! 🏆', 200, 145);
       ctx.fillStyle = '#ffd700';
@@ -9578,11 +9584,11 @@ function doLogin() {
     var values = [Math.floor(gameTime) + 's', '' + kills, '第' + wave + '波'];
     var iconColors = ['#88ccff', '#ff8866', '#ffd700'];
     for (var _ci = 0; _ci < 3; _ci++) {
-      ctx.font = '24px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = iconColors[_ci];
+      ctx.font = '24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = iconColors[_ci];
       ctx.fillText(icons[_ci], colX[_ci], sy + 6);
-      ctx.font = '13px Arial'; ctx.fillStyle = '#888';
+      ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888';
       ctx.fillText(labels[_ci], colX[_ci], sy + 24);
-      ctx.font = 'bold 24px Arial'; ctx.fillStyle = '#fff';
+      ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
       ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3;
       ctx.strokeText(values[_ci], colX[_ci], sy + 52);
       ctx.fillText(values[_ci], colX[_ci], sy + 52);
@@ -9591,17 +9597,17 @@ function doLogin() {
     sy = statsPanelY + statsPanelH + 10;
 
     // Secondary stats + gold
-    ctx.font = '13px Arial'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
+    ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center';
     var learnedCount = 0;
     for (var sk in skillLevels) { if (skillLevels[sk] > 0) learnedCount++; }
     ctx.fillText('Lv.' + playerLevel + '  |  连杀' + maxStreak + '  |  技能' + learnedCount + '/' + selectedBuild.length, 200, sy + 20);
 
     var achCount = Object.keys(unlockedAchievements).length;
-    ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#ffd700';
     ctx.fillText('💰 +' + _lastEarnedGold + ' 金币 (总计: ' + gold + ')', 200, sy + 40);
 
     // Skills summary
-    ctx.font = '12px Arial'; ctx.fillStyle = '#aaa';
+    ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
     var shown = {};
     var summary = [];
     for (var i = 0; i < ownedSkills.length; i++) {
@@ -9613,27 +9619,27 @@ function doLogin() {
 
     // Death tip or victory text
     if (victoryWin && player.alive !== false) {
-      ctx.font = 'bold 14px Arial'; ctx.fillStyle = '#4f4';
+      ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#4f4';
       ctx.fillText('你消灭了所有对手，成为最后的幸存者!', 200, sy + 76);
     } else if (victoryWin && player.alive === false) {
-      ctx.font = 'bold 13px Arial'; ctx.fillStyle = '#fa0';
+      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fa0';
       ctx.fillText('你消灭了所有对手! (但最终' + (deathCause || '阵亡') + ')', 200, sy + 76);
     } else if (deathCause) {
-      ctx.font = '14px Arial'; ctx.fillStyle = '#f88';
+      ctx.font = '14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#f88';
       ctx.fillText('💀 ' + deathCause, 200, sy + 70);
       if (deathTip) {
-        ctx.font = '12px Arial'; ctx.fillStyle = '#8af';
+        ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#8af';
         ctx.fillText('💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)], 200, sy + 88);
       }
     } else if (deathTip) {
-      ctx.font = '13px Arial'; ctx.fillStyle = '#8af';
+      ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#8af';
       ctx.fillText('💡 ' + deathTip, 200, sy + 76);
     }
 
     // Kill leaderboard
     var lbY = sy + 98;
     var lbPlayers = allPlayers.slice().sort(function(a, b) { return b.kills - a.kills; });
-    ctx.font = 'bold 12px Arial'; ctx.fillStyle = '#aaa';
+    ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
     ctx.fillText('— 击杀排行榜 —', 200, lbY);
     var lbShow = Math.min(lbPlayers.length, 5);
     for (var ri = 0; ri < lbShow; ri++) {
@@ -9641,13 +9647,13 @@ function doLogin() {
       var isMe = lp.isLocal;
       var rankIcon = ri === 0 ? '🥇' : (ri === 1 ? '🥈' : (ri === 2 ? '🥉' : (ri + 1) + '.'));
       ctx.fillStyle = isMe ? '#ffd700' : (lp.alive ? '#ccc' : '#888');
-      ctx.font = (isMe ? 'bold ' : '') + '12px Arial';
+      ctx.font = (isMe ? 'bold ' : '') + '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       var statusMark = lp.alive ? '' : ' 💀';
       ctx.fillText(rankIcon + ' ' + lp.name + '  ' + lp.kills + '杀' + statusMark, 200, lbY + 16 + ri * 16);
     }
     var myRank = lbPlayers.findIndex(function(e) { return e.isLocal; }) + 1;
     if (myRank > lbShow) {
-      ctx.fillStyle = '#f84'; ctx.font = 'bold 12px Arial';
+      ctx.fillStyle = '#f84'; ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
       ctx.fillText('你排第' + myRank + '名', 200, lbY + 16 + lbShow * 16);
     }
 
@@ -9662,7 +9668,7 @@ function doLogin() {
     ctx.strokeStyle = '#6aaaff'; ctx.lineWidth = 1.5;
     ctx.strokeRect(shBx + 0.5, shBy + 0.5, shBw - 1, shBh - 1);
     ctx.restore();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 3;
     ctx.strokeText('📤 分享战绩', 200, shBy + 30);
     ctx.fillText('📤 分享战绩', 200, shBy + 30);
@@ -9688,7 +9694,7 @@ function doLogin() {
     ctx.fillRect(rtBx + 3, rtBy + 3, rtBw - 6, rtBh * 0.45);
     ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
     ctx.strokeRect(rtBx + 4, rtBy + 4, rtBw - 8, rtBh - 8);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 26px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 26px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 4;
     ctx.strokeText('🔄 再来一局', 200, rtBy + 38);
     ctx.fillText('🔄 再来一局', 200, rtBy + 38);
@@ -9710,26 +9716,26 @@ function doLogin() {
     sc.fillStyle = grad; sc.fillRect(0, 0, 400, 300);
 
     // Title
-    sc.fillStyle = '#fff'; sc.font = 'bold 24px Arial'; sc.textAlign = 'center';
+    sc.fillStyle = '#fff'; sc.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; sc.textAlign = 'center';
     sc.fillText('幸存者 Survivor', 200, 35);
 
     // Grade
     var grade = getGrade();
-    sc.fillStyle = grade.color; sc.font = 'bold 56px Arial';
+    sc.fillStyle = grade.color; sc.font = 'bold 56px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     sc.fillText(grade.letter, 200, 100);
-    sc.font = '12px Arial'; sc.fillStyle = '#888';
+    sc.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; sc.fillStyle = '#888';
     sc.fillText('RANK', 200, 55);
 
     // Stats
-    sc.fillStyle = '#fff'; sc.font = 'bold 20px Arial';
+    sc.fillStyle = '#fff'; sc.font = 'bold 20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     sc.fillText(Math.floor(gameTime) + 's', 100, 145);
     sc.fillText(kills + '杀', 200, 145);
     sc.fillText('W' + wave, 300, 145);
-    sc.font = '11px Arial'; sc.fillStyle = '#888';
+    sc.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; sc.fillStyle = '#888';
     sc.fillText('生存时间', 100, 160); sc.fillText('击杀数', 200, 160); sc.fillText('波次', 300, 160);
 
     // Skills build
-    sc.font = '12px Arial'; sc.fillStyle = '#aaa';
+    sc.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; sc.fillStyle = '#aaa';
     var shown = {};
     var summary = [];
     for (var i = 0; i < ownedSkills.length; i++) {
@@ -9740,7 +9746,7 @@ function doLogin() {
     sc.fillText(buildStr, 200, 190);
 
     // Challenge text
-    sc.fillStyle = '#ffd700'; sc.font = 'bold 16px Arial';
+    sc.fillStyle = '#ffd700'; sc.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     sc.fillText('来挑战我！', 200, 230);
 
     // Border
@@ -9780,9 +9786,9 @@ function doLogin() {
   // Pause screen (US-207)
   function drawPause() {
     ctx.globalAlpha = 0.6; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 36px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('⏸ 暂停', W / 2, H / 2 - 20);
-    ctx.font = '16px Arial'; ctx.fillStyle = '#888';
+    ctx.font = '16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#888';
     ctx.fillText('按 ESC 继续', W / 2, H / 2 + 20);
     ctx.fillText('第' + wave + '波  击杀 ' + kills + '  ' + Math.floor(gameTime) + '秒', W / 2, H / 2 + 50);
   }
