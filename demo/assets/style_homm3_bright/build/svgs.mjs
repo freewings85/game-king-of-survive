@@ -366,6 +366,56 @@ function fencePost(x) {
     `<polygon points="${x-3},24 ${x},20 ${x+3},24" fill="${P.leatherHi}" stroke="${P.leatherLo}" stroke-width="0.6"/>`;
 }
 
+// 64×64 — 3-segment connected fence spanning full width, meant as
+// a hard wall. Posts at x≈4/32/60, two horizontal rails.
+export function fenceCluster() {
+  const post = (x) => `<polygon points="${x-4},26 ${x+4},26 ${x+4},56 ${x},60 ${x-4},56" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<polygon points="${x-4},26 ${x},20 ${x+4},26" fill="${P.leatherHi}" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<line x1="${x}" y1="26" x2="${x}" y2="56" stroke="${P.leatherLo}" stroke-width="0.4"/>`;
+  return svg(64, 64,
+    // ground shadow (long, like a wall)
+    `<rect x="2" y="58" width="60" height="3" fill="${P.black}" opacity="0.35"/>` +
+    // back rail (slightly higher)
+    `<rect x="0" y="32" width="64" height="5" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<rect x="0" y="32" width="64" height="1.5" fill="${P.leatherHi}" opacity="0.6"/>` +
+    // front rail
+    `<rect x="0" y="45" width="64" height="5" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<rect x="0" y="45" width="64" height="1.5" fill="${P.leatherHi}" opacity="0.6"/>` +
+    // 3 posts
+    post(10) + post(32) + post(54) +
+    // small grass tufts at base
+    `<circle cx="18" cy="60" r="1.2" fill="${P.grassDark}"/>` +
+    `<circle cx="44" cy="60" r="1.2" fill="${P.grassDark}"/>`
+  );
+}
+
+// 64×64 — 4 trees clumped into a dense grove (natural barrier).
+export function treeDense() {
+  const tree = (cx, cy, r, tint) => {
+    const dark = tint === 'light' ? P.grassMid : P.grassDark;
+    const mid  = tint === 'light' ? '#4f8f20' : P.grassMid;
+    const hi   = '#a8e45c';
+    return `<rect x="${cx-2}" y="${cy + r - 4}" width="4" height="10" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 0.9}" fill="${dark}" stroke="${P.black}" stroke-width="0.8"/>` +
+      `<ellipse cx="${cx - r * 0.35}" cy="${cy - r * 0.35}" rx="${r * 0.55}" ry="${r * 0.45}" fill="${mid}" opacity="0.85"/>` +
+      `<ellipse cx="${cx + r * 0.3}" cy="${cy + r * 0.15}" rx="${r * 0.35}" ry="${r * 0.28}" fill="${hi}" opacity="0.5"/>`;
+  };
+  return svg(64, 64,
+    `<ellipse cx="32" cy="60" rx="26" ry="3" fill="${P.black}" opacity="0.4"/>` +
+    // back-left tree first (overlap order matters)
+    tree(16, 22, 12, 'dark') +
+    tree(46, 20, 13, 'light') +
+    tree(24, 38, 14, 'dark') +
+    tree(46, 40, 13, 'light') +
+    // small shadow under bush cluster
+    `<ellipse cx="32" cy="52" rx="20" ry="5" fill="${P.grassDark}" opacity="0.35"/>` +
+    // red berry speckles
+    `<circle cx="12" cy="18" r="1.4" fill="${P.blood}"/>` +
+    `<circle cx="52" cy="16" r="1.4" fill="${P.blood}"/>` +
+    `<circle cx="28" cy="34" r="1.4" fill="${P.blood}"/>`
+  );
+}
+
 export function crate() {
   return svg(64, 64,
     `<ellipse cx="32" cy="56" rx="22" ry="2.5" fill="${P.black}" opacity="0.35"/>` +

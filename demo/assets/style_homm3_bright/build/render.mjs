@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, fenceCluster, treeDense, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -293,12 +293,14 @@ async function buildUI(page) {
 async function buildDecor(page) {
   console.log('[decor] …');
   const items = [
-    { name: 'tree_big',   size: 128, svg: treeBig() },
-    { name: 'tree_small', size: 64,  svg: treeSmall() },
-    { name: 'rock',       size: 64,  svg: rock() },
-    { name: 'house',      size: 128, svg: house() },
-    { name: 'fence',      size: 64,  svg: fence() },
-    { name: 'crate',      size: 64,  svg: crate() },
+    { name: 'tree_big',      size: 128, svg: treeBig() },
+    { name: 'tree_small',    size: 64,  svg: treeSmall() },
+    { name: 'tree_dense',    size: 64,  svg: treeDense() },
+    { name: 'rock',          size: 64,  svg: rock() },
+    { name: 'house',         size: 128, svg: house() },
+    { name: 'fence',         size: 64,  svg: fence() },
+    { name: 'fence_cluster', size: 64,  svg: fenceCluster() },
+    { name: 'crate',         size: 64,  svg: crate() },
   ];
   for (const it of items) {
     const buf = await renderSvg(page, it.svg, it.size, it.size);
@@ -306,19 +308,30 @@ async function buildDecor(page) {
   }
   await writeJSON('decor/index.json', {
     style: 'homm3_bright',
-    items: items.map(it => ({
-      name: it.name, file: `decor/${it.name}.png`,
-      w: it.size, h: it.size,
-      // anchor at bottom-center for ground placement
-      anchor: { x: it.size / 2, y: it.size - 4 },
-      // collision rect (smaller than full sprite, for walking around tree trunks etc.)
-      collider: it.name.startsWith('tree') ? { x: it.size / 2 - 6, y: it.size - 16, w: 12, h: 12 }
-        : it.name === 'house' ? { x: 14, y: 40, w: 100, h: 70 }
-        : it.name === 'rock' ? { x: 12, y: 20, w: 40, h: 28 }
-        : it.name === 'fence' ? { x: 4, y: 20, w: 56, h: 32 }
-        : it.name === 'crate' ? { x: 12, y: 18, w: 40, h: 36 }
-        : null,
-    })),
+    items: items.map(it => {
+      // Leo Step 1: hard barrier = blocks player + forces bot pathing.
+      // Flagged items: house, rock, fence_cluster, tree_dense (big footprint).
+      // Flagged-off: small tree, small fence, crate — visual flavor only.
+      const hardBarrier = ['house', 'rock', 'fence_cluster', 'tree_dense'].includes(it.name);
+      // Collider: hardBarrier covers most of the sprite; non-barrier uses small trunk/base.
+      let collider;
+      if (it.name === 'tree_big')      collider = { x: it.size/2 - 8,  y: it.size - 20, w: 16, h: 14 };
+      else if (it.name === 'tree_small') collider = { x: it.size/2 - 5,  y: it.size - 14, w: 10, h: 10 };
+      else if (it.name === 'tree_dense') collider = { x: 4,              y: 8,            w: 56, h: 48 };
+      else if (it.name === 'house')      collider = { x: 14,             y: 40,           w: 100, h: 70 };
+      else if (it.name === 'rock')       collider = { x: 10,             y: 18,           w: 44, h: 32 };
+      else if (it.name === 'fence')      collider = { x: 12,             y: 22,           w: 40, h: 30 };
+      else if (it.name === 'fence_cluster') collider = { x: 2,           y: 26,           w: 60, h: 30 };
+      else if (it.name === 'crate')      collider = { x: 12,             y: 18,           w: 40, h: 36 };
+      else collider = null;
+      return {
+        name: it.name, file: `decor/${it.name}.png`,
+        w: it.size, h: it.size,
+        anchor: { x: it.size / 2, y: it.size - 4 },
+        collider,
+        hardBarrier,
+      };
+    }),
   });
 }
 

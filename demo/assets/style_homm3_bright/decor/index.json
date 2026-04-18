@@ -11,11 +11,12 @@
         "y": 124
       },
       "collider": {
-        "x": 58,
-        "y": 112,
-        "w": 12,
-        "h": 12
-      }
+        "x": 56,
+        "y": 108,
+        "w": 16,
+        "h": 14
+      },
+      "hardBarrier": false
     },
     {
       "name": "tree_small",
@@ -27,11 +28,29 @@
         "y": 60
       },
       "collider": {
-        "x": 26,
-        "y": 48,
-        "w": 12,
-        "h": 12
-      }
+        "x": 27,
+        "y": 50,
+        "w": 10,
+        "h": 10
+      },
+      "hardBarrier": false
+    },
+    {
+      "name": "tree_dense",
+      "file": "decor/tree_dense.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 4,
+        "y": 8,
+        "w": 56,
+        "h": 48
+      },
+      "hardBarrier": true
     },
     {
       "name": "rock",
@@ -43,11 +62,12 @@
         "y": 60
       },
       "collider": {
-        "x": 12,
-        "y": 20,
-        "w": 40,
-        "h": 28
-      }
+        "x": 10,
+        "y": 18,
+        "w": 44,
+        "h": 32
+      },
+      "hardBarrier": true
     },
     {
       "name": "house",
@@ -63,7 +83,8 @@
         "y": 40,
         "w": 100,
         "h": 70
-      }
+      },
+      "hardBarrier": true
     },
     {
       "name": "fence",
@@ -75,11 +96,29 @@
         "y": 60
       },
       "collider": {
-        "x": 4,
-        "y": 20,
-        "w": 56,
-        "h": 32
-      }
+        "x": 12,
+        "y": 22,
+        "w": 40,
+        "h": 30
+      },
+      "hardBarrier": false
+    },
+    {
+      "name": "fence_cluster",
+      "file": "decor/fence_cluster.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 2,
+        "y": 26,
+        "w": 60,
+        "h": 30
+      },
+      "hardBarrier": true
     },
     {
       "name": "crate",
@@ -95,7 +134,8 @@
         "y": 18,
         "w": 40,
         "h": 36
-      }
+      },
+      "hardBarrier": false
     }
   ]
 }
