@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, fenceCluster, treeDense, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, fenceCluster, treeDense, treeDensePine, treeDenseAutumn, rockSpiky, rockFlat, fenceLong, houseThatch, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -293,43 +293,82 @@ async function buildUI(page) {
 async function buildDecor(page) {
   console.log('[decor] …');
   const items = [
-    { name: 'tree_big',      size: 128, svg: treeBig() },
-    { name: 'tree_small',    size: 64,  svg: treeSmall() },
-    { name: 'tree_dense',    size: 64,  svg: treeDense() },
-    { name: 'rock',          size: 64,  svg: rock() },
-    { name: 'house',         size: 128, svg: house() },
-    { name: 'fence',         size: 64,  svg: fence() },
-    { name: 'fence_cluster', size: 64,  svg: fenceCluster() },
-    { name: 'crate',         size: 64,  svg: crate() },
+    { name: 'tree_big',          size: 128, svg: treeBig() },
+    { name: 'tree_small',        size: 64,  svg: treeSmall() },
+    { name: 'tree_dense',        size: 64,  svg: treeDense() },
+    { name: 'tree_dense_pine',   size: 64,  svg: treeDensePine(),   tag: 'forest' },
+    { name: 'tree_dense_autumn', size: 64,  svg: treeDenseAutumn(), tag: 'forest' },
+    { name: 'rock',              size: 64,  svg: rock() },
+    { name: 'rock_spiky',        size: 64,  svg: rockSpiky(),       tag: 'stones' },
+    { name: 'rock_flat',         size: 64,  svg: rockFlat(),        tag: 'stones' },
+    { name: 'house',             size: 128, svg: house() },
+    { name: 'house_thatch',      size: 128, svg: houseThatch(),     tag: 'village' },
+    { name: 'fence',             size: 64,  svg: fence() },
+    { name: 'fence_cluster',     size: 64,  svg: fenceCluster() },
+    { name: 'fence_long',        size: 128, svg: fenceLong(),       tag: 'village', wide: true },
+    { name: 'crate',             size: 64,  svg: crate() },
   ];
   for (const it of items) {
-    const buf = await renderSvg(page, it.svg, it.size, it.size);
+    const W = it.wide ? it.size * 2 : it.size;
+    const H = it.size;
+    const buf = await renderSvg(page, it.svg, W, H);
     await writeFile(`decor/${it.name}.png`, buf);
   }
+  // Step 1.5 region tags — Developer picks items from these pools
+  // when building forest / stones / village clusters.
+  //   forest:  tree_dense, tree_dense_pine, tree_dense_autumn, tree_big, tree_small
+  //   stones:  rock, rock_spiky, rock_flat
+  //   village: house, house_thatch, fence_cluster, fence_long, fence
+  //   scatter: crate, tree_small, fence (non-barrier flavor)
+  const REGION = {
+    tree_big: 'forest', tree_small: 'scatter',
+    tree_dense: 'forest', tree_dense_pine: 'forest', tree_dense_autumn: 'forest',
+    rock: 'stones', rock_spiky: 'stones', rock_flat: 'stones',
+    house: 'village', house_thatch: 'village',
+    fence: 'scatter', fence_cluster: 'village', fence_long: 'village',
+    crate: 'scatter',
+  };
+  const hardBarrierSet = new Set([
+    'house', 'house_thatch', 'rock', 'rock_spiky', 'rock_flat',
+    'fence_cluster', 'fence_long', 'tree_dense', 'tree_dense_pine', 'tree_dense_autumn',
+  ]);
+
   await writeJSON('decor/index.json', {
     style: 'homm3_bright',
+    regions: {
+      forest:  ['tree_dense', 'tree_dense_pine', 'tree_dense_autumn', 'tree_big', 'tree_small'],
+      stones:  ['rock', 'rock_spiky', 'rock_flat'],
+      village: ['house', 'house_thatch', 'fence_cluster', 'fence_long', 'fence'],
+      scatter: ['crate', 'tree_small', 'fence'],
+    },
     items: items.map(it => {
-      // Leo Step 1: hard barrier = blocks player + forces bot pathing.
-      // Flagged items: house, rock, fence_cluster, tree_dense (big footprint).
-      // Flagged-off: small tree, small fence, crate — visual flavor only.
-      const hardBarrier = ['house', 'rock', 'fence_cluster', 'tree_dense'].includes(it.name);
-      // Collider: hardBarrier covers most of the sprite; non-barrier uses small trunk/base.
+      const W = it.wide ? it.size * 2 : it.size;
+      const H = it.size;
+      const hardBarrier = hardBarrierSet.has(it.name);
       let collider;
-      if (it.name === 'tree_big')      collider = { x: it.size/2 - 8,  y: it.size - 20, w: 16, h: 14 };
-      else if (it.name === 'tree_small') collider = { x: it.size/2 - 5,  y: it.size - 14, w: 10, h: 10 };
-      else if (it.name === 'tree_dense') collider = { x: 4,              y: 8,            w: 56, h: 48 };
-      else if (it.name === 'house')      collider = { x: 14,             y: 40,           w: 100, h: 70 };
-      else if (it.name === 'rock')       collider = { x: 10,             y: 18,           w: 44, h: 32 };
-      else if (it.name === 'fence')      collider = { x: 12,             y: 22,           w: 40, h: 30 };
-      else if (it.name === 'fence_cluster') collider = { x: 2,           y: 26,           w: 60, h: 30 };
-      else if (it.name === 'crate')      collider = { x: 12,             y: 18,           w: 40, h: 36 };
+      if (it.name === 'tree_big')              collider = { x: W/2 - 8,  y: H - 20, w: 16, h: 14 };
+      else if (it.name === 'tree_small')       collider = { x: W/2 - 5,  y: H - 14, w: 10, h: 10 };
+      else if (it.name === 'tree_dense')       collider = { x: 4,        y: 8,      w: 56, h: 48 };
+      else if (it.name === 'tree_dense_pine')  collider = { x: 6,        y: 14,     w: 52, h: 44 };
+      else if (it.name === 'tree_dense_autumn')collider = { x: 4,        y: 8,      w: 56, h: 48 };
+      else if (it.name === 'house')            collider = { x: 14,       y: 40,     w: 100, h: 70 };
+      else if (it.name === 'house_thatch')     collider = { x: 18,       y: 54,     w: 92, h: 62 };
+      else if (it.name === 'rock')             collider = { x: 10,       y: 18,     w: 44, h: 32 };
+      else if (it.name === 'rock_spiky')       collider = { x: 14,       y: 10,     w: 36, h: 44 };
+      else if (it.name === 'rock_flat')        collider = { x: 4,        y: 36,     w: 58, h: 22 };
+      else if (it.name === 'fence')            collider = { x: 12,       y: 22,     w: 40, h: 30 };
+      else if (it.name === 'fence_cluster')    collider = { x: 2,        y: 26,     w: 60, h: 30 };
+      else if (it.name === 'fence_long')       collider = { x: 2,        y: 26,     w: 124, h: 30 };
+      else if (it.name === 'crate')            collider = { x: 12,       y: 18,     w: 40, h: 36 };
       else collider = null;
       return {
-        name: it.name, file: `decor/${it.name}.png`,
-        w: it.size, h: it.size,
-        anchor: { x: it.size / 2, y: it.size - 4 },
+        name: it.name,
+        file: `decor/${it.name}.png`,
+        w: W, h: H,
+        anchor: { x: W / 2, y: H - 4 },
         collider,
         hardBarrier,
+        region: REGION[it.name] || 'scatter',
       };
     }),
   });

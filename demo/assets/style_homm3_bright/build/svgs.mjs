@@ -322,6 +322,42 @@ export function rock() {
   );
 }
 
+// 64×64 — jagged spiky rock (angular silhouette) — for stone
+// circle formations and ritual look
+export function rockSpiky() {
+  return svg(64, 64,
+    `<ellipse cx="32" cy="56" rx="22" ry="3" fill="${P.black}" opacity="0.35"/>` +
+    // tall jagged spire
+    `<polygon points="18,52 26,20 34,8 42,22 48,52" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1.3"/>` +
+    // left highlight face
+    `<polygon points="26,20 34,8 30,30" fill="${P.stoneLight}" opacity="0.7"/>` +
+    // fracture line
+    `<line x1="30" y1="20" x2="34" y2="46" stroke="${P.stoneDark}" stroke-width="0.8"/>` +
+    // smaller shard at base
+    `<polygon points="10,52 14,44 20,52" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.8"/>` +
+    // moss patch
+    `<ellipse cx="28" cy="48" rx="6" ry="2" fill="${P.grassMid}" opacity="0.45"/>`
+  );
+}
+
+// 64×64 — low flat stone slab (blocky) — for broad stone
+// formations / altars, reads distinct from rock + rockSpiky
+export function rockFlat() {
+  return svg(64, 64,
+    `<ellipse cx="32" cy="52" rx="26" ry="3" fill="${P.black}" opacity="0.4"/>` +
+    // top rectangular slab
+    `<path d="M6 40 L58 38 L62 48 L56 54 L8 56 L4 48 Z" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1.3"/>` +
+    // top face highlight
+    `<path d="M8 40 L56 38 L58 44 L10 45 Z" fill="${P.stoneLight}" opacity="0.7"/>` +
+    // small boulder on top
+    `<ellipse cx="38" cy="32" rx="8" ry="6" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1"/>` +
+    `<ellipse cx="36" cy="30" rx="4" ry="2.5" fill="${P.stoneLight}" opacity="0.75"/>` +
+    // cracks
+    `<line x1="18" y1="44" x2="26" y2="50" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+    `<line x1="40" y1="42" x2="52" y2="48" stroke="${P.stoneDark}" stroke-width="0.6"/>`
+  );
+}
+
 export function house() {
   return svg(128, 128,
     `<ellipse cx="64" cy="118" rx="40" ry="5" fill="${P.black}" opacity="0.35"/>` +
@@ -348,6 +384,62 @@ export function house() {
     `<rect x="86" y="64" width="14" height="14" fill="${P.robeBlueHi}" stroke="${P.leatherLo}" stroke-width="1"/>` +
     `<line x1="93" y1="64" x2="93" y2="78" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
     `<line x1="86" y1="71" x2="100" y2="71" stroke="${P.leatherLo}" stroke-width="0.8"/>`
+  );
+}
+
+// 128×64 — long fence segment (2× width). Use as a longer wall
+// piece or stitched to make bigger village perimeters.
+export function fenceLong() {
+  const post = (x) => `<polygon points="${x-4},26 ${x+4},26 ${x+4},56 ${x},60 ${x-4},56" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<polygon points="${x-4},26 ${x},20 ${x+4},26" fill="${P.leatherHi}" stroke="${P.leatherLo}" stroke-width="0.6"/>`;
+  return svg(128, 64,
+    `<rect x="2" y="58" width="124" height="3" fill="${P.black}" opacity="0.35"/>` +
+    // back rail
+    `<rect x="0" y="32" width="128" height="5" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<rect x="0" y="32" width="128" height="1.5" fill="${P.leatherHi}" opacity="0.6"/>` +
+    // front rail
+    `<rect x="0" y="45" width="128" height="5" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<rect x="0" y="45" width="128" height="1.5" fill="${P.leatherHi}" opacity="0.6"/>` +
+    // 5 posts for longer piece
+    post(10) + post(34) + post(64) + post(94) + post(118) +
+    `<circle cx="22" cy="60" r="1.2" fill="${P.grassDark}"/>` +
+    `<circle cx="76" cy="60" r="1.2" fill="${P.grassDark}"/>` +
+    `<circle cx="108" cy="60" r="1.2" fill="${P.grassDark}"/>`
+  );
+}
+
+// 128×128 — thatch-roof round hut (village variant of house).
+// Gives village clusters visual variety when placed next to
+// tile-roofed `house`.
+export function houseThatch() {
+  return svg(128, 128,
+    `<ellipse cx="64" cy="118" rx="42" ry="5" fill="${P.black}" opacity="0.35"/>` +
+    // round cob wall
+    `<ellipse cx="64" cy="86" rx="40" ry="30" fill="${P.parch}" stroke="${P.leatherLo}" stroke-width="1.5"/>` +
+    `<ellipse cx="64" cy="86" rx="36" ry="26" fill="${P.parchHi}" opacity="0.5"/>` +
+    // mud/straw speckles on wall
+    `<circle cx="40" cy="92" r="1.2" fill="${P.leather}" opacity="0.6"/>` +
+    `<circle cx="88" cy="100" r="1.2" fill="${P.leather}" opacity="0.6"/>` +
+    `<circle cx="54" cy="108" r="1" fill="${P.leather}" opacity="0.6"/>` +
+    // conical thatch roof
+    `<path d="M20 56 Q64 -2 108 56 Q64 72 20 56 Z" fill="#a87236" stroke="#5a3a14" stroke-width="1.5"/>` +
+    // thatch lines
+    `<line x1="64" y1="6" x2="30" y2="56" stroke="#5a3a14" stroke-width="0.7" opacity="0.7"/>` +
+    `<line x1="64" y1="6" x2="64" y2="56" stroke="#5a3a14" stroke-width="0.7" opacity="0.7"/>` +
+    `<line x1="64" y1="6" x2="98" y2="56" stroke="#5a3a14" stroke-width="0.7" opacity="0.7"/>` +
+    `<line x1="48" y1="20" x2="36" y2="56" stroke="#5a3a14" stroke-width="0.5" opacity="0.6"/>` +
+    `<line x1="80" y1="20" x2="92" y2="56" stroke="#5a3a14" stroke-width="0.5" opacity="0.6"/>` +
+    // thatch topknot
+    `<ellipse cx="64" cy="6" rx="6" ry="4" fill="#8a5c20" stroke="#3a2408" stroke-width="1"/>` +
+    // door (wooden plank)
+    `<rect x="56" y="78" width="16" height="32" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="1.2"/>` +
+    `<line x1="60" y1="78" x2="60" y2="110" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+    `<line x1="68" y1="78" x2="68" y2="110" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+    `<circle cx="68" cy="94" r="1.4" fill="${P.gold}"/>` +
+    // small round window above door
+    `<circle cx="64" cy="68" r="5" fill="${P.robeBlueHi}" stroke="${P.leatherLo}" stroke-width="1"/>` +
+    `<line x1="59" y1="68" x2="69" y2="68" stroke="${P.leatherLo}" stroke-width="0.6"/>` +
+    `<line x1="64" y1="63" x2="64" y2="73" stroke="${P.leatherLo}" stroke-width="0.6"/>`
   );
 }
 
@@ -386,6 +478,52 @@ export function fenceCluster() {
     // small grass tufts at base
     `<circle cx="18" cy="60" r="1.2" fill="${P.grassDark}"/>` +
     `<circle cx="44" cy="60" r="1.2" fill="${P.grassDark}"/>`
+  );
+}
+
+// 64×64 — pine-style (conical) dense cluster, tall + slim for
+// visual variety inside a forest block.
+export function treeDensePine() {
+  const pine = (cx, cy, h, dark, mid) => {
+    const layers = [];
+    const steps = 4;
+    for (let i = 0; i < steps; i++) {
+      const y = cy - h/2 + (i / steps) * h * 0.7;
+      const w = h * 0.4 * (1 - i / steps * 0.4);
+      layers.push(`<polygon points="${cx},${y - 4} ${cx - w},${y + h/steps * 0.7} ${cx + w},${y + h/steps * 0.7}" fill="${dark}" stroke="${P.black}" stroke-width="0.7"/>`);
+      layers.push(`<polygon points="${cx - w*0.25},${y - 2} ${cx + w*0.2},${y + h/steps * 0.2} ${cx + w*0.05},${y + h/steps * 0.5}" fill="${mid}" opacity="0.7"/>`);
+    }
+    return `<rect x="${cx-1.5}" y="${cy + h/2 - 3}" width="3" height="8" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.4"/>` + layers.join('');
+  };
+  return svg(64, 64,
+    `<ellipse cx="32" cy="60" rx="24" ry="3" fill="${P.black}" opacity="0.4"/>` +
+    pine(14, 32, 36, '#1a3a0a', '#2e5a18') +
+    pine(44, 24, 42, '#1c4210', '#36641e') +
+    pine(28, 44, 30, '#1a3a0a', '#2e5a18') +
+    pine(50, 46, 28, '#1c4210', '#36641e')
+  );
+}
+
+// 64×64 — autumn / yellow-tint variant of treeDense for mixed
+// forests. Same silhouette but warmer palette.
+export function treeDenseAutumn() {
+  const tree = (cx, cy, r) => {
+    return `<rect x="${cx-2}" y="${cy + r - 4}" width="4" height="10" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 0.9}" fill="#a86028" stroke="${P.black}" stroke-width="0.8"/>` +
+      `<ellipse cx="${cx - r * 0.35}" cy="${cy - r * 0.35}" rx="${r * 0.55}" ry="${r * 0.45}" fill="#d48a28" opacity="0.8"/>` +
+      `<ellipse cx="${cx + r * 0.3}" cy="${cy + r * 0.15}" rx="${r * 0.35}" ry="${r * 0.28}" fill="#f4d42a" opacity="0.5"/>`;
+  };
+  return svg(64, 64,
+    `<ellipse cx="32" cy="60" rx="26" ry="3" fill="${P.black}" opacity="0.4"/>` +
+    tree(16, 22, 12) +
+    tree(46, 20, 13) +
+    tree(24, 38, 14) +
+    tree(46, 40, 13) +
+    `<ellipse cx="32" cy="52" rx="20" ry="5" fill="#6a3a14" opacity="0.3"/>` +
+    // fallen leaves
+    `<circle cx="12" cy="54" r="1.2" fill="#d48a28" opacity="0.7"/>` +
+    `<circle cx="54" cy="52" r="1.2" fill="#f4d42a" opacity="0.7"/>` +
+    `<circle cx="36" cy="56" r="1.2" fill="#a86028" opacity="0.7"/>`
   );
 }
 
