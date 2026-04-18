@@ -3073,7 +3073,8 @@ function doLogin() {
         x: e.x, y: e.y, hp: e.hp, maxHp: e.maxHp, radius: e.radius,
         type: 'enemy', enemyType: e.type, color: e.color,
         hostile: e.hostile, alive: e.alive,
-        isBoss: e.type === 'boss', miniBoss: e.type === 'miniBoss'
+        isBoss: e.type === 'boss', miniBoss: e.type === 'miniBoss',
+        bossTypeId: e.bossTypeId, bossTypeName: e.bossTypeName
       };
     });
 
@@ -4447,7 +4448,8 @@ function doLogin() {
     tilesetImg: null, tilesetReady: false, tilesetMeta: null, tileIndex: {},
     monsterImg: null, monsterReady: false, monsterMeta: null,
     decorImgs: {}, decorMeta: null,
-    ui9: {}, ui9Meta: null, ui9Ready: false
+    ui9: {}, ui9Meta: null, ui9Ready: false,
+    bossImgs: {}, bossMetas: {} // keyed by bossId: { img, ready, meta }
   };
   (function preloadHomm3Art() {
     function loadJSON(path, cb) {
@@ -4497,6 +4499,14 @@ function doLogin() {
       HOMM3_ART.ui9[k] = im;
     });
     loadJSON(HOMM3_ART_BASE + 'ui9/meta.json', function(j) { HOMM3_ART.ui9Meta = j; });
+    // Boss species sprites — keyed by BOSS_TYPES.id
+    var _bossIds = ['stone_giant', 'shadow_mage', 'berserker', 'frost_dragon', 'rot_troll'];
+    _bossIds.forEach(function(bid) {
+      HOMM3_ART.bossImgs[bid] = { img: new Image(), ready: false };
+      HOMM3_ART.bossImgs[bid].img.onload = (function(id){ return function(){ HOMM3_ART.bossImgs[id].ready = true; }; })(bid);
+      HOMM3_ART.bossImgs[bid].img.src = HOMM3_ART_BASE + 'boss_' + bid + '.png';
+      loadJSON(HOMM3_ART_BASE + 'boss_' + bid + '.json', (function(id){ return function(j){ HOMM3_ART.bossMetas[id] = j; }; })(bid));
+    });
   })();
 
   // Per-tile biome grid — built once from a seed so variants/seams are stable
@@ -5004,7 +5014,32 @@ function doLogin() {
   }
 
   // === ENEMY SPRITES — Canvas-drawn creatures per enemy type ===
-  function drawEnemySprite(ctx, x, y, r, type, themeColor, gt) {
+  function drawEnemySprite(ctx, x, y, r, type, themeColor, gt, srcEntity) {
+    // Boss species — dedicated sprite sheet per BOSS_TYPES.id with walk/attack/death.
+    if (srcEntity && srcEntity.bossTypeId) {
+      var bEntry = HOMM3_ART.bossImgs[srcEntity.bossTypeId];
+      var bMeta = HOMM3_ART.bossMetas[srcEntity.bossTypeId];
+      if (bEntry && bEntry.ready && bMeta) {
+        var bfw = bMeta.frameW, bfh = bMeta.frameH;
+        var bAng = (typeof player !== 'undefined' && player) ? Math.atan2(player.y - y, player.x - x) : Math.PI / 2;
+        var bDir = charDirOffset(bAng);
+        var bAnim = bMeta.anims.walk;
+        var bFrames = bAnim.frames, bFps = bAnim.fps;
+        var bIdx = Math.floor((gt || 0) * bFps) % bFrames;
+        var bsx = bIdx * bfw, bsy = bDir * bfh;
+        // Scale 128px boss sprite to ~4× radius for presence (boss r=60ish → ~240px tall)
+        var bdh = r * 4.0, bdw = bdh;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(bEntry.img, bsx, bsy, bfw, bfh, x - bdw / 2, y - bdh * 0.72, bdw, bdh);
+        if (themeColor === '#fff') { // hit flash
+          ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff';
+          ctx.fillRect(x - bdw / 2, y - bdh * 0.72, bdw, bdh);
+        }
+        ctx.restore();
+        return;
+      }
+    }
     // homm3_bright: render as orc sprite sheet. Facing derived from angle-to-player
     // since AI chases; idle enemies default to facing down.
     if (HOMM3_ART.monsterReady && HOMM3_ART.monsterMeta) {
@@ -7390,7 +7425,7 @@ function doLogin() {
           ctx.restore(); ctx.globalAlpha = spawnAlpha;
         }
         // Body — enemySprite: render enemies as Canvas-drawn sprites
-        drawEnemySprite(ctx, e.x, e.y, e.radius, e.enemyType || 'normal', strongHitFlash ? '#fff' : themeColor, gameTime);
+        drawEnemySprite(ctx, e.x, e.y, e.radius, e.enemyType || 'normal', strongHitFlash ? '#fff' : themeColor, gameTime, e);
         // HP bar
         if (e.hp < e.maxHp) {
           var hpBarColor = isHostile ? '#f44' : '#4f4';
