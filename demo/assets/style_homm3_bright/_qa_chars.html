@@ -1,0 +1,49 @@
+<!doctype html><html><head><style>
+body{margin:0;background:#181c22;color:#eee;font-family:sans-serif;padding:16px}
+h2{color:#ffd87a;margin:20px 0 8px;font-size:14px}
+.row{display:flex;gap:16px;align-items:flex-start}
+.col h3{margin:0 0 6px;font-size:12px;color:#ccc}
+.sheet{background:url(tileset.png) 0 0/auto;image-rendering:pixelated;border:1px solid #333}
+.label{font-size:10px;color:#888;margin:4px 0 2px;font-family:monospace}
+</style></head><body>
+<h2>Three classes — side-by-side sprite sheets</h2>
+<p style="font-size:12px;color:#aaa;margin:0 0 16px">Each sheet: 4 rows × 4 cols walk (U/L/D/R × 4 frames) + row 4 attack (3 frames) + row 5 death (3 frames).</p>
+<div class="row">
+  <div class="col">
+    <h3>WARRIOR (hammer + shield, wide silhouette)</h3>
+    <img class="sheet" src="player_warrior.png" style="background-color:#2a5a22">
+    <div class="label">player_warrior.png · 256×384</div>
+  </div>
+  <div class="col">
+    <h3>MAGE (blue robe + staff, pointed hat)</h3>
+    <img class="sheet" src="player_mage.png" style="background-color:#2a5a22">
+    <div class="label">player_mage.png · 256×384</div>
+  </div>
+  <div class="col">
+    <h3>SCOUT (green hood + short bow, slim)</h3>
+    <img class="sheet" src="player_scout.png" style="background-color:#2a5a22">
+    <div class="label">player_scout.png · 256×384</div>
+  </div>
+</div>
+<h2>Silhouette test (row 0 col 0 — up walk frame 0, zoomed 3x)</h2>
+<div class="row" style="background:#2a5a22;padding:12px">
+  <div><canvas id="w" width="192" height="192" style="image-rendering:pixelated"></canvas><div class="label">warrior</div></div>
+  <div><canvas id="m" width="192" height="192" style="image-rendering:pixelated"></canvas><div class="label">mage</div></div>
+  <div><canvas id="s" width="192" height="192" style="image-rendering:pixelated"></canvas><div class="label">scout</div></div>
+</div>
+<script>
+async function zoom(src, cvs){
+  const img=new Image(); img.src=src;
+  await new Promise(r=>img.onload=r);
+  const c=document.getElementById(cvs); const ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(img, 0, 2*64, 64, 64, 0, 0, 192, 192);  // row 2 = down dir, frame 0
+}
+(async()=>{
+  await zoom('player_warrior.png','w');
+  await zoom('player_mage.png','m');
+  await zoom('player_scout.png','s');
+  window.__ready=true;
+})();
+</script>
+</body></html>
