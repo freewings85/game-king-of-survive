@@ -4647,6 +4647,18 @@ function doLogin() {
     });
   })();
 
+  // Archetype head icons (ArtDesigner 2026-04-19). 24×24 PNG shown above
+  // each bot nameplate so archetype is recognisable at a glance.
+  var ARCHETYPE_ICONS = {}; // keyed by id: { img, ready }
+  (function preloadArchetypeIcons() {
+    ['assassin', 'bruiser', 'glasscannon', 'tank', 'speedster', 'sharpshooter', 'duelist'].forEach(function(id) {
+      var e = { img: new Image(), ready: false };
+      e.img.onload = function() { e.ready = true; };
+      e.img.src = 'assets/archetype/' + id + '.png';
+      ARCHETYPE_ICONS[id] = e;
+    });
+  })();
+
   // Strategic points (Experiment C, 2026-04-19). Each point has a
   // capture zone (radius 60). Standing in the zone alone progresses the
   // capture bar (0 → 100 in 10s). Once captured, grants a 30s buff.
@@ -8382,11 +8394,26 @@ function doLogin() {
       ctx.fillStyle = isEnemy ? '#f88' : '#fff';
       ctx.fillText(_bpLabel, bp.x, bp.y - bp.radius - 24);
       if (bp.archetypeName) {
+        var _archIcon = bp.archetype && ARCHETYPE_ICONS[bp.archetype];
         ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+        var _archText = '[' + bp.archetypeName + ']';
+        var _archTextW = ctx.measureText(_archText).width;
+        var _archIconSize = 18;
+        var _archTotalW = (_archIcon && _archIcon.ready ? _archIconSize + 3 : 0) + _archTextW;
+        var _archStartX = bp.x - _archTotalW / 2;
+        var _archY = bp.y - bp.radius - 12;
+        // Icon first (if loaded)
+        if (_archIcon && _archIcon.ready) {
+          ctx.drawImage(_archIcon.img, _archStartX, _archY - _archIconSize / 2 - 3, _archIconSize, _archIconSize);
+          _archStartX += _archIconSize + 3;
+        }
+        // Text aligned to remaining width
+        ctx.textAlign = 'left';
         ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 2.5;
-        ctx.strokeText('[' + bp.archetypeName + ']', bp.x, bp.y - bp.radius - 12);
+        ctx.strokeText(_archText, _archStartX, _archY);
         ctx.fillStyle = bp.archetypeColor || '#ffd700';
-        ctx.fillText('[' + bp.archetypeName + ']', bp.x, bp.y - bp.radius - 12);
+        ctx.fillText(_archText, _archStartX, _archY);
+        ctx.textAlign = 'center';
       }
       // HP bar
       var botBarW = 34;
