@@ -645,6 +645,112 @@ export function treeRow() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// ARCHETYPE ICONS (experiment A UX patch) — 24×24 small icons
+// to float above a bot's head so class reads at a glance.
+// Each icon: colored circular backing + mono silhouette. Match
+// color conventions to bot tint (Developer's archetype palette).
+// ─────────────────────────────────────────────────────────────
+function archetypeBacking(bg, stroke = null) {
+  return `<circle cx="12" cy="12" r="11" fill="${bg}" stroke="${stroke || P.black}" stroke-width="1.2"/>` +
+    `<circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="0.6" opacity="0.35"/>`;
+}
+
+// assassin — dagger + hood silhouette, purple
+export function archetypeAssassin() {
+  return svg(24, 24,
+    archetypeBacking('#6a2e9a') +
+    // dagger
+    `<polygon points="12,4 10,16 14,16" fill="#d0d4dc" stroke="#1a1a22" stroke-width="0.7"/>` +
+    `<rect x="11" y="15" width="2" height="3" fill="#2a1a08" stroke="#0a0402" stroke-width="0.4"/>` +
+    `<rect x="10" y="17" width="4" height="1.5" fill="#c8a868"/>` +
+    // hood curl
+    `<path d="M6 10 Q12 6 18 10" stroke="#c490e8" stroke-width="0.8" fill="none" opacity="0.75"/>`
+  );
+}
+
+// bruiser — fist / spiked knuckles, orange-brown
+export function archetypeBruiser() {
+  return svg(24, 24,
+    archetypeBacking('#c87030') +
+    // clenched fist silhouette
+    `<path d="M7 10 Q12 7 17 10 L18 16 Q12 18 6 16 Z" fill="#3a1e0a" stroke="#1a0a04" stroke-width="0.7"/>` +
+    // spikes on knuckles
+    `<polygon points="8,9 8,6 9,9" fill="#f0ecdc" stroke="#1a0a04" stroke-width="0.3"/>` +
+    `<polygon points="11,8 11,5 12,8" fill="#f0ecdc" stroke="#1a0a04" stroke-width="0.3"/>` +
+    `<polygon points="14,8 14,5 15,8" fill="#f0ecdc" stroke="#1a0a04" stroke-width="0.3"/>`
+  );
+}
+
+// glasscannon — cannon / crosshair, red
+export function archetypeGlasscannon() {
+  return svg(24, 24,
+    archetypeBacking('#c42020') +
+    // crosshair
+    `<circle cx="12" cy="12" r="6" fill="none" stroke="#fff6a8" stroke-width="1.2"/>` +
+    `<line x1="12" y1="3" x2="12" y2="7" stroke="#fff6a8" stroke-width="1.2"/>` +
+    `<line x1="12" y1="17" x2="12" y2="21" stroke="#fff6a8" stroke-width="1.2"/>` +
+    `<line x1="3" y1="12" x2="7" y2="12" stroke="#fff6a8" stroke-width="1.2"/>` +
+    `<line x1="17" y1="12" x2="21" y2="12" stroke="#fff6a8" stroke-width="1.2"/>` +
+    `<circle cx="12" cy="12" r="1.2" fill="#fff6a8"/>`
+  );
+}
+
+// tank — shield, steel blue
+export function archetypeTank() {
+  return svg(24, 24,
+    archetypeBacking('#4a6a8a') +
+    // shield silhouette
+    `<path d="M12 5 L18 7 L18 13 Q18 17 12 19 Q6 17 6 13 L6 7 Z" fill="#c0c8d4" stroke="#1a2028" stroke-width="0.9"/>` +
+    // emblem cross
+    `<line x1="12" y1="7" x2="12" y2="17" stroke="#c41a1a" stroke-width="1.4"/>` +
+    `<line x1="8" y1="12" x2="16" y2="12" stroke="#c41a1a" stroke-width="1.4"/>`
+  );
+}
+
+// speedster — lightning bolt, cyan
+export function archetypeSpeedster() {
+  return svg(24, 24,
+    archetypeBacking('#2a9aca') +
+    // zigzag bolt
+    `<polygon points="14,4 7,13 11,13 9,20 17,10 12,10" fill="#fff6a8" stroke="#1a3a4a" stroke-width="0.9" stroke-linejoin="round"/>`
+  );
+}
+
+// sharpshooter — bow + arrow, green
+export function archetypeSharpshooter() {
+  return svg(24, 24,
+    archetypeBacking('#3a8a28') +
+    // bow
+    `<path d="M7 6 Q4 12 7 18" stroke="#6a3a14" stroke-width="1.6" fill="none" stroke-linecap="round"/>` +
+    // string
+    `<line x1="7" y1="6" x2="7" y2="18" stroke="#f0ecdc" stroke-width="0.6"/>` +
+    // arrow
+    `<line x1="7" y1="12" x2="20" y2="12" stroke="#c0c0c0" stroke-width="1.2"/>` +
+    `<polygon points="20,12 17,10 17,14" fill="#c0c0c0" stroke="#1a2028" stroke-width="0.3"/>` +
+    `<polygon points="8,12 10,10 10,14" fill="#c41a1a"/>`
+  );
+}
+
+// duelist — crossed swords, gold
+export function archetypeDuelist() {
+  return svg(24, 24,
+    archetypeBacking('#c89a28') +
+    // two crossed swords
+    `<g transform="rotate(-40 12 12)">` +
+      `<rect x="11" y="3" width="2" height="14" fill="#e0e4ec" stroke="#1a1a22" stroke-width="0.5"/>` +
+      `<rect x="10" y="16" width="4" height="2" fill="#3a2a0e"/>` +
+      `<rect x="9" y="18" width="6" height="1" fill="#c89a28"/>` +
+    `</g>` +
+    `<g transform="rotate(40 12 12)">` +
+      `<rect x="11" y="3" width="2" height="14" fill="#e0e4ec" stroke="#1a1a22" stroke-width="0.5"/>` +
+      `<rect x="10" y="16" width="4" height="2" fill="#3a2a0e"/>` +
+      `<rect x="9" y="18" width="6" height="1" fill="#c89a28"/>` +
+    `</g>` +
+    `<circle cx="12" cy="12" r="1.4" fill="#c41a1a"/>`
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // STRATEGIC POINTS (experiment C) — 64×128 standing sprites.
 // Each has a bottom anchor and a captureGlow zone near the base
 // (Developer tints this circle by owning-team color). Top half is

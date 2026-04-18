@@ -1,0 +1,56 @@
+<!doctype html><html><head><style>
+body{margin:0;background:#181c22;color:#eee;font-family:sans-serif;padding:16px}
+h2{color:#ffd87a;margin:18px 0 8px;font-size:14px}
+.row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.cell{background:#4a8a22;border:1px solid #333;padding:6px;text-align:center;border-radius:4px}
+.lbl{font-size:9px;color:#ddd;margin-top:4px;font-family:monospace;line-height:1.3}
+.bot{display:inline-block;vertical-align:top;margin:10px 4px;width:72px;text-align:center}
+.icon img{width:24px;height:24px;margin:0 auto;display:block}
+.name{font-size:10px;font-weight:bold;margin-top:2px;text-shadow:0 0 2px #000;font-family:monospace}
+.bot-body{width:28px;height:28px;border-radius:50%;background:#8a5a20;border:2px solid #1a1a22;margin:2px auto 0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px}
+.board{background:linear-gradient(#4a8a22,#3a6e18);padding:10px;border-radius:6px}
+</style></head><body>
+
+<h2>Archetype icons — native 24×24</h2>
+<div class="row"><div class="cell"><img src="assassin.png"><div class="lbl">assassin<br>刺客</div></div><div class="cell"><img src="bruiser.png"><div class="lbl">bruiser<br>重装</div></div><div class="cell"><img src="glasscannon.png"><div class="lbl">glasscannon<br>炮手</div></div><div class="cell"><img src="tank.png"><div class="lbl">tank<br>坦克</div></div><div class="cell"><img src="speedster.png"><div class="lbl">speedster<br>疾风</div></div><div class="cell"><img src="sharpshooter.png"><div class="lbl">sharpshooter<br>神射</div></div><div class="cell"><img src="duelist.png"><div class="lbl">duelist<br>决斗者</div></div></div>
+
+<h2>Zoomed 3× (readability at far camera distance)</h2>
+<div class="row"><div class="cell"><img src="assassin.png" style="width:72px;height:72px"><div class="lbl">刺客 ×3</div></div><div class="cell"><img src="bruiser.png" style="width:72px;height:72px"><div class="lbl">重装 ×3</div></div><div class="cell"><img src="glasscannon.png" style="width:72px;height:72px"><div class="lbl">炮手 ×3</div></div><div class="cell"><img src="tank.png" style="width:72px;height:72px"><div class="lbl">坦克 ×3</div></div><div class="cell"><img src="speedster.png" style="width:72px;height:72px"><div class="lbl">疾风 ×3</div></div><div class="cell"><img src="sharpshooter.png" style="width:72px;height:72px"><div class="lbl">神射 ×3</div></div><div class="cell"><img src="duelist.png" style="width:72px;height:72px"><div class="lbl">决斗者 ×3</div></div></div>
+
+<h2>Mock head-HUD — icon + Chinese label above bot sprite</h2>
+<div class="board"><div class="bot">
+    <div class="icon"><img src="assassin.png"></div>
+    <div class="name" style="color:#6a2e9a">[刺客]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="bruiser.png"></div>
+    <div class="name" style="color:#c87030">[重装]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="glasscannon.png"></div>
+    <div class="name" style="color:#c42020">[炮手]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="tank.png"></div>
+    <div class="name" style="color:#4a6a8a">[坦克]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="speedster.png"></div>
+    <div class="name" style="color:#2a9aca">[疾风]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="sharpshooter.png"></div>
+    <div class="name" style="color:#3a8a28">[神射]</div>
+    <div class="bot-body">bot</div>
+  </div><div class="bot">
+    <div class="icon"><img src="duelist.png"></div>
+    <div class="name" style="color:#c89a28">[决斗者]</div>
+    <div class="bot-body">bot</div>
+  </div></div>
+
+<h2>Usage hint</h2>
+<p style="color:#aaa;font-size:12px;max-width:800px;line-height:1.5">
+Float 24×24 icon at bot.center.y − 36px (above nameplate). Either replace the current "[刺客]" text label, OR stack icon above and keep label below for extra emphasis. Icon backing color matches the bot's archetype tint so players can still spot it peripherally.
+</p>
+
+</body></html>

@@ -1,0 +1,52 @@
+{
+  "style": "homm3_bright",
+  "size": {
+    "w": 24,
+    "h": 24
+  },
+  "usage": "Float above bot head (offset y=-36px from bot center). Draw at native 24px on mobile, or scale 1.5x (36px) on tablet. Replaces or complements \"[刺客]\" text label.",
+  "archetypes": [
+    {
+      "id": "assassin",
+      "label": "刺客",
+      "color": "#6a2e9a",
+      "file": "assassin.png"
+    },
+    {
+      "id": "bruiser",
+      "label": "重装",
+      "color": "#c87030",
+      "file": "bruiser.png"
+    },
+    {
+      "id": "glasscannon",
+      "label": "炮手",
+      "color": "#c42020",
+      "file": "glasscannon.png"
+    },
+    {
+      "id": "tank",
+      "label": "坦克",
+      "color": "#4a6a8a",
+      "file": "tank.png"
+    },
+    {
+      "id": "speedster",
+      "label": "疾风",
+      "color": "#2a9aca",
+      "file": "speedster.png"
+    },
+    {
+      "id": "sharpshooter",
+      "label": "神射",
+      "color": "#3a8a28",
+      "file": "sharpshooter.png"
+    },
+    {
+      "id": "duelist",
+      "label": "决斗者",
+      "color": "#c89a28",
+      "file": "duelist.png"
+    }
+  ]
+}
