@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="iwPaper" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#f4ecd8"/>
+      <stop offset="100%" stop-color="#d8c8a4"/>
+    </radialGradient>
+    <filter id="iwRough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+      <feColorMatrix values="0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0.5 0"/>
+      <feComposite in2="SourceGraphic" operator="in"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" fill="url(#iwPaper)"/>
+  <!-- paper texture -->
+  <g opacity="0.12">
+    <rect width="256" height="256" filter="url(#iwRough)"/>
+  </g>
+  <!-- ink grass wash (top band) -->
+  <path d="M0 0 Q30 40 60 20 Q90 45 130 25 Q170 50 200 20 Q230 45 256 10 L256 0 Z" fill="#2a2a2a" opacity="0.55"/>
+  <!-- ink grass strokes -->
+  <g stroke="#1a1a1a" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M30 35 L28 20"/><path d="M40 40 L42 22"/><path d="M60 38 L58 20"/>
+    <path d="M100 40 L102 22"/><path d="M120 45 L118 25"/><path d="M150 42 L148 22"/>
+    <path d="M180 44 L182 22"/><path d="M210 42 L208 22"/><path d="M230 40 L232 20"/>
+  </g>
+  <!-- wet stone (center, wash) -->
+  <g opacity="0.75">
+    <ellipse cx="100" cy="120" rx="38" ry="22" fill="#6a6a6a"/>
+    <ellipse cx="100" cy="120" rx="30" ry="14" fill="#3a3a3a"/>
+    <ellipse cx="95" cy="115" rx="10" ry="5" fill="#1a1a1a"/>
+  </g>
+  <!-- distant rock (hard ink edge) -->
+  <path d="M160 155 Q180 120 210 140 Q230 125 244 160 Q220 175 190 170 Q170 180 160 155 Z" fill="#1a1a1a" opacity="0.85"/>
+  <path d="M170 152 Q180 132 200 142" stroke="#f4ecd8" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <!-- dirt path dry-brush -->
+  <path d="M0 190 Q80 200 150 185 Q210 195 256 180" stroke="#6a4a2a" stroke-width="18" fill="none" opacity="0.35" stroke-linecap="round"/>
+  <path d="M0 190 Q80 200 150 185 Q210 195 256 180" stroke="#3a2a14" stroke-width="2" fill="none" opacity="0.6" stroke-dasharray="3 4"/>
+  <!-- bamboo shoots ink strokes -->
+  <g stroke="#1a3a18" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M40 230 L44 160"/>
+    <path d="M52 230 L50 170"/>
+  </g>
+  <g fill="#1a3a18">
+    <path d="M38 200 Q28 195 32 205 Z"/>
+    <path d="M48 180 Q58 175 54 185 Z"/>
+  </g>
+  <!-- red seal (sihō-in) -->
+  <g transform="translate(215,215)">
+    <rect x="-10" y="-10" width="20" height="20" fill="#c41a1a" stroke="#8a0a0a" stroke-width="1"/>
+    <text x="0" y="4" text-anchor="middle" font-family="serif" font-size="12" fill="#f4ecd8" font-weight="bold">墨</text>
+  </g>
+  <text x="128" y="250" text-anchor="middle" font-family="serif" font-size="10" fill="#3a2a14">ink_wash · terrain</text>
+</svg>

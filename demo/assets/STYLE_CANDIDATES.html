@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>Art Style Candidates · king-of-survive</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font-family: system-ui, sans-serif; }
+  header { padding:16px 24px; border-bottom:1px solid #333; position:sticky; top:0; background:#111; z-index:10; }
+  h1 { margin:0; font-size:18px; }
+  .hint { color:#888; font-size:13px; margin-top:4px; }
+  .pack { padding:20px 24px; border-bottom:1px solid #222; }
+  .pack h2 { margin:0 0 4px; font-size:16px; color:#ffd87a; }
+  .pack p { margin:0 0 12px; color:#aaa; font-size:13px; }
+  .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; }
+  .cell { background:#000; border:1px solid #333; border-radius:6px; overflow:hidden; display:flex; flex-direction:column; }
+  .cell img { width:100%; height:auto; display:block; background:#222; }
+  .cell .cap { padding:6px 8px; font-size:12px; color:#bbb; }
+  .vote { margin-top:10px; font-size:13px; color:#ffa84a; }
+  @media (max-width: 780px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎨 Art Style Candidates</h1>
+  <div class="hint">选 1 个作为正式方向。每包 4 张：地表 · 角色 · 怪物 · UI 边框。浏览器直接打开本文件即可对比。</div>
+</header>
+
+<section class="pack" id="painted_dark">
+  <h2>Pack 1 · painted_dark（暗黑破坏神风）</h2>
+  <p>深棕 + 暗红 + 骨白；强阴影；粗轮廓。适合末世/地牢氛围。</p>
+  <div class="grid">
+    <div class="cell"><img src="style_painted_dark/terrain.svg"><div class="cap">terrain</div></div>
+    <div class="cell"><img src="style_painted_dark/character_barbarian.svg"><div class="cap">barbarian</div></div>
+    <div class="cell"><img src="style_painted_dark/monster_skeleton.svg"><div class="cap">skeleton</div></div>
+    <div class="cell"><img src="style_painted_dark/ui_frame.svg"><div class="cap">ui_frame</div></div>
+  </div>
+</section>
+
+<section class="pack" id="homm3_bright">
+  <h2>Pack 2 · homm3_bright（英雄无敌3 风）</h2>
+  <p>饱和卡通手绘；鲜绿草地 + 金边羊皮卷轴；暖色氛围。</p>
+  <div class="grid">
+    <div class="cell"><img src="style_homm3_bright/terrain.svg"><div class="cap">terrain</div></div>
+    <div class="cell"><img src="style_homm3_bright/character_mage.svg"><div class="cap">mage</div></div>
+    <div class="cell"><img src="style_homm3_bright/monster_orc.svg"><div class="cap">orc</div></div>
+    <div class="cell"><img src="style_homm3_bright/ui_frame.svg"><div class="cap">ui_frame</div></div>
+  </div>
+</section>
+
+<section class="pack" id="pixel_unified">
+  <h2>Pack 3 · pixel_unified（统一 16-bit 像素）</h2>
+  <p>强制像素一致；itch.io/opengameart 海量 CC0 可直接替换。项目已有 LPC 可复用，工作量最小。</p>
+  <div class="grid">
+    <div class="cell"><img src="style_pixel_unified/terrain.svg"><div class="cap">terrain</div></div>
+    <div class="cell"><img src="style_pixel_unified/character_archer.svg"><div class="cap">archer</div></div>
+    <div class="cell"><img src="style_pixel_unified/monster_goblin.svg"><div class="cap">goblin</div></div>
+    <div class="cell"><img src="style_pixel_unified/ui_frame.svg"><div class="cap">ui_frame</div></div>
+  </div>
+</section>
+
+<section class="pack" id="ink_wash">
+  <h2>Pack 4 · ink_wash（水墨 / 差异化选项）</h2>
+  <p>米白宣纸 + 墨色 + 朱红印章；辨识度极强。受众窄，对比度需谨慎。</p>
+  <div class="grid">
+    <div class="cell"><img src="style_ink_wash/terrain.svg"><div class="cap">terrain</div></div>
+    <div class="cell"><img src="style_ink_wash/character_swordsman.svg"><div class="cap">swordsman</div></div>
+    <div class="cell"><img src="style_ink_wash/monster_yokai.svg"><div class="cap">yokai</div></div>
+    <div class="cell"><img src="style_ink_wash/ui_frame.svg"><div class="cap">ui_frame</div></div>
+  </div>
+</section>
+
+<section class="pack">
+  <div class="vote">👉 @Leo 选一个：<code>painted_dark</code> / <code>homm3_bright</code> / <code>pixel_unified</code> / <code>ink_wash</code>。选中后我会把对应 SVG 替换成高分辨率 PNG/tileset 并交给 Developer 接入。</div>
+</section>
+</body>
+</html>

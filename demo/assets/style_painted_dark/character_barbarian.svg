@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="pdBg" cx="50%" cy="60%" r="70%">
+      <stop offset="0%" stop-color="#3a2a1e"/>
+      <stop offset="100%" stop-color="#0c0704"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#pdBg)"/>
+  <!-- ground shadow -->
+  <ellipse cx="128" cy="210" rx="52" ry="10" fill="#000" opacity="0.6"/>
+
+  <!-- BARBARIAN (top-down silhouette, wide shoulders) -->
+  <!-- cloak back -->
+  <path d="M80 130 Q128 200 176 130 Q168 180 128 190 Q88 180 80 130 Z" fill="#4a1a14" stroke="#1a0604" stroke-width="2"/>
+  <!-- shoulder pauldrons (big, diablo-ish) -->
+  <ellipse cx="78" cy="118" rx="26" ry="20" fill="#55443a" stroke="#1a0604" stroke-width="2"/>
+  <ellipse cx="178" cy="118" rx="26" ry="20" fill="#55443a" stroke="#1a0604" stroke-width="2"/>
+  <!-- spike studs on pauldrons -->
+  <polygon points="65,100 70,92 75,100" fill="#c8b08a" stroke="#1a0604" stroke-width="1"/>
+  <polygon points="85,100 90,92 95,100" fill="#c8b08a" stroke="#1a0604" stroke-width="1"/>
+  <polygon points="165,100 170,92 175,100" fill="#c8b08a" stroke="#1a0604" stroke-width="1"/>
+  <polygon points="185,100 190,92 195,100" fill="#c8b08a" stroke="#1a0604" stroke-width="1"/>
+  <!-- torso leather -->
+  <path d="M98 110 Q128 100 158 110 L162 160 Q128 168 94 160 Z" fill="#3a2a1e" stroke="#1a0604" stroke-width="2"/>
+  <!-- belt -->
+  <rect x="94" y="150" width="68" height="10" fill="#2a1a10" stroke="#0a0402" stroke-width="1"/>
+  <rect x="122" y="148" width="12" height="14" fill="#c8b08a" stroke="#1a0604" stroke-width="1"/>
+  <!-- head (bald/helmet) -->
+  <circle cx="128" cy="98" r="20" fill="#b08a6a" stroke="#1a0604" stroke-width="2"/>
+  <!-- war-paint stripe -->
+  <rect x="112" y="92" width="32" height="4" fill="#5c1a14" opacity="0.9"/>
+  <!-- two-handed axe across back -->
+  <rect x="124" y="40" width="8" height="110" fill="#3a2a1e" stroke="#1a0604" stroke-width="1.5"/>
+  <path d="M90 55 L128 40 L128 80 Q105 78 90 70 Z" fill="#8a8678" stroke="#1a0604" stroke-width="2"/>
+  <path d="M166 55 L128 40 L128 80 Q151 78 166 70 Z" fill="#8a8678" stroke="#1a0604" stroke-width="2"/>
+  <!-- blood on axe -->
+  <path d="M95 62 L118 65 L105 72 Z" fill="#5c1a14" opacity="0.8"/>
+
+  <text x="128" y="246" text-anchor="middle" font-family="serif" font-size="10" fill="#8b6a4a">painted_dark · barbarian</text>
+</svg>

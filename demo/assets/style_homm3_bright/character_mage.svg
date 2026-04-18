@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="h3Bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#9cd4f0"/>
+      <stop offset="100%" stop-color="#4a7eaa"/>
+    </radialGradient>
+    <radialGradient id="h3Orb" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#9fd8ff"/>
+      <stop offset="100%" stop-color="#1c5a9a"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#h3Bg)"/>
+  <!-- glowing ground circle -->
+  <ellipse cx="128" cy="210" rx="60" ry="12" fill="#9fd8ff" opacity="0.6"/>
+  <ellipse cx="128" cy="210" rx="40" ry="7" fill="#fff" opacity="0.5"/>
+
+  <!-- MAGE top-down -->
+  <!-- blue robe with gold trim -->
+  <path d="M78 130 Q128 110 178 130 Q172 200 128 210 Q84 200 78 130 Z" fill="#2a4ea8" stroke="#0a1a4a" stroke-width="2"/>
+  <!-- robe folds -->
+  <path d="M98 150 Q128 140 158 150 L155 195 Q128 202 101 195 Z" fill="#3a64c4" opacity="0.8"/>
+  <path d="M118 135 L120 200 M136 135 L136 200" stroke="#0a1a4a" stroke-width="1.2"/>
+  <!-- gold trim -->
+  <path d="M78 130 Q128 110 178 130" stroke="#f4d42a" stroke-width="3" fill="none"/>
+  <path d="M82 140 Q128 122 174 140" stroke="#c88a14" stroke-width="1.5" fill="none"/>
+  <!-- red sash -->
+  <path d="M92 170 Q128 178 164 170 L162 182 Q128 188 94 182 Z" fill="#c42020" stroke="#6a0a0a" stroke-width="1.5"/>
+  <!-- head with long gray beard -->
+  <circle cx="128" cy="100" r="18" fill="#e8c89a" stroke="#2a1a08" stroke-width="2"/>
+  <!-- pointed blue hat -->
+  <path d="M110 92 Q128 40 146 92 Z" fill="#2a4ea8" stroke="#0a1a4a" stroke-width="2"/>
+  <path d="M114 92 Q128 50 142 92" fill="#3a64c4"/>
+  <!-- gold star on hat -->
+  <polygon points="128,60 130,66 136,66 131,70 133,76 128,72 123,76 125,70 120,66 126,66" fill="#f4d42a" stroke="#8a5a0a" stroke-width="1"/>
+  <!-- white beard -->
+  <path d="M115 110 Q128 135 141 110 Q138 128 128 130 Q118 128 115 110 Z" fill="#f0ecdc" stroke="#2a1a08" stroke-width="1.5"/>
+  <!-- eyes -->
+  <circle cx="122" cy="98" r="1.6" fill="#000"/>
+  <circle cx="134" cy="98" r="1.6" fill="#000"/>
+  <!-- magic staff with glowing orb -->
+  <line x1="200" y1="60" x2="170" y2="170" stroke="#6a3a14" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="204" cy="54" r="16" fill="url(#h3Orb)" stroke="#0a1a4a" stroke-width="2"/>
+  <circle cx="198" cy="48" r="4" fill="#fff" opacity="0.8"/>
+  <!-- sparkles -->
+  <g fill="#fff6a8">
+    <polygon points="224,30 226,36 232,38 226,40 224,46 222,40 216,38 222,36"/>
+    <polygon points="184,28 185,32 189,33 185,34 184,38 183,34 179,33 183,32"/>
+  </g>
+
+  <text x="128" y="248" text-anchor="middle" font-family="serif" font-size="10" fill="#0a1a4a">homm3_bright · mage</text>
+</svg>

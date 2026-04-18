@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="iwBg" cx="50%" cy="50%" r="75%">
+      <stop offset="0%" stop-color="#f4ecd8"/>
+      <stop offset="100%" stop-color="#c8b888"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#iwBg)"/>
+  <!-- wash shadow under feet -->
+  <ellipse cx="128" cy="212" rx="52" ry="10" fill="#1a1a1a" opacity="0.4"/>
+  <ellipse cx="128" cy="212" rx="38" ry="7" fill="#1a1a1a" opacity="0.3"/>
+
+  <!-- SWORDSMAN (top-down, flowing hakama) -->
+  <!-- black hakama wash -->
+  <path d="M82 160 Q128 180 174 160 Q178 205 128 215 Q78 205 82 160 Z" fill="#1a1a1a"/>
+  <path d="M92 170 Q128 180 164 170 L160 200 Q128 208 96 200 Z" fill="#2a2a2a"/>
+  <path d="M128 165 L128 212" stroke="#f4ecd8" stroke-width="1" opacity="0.5"/>
+  <!-- white gi upper -->
+  <path d="M95 120 Q128 105 161 120 L165 165 Q128 175 91 165 Z" fill="#f4ecd8" stroke="#1a1a1a" stroke-width="2"/>
+  <!-- gi overlap v-neck -->
+  <path d="M110 115 L128 135 L146 115" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+  <path d="M112 120 L128 140 L144 120" fill="#1a1a1a"/>
+  <!-- red obi sash -->
+  <path d="M96 150 Q128 158 160 150 L158 162 Q128 168 98 162 Z" fill="#c41a1a" stroke="#6a0a0a" stroke-width="1.5"/>
+  <!-- head / topknot -->
+  <circle cx="128" cy="98" r="18" fill="#e8c89a" stroke="#1a1a1a" stroke-width="2"/>
+  <path d="M118 84 Q128 68 138 84 Q136 90 128 92 Q120 90 118 84 Z" fill="#1a1a1a"/>
+  <rect x="126" y="74" width="4" height="12" fill="#1a1a1a"/>
+  <!-- eyes -->
+  <line x1="120" y1="98" x2="124" y2="98" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="132" y1="98" x2="136" y2="98" stroke="#1a1a1a" stroke-width="1.5"/>
+  <!-- katana drawn (long ink stroke across body) -->
+  <g>
+    <line x1="60" y1="70" x2="210" y2="130" stroke="#1a1a1a" stroke-width="2"/>
+    <rect x="55" y="63" width="18" height="18" fill="#1a1a1a" transform="rotate(-20 64 72)"/>
+    <rect x="205" y="125" width="16" height="5" fill="#6a3a14" transform="rotate(-20 213 127)"/>
+  </g>
+  <!-- red seal -->
+  <g transform="translate(220,230)">
+    <rect x="-10" y="-10" width="20" height="20" fill="#c41a1a" stroke="#8a0a0a" stroke-width="1"/>
+    <text x="0" y="4" text-anchor="middle" font-family="serif" font-size="12" fill="#f4ecd8" font-weight="bold">侍</text>
+  </g>
+  <text x="128" y="250" text-anchor="middle" font-family="serif" font-size="10" fill="#3a2a14">ink_wash · swordsman</text>
+</svg>

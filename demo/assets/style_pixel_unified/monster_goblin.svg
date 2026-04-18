@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" shape-rendering="crispEdges">
+  <rect width="256" height="256" fill="#5a4a2a"/>
+  <g fill="#3a2a12">
+    <rect x="16" y="24" width="8" height="8"/><rect x="200" y="48" width="8" height="8"/>
+    <rect x="40" y="200" width="8" height="8"/><rect x="224" y="216" width="8" height="8"/>
+  </g>
+  <!-- shadow -->
+  <g fill="#000" opacity="0.35">
+    <rect x="104" y="216" width="48" height="8"/>
+    <rect x="112" y="208" width="32" height="8"/>
+  </g>
+
+  <g transform="translate(64,64)">
+    <!-- pointed ears -->
+    <g fill="#5aa048">
+      <rect x="32" y="24" width="8" height="8"/>
+      <rect x="88" y="24" width="8" height="8"/>
+      <rect x="40" y="16" width="4" height="8"/>
+      <rect x="92" y="16" width="4" height="8"/>
+    </g>
+    <!-- head -->
+    <g fill="#5aa048">
+      <rect x="40" y="24" width="48" height="24"/>
+    </g>
+    <!-- head shading -->
+    <g fill="#3a7028">
+      <rect x="40" y="40" width="48" height="8"/>
+      <rect x="40" y="24" width="8" height="24"/>
+    </g>
+    <!-- big yellow eyes -->
+    <g fill="#fff060">
+      <rect x="48" y="28" width="12" height="8"/>
+      <rect x="68" y="28" width="12" height="8"/>
+    </g>
+    <g fill="#1a1a1a">
+      <rect x="52" y="28" width="4" height="4"/>
+      <rect x="72" y="28" width="4" height="4"/>
+    </g>
+    <!-- evil grin with fang -->
+    <g fill="#1a1a1a">
+      <rect x="56" y="40" width="20" height="4"/>
+    </g>
+    <g fill="#f0ecdc">
+      <rect x="60" y="40" width="4" height="8"/>
+      <rect x="68" y="40" width="4" height="8"/>
+    </g>
+    <!-- loincloth body -->
+    <g fill="#6a3a14">
+      <rect x="40" y="48" width="48" height="16"/>
+    </g>
+    <g fill="#8a4a20">
+      <rect x="40" y="48" width="48" height="4"/>
+    </g>
+    <!-- green torso -->
+    <g fill="#5aa048">
+      <rect x="48" y="64" width="32" height="32"/>
+    </g>
+    <g fill="#3a7028">
+      <rect x="48" y="88" width="32" height="8"/>
+    </g>
+    <!-- arms -->
+    <g fill="#5aa048">
+      <rect x="32" y="56" width="16" height="32"/>
+      <rect x="80" y="56" width="16" height="32"/>
+    </g>
+    <!-- rusty dagger in right hand -->
+    <g fill="#8a8a92">
+      <rect x="108" y="40" width="4" height="24"/>
+      <rect x="104" y="36" width="12" height="4"/>
+    </g>
+    <g fill="#6a3a14">
+      <rect x="108" y="64" width="4" height="8"/>
+    </g>
+    <g fill="#c42020">
+      <rect x="108" y="44" width="4" height="4"/>
+    </g>
+    <!-- legs -->
+    <g fill="#5aa048">
+      <rect x="48" y="96" width="14" height="20"/>
+      <rect x="66" y="96" width="14" height="20"/>
+    </g>
+    <!-- feet -->
+    <g fill="#2a1a08">
+      <rect x="48" y="112" width="14" height="4"/>
+      <rect x="66" y="112" width="14" height="4"/>
+    </g>
+  </g>
+
+  <text x="128" y="250" text-anchor="middle" font-family="monospace" font-size="10" fill="#f0ecdc">pixel_unified · goblin</text>
+</svg>

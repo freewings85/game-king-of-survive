@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="pdMbg" cx="50%" cy="60%" r="70%">
+      <stop offset="0%" stop-color="#2a2218"/>
+      <stop offset="100%" stop-color="#08060a"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#pdMbg)"/>
+  <!-- unholy ground glow -->
+  <ellipse cx="128" cy="210" rx="60" ry="14" fill="#2a0a1a" opacity="0.9"/>
+  <ellipse cx="128" cy="210" rx="40" ry="8" fill="#5c1a3a" opacity="0.6"/>
+
+  <!-- SKELETON (top-down) -->
+  <!-- tattered black cloak -->
+  <path d="M70 140 Q128 220 186 140 L178 190 Q128 210 78 190 Z" fill="#141014" stroke="#000" stroke-width="2"/>
+  <path d="M88 185 L80 205 M108 195 L104 215 M128 200 L128 218 M148 195 L152 215 M168 185 L176 205" stroke="#000" stroke-width="2" fill="none"/>
+  <!-- ribcage -->
+  <path d="M108 120 Q128 116 148 120 L150 160 Q128 166 106 160 Z" fill="#d8cdb5" stroke="#1a1408" stroke-width="2"/>
+  <line x1="110" y1="130" x2="146" y2="130" stroke="#1a1408" stroke-width="1.5"/>
+  <line x1="108" y1="138" x2="148" y2="138" stroke="#1a1408" stroke-width="1.5"/>
+  <line x1="106" y1="146" x2="150" y2="146" stroke="#1a1408" stroke-width="1.5"/>
+  <line x1="128" y1="118" x2="128" y2="160" stroke="#1a1408" stroke-width="1.5"/>
+  <!-- skull -->
+  <ellipse cx="128" cy="100" rx="22" ry="24" fill="#e4d9bf" stroke="#1a1408" stroke-width="2"/>
+  <!-- eye sockets (glowing red) -->
+  <ellipse cx="120" cy="98" rx="5" ry="6" fill="#000"/>
+  <ellipse cx="136" cy="98" rx="5" ry="6" fill="#000"/>
+  <circle cx="120" cy="98" r="2.2" fill="#ff3a2a"/>
+  <circle cx="136" cy="98" r="2.2" fill="#ff3a2a"/>
+  <!-- nasal + teeth -->
+  <polygon points="128,104 124,112 132,112" fill="#1a1408"/>
+  <g stroke="#1a1408" stroke-width="1">
+    <line x1="118" y1="116" x2="118" y2="121"/>
+    <line x1="122" y1="116" x2="122" y2="122"/>
+    <line x1="126" y1="116" x2="126" y2="122"/>
+    <line x1="130" y1="116" x2="130" y2="122"/>
+    <line x1="134" y1="116" x2="134" y2="122"/>
+    <line x1="138" y1="116" x2="138" y2="121"/>
+  </g>
+  <!-- rusted scimitar -->
+  <path d="M180 70 Q220 90 215 140" stroke="#6a5438" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <rect x="175" y="62" width="14" height="14" fill="#3a2a1e" stroke="#1a0604" stroke-width="1"/>
+  <!-- bone arm reaching out -->
+  <line x1="150" y1="130" x2="185" y2="95" stroke="#d8cdb5" stroke-width="6" stroke-linecap="round"/>
+
+  <text x="128" y="246" text-anchor="middle" font-family="serif" font-size="10" fill="#8b6a4a">painted_dark · skeleton</text>
+</svg>

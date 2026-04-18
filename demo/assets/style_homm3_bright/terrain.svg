@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <radialGradient id="h3Grass" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#7cc43c"/>
+      <stop offset="100%" stop-color="#4a8c24"/>
+    </radialGradient>
+    <radialGradient id="h3Dirt" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#c89658"/>
+      <stop offset="100%" stop-color="#8a6230"/>
+    </radialGradient>
+  </defs>
+  <!-- lush grass base -->
+  <rect width="256" height="256" fill="url(#h3Grass)"/>
+  <!-- grass texture dots -->
+  <g fill="#2e6812" opacity="0.6">
+    <circle cx="20" cy="30" r="2"/><circle cx="55" cy="70" r="2"/><circle cx="90" cy="50" r="2"/>
+    <circle cx="200" cy="40" r="2"/><circle cx="180" cy="90" r="2"/><circle cx="220" cy="160" r="2"/>
+    <circle cx="30" cy="180" r="2"/><circle cx="70" cy="220" r="2"/><circle cx="150" cy="230" r="2"/>
+  </g>
+  <g fill="#a8e45c" opacity="0.7">
+    <circle cx="40" cy="60" r="1.5"/><circle cx="110" cy="30" r="1.5"/><circle cx="170" cy="70" r="1.5"/>
+    <circle cx="210" cy="200" r="1.5"/><circle cx="50" cy="200" r="1.5"/><circle cx="130" cy="240" r="1.5"/>
+  </g>
+  <!-- winding dirt road -->
+  <path d="M0 130 Q60 110 120 140 T256 120 L256 170 Q180 190 120 180 T0 180 Z" fill="url(#h3Dirt)" stroke="#5a3a14" stroke-width="2"/>
+  <!-- road pebbles -->
+  <g fill="#e8c68a" stroke="#5a3a14" stroke-width="0.5">
+    <circle cx="30" cy="155" r="3"/><circle cx="75" cy="145" r="2.5"/><circle cx="130" cy="160" r="3"/>
+    <circle cx="180" cy="150" r="2.5"/><circle cx="220" cy="145" r="3"/>
+  </g>
+  <!-- stones -->
+  <g>
+    <ellipse cx="45" cy="45" rx="14" ry="10" fill="#b8b0a0" stroke="#4a443a" stroke-width="2"/>
+    <ellipse cx="42" cy="42" rx="6" ry="4" fill="#d8d2c4" opacity="0.7"/>
+    <ellipse cx="210" cy="215" rx="12" ry="8" fill="#b8b0a0" stroke="#4a443a" stroke-width="2"/>
+    <ellipse cx="208" cy="213" rx="5" ry="3" fill="#d8d2c4" opacity="0.7"/>
+  </g>
+  <!-- flowers (red+yellow highlights) -->
+  <g>
+    <circle cx="85" cy="90" r="3" fill="#e83a3a"/><circle cx="85" cy="90" r="1" fill="#fff6a8"/>
+    <circle cx="160" cy="210" r="3" fill="#e83a3a"/><circle cx="160" cy="210" r="1" fill="#fff6a8"/>
+    <circle cx="195" cy="70" r="3" fill="#f4d42a"/><circle cx="195" cy="70" r="1" fill="#fff6a8"/>
+    <circle cx="100" cy="220" r="3" fill="#f4d42a"/><circle cx="100" cy="220" r="1" fill="#fff6a8"/>
+  </g>
+  <!-- small tree cluster -->
+  <g transform="translate(220,50)">
+    <ellipse cx="0" cy="-4" rx="16" ry="14" fill="#2e6812" stroke="#1a3a06" stroke-width="2"/>
+    <ellipse cx="-4" cy="-8" rx="8" ry="6" fill="#4f8f20" opacity="0.8"/>
+    <rect x="-3" y="8" width="6" height="8" fill="#5a3a14"/>
+  </g>
+  <text x="128" y="248" text-anchor="middle" font-family="serif" font-size="10" fill="#2a1a08">homm3_bright · terrain</text>
+</svg>
