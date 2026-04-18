@@ -5,13 +5,15 @@
       "tree_dense",
       "tree_dense_pine",
       "tree_dense_autumn",
+      "tree_row",
       "tree_big",
       "tree_small"
     ],
     "stones": [
       "rock",
       "rock_spiky",
-      "rock_flat"
+      "rock_flat",
+      "stone_pile"
     ],
     "village": [
       "house",
@@ -19,6 +21,13 @@
       "fence_cluster",
       "fence_long",
       "fence"
+    ],
+    "ruins": [
+      "broken_wall",
+      "rock",
+      "rock_flat",
+      "fence_cluster",
+      "stone_pile"
     ],
     "scatter": [
       "crate",
@@ -260,6 +269,60 @@
       },
       "hardBarrier": true,
       "region": "village"
+    },
+    {
+      "name": "broken_wall",
+      "file": "decor/broken_wall.png",
+      "w": 256,
+      "h": 128,
+      "anchor": {
+        "x": 128,
+        "y": 124
+      },
+      "collider": {
+        "x": 4,
+        "y": 14,
+        "w": 120,
+        "h": 44
+      },
+      "hardBarrier": true,
+      "region": "ruins"
+    },
+    {
+      "name": "stone_pile",
+      "file": "decor/stone_pile.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 8,
+        "y": 20,
+        "w": 50,
+        "h": 34
+      },
+      "hardBarrier": true,
+      "region": "stones"
+    },
+    {
+      "name": "tree_row",
+      "file": "decor/tree_row.png",
+      "w": 256,
+      "h": 128,
+      "anchor": {
+        "x": 128,
+        "y": 124
+      },
+      "collider": {
+        "x": 6,
+        "y": 14,
+        "w": 116,
+        "h": 42
+      },
+      "hardBarrier": true,
+      "region": "forest"
     },
     {
       "name": "crate",

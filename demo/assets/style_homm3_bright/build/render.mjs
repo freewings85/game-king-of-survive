@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, fenceCluster, treeDense, treeDensePine, treeDenseAutumn, rockSpiky, rockFlat, fenceLong, houseThatch, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, fenceCluster, treeDense, treeDensePine, treeDenseAutumn, rockSpiky, rockFlat, fenceLong, houseThatch, brokenWall, stonePile, treeRow, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -306,6 +306,9 @@ async function buildDecor(page) {
     { name: 'fence',             size: 64,  svg: fence() },
     { name: 'fence_cluster',     size: 64,  svg: fenceCluster() },
     { name: 'fence_long',        size: 128, svg: fenceLong(),       tag: 'village', wide: true },
+    { name: 'broken_wall',       size: 128, svg: brokenWall(),      tag: 'ruins',   wide: true },
+    { name: 'stone_pile',        size: 64,  svg: stonePile(),       tag: 'stones' },
+    { name: 'tree_row',          size: 128, svg: treeRow(),         tag: 'forest',  wide: true },
     { name: 'crate',             size: 64,  svg: crate() },
   ];
   for (const it of items) {
@@ -322,23 +325,26 @@ async function buildDecor(page) {
   //   scatter: crate, tree_small, fence (non-barrier flavor)
   const REGION = {
     tree_big: 'forest', tree_small: 'scatter',
-    tree_dense: 'forest', tree_dense_pine: 'forest', tree_dense_autumn: 'forest',
-    rock: 'stones', rock_spiky: 'stones', rock_flat: 'stones',
+    tree_dense: 'forest', tree_dense_pine: 'forest', tree_dense_autumn: 'forest', tree_row: 'forest',
+    rock: 'stones', rock_spiky: 'stones', rock_flat: 'stones', stone_pile: 'stones',
     house: 'village', house_thatch: 'village',
     fence: 'scatter', fence_cluster: 'village', fence_long: 'village',
+    broken_wall: 'ruins',
     crate: 'scatter',
   };
   const hardBarrierSet = new Set([
-    'house', 'house_thatch', 'rock', 'rock_spiky', 'rock_flat',
+    'house', 'house_thatch', 'rock', 'rock_spiky', 'rock_flat', 'stone_pile',
     'fence_cluster', 'fence_long', 'tree_dense', 'tree_dense_pine', 'tree_dense_autumn',
+    'tree_row', 'broken_wall',
   ]);
 
   await writeJSON('decor/index.json', {
     style: 'homm3_bright',
     regions: {
-      forest:  ['tree_dense', 'tree_dense_pine', 'tree_dense_autumn', 'tree_big', 'tree_small'],
-      stones:  ['rock', 'rock_spiky', 'rock_flat'],
+      forest:  ['tree_dense', 'tree_dense_pine', 'tree_dense_autumn', 'tree_row', 'tree_big', 'tree_small'],
+      stones:  ['rock', 'rock_spiky', 'rock_flat', 'stone_pile'],
       village: ['house', 'house_thatch', 'fence_cluster', 'fence_long', 'fence'],
+      ruins:   ['broken_wall', 'rock', 'rock_flat', 'fence_cluster', 'stone_pile'],
       scatter: ['crate', 'tree_small', 'fence'],
     },
     items: items.map(it => {
@@ -359,6 +365,9 @@ async function buildDecor(page) {
       else if (it.name === 'fence')            collider = { x: 12,       y: 22,     w: 40, h: 30 };
       else if (it.name === 'fence_cluster')    collider = { x: 2,        y: 26,     w: 60, h: 30 };
       else if (it.name === 'fence_long')       collider = { x: 2,        y: 26,     w: 124, h: 30 };
+      else if (it.name === 'broken_wall')      collider = { x: 4,        y: 14,     w: 120, h: 44 };
+      else if (it.name === 'stone_pile')       collider = { x: 8,        y: 20,     w: 50, h: 34 };
+      else if (it.name === 'tree_row')         collider = { x: 6,        y: 14,     w: 116, h: 42 };
       else if (it.name === 'crate')            collider = { x: 12,       y: 18,     w: 40, h: 36 };
       else collider = null;
       return {

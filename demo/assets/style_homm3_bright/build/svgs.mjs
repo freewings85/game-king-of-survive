@@ -554,6 +554,96 @@ export function treeDense() {
   );
 }
 
+// 128×64 — broken stone wall (ruins filler). Crumbling parapet
+// with missing top bricks + moss. Drop several in a row to form
+// a large collapsed rampart for Leo's ruins regions.
+export function brokenWall() {
+  const brick = (x, y, w, h, shade = 0) => {
+    const base = shade === 0 ? P.stoneMid : shade > 0 ? P.stoneLight : P.stoneDark;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${base}" stroke="${P.stoneDark}" stroke-width="0.6"/>`;
+  };
+  return svg(128, 64,
+    `<rect x="2" y="58" width="124" height="4" fill="${P.black}" opacity="0.4"/>` +
+    // ground tumble of rubble
+    `<ellipse cx="14" cy="58" rx="6" ry="3" fill="${P.stoneDark}" opacity="0.7"/>` +
+    `<ellipse cx="118" cy="56" rx="8" ry="3" fill="${P.stoneDark}" opacity="0.7"/>` +
+    // broken wall silhouette (jagged top)
+    // build as brick rows
+    // row: bottom (full width)
+    brick(6, 42, 18, 14, 0) + brick(24, 42, 20, 14, -1) + brick(44, 42, 18, 14, 0) +
+    brick(62, 42, 22, 14, 1) + brick(84, 42, 18, 14, 0) + brick(102, 42, 18, 14, -1) +
+    // row: middle (partial — some bricks missing)
+    brick(6, 28, 20, 14, 1) + brick(26, 28, 18, 14, 0) +
+    /* gap at x=44 */ brick(64, 28, 20, 14, 0) + brick(84, 28, 20, 14, 1) +
+    /* gap at x=104 */ brick(110, 28, 14, 14, -1) +
+    // row: top — heavily broken, just a few bricks sticking up
+    brick(8, 14, 16, 14, 0) + brick(66, 14, 18, 14, -1) +
+    // crown of rubble (sticking up)
+    `<polygon points="30,14 36,6 42,14" fill="${P.stoneDark}" stroke="${P.black}" stroke-width="0.6"/>` +
+    `<polygon points="96,14 102,8 108,14" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+    // cracks
+    `<path d="M14 18 L20 42 M70 12 L78 42 M92 28 L100 52" stroke="${P.stoneDark}" stroke-width="0.6" fill="none" opacity="0.7"/>` +
+    // moss patches (soft greens on shaded side)
+    `<ellipse cx="12" cy="44" rx="6" ry="2" fill="${P.grassMid}" opacity="0.5"/>` +
+    `<ellipse cx="86" cy="44" rx="5" ry="2" fill="${P.grassMid}" opacity="0.45"/>` +
+    `<circle cx="28" cy="30" r="1.3" fill="${P.grassDark}" opacity="0.6"/>` +
+    `<circle cx="72" cy="30" r="1.2" fill="${P.grassDark}" opacity="0.6"/>`
+  );
+}
+
+// 64×64 — mound of stacked boulders. Acts as a dense single
+// drop inside stones regions (vs one small rock).
+export function stonePile() {
+  return svg(64, 64,
+    `<ellipse cx="32" cy="56" rx="26" ry="3" fill="${P.black}" opacity="0.4"/>` +
+    // back big boulder
+    `<ellipse cx="30" cy="34" rx="18" ry="14" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1.3"/>` +
+    `<ellipse cx="24" cy="30" rx="9" ry="6" fill="${P.stoneLight}" opacity="0.7"/>` +
+    // front right boulder
+    `<ellipse cx="46" cy="46" rx="12" ry="9" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1.2"/>` +
+    `<ellipse cx="43" cy="44" rx="5" ry="3" fill="${P.stoneLight}" opacity="0.7"/>` +
+    // front left small
+    `<ellipse cx="16" cy="48" rx="8" ry="6" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1"/>` +
+    `<ellipse cx="14" cy="46" rx="3" ry="2" fill="${P.stoneLight}" opacity="0.75"/>` +
+    // top crown small rock
+    `<ellipse cx="34" cy="20" rx="6" ry="5" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.9"/>` +
+    `<ellipse cx="32" cy="18" rx="2.5" ry="1.8" fill="${P.stoneLight}" opacity="0.8"/>` +
+    // cracks / shading between stones
+    `<line x1="30" y1="42" x2="38" y2="44" stroke="${P.stoneDark}" stroke-width="0.8"/>` +
+    `<line x1="20" y1="42" x2="26" y2="44" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+    // tiny moss
+    `<ellipse cx="14" cy="50" rx="4" ry="1.2" fill="${P.grassMid}" opacity="0.5"/>` +
+    `<ellipse cx="44" cy="52" rx="3" ry="1" fill="${P.grassMid}" opacity="0.45"/>`
+  );
+}
+
+// 128×64 — row of 3 overlapping trees for quick forest edges.
+// Drop several side-by-side for dense HoMM3 "forest block".
+export function treeRow() {
+  const t = (cx, cy, r, tint) => {
+    const dark = tint === 'a' ? P.grassDark : tint === 'b' ? '#1c4210' : '#2e6812';
+    const mid  = tint === 'a' ? P.grassMid  : tint === 'b' ? '#36641e' : '#4f8f20';
+    const hi   = '#a8e45c';
+    return `<rect x="${cx-2.5}" y="${cy + r - 4}" width="5" height="10" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 0.92}" fill="${dark}" stroke="${P.black}" stroke-width="0.8"/>` +
+      `<ellipse cx="${cx - r*0.35}" cy="${cy - r*0.3}" rx="${r*0.55}" ry="${r*0.45}" fill="${mid}" opacity="0.85"/>` +
+      `<ellipse cx="${cx + r*0.25}" cy="${cy + r*0.1}" rx="${r*0.3}" ry="${r*0.24}" fill="${hi}" opacity="0.45"/>` +
+      `<circle cx="${cx - r*0.2}" cy="${cy - r*0.15}" r="1.2" fill="${P.blood}" opacity="0.8"/>`;
+  };
+  return svg(128, 64,
+    `<ellipse cx="64" cy="60" rx="58" ry="4" fill="${P.black}" opacity="0.4"/>` +
+    // 3 overlapping trees, varied tint + size for organic look
+    t(22, 30, 18, 'a') +
+    t(54, 26, 22, 'b') +
+    t(90, 28, 20, 'c') +
+    t(112, 34, 14, 'a') +
+    // ground bush filler between trunks
+    `<ellipse cx="40" cy="52" rx="10" ry="4" fill="${P.grassDark}" opacity="0.6"/>` +
+    `<ellipse cx="74" cy="54" rx="12" ry="4" fill="${P.grassDark}" opacity="0.6"/>` +
+    `<ellipse cx="102" cy="52" rx="9" ry="3.5" fill="${P.grassDark}" opacity="0.6"/>`
+  );
+}
+
 export function crate() {
   return svg(64, 64,
     `<ellipse cx="32" cy="56" rx="22" ry="2.5" fill="${P.black}" opacity="0.35"/>` +
