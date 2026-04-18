@@ -1,0 +1,18 @@
+{
+  "slices": [
+    "tl",
+    "t",
+    "tr",
+    "l",
+    "c",
+    "r",
+    "bl",
+    "b",
+    "br"
+  ],
+  "cornerSize": 16,
+  "fullW": 192,
+  "fullH": 64,
+  "usage": "9-slice. Corners fixed 16px, edges stretch (t/b horizontally, l/r vertically), c fills.",
+  "style": "homm3_bright"
+}
