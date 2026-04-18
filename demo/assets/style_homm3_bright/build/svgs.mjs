@@ -920,3 +920,262 @@ function trollDeath(f) {
     (f === 2 ? `<text x="64" y="30" text-anchor="middle" font-family="serif" font-size="18" fill="${P.gold}" opacity="0.75">†</text>` : '')
   );
 }
+
+// ─────────────────────────────────────────────────────────────
+// FIVE BOSS TYPES — matches Developer's BOSS_TYPES.id:
+//   stone_giant, shadow_mage, berserker, frost_dragon, rot_troll
+// All 128×128, 4×6 grid (walk 4dir×4 + attack 3 + death 3).
+//
+// Rot_troll reuses trollFrame (the original troll retooled to
+// "plague/rot" palette by swapping P-color overrides).
+// ─────────────────────────────────────────────────────────────
+
+// shared death helper for 128-px bosses
+function bigDeath(baseSvg, f, symbol = '✦', tint = '#f4d42a') {
+  const rot = [0, 50, 85][f] || 0;
+  const op = [1.0, 0.82, 0.5][f] || 0.5;
+  return svg(128, 128,
+    `<g transform="rotate(${rot} 64 72)" opacity="${op}">${stripSvgWrapper(baseSvg)}</g>` +
+    (f === 2 ? `<text x="64" y="30" text-anchor="middle" font-family="serif" font-size="20" fill="${tint}" opacity="0.75">${symbol}</text>` : '')
+  );
+}
+
+// ── STONE GIANT (gray rock humanoid, fists) ──────────────────
+export function stoneGiantFrame(dir, anim, f) {
+  if (anim === 'death') return bigDeath(sgWalk('D', 0, 0), f, '✦', '#b8b0a0');
+  if (anim === 'attack') return sgAttack(dir, f);
+  const B = [0, -2, 0, 2][f % 4];
+  const leg = [0, 4, 0, -4][f % 4];
+  return sgWalk(dir, B, leg);
+}
+function sgWalk(dir, B, legStep) {
+  const rock = '#8a8a92', rockLo = '#3a3a42', rockHi = '#c0c0c8';
+  const accent = '#4a6a8a';
+  const head = `<ellipse cx="64" cy="${42 + B}" rx="20" ry="18" fill="${rock}" stroke="${rockLo}" stroke-width="1.5"/>` +
+    `<path d="M46 ${32+B} Q48 ${26+B} 56 ${28+B} Q60 ${22+B} 68 ${26+B} Q76 ${24+B} 82 ${30+B}" fill="${rockHi}" stroke="${rockLo}" stroke-width="1" opacity="0.9"/>` +
+    // crystal shards on head
+    `<polygon points="54,${24+B} 56,${16+B} 60,${24+B}" fill="${accent}" stroke="${rockLo}" stroke-width="0.8"/>` +
+    `<polygon points="72,${22+B} 76,${14+B} 78,${22+B}" fill="${accent}" stroke="${rockLo}" stroke-width="0.8"/>`;
+  const eyes = dir === 'D'
+    ? `<circle cx="57" cy="${42+B}" r="2" fill="${accent}"/><circle cx="71" cy="${42+B}" r="2" fill="${accent}"/><circle cx="57" cy="${42+B}" r="0.8" fill="${P.white}"/><circle cx="71" cy="${42+B}" r="0.8" fill="${P.white}"/>`
+    : dir === 'L' ? `<circle cx="55" cy="${42+B}" r="1.5" fill="${accent}"/>`
+    : dir === 'R' ? `<circle cx="73" cy="${42+B}" r="1.5" fill="${accent}"/>`
+    : '';
+  const body = `<path d="M32 ${72+B} Q64 ${64+B} 96 ${72+B} L100 ${104+B} Q64 ${110+B} 28 ${104+B} Z" fill="${rock}" stroke="${rockLo}" stroke-width="1.6"/>` +
+    `<path d="M40 ${76+B} Q64 ${70+B} 88 ${76+B} L88 ${100+B} Q64 ${104+B} 40 ${100+B} Z" fill="${rockHi}" opacity="0.4"/>` +
+    // crystal veins
+    `<line x1="50" y1="${78+B}" x2="56" y2="${96+B}" stroke="${accent}" stroke-width="1" opacity="0.7"/>` +
+    `<line x1="72" y1="${74+B}" x2="78" y2="${92+B}" stroke="${accent}" stroke-width="1" opacity="0.7"/>`;
+  // legs (thick stone)
+  const legs = `<rect x="${(48 + legStep * 0.3).toFixed(1)}" y="${104 + B}" width="12" height="16" fill="${rockLo}" stroke="${P.black}" stroke-width="0.6"/>` +
+    `<rect x="${(68 - legStep * 0.3).toFixed(1)}" y="${104 + B}" width="12" height="16" fill="${rockLo}" stroke="${P.black}" stroke-width="0.6"/>`;
+  // huge fists instead of weapon
+  const fists = dir === 'L'
+    ? `<ellipse cx="18" cy="${74+B}" rx="12" ry="10" fill="${rock}" stroke="${rockLo}" stroke-width="1.5"/><polygon points="6,${70+B} 10,${76+B} 4,${78+B}" fill="${accent}"/>`
+    : dir === 'R'
+    ? `<ellipse cx="110" cy="${74+B}" rx="12" ry="10" fill="${rock}" stroke="${rockLo}" stroke-width="1.5"/><polygon points="122,${70+B} 118,${76+B} 124,${78+B}" fill="${accent}"/>`
+    : `<ellipse cx="110" cy="${78+B}" rx="11" ry="9" fill="${rock}" stroke="${rockLo}" stroke-width="1.5"/><ellipse cx="18" cy="${78+B}" rx="11" ry="9" fill="${rock}" stroke="${rockLo}" stroke-width="1.5"/>`;
+  return svg(128, 128,
+    `<ellipse cx="64" cy="124" rx="30" ry="5" fill="${P.black}" opacity="0.5"/>` +
+    legs + fists + body + head + eyes
+  );
+}
+function sgAttack(dir, f) {
+  const base = sgWalk(dir, 0, 0);
+  const fx = f === 1
+    ? `<g><circle cx="64" cy="72" r="28" fill="#4a6a8a" opacity="0.25"/><circle cx="64" cy="72" r="18" fill="#c0c0c8" opacity="0.45"/></g>`
+    : f === 2
+    ? `<g stroke="#c0c0c8" stroke-width="2"><line x1="64" y1="44" x2="64" y2="24"/><line x1="88" y1="72" x2="108" y2="72"/><line x1="40" y1="72" x2="20" y2="72"/><line x1="64" y1="100" x2="64" y2="120"/></g>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+// ── SHADOW MAGE (dark purple robe, glowing eyes, evil staff) ─
+export function shadowMageFrame(dir, anim, f) {
+  if (anim === 'death') return bigDeath(smWalk('D', 0, 0), f, '✦', '#8a3ac8');
+  if (anim === 'attack') return smAttack(dir, f);
+  const B = [0, -2, 0, 2][f % 4];
+  const leg = [0, 4, 0, -4][f % 4];
+  return smWalk(dir, B, leg);
+}
+function smWalk(dir, B, legStep) {
+  const robe = '#2a1238', robeHi = '#4a1e5a', robeLo = '#0a0412';
+  const glow = '#c83af0', glowHi = '#ffb4ff';
+  // hood (pointed, tall)
+  const hood = `<path d="M42 ${38+B} Q64 ${8+B} 86 ${38+B} L82 ${60+B} Q64 ${62+B} 46 ${60+B} Z" fill="${robe}" stroke="${robeLo}" stroke-width="1.5"/>` +
+    `<path d="M48 ${40+B} Q64 ${18+B} 80 ${40+B}" fill="${robeHi}" opacity="0.5"/>`;
+  // glowing eyes under hood
+  const eyes = dir === 'D'
+    ? `<ellipse cx="58" cy="${46+B}" rx="2.5" ry="1.5" fill="${glowHi}"/><ellipse cx="70" cy="${46+B}" rx="2.5" ry="1.5" fill="${glowHi}"/><ellipse cx="58" cy="${46+B}" rx="1.2" ry="0.8" fill="${glow}"/><ellipse cx="70" cy="${46+B}" rx="1.2" ry="0.8" fill="${glow}"/>`
+    : dir === 'L' ? `<ellipse cx="56" cy="${46+B}" rx="2" ry="1.2" fill="${glowHi}"/><ellipse cx="56" cy="${46+B}" rx="1" ry="0.6" fill="${glow}"/>`
+    : dir === 'R' ? `<ellipse cx="72" cy="${46+B}" rx="2" ry="1.2" fill="${glowHi}"/><ellipse cx="72" cy="${46+B}" rx="1" ry="0.6" fill="${glow}"/>`
+    : '';
+  // flowing robe body
+  const body = `<path d="M30 ${62+B} Q64 ${58+B} 98 ${62+B} L104 ${110+B} Q64 ${116+B} 24 ${110+B} Z" fill="${robe}" stroke="${robeLo}" stroke-width="1.5"/>` +
+    // tattered edges
+    `<path d="M28 ${108+B} L26 ${118+B} M42 ${114+B} L40 ${124+B} M64 ${116+B} L64 ${126+B} M86 ${114+B} L88 ${124+B} M100 ${108+B} L102 ${118+B}" stroke="${robeLo}" stroke-width="2" fill="none"/>` +
+    // purple rune glow on chest
+    `<circle cx="64" cy="${80+B}" r="8" fill="${glow}" opacity="0.35"/>` +
+    `<polygon points="64,${74+B} 60,${82+B} 68,${82+B}" fill="${glowHi}" opacity="0.8"/>` +
+    `<polygon points="64,${86+B} 60,${78+B} 68,${78+B}" fill="${glowHi}" opacity="0.8"/>`;
+  const legs = `<rect x="${(54 + legStep * 0.2).toFixed(1)}" y="${110 + B}" width="6" height="8" fill="${robeLo}"/>` +
+    `<rect x="${(68 - legStep * 0.2).toFixed(1)}" y="${110 + B}" width="6" height="8" fill="${robeLo}"/>`;
+  // staff with glowing orb
+  const staff = dir === 'L'
+    ? `<line x1="18" y1="${36+B}" x2="26" y2="${104+B}" stroke="${robeLo}" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="${32+B}" r="8" fill="${glow}" opacity="0.4"/><circle cx="16" cy="${32+B}" r="4" fill="${glowHi}"/>`
+    : dir === 'R'
+    ? `<line x1="110" y1="${36+B}" x2="102" y2="${104+B}" stroke="${robeLo}" stroke-width="3" stroke-linecap="round"/><circle cx="112" cy="${32+B}" r="8" fill="${glow}" opacity="0.4"/><circle cx="112" cy="${32+B}" r="4" fill="${glowHi}"/>`
+    : dir === 'U'
+    ? `<line x1="100" y1="${30+B}" x2="92" y2="${90+B}" stroke="${robeLo}" stroke-width="3" stroke-linecap="round"/><circle cx="102" cy="${26+B}" r="7" fill="${glow}" opacity="0.4"/><circle cx="102" cy="${26+B}" r="3.5" fill="${glowHi}"/>`
+    : `<line x1="106" y1="${44+B}" x2="98" y2="${112+B}" stroke="${robeLo}" stroke-width="3" stroke-linecap="round"/><circle cx="108" cy="${40+B}" r="7" fill="${glow}" opacity="0.4"/><circle cx="108" cy="${40+B}" r="3.5" fill="${glowHi}"/>`;
+  return svg(128, 128,
+    `<ellipse cx="64" cy="122" rx="28" ry="4" fill="${P.black}" opacity="0.5"/>` +
+    legs + body + hood + eyes + staff
+  );
+}
+function smAttack(dir, f) {
+  const base = smWalk(dir, 0, 0);
+  const fx = f === 1
+    ? `<g><circle cx="16" cy="32" r="16" fill="#c83af0" opacity="0.4"/><circle cx="16" cy="32" r="8" fill="#ffb4ff"/></g>`
+    : f === 2
+    ? `<g stroke="#c83af0" stroke-width="1.5" fill="none" opacity="0.9"><path d="M22 34 Q50 36 80 60"/><path d="M22 34 Q44 24 72 44"/></g><circle cx="80" cy="60" r="4" fill="#ffb4ff" opacity="0.9"/>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+// ── BERSERKER (red-clad muscular, dual weapons) ─────────────
+export function berserkerFrame(dir, anim, f) {
+  if (anim === 'death') return bigDeath(bzWalk('D', 0, 0), f, '†', P.blood);
+  if (anim === 'attack') return bzAttack(dir, f);
+  const B = [0, -3, 0, 3][f % 4]; // bigger bob = aggressive
+  const leg = [0, 5, 0, -5][f % 4];
+  return bzWalk(dir, B, leg);
+}
+function bzWalk(dir, B, legStep) {
+  const skin = '#d89878', skinDark = '#8a5c40';
+  const armor = P.blood, armorLo = '#6a0a0a', armorHi = '#e83a3a';
+  // bare head with tall red mohawk
+  const head = `<ellipse cx="64" cy="${42 + B}" rx="13" ry="13" fill="${skin}" stroke="${skinDark}" stroke-width="1.2"/>` +
+    // mohawk
+    `<polygon points="52,${32+B} 60,${18+B} 64,${32+B} 68,${18+B} 76,${32+B}" fill="${armor}" stroke="${armorLo}" stroke-width="1"/>` +
+    // war paint / scars
+    `<path d="M52 ${44+B} Q58 ${46+B} 60 ${50+B}" stroke="${armor}" stroke-width="1" fill="none"/>` +
+    `<path d="M68 ${44+B} Q74 ${46+B} 72 ${50+B}" stroke="${armor}" stroke-width="1" fill="none"/>`;
+  const eyes = dir === 'D'
+    ? `<circle cx="58" cy="${42+B}" r="1.3" fill="${P.black}"/><circle cx="70" cy="${42+B}" r="1.3" fill="${P.black}"/>`
+    : dir === 'L' ? `<circle cx="56" cy="${42+B}" r="1.3" fill="${P.black}"/>`
+    : dir === 'R' ? `<circle cx="72" cy="${42+B}" r="1.3" fill="${P.black}"/>`
+    : '';
+  const mouth = dir === 'D' ? `<path d="M56 ${52+B} Q64 ${58+B} 72 ${52+B}" stroke="${P.black}" stroke-width="1.2" fill="none"/><polygon points="58,${54+B} 60,${57+B} 62,${54+B}" fill="${P.white}" stroke="${P.black}" stroke-width="0.3"/>` : '';
+  // bare muscular torso + red leather straps
+  const torso = `<path d="M36 ${66+B} Q64 ${60+B} 92 ${66+B} L96 ${100+B} Q64 ${106+B} 32 ${100+B} Z" fill="${skin}" stroke="${skinDark}" stroke-width="1.2"/>` +
+    `<path d="M44 ${68+B} Q64 ${66+B} 84 ${68+B} L82 ${90+B} Q64 ${94+B} 46 ${90+B} Z" fill="${skinDark}" opacity="0.3"/>` +
+    // red leather straps (X across chest)
+    `<path d="M40 ${68+B} L90 ${98+B} M90 ${68+B} L40 ${98+B}" stroke="${armor}" stroke-width="3" opacity="0.9"/>` +
+    // belt
+    `<rect x="34" y="${96+B}" width="60" height="5" fill="${armor}" stroke="${armorLo}" stroke-width="0.8"/>` +
+    `<rect x="60" y="${94+B}" width="8" height="9" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.6"/>`;
+  const legs = `<rect x="${(52 + legStep * 0.4).toFixed(1)}" y="${100 + B}" width="8" height="16" fill="${skinDark}" stroke="${P.black}" stroke-width="0.6"/>` +
+    `<rect x="${(68 - legStep * 0.4).toFixed(1)}" y="${100 + B}" width="8" height="16" fill="${skinDark}" stroke="${P.black}" stroke-width="0.6"/>` +
+    // red war paint stripes on legs
+    `<rect x="${(52 + legStep * 0.4).toFixed(1)}" y="${108 + B}" width="8" height="2" fill="${armor}"/>` +
+    `<rect x="${(68 - legStep * 0.4).toFixed(1)}" y="${108 + B}" width="8" height="2" fill="${armor}"/>`;
+  // dual axes: left + right side
+  const axeL = `<rect x="16" y="${60+B}" width="3" height="34" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="0.5"/><path d="M6 ${58+B} L20 ${50+B} L22 ${64+B} L10 ${72+B} Z" fill="${armorHi}" stroke="${P.black}" stroke-width="1"/><path d="M8 ${60+B} L20 ${52+B} L20 ${56+B}" stroke="${P.white}" stroke-width="0.6" fill="none" opacity="0.5"/>`;
+  const axeR = `<rect x="109" y="${60+B}" width="3" height="34" fill="${P.wood}" stroke="${P.leatherLo}" stroke-width="0.5"/><path d="M122 ${58+B} L108 ${50+B} L106 ${64+B} L118 ${72+B} Z" fill="${armorHi}" stroke="${P.black}" stroke-width="1"/><path d="M120 ${60+B} L108 ${52+B} L108 ${56+B}" stroke="${P.white}" stroke-width="0.6" fill="none" opacity="0.5"/>`;
+  return svg(128, 128,
+    `<ellipse cx="64" cy="122" rx="28" ry="4.5" fill="${P.black}" opacity="0.5"/>` +
+    legs + axeL + axeR + torso + head + eyes + mouth
+  );
+}
+function bzAttack(dir, f) {
+  const base = bzWalk(dir, -1, 0);
+  const fx = f === 1
+    ? `<g opacity="0.6" stroke="#ff3a3a" stroke-width="2" fill="none"><path d="M8 64 Q24 52 38 62"/><path d="M120 64 Q104 52 90 62"/></g>`
+    : f === 2
+    ? `<g stroke="#ff3a3a" stroke-width="2"><line x1="12" y1="58" x2="24" y2="48"/><line x1="116" y1="58" x2="104" y2="48"/></g><text x="64" y="30" text-anchor="middle" font-family="serif" font-size="14" fill="#ff3a3a" font-weight="bold">RAGE!</text>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+// ── FROST DRAGON (serpentine, wings, icy blue) ──────────────
+export function frostDragonFrame(dir, anim, f) {
+  if (anim === 'death') return bigDeath(fdPose(f % 4, 0), f, '✦', '#9fd8ff');
+  if (anim === 'attack') return fdAttack(dir, f);
+  const wingPhase = [0, 1, 0, -1][f % 4]; // wing flap
+  return fdPose(f % 4, wingPhase, dir);
+}
+function fdPose(f, wingPhase, dir) {
+  const scale = '#6aaacc', scaleDark = '#1c5a9a', scaleHi = '#c8e4ff';
+  const wingMem = '#8fc0d8', wingEdge = '#1c5a9a';
+  const B = [0, -1, 0, 1][f % 4];
+  // wings (top-down view, spread wide; flap by scaling y)
+  const wingScale = 1 + wingPhase * 0.15;
+  const wings = `<g transform="translate(64,64) scale(1, ${wingScale.toFixed(2)}) translate(-64,-64)">` +
+    `<path d="M18 ${50+B} Q6 ${40+B} 8 ${28+B} Q20 ${20+B} 36 ${36+B} Q32 ${48+B} 24 ${54+B} Z" fill="${wingMem}" stroke="${wingEdge}" stroke-width="1.5" opacity="0.9"/>` +
+    `<path d="M110 ${50+B} Q122 ${40+B} 120 ${28+B} Q108 ${20+B} 92 ${36+B} Q96 ${48+B} 104 ${54+B} Z" fill="${wingMem}" stroke="${wingEdge}" stroke-width="1.5" opacity="0.9"/>` +
+    // wing membrane lines
+    `<path d="M18 ${50+B} Q22 ${36+B} 20 ${26+B} M28 ${50+B} Q30 ${34+B} 24 ${22+B}" stroke="${wingEdge}" stroke-width="0.7" fill="none"/>` +
+    `<path d="M110 ${50+B} Q106 ${36+B} 108 ${26+B} M100 ${50+B} Q98 ${34+B} 104 ${22+B}" stroke="${wingEdge}" stroke-width="0.7" fill="none"/>` +
+    `</g>`;
+  // body: serpentine oval
+  const body = `<ellipse cx="64" cy="${72 + B}" rx="18" ry="28" fill="${scale}" stroke="${scaleDark}" stroke-width="1.5"/>` +
+    `<ellipse cx="64" cy="${72 + B}" rx="12" ry="22" fill="${scaleHi}" opacity="0.4"/>` +
+    // scale pattern (horizontal rows)
+    `<path d="M52 ${56+B} Q64 ${60+B} 76 ${56+B} M52 ${68+B} Q64 ${72+B} 76 ${68+B} M52 ${82+B} Q64 ${86+B} 76 ${82+B} M52 ${94+B} Q64 ${98+B} 76 ${94+B}" stroke="${scaleDark}" stroke-width="0.7" fill="none"/>`;
+  // head on top (dragon head)
+  const head = `<path d="M50 ${40+B} Q64 ${28+B} 78 ${40+B} Q76 ${56+B} 64 ${58+B} Q52 ${56+B} 50 ${40+B} Z" fill="${scale}" stroke="${scaleDark}" stroke-width="1.2"/>` +
+    // horns
+    `<polygon points="54,${32+B} 50,${22+B} 56,${30+B}" fill="${scaleHi}" stroke="${scaleDark}" stroke-width="0.8"/>` +
+    `<polygon points="74,${32+B} 78,${22+B} 72,${30+B}" fill="${scaleHi}" stroke="${scaleDark}" stroke-width="0.8"/>` +
+    // eyes: icy blue
+    `<ellipse cx="57" cy="${44+B}" rx="2" ry="2.5" fill="${P.white}"/><circle cx="57" cy="${44+B}" r="1" fill="${scaleDark}"/>` +
+    `<ellipse cx="71" cy="${44+B}" rx="2" ry="2.5" fill="${P.white}"/><circle cx="71" cy="${44+B}" r="1" fill="${scaleDark}"/>` +
+    // fangs
+    `<polygon points="58,${56+B} 56,${62+B} 60,${60+B}" fill="${P.white}"/>` +
+    `<polygon points="70,${56+B} 72,${62+B} 68,${60+B}" fill="${P.white}"/>`;
+  // tail
+  const tail = `<path d="M64 ${100+B} Q70 ${116+B} 80 ${114+B}" stroke="${scale}" stroke-width="8" fill="none" stroke-linecap="round"/>` +
+    `<polygon points="82,${110+B} 88,${108+B} 84,${118+B}" fill="${scaleHi}" stroke="${scaleDark}" stroke-width="0.8"/>`;
+  // icy breath (frame 1/3 = small puff)
+  const breath = (f === 1 || f === 3)
+    ? `<g opacity="0.55"><circle cx="64" cy="${22+B}" r="3" fill="${scaleHi}"/><circle cx="60" cy="${18+B}" r="2" fill="${P.white}"/></g>`
+    : '';
+  return svg(128, 128,
+    `<ellipse cx="64" cy="122" rx="30" ry="4.5" fill="${P.black}" opacity="0.45"/>` +
+    tail + wings + body + head + breath
+  );
+}
+function fdAttack(dir, f) {
+  const base = fdPose(f, 1, dir);
+  const fx = f === 1
+    ? `<g opacity="0.75"><circle cx="64" cy="18" r="6" fill="#c8e4ff"/><circle cx="56" cy="12" r="3" fill="${P.white}"/><circle cx="72" cy="12" r="3" fill="${P.white}"/></g>`
+    : f === 2
+    ? `<g fill="#c8e4ff" opacity="0.8"><polygon points="48,0 52,16 44,16"/><polygon points="60,0 64,16 56,16"/><polygon points="72,0 76,16 68,16"/><polygon points="84,0 88,16 80,16"/></g>`
+    : '';
+  return base.replace('</svg>', fx + '</svg>');
+}
+
+// ── ROT TROLL (plague-tinted, sickly green, pustules) ───────
+export function rotTrollFrame(dir, anim, f) {
+  // Reuse trollFrame shape; overlay rot palette via a color-swap wrapper.
+  const base = trollFrame(dir, anim, f);
+  // Recolor: darken skin, add pustules and green mist.
+  // Strip <svg> wrapper, wrap in filter + overlay pustules.
+  const inner = stripSvgWrapper(base);
+  const pustules = anim === 'death' ? '' :
+    `<g opacity="0.8">
+      <circle cx="46" cy="72" r="3" fill="#9adf3c" stroke="#3a5a1a" stroke-width="0.6"/>
+      <circle cx="82" cy="86" r="2.5" fill="#9adf3c" stroke="#3a5a1a" stroke-width="0.6"/>
+      <circle cx="68" cy="62" r="2" fill="#c4e868" stroke="#3a5a1a" stroke-width="0.5"/>
+      <circle cx="54" cy="92" r="2.5" fill="#9adf3c" stroke="#3a5a1a" stroke-width="0.6"/>
+    </g>`;
+  const mist = anim === 'death' ? '' :
+    `<g opacity="0.35" fill="#9adf3c"><circle cx="30" cy="50" r="6"/><circle cx="100" cy="48" r="5"/><circle cx="26" cy="110" r="7"/></g>`;
+  return svg(128, 128,
+    // darken underlay
+    `<filter id="rot_${anim}_${f}"><feColorMatrix values="0.7 0 0 0 0  0.1 0.9 0 0 -0.1  0.05 0 0.5 0 -0.05  0 0 0 1 0"/></filter>` +
+    `<g filter="url(#rot_${anim}_${f})">${inner}</g>` +
+    mist + pustules
+  );
+}

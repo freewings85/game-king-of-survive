@@ -1,0 +1,46 @@
+<!doctype html><html><head><style>
+body{margin:0;background:#181c22;color:#eee;font-family:sans-serif;padding:16px}
+h2{color:#ffd87a;margin:18px 0 6px;font-size:14px}
+</style></head><body>
+<h2>All 5 bosses — full sheets (4×6, 128px frames)</h2>
+<div><div style="display:inline-block;vertical-align:top;margin:0 12px 12px 0">
+    <div style="font-size:12px;color:#ffd87a;margin-bottom:4px;font-family:monospace">stone_giant</div>
+    <img src="boss_stone_giant.png" style="background:#4a8a22;border:1px solid #333;image-rendering:pixelated">
+    <div style="font-size:9px;color:#888;margin-top:2px">boss_stone_giant.png 512×768</div>
+  </div><div style="display:inline-block;vertical-align:top;margin:0 12px 12px 0">
+    <div style="font-size:12px;color:#ffd87a;margin-bottom:4px;font-family:monospace">shadow_mage</div>
+    <img src="boss_shadow_mage.png" style="background:#4a8a22;border:1px solid #333;image-rendering:pixelated">
+    <div style="font-size:9px;color:#888;margin-top:2px">boss_shadow_mage.png 512×768</div>
+  </div><div style="display:inline-block;vertical-align:top;margin:0 12px 12px 0">
+    <div style="font-size:12px;color:#ffd87a;margin-bottom:4px;font-family:monospace">berserker</div>
+    <img src="boss_berserker.png" style="background:#4a8a22;border:1px solid #333;image-rendering:pixelated">
+    <div style="font-size:9px;color:#888;margin-top:2px">boss_berserker.png 512×768</div>
+  </div><div style="display:inline-block;vertical-align:top;margin:0 12px 12px 0">
+    <div style="font-size:12px;color:#ffd87a;margin-bottom:4px;font-family:monospace">frost_dragon</div>
+    <img src="boss_frost_dragon.png" style="background:#4a8a22;border:1px solid #333;image-rendering:pixelated">
+    <div style="font-size:9px;color:#888;margin-top:2px">boss_frost_dragon.png 512×768</div>
+  </div><div style="display:inline-block;vertical-align:top;margin:0 12px 12px 0">
+    <div style="font-size:12px;color:#ffd87a;margin-bottom:4px;font-family:monospace">rot_troll</div>
+    <img src="boss_rot_troll.png" style="background:#4a8a22;border:1px solid #333;image-rendering:pixelated">
+    <div style="font-size:9px;color:#888;margin-top:2px">boss_rot_troll.png 512×768</div>
+  </div></div>
+<h2>Silhouette test (row 2 col 0 = down walk frame 0, zoomed 3×)</h2>
+<div><div style="display:inline-block;margin:0 8px"><canvas id="sil_stone_giant" width="384" height="384" style="image-rendering:pixelated;background:#4a8a22;border:1px solid #333"></canvas><div style="font-size:10px;color:#ccc;margin-top:2px">stone_giant</div></div><div style="display:inline-block;margin:0 8px"><canvas id="sil_shadow_mage" width="384" height="384" style="image-rendering:pixelated;background:#4a8a22;border:1px solid #333"></canvas><div style="font-size:10px;color:#ccc;margin-top:2px">shadow_mage</div></div><div style="display:inline-block;margin:0 8px"><canvas id="sil_berserker" width="384" height="384" style="image-rendering:pixelated;background:#4a8a22;border:1px solid #333"></canvas><div style="font-size:10px;color:#ccc;margin-top:2px">berserker</div></div><div style="display:inline-block;margin:0 8px"><canvas id="sil_frost_dragon" width="384" height="384" style="image-rendering:pixelated;background:#4a8a22;border:1px solid #333"></canvas><div style="font-size:10px;color:#ccc;margin-top:2px">frost_dragon</div></div><div style="display:inline-block;margin:0 8px"><canvas id="sil_rot_troll" width="384" height="384" style="image-rendering:pixelated;background:#4a8a22;border:1px solid #333"></canvas><div style="font-size:10px;color:#ccc;margin-top:2px">rot_troll</div></div></div>
+<script>
+async function zoom(src, id){
+  const img=new Image(); img.src=src;
+  await new Promise(r=>img.onload=r);
+  const c=document.getElementById(id); const ctx=c.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(img, 0, 2*128, 128, 128, 0, 0, 384, 384);
+}
+(async()=>{
+  await zoom('boss_stone_giant.png','sil_stone_giant');
+  await zoom('boss_shadow_mage.png','sil_shadow_mage');
+  await zoom('boss_berserker.png','sil_berserker');
+  await zoom('boss_frost_dragon.png','sil_frost_dragon');
+  await zoom('boss_rot_troll.png','sil_rot_troll');
+  window.__ready=true;
+})();
+</script>
+</body></html>

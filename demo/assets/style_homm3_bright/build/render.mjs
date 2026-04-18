@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame } from './svgs.mjs';
+import { TILES, mageFrame, orcFrame, uiFrameFull, treeBig, treeSmall, rock, house, fence, crate, autotileGrassDirt, autotileGrassStone, warriorFrame, scoutFrame, goblinFrame, slimeFrame, wolfFrame, skeletonFrame, trollFrame, stoneGiantFrame, shadowMageFrame, berserkerFrame, frostDragonFrame, rotTrollFrame } from './svgs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACK_DIR = path.resolve(__dirname, '..');
@@ -30,6 +30,7 @@ async function main() {
   if (target === 'all' || target === 'scout')    jobs.push(() => buildChar(page, 'scout',   scoutFrame));
   if (target === 'all' || target === 'mobs')     jobs.push(() => buildMobs(page));
   if (target === 'all' || target === 'boss')     jobs.push(() => buildBoss(page));
+  if (target === 'all' || target === 'bosses')   jobs.push(() => buildBosses(page));
 
   for (const j of jobs) await j();
 
@@ -387,6 +388,47 @@ async function buildBoss(page) {
 
 function blank128() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128"></svg>`;
+}
+
+// ── FIVE BOSSES ────────────────────────────────────────────
+// IDs match Developer's BOSS_TYPES: stone_giant, shadow_mage,
+// berserker, frost_dragon, rot_troll. Same 4×6 grid as boss_troll.
+async function buildBosses(page) {
+  const bosses = [
+    { id: 'stone_giant',  fn: stoneGiantFrame,  accent: '#4a6a8a' },
+    { id: 'shadow_mage',  fn: shadowMageFrame,  accent: '#c83af0' },
+    { id: 'berserker',    fn: berserkerFrame,   accent: '#c41a1a' },
+    { id: 'frost_dragon', fn: frostDragonFrame, accent: '#6aaacc' },
+    { id: 'rot_troll',    fn: rotTrollFrame,    accent: '#9adf3c' },
+  ];
+  for (const b of bosses) {
+    console.log(`[boss:${b.id}] …`);
+    const cells = [];
+    const dirs = ['U', 'L', 'D', 'R'];
+    for (const d of dirs) for (let f = 0; f < 4; f++) cells.push(b.fn(d, 'walk', f));
+    for (let f = 0; f < 4; f++) cells.push(f < 3 ? b.fn('D', 'attack', f) : blank128());
+    for (let f = 0; f < 4; f++) cells.push(f < 3 ? b.fn('D', 'death', f)  : blank128());
+    const sheet = await composite(page, cells, 128, 128, 4);
+    await writeFile(`boss_${b.id}.png`, sheet);
+    await writeJSON(`boss_${b.id}.json`, {
+      image: `boss_${b.id}.png`,
+      frameW: 128, frameH: 128,
+      sheetCols: 4, sheetRows: 6,
+      directionOrder: ['up', 'left', 'down', 'right'],
+      anims: {
+        walk:   { rowBase: 0, rowFromDir: true,  frames: 4, fps: 6,  skipFrame0: false },
+        attack: { rowBase: 4, rowFromDir: false, frames: 3, fps: 8,  skipFrame0: false },
+        death:  { rowBase: 5, rowFromDir: false, frames: 3, fps: 6,  skipFrame0: false, loop: false },
+      },
+      previewFrame: { row: 2, col: 0 },
+      style: 'homm3_bright',
+      kind: 'boss',
+      bossId: b.id,
+      accentColor: b.accent,
+      collider: { x: 32, y: 64, w: 64, h: 56 },
+      anchor:   { x: 64, y: 112 },
+    });
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
