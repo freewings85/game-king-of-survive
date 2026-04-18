@@ -1,0 +1,97 @@
+{
+  "style": "homm3_bright",
+  "points": {
+    "watchtower": {
+      "file": "watchtower.png",
+      "w": 64,
+      "h": 128,
+      "anchor": {
+        "x": 32,
+        "y": 124
+      },
+      "collider": {
+        "x": 14,
+        "y": 88,
+        "w": 36,
+        "h": 36
+      },
+      "captureGlow": {
+        "cx": 32,
+        "cy": 122,
+        "rx": 26,
+        "ry": 6
+      },
+      "tagline": "vision radius +120%, enemy silhouettes through decor",
+      "recommendedBuff": "vision"
+    },
+    "temple": {
+      "file": "temple.png",
+      "w": 64,
+      "h": 128,
+      "anchor": {
+        "x": 32,
+        "y": 124
+      },
+      "collider": {
+        "x": 8,
+        "y": 100,
+        "w": 48,
+        "h": 22
+      },
+      "captureGlow": {
+        "cx": 32,
+        "cy": 122,
+        "rx": 28,
+        "ry": 6.5
+      },
+      "tagline": "steady +2 hp/s regen while within radius",
+      "recommendedBuff": "regen"
+    },
+    "camp": {
+      "file": "camp.png",
+      "w": 64,
+      "h": 128,
+      "anchor": {
+        "x": 32,
+        "y": 124
+      },
+      "collider": {
+        "x": 6,
+        "y": 88,
+        "w": 52,
+        "h": 34
+      },
+      "captureGlow": {
+        "cx": 32,
+        "cy": 122,
+        "rx": 30,
+        "ry": 7
+      },
+      "tagline": "enemies within 600px pinged on minimap for 30s",
+      "recommendedBuff": "radar"
+    }
+  },
+  "captureBar": {
+    "frame": {
+      "file": "capture_bar.png",
+      "w": 192,
+      "h": 32
+    },
+    "nineSlice": {
+      "dir": "capture_bar9/",
+      "cornerSize": 8
+    },
+    "fillTextures": {
+      "neutral": "capture_fill_neutral.png",
+      "team1": "capture_fill_team1.png",
+      "team2": "capture_fill_team2.png"
+    },
+    "fillInset": {
+      "x": 6,
+      "y": 6,
+      "w": 180,
+      "h": 16
+    },
+    "usage": "Tile fill texture horizontally inside fillInset at current progress percentage."
+  }
+}

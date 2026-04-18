@@ -644,6 +644,152 @@ export function treeRow() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// STRATEGIC POINTS (experiment C) — 64×128 standing sprites.
+// Each has a bottom anchor and a captureGlow zone near the base
+// (Developer tints this circle by owning-team color). Top half is
+// the iconic silhouette readable from across the map.
+// ─────────────────────────────────────────────────────────────
+export function strategicWatchtower() {
+  return svg(64, 128,
+    // ground shadow
+    `<ellipse cx="32" cy="122" rx="22" ry="3.5" fill="${P.black}" opacity="0.5"/>` +
+    // capture glow plate (Developer tints this by team)
+    `<ellipse cx="32" cy="122" rx="26" ry="6" fill="${P.gold}" opacity="0.18"/>` +
+    // stone base (wider at bottom)
+    `<path d="M14 118 L50 118 L46 92 L18 92 Z" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1.2"/>` +
+    // base brick lines
+    `<line x1="16" y1="105" x2="48" y2="105" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+    `<line x1="24" y1="92" x2="24" y2="118" stroke="${P.stoneDark}" stroke-width="0.4"/>` +
+    `<line x1="40" y1="92" x2="40" y2="118" stroke="${P.stoneDark}" stroke-width="0.4"/>` +
+    // door
+    `<path d="M28 118 L28 108 Q32 104 36 108 L36 118 Z" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<circle cx="34" cy="114" r="0.8" fill="${P.gold}"/>` +
+    // tower shaft
+    `<path d="M18 92 L46 92 L44 42 L20 42 Z" fill="${P.stoneLight}" stroke="${P.stoneDark}" stroke-width="1.2"/>` +
+    // tower shading on right side
+    `<path d="M34 92 L44 92 L42 42 L34 42 Z" fill="${P.stoneMid}" opacity="0.55"/>` +
+    // arrow slits (3 vertical)
+    `<rect x="22" y="60" width="2" height="8" fill="${P.black}"/>` +
+    `<rect x="31" y="56" width="2" height="10" fill="${P.black}"/>` +
+    `<rect x="40" y="60" width="2" height="8" fill="${P.black}"/>` +
+    // crenellations (battlement) at top of shaft
+    `<path d="M18 42 L22 42 L22 38 L26 38 L26 42 L30 42 L30 38 L34 38 L34 42 L38 42 L38 38 L42 38 L42 42 L46 42 L46 34 L18 34 Z" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="1"/>` +
+    // conical wooden roof
+    `<polygon points="14,36 50,36 32,4" fill="${P.blood}" stroke="${P.robeRedLo}" stroke-width="1.2"/>` +
+    `<line x1="20" y1="32" x2="32" y2="8" stroke="${P.robeRedLo}" stroke-width="0.5" opacity="0.7"/>` +
+    `<line x1="32" y1="8" x2="32" y2="36" stroke="${P.robeRedLo}" stroke-width="0.5" opacity="0.7"/>` +
+    `<line x1="44" y1="32" x2="32" y2="8" stroke="${P.robeRedLo}" stroke-width="0.5" opacity="0.7"/>` +
+    // flag pole + pennant
+    `<line x1="32" y1="4" x2="32" y2="-6" stroke="${P.black}" stroke-width="0.8"/>` +
+    `<polygon points="32,0 48,4 32,8" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.6"/>`
+  );
+}
+
+export function strategicTemple() {
+  return svg(64, 128,
+    `<ellipse cx="32" cy="122" rx="24" ry="4" fill="${P.black}" opacity="0.5"/>` +
+    // capture glow
+    `<ellipse cx="32" cy="122" rx="28" ry="6.5" fill="#c8e4ff" opacity="0.25"/>` +
+    // marble base platform (stepped)
+    `<path d="M6 122 L58 122 L54 112 L10 112 Z" fill="${P.stoneLight}" stroke="${P.stoneDark}" stroke-width="1.2"/>` +
+    `<path d="M10 112 L54 112 L50 102 L14 102 Z" fill="${P.parchHi}" stroke="${P.stoneDark}" stroke-width="1"/>` +
+    `<line x1="14" y1="107" x2="50" y2="107" stroke="${P.stoneDark}" stroke-width="0.5"/>` +
+    // columns (4)
+    [12, 24, 36, 48].map(x => (
+      `<rect x="${x}" y="52" width="6" height="50" fill="${P.stoneLight}" stroke="${P.stoneDark}" stroke-width="0.8"/>` +
+      `<rect x="${x-1}" y="48" width="8" height="4" fill="${P.parchHi}" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+      `<rect x="${x-1}" y="100" width="8" height="4" fill="${P.parchHi}" stroke="${P.stoneDark}" stroke-width="0.6"/>` +
+      `<line x1="${x+1.5}" y1="52" x2="${x+1.5}" y2="100" stroke="${P.stoneDark}" stroke-width="0.3" opacity="0.6"/>` +
+      `<line x1="${x+4}" y1="52" x2="${x+4}" y2="100" stroke="${P.stoneDark}" stroke-width="0.3" opacity="0.6"/>`
+    )).join('') +
+    // pediment (triangle roof) with gold trim
+    `<polygon points="4,48 60,48 32,18" fill="${P.parchHi}" stroke="${P.stoneDark}" stroke-width="1.4"/>` +
+    `<polygon points="8,48 56,48 32,22" fill="${P.parch}" stroke="${P.goldLo}" stroke-width="0.6"/>` +
+    // sacred flame / altar glow between center columns
+    `<ellipse cx="32" cy="90" rx="6" ry="7" fill="${P.goldHi}" opacity="0.5"/>` +
+    `<ellipse cx="32" cy="88" rx="3" ry="5" fill="#fff" opacity="0.85"/>` +
+    `<path d="M30 94 Q32 82 34 94 Q33 86 32 84 Q31 86 30 94 Z" fill="${P.gold}"/>` +
+    // gold star at apex
+    `<polygon points="32,14 33.5,19 38,19 34.5,22 36,27 32,24 28,27 29.5,22 26,19 30.5,19" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.5"/>`
+  );
+}
+
+export function strategicCamp() {
+  return svg(64, 128,
+    `<ellipse cx="32" cy="122" rx="26" ry="4" fill="${P.black}" opacity="0.5"/>` +
+    // capture glow
+    `<ellipse cx="32" cy="122" rx="30" ry="7" fill="#ff9a3a" opacity="0.22"/>` +
+    // back tent (larger, centered back)
+    `<path d="M14 108 L50 108 L46 62 L18 62 Z" fill="${P.parch}" stroke="${P.leatherLo}" stroke-width="1.2"/>` +
+    `<polygon points="14,62 50,62 32,38" fill="${P.parchLo}" stroke="${P.leatherLo}" stroke-width="1.2"/>` +
+    // tent stripes
+    `<line x1="20" y1="62" x2="22" y2="108" stroke="${P.blood}" stroke-width="2" opacity="0.85"/>` +
+    `<line x1="32" y1="62" x2="32" y2="108" stroke="${P.blood}" stroke-width="2.5"/>` +
+    `<line x1="44" y1="62" x2="42" y2="108" stroke="${P.blood}" stroke-width="2" opacity="0.85"/>` +
+    // tent flap opening
+    `<path d="M28 108 Q32 86 36 108 Z" fill="${P.black}" opacity="0.85"/>` +
+    // center pole + flag
+    `<line x1="32" y1="38" x2="32" y2="14" stroke="${P.leatherLo}" stroke-width="1"/>` +
+    `<polygon points="32,14 46,18 32,22" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.5"/>` +
+    // left small tent
+    `<polygon points="6,110 24,110 15,92" fill="${P.leatherHi}" stroke="${P.leatherLo}" stroke-width="0.9"/>` +
+    `<path d="M14 110 L14 104 L16 104 L16 110 Z" fill="${P.black}" opacity="0.65"/>` +
+    // right side supply crates
+    `<rect x="42" y="100" width="12" height="10" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<rect x="42" y="100" width="12" height="3" fill="${P.leatherHi}" opacity="0.6"/>` +
+    `<line x1="48" y1="100" x2="48" y2="110" stroke="${P.leatherLo}" stroke-width="0.5"/>` +
+    `<rect x="44" y="90" width="9" height="10" fill="${P.leather}" stroke="${P.leatherLo}" stroke-width="0.8"/>` +
+    `<rect x="44" y="90" width="9" height="3" fill="${P.leatherHi}" opacity="0.6"/>` +
+    // campfire in front
+    `<ellipse cx="30" cy="118" rx="8" ry="3" fill="${P.black}" opacity="0.5"/>` +
+    `<path d="M26 118 L28 114 L27 118 L30 110 L32 118 L33 113 L34 118 Z" fill="${P.blood}"/>` +
+    `<path d="M28 116 L30 112 L32 116 Z" fill="${P.gold}"/>` +
+    // stones around fire
+    `<circle cx="22" cy="118" r="1.5" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.4"/>` +
+    `<circle cx="38" cy="119" r="1.5" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.4"/>` +
+    `<circle cx="30" cy="121" r="1.2" fill="${P.stoneMid}" stroke="${P.stoneDark}" stroke-width="0.4"/>`
+  );
+}
+
+// 192×32 — capture progress bar, 9-slice friendly.
+// Includes tickmarks + empty-fill indicator. Developer tints the
+// fill and glow by capturing team color; neutral version uses gold.
+// Separate `capture_bar_fill` used as a repeatable texture to
+// overlay inside the frame at current progress.
+export function captureBarFrame() {
+  return svg(192, 32,
+    // drop shadow
+    `<rect x="0" y="2" width="192" height="32" fill="${P.black}" opacity="0.35" rx="8"/>` +
+    // outer gold frame
+    `<rect x="0" y="0" width="192" height="28" rx="6" fill="${P.leatherLo}" stroke="${P.goldLo}" stroke-width="1.2"/>` +
+    // inner dark trough
+    `<rect x="6" y="6" width="180" height="16" rx="3" fill="#1a1a22" stroke="${P.goldLo}" stroke-width="0.6"/>` +
+    // segment tick marks (every 25%)
+    `<line x1="51"  y1="6" x2="51"  y2="22" stroke="${P.goldLo}" stroke-width="0.6" opacity="0.7"/>` +
+    `<line x1="96"  y1="6" x2="96"  y2="22" stroke="${P.goldLo}" stroke-width="0.6" opacity="0.7"/>` +
+    `<line x1="141" y1="6" x2="141" y2="22" stroke="${P.goldLo}" stroke-width="0.6" opacity="0.7"/>` +
+    // gold corner curls (frame flourish)
+    `<polygon points="4,2 10,2 10,6 6,6" fill="${P.gold}"/>` +
+    `<polygon points="182,2 188,2 186,6 182,6" fill="${P.gold}"/>` +
+    `<polygon points="4,26 10,26 10,22 6,22" fill="${P.gold}"/>` +
+    `<polygon points="182,26 188,26 186,22 182,22" fill="${P.gold}"/>`
+  );
+}
+
+// 8×16 — tiled fill chunk colored by team. We produce 3 colored
+// variants so Developer just picks by team id.
+function captureBarFill(color, highlight) {
+  return svg(8, 16,
+    `<rect width="8" height="16" fill="${color}"/>` +
+    `<rect width="8" height="3" fill="${highlight}" opacity="0.75"/>` +
+    `<rect y="13" width="8" height="3" fill="${P.black}" opacity="0.3"/>`
+  );
+}
+export const captureBarFillNeutral = () => captureBarFill(P.gold,    P.goldHi);
+export const captureBarFillTeam1   = () => captureBarFill('#2a5ac8', '#9fd8ff');
+export const captureBarFillTeam2   = () => captureBarFill('#c41a1a', '#ff9a9a');
+
 export function crate() {
   return svg(64, 64,
     `<ellipse cx="32" cy="56" rx="22" ry="2.5" fill="${P.black}" opacity="0.35"/>` +
