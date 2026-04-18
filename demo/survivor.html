@@ -1956,7 +1956,9 @@ function doLogin() {
       facingAngle: 0
     };
     allPlayers = [player];
-    player.factionId = 0; // player's own faction in solo mode
+    // Solo = 8-way FFA, each player in a unique faction (0..7).
+    // Team = 4v4, player + first 3 bots are faction 1, other 4 bots are faction 2.
+    player.factionId = gameMode === 'team' ? 1 : 0;
     localPlayerId = 0;
     player.isLocal = true;
     player.isBot = false;
@@ -2454,6 +2456,23 @@ function doLogin() {
     }
     // === Generate PUBG-style buildings, crates, walls across the map ===
     _generateBRStructures();
+    // Seed initial mob field so the world feels populated from t=0
+    _brMobState.spawnTimer = 0;
+    _brMobState.bossTimer = 120; // first boss at 120s
+    _brMobState.matchBossType = null; // each match rolls a fresh species
+    _brMobState.respawnPending = false;
+    _brMobState.lastBossCamp = -1;
+    _activeBossRef = null;
+    for (var _seedI = 0; _seedI < 15; _seedI++) {
+      var _seedA = Math.random() * Math.PI * 2;
+      var _seedR = 300 + Math.random() * (Math.min(WORLD_W, WORLD_H) * 0.35);
+      var _seedX = WORLD_W / 2 + Math.cos(_seedA) * _seedR;
+      var _seedY = WORLD_H / 2 + Math.sin(_seedA) * _seedR;
+      _seedX = Math.max(60, Math.min(WORLD_W - 60, _seedX));
+      _seedY = Math.max(60, Math.min(WORLD_H - 60, _seedY));
+      var _seedType = (_seedI % 5 === 0) ? 'fast' : ((_seedI % 5 === 1) ? 'swarm' : 'normal');
+      spawnOfflineEnemy(_seedType, _seedX, _seedY);
+    }
     // homm3_bright decor scatter — retries once assets finish loading if empty
     _generateHomm3Decor();
     // Autotile biome grid rebuilds to match current WORLD_W/H
@@ -2466,9 +2485,136 @@ function doLogin() {
     stormZone.radius = Math.max(WORLD_W, WORLD_H) * 0.75;
     stormZone.centerX = WORLD_W / 2;
     stormZone.centerY = WORLD_H / 2;
-    stormZone.shrinkRate = 24; // px/s (was 12 — tighter ring pressure)
-    stormZone._shrinkDelay = 20; // start shrinking at 20s (was 45)
-    stormZone._minRadius = 120;
+    // BR + MOBA: early minutes are farming, final minute is forced engagement.
+    stormZone.shrinkRate = 18; // px/s
+    stormZone._shrinkDelay = 30; // farm window before pressure begins
+    stormZone._minRadius = 180;
+  }
+
+  // BR+MOBA continuous mob field. Maintains `_brMobTarget` live hostile
+  // mobs scattered across the map so every player has something nearby to
+  // farm. A single boss spawns periodically at one of the named camps.
+  // Named boss camps (Leo spec 2026-04-18): 5 predefined points, position
+  // scales with WORLD_W/H so the regions feel coherent at any map size.
+  function _bossCamps() {
+    return [
+      { name: '北岭废墟', fx: 0.50, fy: 0.15 },
+      { name: '南岸石阵', fx: 0.50, fy: 0.85 },
+      { name: '东丘营地', fx: 0.85, fy: 0.50 },
+      { name: '西林洞窟', fx: 0.15, fy: 0.50 },
+      { name: '中央祭坛', fx: 0.50, fy: 0.50 }
+    ];
+  }
+  // Boss species (Leo 2026-04-18): the first boss spawn of a match picks
+  // one species uniformly and it is locked for the rest of the match —
+  // different matches see different bosses (replay variety).
+  // stats are multipliers on top of the base boss row (hp=500, spd=20, r=60).
+  var BOSS_TYPES = [
+    { id: 'stone_giant',  name: '石巨人',   hpMul: 1.80, spdMul: 0.70, radMul: 1.20, color: '#888a95' },
+    { id: 'shadow_mage',  name: '暗影法师', hpMul: 0.90, spdMul: 1.10, radMul: 0.95, color: '#5a2a8a' },
+    { id: 'berserker',    name: '狂战士',   hpMul: 0.95, spdMul: 1.60, radMul: 0.95, color: '#b13030' },
+    { id: 'frost_dragon', name: '冰霜恶龙', hpMul: 1.30, spdMul: 1.00, radMul: 1.25, color: '#4a9edd' },
+    { id: 'rot_troll',    name: '腐烂巨魔', hpMul: 1.50, spdMul: 0.85, radMul: 1.15, color: '#5e7a32' }
+  ];
+  // Cadence: first spawn 120s into match, then 180-240s after each death.
+  // bossTimer tracks time until next eligible spawn attempt.
+  var _brMobState = {
+    spawnTimer: 0,
+    bossTimer: 120,
+    targetCount: 22,
+    lastBossCamp: -1,
+    matchBossType: null,    // locked on first spawn
+    respawnPending: false   // true while waiting for bossTimer after a death
+  };
+  // Banner shown when a boss drops; rendered from drawGame.
+  var bossDropBanner = { active: false, timer: 0, text: '', zoneName: '' };
+  // Live boss location for minimap crown marker
+  var _activeBossRef = null;
+  function updateBRMobField(dt) {
+    _brMobState.spawnTimer -= dt;
+    _brMobState.bossTimer -= dt;
+    // Count live hostile (non-treasure) mobs
+    var alive = 0, liveBoss = 0;
+    for (var i = 0; i < offlineEnemies.length; i++) {
+      var e = offlineEnemies[i];
+      if (!e.alive || !e.hostile) continue;
+      alive++;
+      if (e.type === 'boss' || e.type === 'miniBoss') liveBoss++;
+    }
+    // Regular spawn: if under target, drip one at a uniformly-random world
+    // cell that has no player within 220px (avoid "怪在玩家脸上" spawns).
+    if (_brMobState.spawnTimer <= 0 && alive < _brMobState.targetCount) {
+      _brMobState.spawnTimer = 0.7 + Math.random() * 0.6;
+      var pool = (gameTime < 45) ? ['normal', 'normal', 'swarm', 'fast']
+                : (gameTime < 120) ? ['normal', 'fast', 'tank', 'swarm', 'ranged']
+                                    : ['fast', 'tank', 'ranged', 'normal', 'tank'];
+      var attempts = 0, ex = 0, ey = 0, ok = false;
+      while (attempts < 10 && !ok) {
+        attempts++;
+        ex = 80 + Math.random() * (WORLD_W - 160);
+        ey = 80 + Math.random() * (WORLD_H - 160);
+        ok = true;
+        // Far enough from every player
+        for (var pi = 0; pi < allPlayers.length; pi++) {
+          var p = allPlayers[pi];
+          if (!p || !p.alive) continue;
+          var dx = ex - p.x, dy = ey - p.y;
+          if (dx * dx + dy * dy < 220 * 220) { ok = false; break; }
+        }
+        // Inside the current storm ring (so mobs don't wither instantly)
+        if (ok && stormZone.active) {
+          var _dsx = ex - stormZone.centerX, _dsy = ey - stormZone.centerY;
+          if (_dsx * _dsx + _dsy * _dsy > stormZone.radius * stormZone.radius) ok = false;
+        }
+      }
+      if (ok) spawnOfflineEnemy(pool[Math.floor(Math.random() * pool.length)], ex, ey);
+    }
+    // Boss cadence: first spawn when bossTimer elapses (120s default),
+    // after a death bossTimer resets to 180-240s. Max 1 alive at a time.
+    if (_brMobState.bossTimer <= 0 && liveBoss === 0) {
+      // Lock boss species for the whole match on the FIRST spawn.
+      if (!_brMobState.matchBossType) {
+        _brMobState.matchBossType = BOSS_TYPES[Math.floor(Math.random() * BOSS_TYPES.length)];
+      }
+      var bossType = _brMobState.matchBossType;
+      var camps = _bossCamps();
+      // Pick a camp different from last time so the Boss visits variety
+      var idx = Math.floor(Math.random() * camps.length);
+      if (camps.length > 1 && idx === _brMobState.lastBossCamp) idx = (idx + 1) % camps.length;
+      _brMobState.lastBossCamp = idx;
+      var camp = camps[idx];
+      var bx = Math.round(WORLD_W * camp.fx);
+      var by = Math.round(WORLD_H * camp.fy);
+      spawnOfflineEnemy('boss', bx, by);
+      _activeBossRef = offlineEnemies[offlineEnemies.length - 1];
+      // Apply species modifiers
+      _activeBossRef.bossTypeId = bossType.id;
+      _activeBossRef.bossTypeName = bossType.name;
+      _activeBossRef.hp = Math.round(_activeBossRef.hp * bossType.hpMul);
+      _activeBossRef.maxHp = _activeBossRef.hp;
+      _activeBossRef.speed = Math.round(_activeBossRef.speed * bossType.spdMul);
+      _activeBossRef.radius = Math.round(_activeBossRef.radius * bossType.radMul);
+      _activeBossRef.color = bossType.color;
+      _activeBossRef._campName = camp.name;
+      // Suspend bossTimer until this boss dies
+      _brMobState.bossTimer = Number.POSITIVE_INFINITY;
+      _brMobState.respawnPending = false;
+      // Center-top 2.5s banner includes species name
+      bossDropBanner.active = true;
+      bossDropBanner.timer = 2.5;
+      bossDropBanner.text = '★ ' + bossType.name + ' 已出现在 ' + camp.name + ' ★';
+      bossDropBanner.zoneName = camp.name;
+      killFeed.push({ text: '⚠ ' + bossType.name + ' 降临 ' + camp.name + ' ⚠', color: '#f44', time: 6 });
+      if (typeof playSound === 'function') playSound('boss_warn');
+    }
+    // On Boss death: start the 180-240s respawn countdown (once).
+    if (_activeBossRef && (!_activeBossRef.alive || _activeBossRef.hp <= 0)) {
+      _activeBossRef = null;
+      if (!_brMobState.respawnPending) {
+        _brMobState.bossTimer = 180 + Math.random() * 60;
+        _brMobState.respawnPending = true;
+      }
+    }
   }
 
   function spawnOfflineEnemy(type, x, y) {
@@ -2566,8 +2712,7 @@ function doLogin() {
           }
         }
         if (b._aiState !== 'flee') {
-          // Look for nearest enemy anywhere — large vision radius so bots
-          // don't get stranded in empty corners with nothing to chase.
+          // 1) Look for nearest enemy player anywhere
           var bestTarget = null, bestDist = 1400;
           for (var pi = 0; pi < _allBR.length; pi++) {
             var _tgt = _allBR[pi];
@@ -2577,14 +2722,25 @@ function doLogin() {
             var _td = Math.sqrt(_tdx * _tdx + _tdy * _tdy);
             if (_td < bestDist) { bestDist = _td; bestTarget = _tgt; }
           }
-          if (bestTarget) {
-            b._aiState = 'engage';
-            b._aiTarget = bestTarget;
+          // 2) Look for nearest mob within 340px — prefer farming over
+          //    engaging a far-away player (MOBA jungle pattern)
+          var bestMob = null, bestMobDist = 340;
+          for (var _mi = 0; _mi < offlineEnemies.length; _mi++) {
+            var _m = offlineEnemies[_mi];
+            if (!_m || !_m.alive || !_m.hostile) continue;
+            var _mdx = _m.x - b.x, _mdy = _m.y - b.y;
+            var _md = Math.sqrt(_mdx * _mdx + _mdy * _mdy);
+            if (_md < bestMobDist) { bestMobDist = _md; bestMob = _m; }
+          }
+          if (bestTarget && bestDist < 420) {
+            // Close player trumps farming
+            b._aiState = 'engage'; b._aiTarget = bestTarget;
+          } else if (bestMob) {
+            b._aiState = 'farm'; b._aiTarget = bestMob;
+          } else if (bestTarget) {
+            b._aiState = 'engage'; b._aiTarget = bestTarget;
           } else {
-            // No one in range — push toward storm center so late-game
-            // convergence is inevitable.
-            b._aiState = 'push';
-            b._aiTarget = null;
+            b._aiState = 'push'; b._aiTarget = null;
           }
         }
       }
@@ -2601,6 +2757,31 @@ function doLogin() {
           b.facingAngle = Math.atan2(_fcy, _fcx);
         }
         if (_fd < stormZone.radius * 0.5) b._aiState = 'push';
+      } else if (b._aiState === 'farm' && b._aiTarget && b._aiTarget.alive) {
+        // Approach the mob and swing at melee range
+        var _mdx = b._aiTarget.x - b.x, _mdy = b._aiTarget.y - b.y;
+        var _md = Math.sqrt(_mdx * _mdx + _mdy * _mdy) || 0.001;
+        b.facingAngle = Math.atan2(_mdy, _mdx);
+        var _farmRange = 70;
+        if (_md > _farmRange) {
+          b.x += (_mdx / _md) * bSpeed * dt;
+          b.y += (_mdy / _md) * bSpeed * dt;
+        }
+        if (_md < _farmRange + 20 && b._attackTimer <= 0) {
+          b._attackTimer = b.attackCooldown;
+          var _farmDmg = b.attackDamage + Math.floor(Math.random() * 4);
+          b._aiTarget.hp -= _farmDmg;
+          emit(b._aiTarget.x, b._aiTarget.y, '#ffd060', 4, 90);
+          if (b._aiTarget.hp <= 0 && b._aiTarget.alive) {
+            b._aiTarget.alive = false;
+            b.kills++;
+            // Bot XP from farming: level-up inside match (stays within
+            // existing bot.level but doesn't need party-wide XP logic here)
+            b.level = Math.min(10, (b.level || 1) + ((b._aiTarget.type === 'boss' || b._aiTarget.type === 'miniBoss') ? 2 : 1));
+            b._aiTarget = null;
+            b._aiState = 'push';
+          }
+        }
       } else if (b._aiState === 'push') {
         // Drift toward storm center with small random jitter. Keeps bots
         // converging so "不到对手" never happens.
@@ -2736,8 +2917,9 @@ function doLogin() {
       state = 'gameOver';
     }
 
-    // BR mode — no PVE waves. The 7 bots ARE the opponents.
-    // (updateOfflineWaveSystem retained for multiplayer/network mode only.)
+    // BR + MOBA: continuous mob field (no "第 N 波" banner) — bots and
+    // players farm to level up; boss drops on cadence.
+    updateBRMobField(dt);
     // Combo window tick
     updateComboState(dt);
 
@@ -8229,6 +8411,30 @@ function doLogin() {
       ctx.globalAlpha = 1;
     }
 
+    // Boss drop banner — "★ Boss 已出现在 [区域] ★"
+    if (bossDropBanner.active) {
+      bossDropBanner.timer -= 0.016;
+      if (bossDropBanner.timer <= 0) { bossDropBanner.active = false; }
+      else {
+        var _bbAlpha = Math.min(1, bossDropBanner.timer / 0.4); // fade out last 0.4s
+        var _bbFS = Math.round(Math.min(W, H) * 0.045);
+        var _bbY = Math.round(H * 0.18);
+        ctx.save();
+        ctx.globalAlpha = _bbAlpha;
+        ctx.fillStyle = 'rgba(15,5,5,0.75)';
+        var _bbW = W; ctx.fillRect(0, _bbY - _bbFS, _bbW, _bbFS * 2.2);
+        ctx.fillStyle = '#ffd040';
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = Math.max(3, _bbFS * 0.09);
+        ctx.font = 'bold ' + _bbFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.strokeText(bossDropBanner.text, W / 2, _bbY + _bbFS * 0.1);
+        ctx.fillText(bossDropBanner.text, W / 2, _bbY + _bbFS * 0.1);
+        ctx.textBaseline = 'alphabetic';
+        ctx.restore();
+      }
+    }
+
     // Storm warning bar — red pulsing banner when player is outside safe zone
     if (stormZone.active && player && player.alive !== false && player._inStorm && BR_UI.stormBarReady) {
       var _sbW = Math.min(W - 40, 420);
@@ -8712,6 +8918,27 @@ function doLogin() {
       // White circle border for safe zone
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(scx, scy, sr, 0, Math.PI * 2); ctx.stroke();
+    }
+    // Boss crown marker on minimap — pulsing gold crown so everyone knows
+    // where to converge for the objective.
+    if (_activeBossRef && _activeBossRef.alive) {
+      var _bmx = mmX + (_activeBossRef.x / WORLD_W) * mmW;
+      var _bmy = mmY + (_activeBossRef.y / WORLD_H) * mmH;
+      var _bmPulse = 0.7 + 0.3 * Math.sin(Date.now() / 180);
+      ctx.save();
+      if (BR_UI.crownsReady >= 1 && BR_UI.crowns.gold) {
+        var _bmSz = Math.max(10, Math.round(mmW * 0.14));
+        ctx.globalAlpha = _bmPulse;
+        ctx.drawImage(BR_UI.crowns.gold, _bmx - _bmSz / 2, _bmy - _bmSz / 2, _bmSz, _bmSz);
+      } else {
+        // Fallback: red pulse dot
+        ctx.globalAlpha = _bmPulse;
+        ctx.fillStyle = '#ff2020';
+        ctx.beginPath(); ctx.arc(_bmx, _bmy, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(_bmx, _bmy, 5, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
     }
     // Minimap enemy dots — sample both network entities and offline enemies
     for (var mi = 0; mi < entities.length; mi += 2) {
@@ -10395,6 +10622,10 @@ function doLogin() {
     get offlineEnemies() { return offlineEnemies; },
     get HOMM3_ART() { return HOMM3_ART; },
     get decorItems() { return _decorItems; },
+    get tutorialDone() { return tutorialDone; },
+    set tutorialDone(v) { tutorialDone = !!v; if (v) _tutorialSkipRect = null; },
+    get gameMode() { return gameMode; },
+    set gameMode(v) { gameMode = v; },
     get allPlayers() { return allPlayers; },
     get isDailyMode() { return isDailyMode; },
     get entities() { return entities; },
