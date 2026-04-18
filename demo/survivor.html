@@ -4274,11 +4274,18 @@ function doLogin() {
       for (var i = 0; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) return pool[i].name; }
       return pool[0].name;
     }
-    // Target density: ~1 decor per 240×240 world area → scales with world size.
-    var target = Math.round((WORLD_W * WORLD_H) / (240 * 240));
+    // Target density: ~1 per 200×200 world → +44% vs prior 240×240.
+    // Density varies by position: storm-ring (where late game converges) denser,
+    // spawn + wave-spawn points sparser so they don't block sightlines.
+    var target = Math.round((WORLD_W * WORLD_H) / (200 * 200));
     var cx = WORLD_W / 2, cy = WORLD_H / 2;
+    var SPAWN_CLEAR_R = 240;        // radius around player spawn with no decor
+    var WAVE_CLEAR_R = 110;         // radius around each wave-spawn point
+    var STORM_RING_INNER = 260;     // ring [inner, outer] gets +40% accept rate
+    var STORM_RING_OUTER = Math.min(WORLD_W, WORLD_H) * 0.45;
+    var waveSpawns = (typeof _waveSpawnPoints !== 'undefined' && _waveSpawnPoints) ? _waveSpawnPoints : [];
     var attempts = 0;
-    while (_decorItems.length < target && attempts < target * 6) {
+    while (_decorItems.length < target && attempts < target * 8) {
       attempts++;
       var name = pickName();
       var it = null;
@@ -4286,8 +4293,21 @@ function doLogin() {
       if (!it) continue;
       var dx = 40 + rnd() * (WORLD_W - 80);
       var dy = 40 + rnd() * (WORLD_H - 80);
-      // Keep center ~200px clear for player spawn + immediate combat space
-      if (Math.abs(dx - cx) < 200 && Math.abs(dy - cy) < 200) continue;
+      var rdx = dx - cx, rdy = dy - cy;
+      var rFromCenter = Math.sqrt(rdx * rdx + rdy * rdy);
+      // Keep player spawn clear (circular, larger than before)
+      if (rFromCenter < SPAWN_CLEAR_R) continue;
+      // Keep each wave-spawn point clear
+      var tooClose = false;
+      for (var wi = 0; wi < waveSpawns.length; wi++) {
+        var wp = waveSpawns[wi];
+        var wdx = dx - wp.x, wdy = dy - wp.y;
+        if (wdx * wdx + wdy * wdy < WAVE_CLEAR_R * WAVE_CLEAR_R) { tooClose = true; break; }
+      }
+      if (tooClose) continue;
+      // Density biasing: storm-ring always accepts; outside accepts 70%.
+      var inRing = rFromCenter >= STORM_RING_INNER && rFromCenter <= STORM_RING_OUTER;
+      if (!inRing && rnd() > 0.7) continue;
       // Avoid BR structure footprints
       var hit = false;
       for (var si = 0; si < _brStructures.length; si++) {
@@ -8316,10 +8336,13 @@ function doLogin() {
     // Panel background
     var extraH = gameMode === 'team' ? 14 : 0; // space for team separator
     var panelH = allPlayers.length * rowH + 8 + extraH;
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = '#0a0a18';
-    ctx.fillRect(panelX - 2, panelY - 4, barW + 50, panelH);
-    ctx.globalAlpha = 1;
+    var _ppUsed9 = draw9Slice(ctx, panelX - 2, panelY - 4, barW + 50, panelH, { cornerSize: 10, alpha: 0.8 });
+    if (!_ppUsed9) {
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#0a0a18';
+      ctx.fillRect(panelX - 2, panelY - 4, barW + 50, panelH);
+      ctx.globalAlpha = 1;
+    }
     ctx.font = '10px Arial'; ctx.textAlign = 'left';
     var rowOffset = 0;
     for (var pi = 0; pi < allPlayers.length; pi++) {
@@ -8613,16 +8636,19 @@ function doLogin() {
     // --- Logo frame (y: 20-100) ---
     var logoPulse = 1 + Math.sin(Date.now() * 0.002) * 0.02;
     var frameX = 30, frameY = 20, frameW = 340, frameH = 80;
-    ctx.save();
-    ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 18;
-    var fGrad = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameH);
-    fGrad.addColorStop(0, 'rgba(40,30,10,0.85)'); fGrad.addColorStop(1, 'rgba(15,10,4,0.85)');
-    ctx.fillStyle = fGrad; ctx.fillRect(frameX, frameY, frameW, frameH);
-    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
-    ctx.strokeRect(frameX, frameY, frameW, frameH);
-    ctx.restore();
-    ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
-    ctx.strokeRect(frameX + 4, frameY + 4, frameW - 8, frameH - 8);
+    var _logoUsed9 = draw9Slice(ctx, frameX, frameY, frameW, frameH, { cornerSize: 16, alpha: 1 });
+    if (!_logoUsed9) {
+      ctx.save();
+      ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 18;
+      var fGrad = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameH);
+      fGrad.addColorStop(0, 'rgba(40,30,10,0.85)'); fGrad.addColorStop(1, 'rgba(15,10,4,0.85)');
+      ctx.fillStyle = fGrad; ctx.fillRect(frameX, frameY, frameW, frameH);
+      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+      ctx.strokeRect(frameX, frameY, frameW, frameH);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
+      ctx.strokeRect(frameX + 4, frameY + 4, frameW - 8, frameH - 8);
+    }
     ctx.save();
     ctx.translate(200, frameY + frameH / 2);
     ctx.scale(logoPulse, logoPulse);
@@ -9450,23 +9476,24 @@ function doLogin() {
     // === Stats block — three columns inside a bordered panel ===
     var sy = 168;
     var statsPanelX = 200 - 190, statsPanelY = sy - 18, statsPanelW = 380, statsPanelH = 80;
-    // Panel gradient background
-    var spGrad = ctx.createLinearGradient(statsPanelX, statsPanelY, statsPanelX, statsPanelY + statsPanelH);
-    spGrad.addColorStop(0, 'rgba(30,30,60,0.85)');
-    spGrad.addColorStop(1, 'rgba(10,10,22,0.85)');
-    ctx.fillStyle = spGrad;
-    ctx.fillRect(statsPanelX, statsPanelY, statsPanelW, statsPanelH);
-    // Gold border with glow
-    ctx.save();
-    ctx.shadowColor = victoryWin ? '#ffd700' : '#6688cc';
-    ctx.shadowBlur = 14;
-    ctx.strokeStyle = victoryWin ? '#ffd700' : '#6688cc';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(statsPanelX + 0.5, statsPanelY + 0.5, statsPanelW - 1, statsPanelH - 1);
-    ctx.restore();
-    // Inner hairline
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-    ctx.strokeRect(statsPanelX + 4, statsPanelY + 4, statsPanelW - 8, statsPanelH - 8);
+    // homm3_bright 9-slice frame; falls back to gradient+gold if assets missing.
+    var _statsUsed9 = draw9Slice(ctx, statsPanelX, statsPanelY, statsPanelW, statsPanelH, { cornerSize: 18, alpha: 0.95 });
+    if (!_statsUsed9) {
+      var spGrad = ctx.createLinearGradient(statsPanelX, statsPanelY, statsPanelX, statsPanelY + statsPanelH);
+      spGrad.addColorStop(0, 'rgba(30,30,60,0.85)');
+      spGrad.addColorStop(1, 'rgba(10,10,22,0.85)');
+      ctx.fillStyle = spGrad;
+      ctx.fillRect(statsPanelX, statsPanelY, statsPanelW, statsPanelH);
+      ctx.save();
+      ctx.shadowColor = victoryWin ? '#ffd700' : '#6688cc';
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = victoryWin ? '#ffd700' : '#6688cc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(statsPanelX + 0.5, statsPanelY + 0.5, statsPanelW - 1, statsPanelH - 1);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+      ctx.strokeRect(statsPanelX + 4, statsPanelY + 4, statsPanelW - 8, statsPanelH - 8);
+    }
     // Column dividers
     ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(statsPanelX + statsPanelW / 3, statsPanelY + 10); ctx.lineTo(statsPanelX + statsPanelW / 3, statsPanelY + statsPanelH - 10); ctx.stroke();
