@@ -1,0 +1,101 @@
+{
+  "style": "homm3_bright",
+  "items": [
+    {
+      "name": "tree_big",
+      "file": "decor/tree_big.png",
+      "w": 128,
+      "h": 128,
+      "anchor": {
+        "x": 64,
+        "y": 124
+      },
+      "collider": {
+        "x": 58,
+        "y": 112,
+        "w": 12,
+        "h": 12
+      }
+    },
+    {
+      "name": "tree_small",
+      "file": "decor/tree_small.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 26,
+        "y": 48,
+        "w": 12,
+        "h": 12
+      }
+    },
+    {
+      "name": "rock",
+      "file": "decor/rock.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 12,
+        "y": 20,
+        "w": 40,
+        "h": 28
+      }
+    },
+    {
+      "name": "house",
+      "file": "decor/house.png",
+      "w": 128,
+      "h": 128,
+      "anchor": {
+        "x": 64,
+        "y": 124
+      },
+      "collider": {
+        "x": 14,
+        "y": 40,
+        "w": 100,
+        "h": 70
+      }
+    },
+    {
+      "name": "fence",
+      "file": "decor/fence.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 4,
+        "y": 20,
+        "w": 56,
+        "h": 32
+      }
+    },
+    {
+      "name": "crate",
+      "file": "decor/crate.png",
+      "w": 64,
+      "h": 64,
+      "anchor": {
+        "x": 32,
+        "y": 60
+      },
+      "collider": {
+        "x": 12,
+        "y": 18,
+        "w": 40,
+        "h": 36
+      }
+    }
+  ]
+}

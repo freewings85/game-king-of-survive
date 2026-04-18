@@ -1,0 +1,27 @@
+{
+  "image": "monster_orc.png",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 4,
+  "sheetRows": 4,
+  "directionOrder": [
+    "up",
+    "left",
+    "down",
+    "right"
+  ],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 8,
+      "skipFrame0": false
+    }
+  },
+  "previewFrame": {
+    "row": 2,
+    "col": 0
+  },
+  "style": "homm3_bright"
+}

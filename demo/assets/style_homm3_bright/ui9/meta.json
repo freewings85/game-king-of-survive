@@ -1,0 +1,17 @@
+{
+  "slices": [
+    "tl",
+    "t",
+    "tr",
+    "l",
+    "c",
+    "r",
+    "bl",
+    "b",
+    "br"
+  ],
+  "sliceW": 64,
+  "sliceH": 64,
+  "usage": "9-slice: stretch edges+center, keep corners fixed. cornerSize=16 recommended.",
+  "style": "homm3_bright"
+}

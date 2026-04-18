@@ -1,0 +1,42 @@
+{
+  "image": "player_mage.png",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 4,
+  "sheetRows": 6,
+  "directionOrder": [
+    "up",
+    "left",
+    "down",
+    "right"
+  ],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 10,
+      "skipFrame0": false
+    },
+    "attack": {
+      "rowBase": 4,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 12,
+      "skipFrame0": false
+    },
+    "death": {
+      "rowBase": 5,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 8,
+      "skipFrame0": false,
+      "loop": false
+    }
+  },
+  "previewFrame": {
+    "row": 2,
+    "col": 0
+  },
+  "style": "homm3_bright"
+}

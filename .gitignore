@@ -21,6 +21,10 @@ test-results/
 feedback/
 qa/rounds/*/screenshots/
 
+# Exception: committed game assets (runtime requires them)
+!demo/assets/**/*.png
+!demo/assets/**/*.jpg
+
 # Replay recordings
 server/replays/
 
