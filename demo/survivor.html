@@ -734,6 +734,10 @@ function doLogin() {
   var explosionAoe = [];
   window._chainArcs = [];
   var screenFlash = { color: '', alpha: 0 };
+  // BR combat feedback: red radial vignette flashes from screen edges when
+  // the player takes damage. decay timer tween to 0 over ~0.45s.
+  var playerHurtVignette = { timer: 0, duration: 0.45 };
+  function triggerPlayerHurt() { playerHurtVignette.timer = playerHurtVignette.duration; }
   var killDisplayPulse = 0;
   // Tutorial system
   var tutorialDone = false;
@@ -825,6 +829,7 @@ function doLogin() {
       musicMasterGain = audioCtx.createGain();
       musicMasterGain.gain.value = 0.18;
       musicMasterGain.connect(audioCtx.destination);
+      _preloadSfx();
     } catch(e) {}
   }
   // _playTone — single oscillator tone with ADSR-style envelope
@@ -866,8 +871,49 @@ function doLogin() {
       src.start();
     } catch(e) {}
   }
+  // Phase 2 WAV SFX — preload CC0 samples into AudioBuffers and play via
+  // BufferSource (low latency, overlapping-safe). Falls through to synth if
+  // the buffer isn't ready yet or the name is synth-only.
+  var _sfxBuffers = {};
+  var _sfxFiles = {
+    shoot: 'shoot.wav',
+    hit: 'hit_flesh.wav',
+    hit_metal: 'hit_metal.wav',
+    step_grass: 'step_grass.wav',
+    step_dirt: 'step_dirt.wav',
+    explosion: 'explosion.wav',
+    storm_alert: 'storm_alert.wav',
+    kill: 'kill_confirmed.wav',
+    victory: 'victory.wav'
+  };
+  function _preloadSfx() {
+    if (!audioCtx) return;
+    Object.keys(_sfxFiles).forEach(function(name) {
+      var url = 'assets/audio/' + _sfxFiles[name];
+      fetch(url).then(function(r) { return r.arrayBuffer(); })
+        .then(function(ab) { return audioCtx.decodeAudioData(ab); })
+        .then(function(buf) { _sfxBuffers[name] = buf; })
+        .catch(function() {});
+    });
+  }
+  function _playBuffer(name, volume) {
+    var buf = _sfxBuffers[name];
+    if (!buf || !audioCtx) return false;
+    try {
+      var src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      var g = audioCtx.createGain();
+      g.gain.value = (volume == null ? 1 : volume);
+      src.connect(g); g.connect(sfxMasterGain || audioCtx.destination);
+      src.start(0);
+      return true;
+    } catch (e) { return false; }
+  }
+
   function playSound(type) {
     if (!soundEnabled || !audioCtx) return;
+    // Prefer WAV if available, otherwise synth.
+    if (_sfxBuffers[type] && _playBuffer(type)) return;
     try {
       var now = audioCtx.currentTime;
       switch (type) {
@@ -2371,8 +2417,11 @@ function doLogin() {
     var _botSkins = ['warrior_inferno', 'mage_thunder', 'scout_ghost_assassin', 'default', 'default', 'default', 'default'];
     offlineBots = [];
     for (var bi = 0; bi < 7; bi++) {
-      var bAngle = Math.PI * 2 * bi / 7;
-      var bDist = 350 + Math.random() * 200;
+      // BR spawn: spread around the world at 0.75 × half-diagonal so bots
+      // start at the map perimeter. They converge when the storm shrinks.
+      var bAngle = Math.PI * 2 * bi / 7 + 0.3;
+      var _halfDiag = Math.min(WORLD_W, WORLD_H) * 0.38;
+      var bDist = _halfDiag + Math.random() * _halfDiag * 0.25;
       var _bc = _botClasses[bi];
       var _botHP = _bc === 'warrior' ? 280 : (_bc === 'mage' ? 200 : 220);
       var _botSpd = _bc === 'scout' ? 130 : (_bc === 'warrior' ? 100 : 110);
@@ -2412,12 +2461,14 @@ function doLogin() {
 
     // Storm zone — starts shrinking after 60s, center = map center
     stormZone.active = true;
+    // BR pacing: the safe zone starts ~75% of world, holds briefly, then
+    // shrinks fast so all 8 players must converge within ~90s.
     stormZone.radius = Math.max(WORLD_W, WORLD_H) * 0.75;
     stormZone.centerX = WORLD_W / 2;
     stormZone.centerY = WORLD_H / 2;
-    stormZone.shrinkRate = 12; // px/s
-    stormZone._shrinkDelay = 45; // don't shrink until 45s
-    stormZone._minRadius = 80;
+    stormZone.shrinkRate = 24; // px/s (was 12 — tighter ring pressure)
+    stormZone._shrinkDelay = 20; // start shrinking at 20s (was 45)
+    stormZone._minRadius = 120;
   }
 
   function spawnOfflineEnemy(type, x, y) {
@@ -2505,8 +2556,8 @@ function doLogin() {
 
       // --- AI decision every 0.5-2s ---
       if (b._nextDecision <= 0) {
-        b._nextDecision = 0.8 + Math.random() * 1.5;
-        // Check if outside storm → flee toward center
+        b._nextDecision = 0.6 + Math.random() * 0.9;
+        // Check if outside safe zone → flee toward center
         if (stormZone.active) {
           var _sdBot = Math.sqrt((b.x - stormZone.centerX) * (b.x - stormZone.centerX) + (b.y - stormZone.centerY) * (b.y - stormZone.centerY));
           if (_sdBot > stormZone.radius * 0.8) {
@@ -2515,8 +2566,9 @@ function doLogin() {
           }
         }
         if (b._aiState !== 'flee') {
-          // Look for nearest enemy player (different factionId)
-          var bestTarget = null, bestDist = 350;
+          // Look for nearest enemy anywhere — large vision radius so bots
+          // don't get stranded in empty corners with nothing to chase.
+          var bestTarget = null, bestDist = 1400;
           for (var pi = 0; pi < _allBR.length; pi++) {
             var _tgt = _allBR[pi];
             if (_tgt === b || !_tgt.alive) continue;
@@ -2529,7 +2581,9 @@ function doLogin() {
             b._aiState = 'engage';
             b._aiTarget = bestTarget;
           } else {
-            b._aiState = 'patrol';
+            // No one in range — push toward storm center so late-game
+            // convergence is inevitable.
+            b._aiState = 'push';
             b._aiTarget = null;
           }
         }
@@ -2538,7 +2592,7 @@ function doLogin() {
       // --- Movement ---
       var bSpeed = b.speed || 100;
       if (b._aiState === 'flee') {
-        // Move toward storm center
+        // Move toward storm center (storm is damaging)
         var _fcx = stormZone.centerX - b.x, _fcy = stormZone.centerY - b.y;
         var _fd = Math.sqrt(_fcx * _fcx + _fcy * _fcy);
         if (_fd > 5) {
@@ -2546,8 +2600,20 @@ function doLogin() {
           b.y += (_fcy / _fd) * bSpeed * 1.1 * dt;
           b.facingAngle = Math.atan2(_fcy, _fcx);
         }
-        // Exit flee when safely inside
-        if (_fd < stormZone.radius * 0.5) b._aiState = 'patrol';
+        if (_fd < stormZone.radius * 0.5) b._aiState = 'push';
+      } else if (b._aiState === 'push') {
+        // Drift toward storm center with small random jitter. Keeps bots
+        // converging so "不到对手" never happens.
+        var _pcx = stormZone.centerX - b.x, _pcy = stormZone.centerY - b.y;
+        var _pd = Math.sqrt(_pcx * _pcx + _pcy * _pcy);
+        b._patrolAngle = (b._patrolAngle || 0) + (Math.random() - 0.5) * 0.8 * dt;
+        var jitter = 0.25;
+        var mvx = (_pd > 5 ? _pcx / _pd : 0) + Math.cos(b._patrolAngle) * jitter;
+        var mvy = (_pd > 5 ? _pcy / _pd : 0) + Math.sin(b._patrolAngle) * jitter;
+        var ml = Math.max(0.001, Math.sqrt(mvx * mvx + mvy * mvy));
+        b.x += (mvx / ml) * bSpeed * 0.75 * dt;
+        b.y += (mvy / ml) * bSpeed * 0.75 * dt;
+        b.facingAngle = Math.atan2(mvy, mvx);
       } else if (b._aiState === 'engage' && b._aiTarget && b._aiTarget.alive) {
         var _edx = b._aiTarget.x - b.x, _edy = b._aiTarget.y - b.y;
         var _ed = Math.sqrt(_edx * _edx + _edy * _edy);
@@ -2577,6 +2643,12 @@ function doLogin() {
             size: 8, particleType: 'circle', _isProjectile: true
           });
           floatText(b._aiTarget.x, b._aiTarget.y - 16, '-' + _aDmg, { color: '#ff6666', size: 11 });
+          // Hit sparks at the target — makes bot-vs-bot combat readable from across the map
+          emit(b._aiTarget.x, b._aiTarget.y, '#ff4444', 5, 120);
+          if (b._aiTarget === player || b._aiTarget.isLocal) {
+            triggerPlayerHurt();
+            if (typeof screenShake === 'function') screenShake('medium');
+          }
           // Target killed?
           if (b._aiTarget.hp <= 0 && b._aiTarget.alive) {
             b._aiTarget.alive = false;
@@ -2599,11 +2671,13 @@ function doLogin() {
           }
         }
       } else {
-        // Patrol — wander randomly
+        // Legacy patrol fallback — bias toward storm center like 'push'
         b._patrolAngle = b._patrolAngle || 0;
-        b._patrolAngle += (Math.random() - 0.5) * 2 * dt;
-        b.x += Math.cos(b._patrolAngle) * bSpeed * 0.4 * dt;
-        b.y += Math.sin(b._patrolAngle) * bSpeed * 0.4 * dt;
+        b._patrolAngle += (Math.random() - 0.5) * 1.2 * dt;
+        var _lpcx = stormZone.centerX - b.x, _lpcy = stormZone.centerY - b.y;
+        var _lpd = Math.max(1, Math.sqrt(_lpcx * _lpcx + _lpcy * _lpcy));
+        b.x += ((_lpcx / _lpd) * 0.6 + Math.cos(b._patrolAngle) * 0.4) * bSpeed * 0.55 * dt;
+        b.y += ((_lpcy / _lpd) * 0.6 + Math.sin(b._patrolAngle) * 0.4) * bSpeed * 0.55 * dt;
         b.facingAngle = b._patrolAngle;
       }
       // Keep in bounds
@@ -2620,6 +2694,15 @@ function doLogin() {
       var _psd = Math.sqrt((player.x - stormZone.centerX) * (player.x - stormZone.centerX) + (player.y - stormZone.centerY) * (player.y - stormZone.centerY));
       if (_psd > stormZone.radius) {
         player.hp -= 8 * dt;
+        // Pulse hurt vignette at ~2Hz while outside the safe zone
+        if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
+        // One alert sound on edge-transition, then throttle to every 3s
+        player._stormAlertAt = player._stormAlertAt || 0;
+        if (!player._inStorm || (gameTime - player._stormAlertAt) > 3) {
+          playSound('storm_alert');
+          player._stormAlertAt = gameTime;
+        }
+        player._inStorm = true;
         if (player.hp <= 0 && player.alive) {
           player.hp = 0; player.alive = false;
           deathCause = '被毒圈击杀';
@@ -2627,6 +2710,8 @@ function doLogin() {
           state = 'spectating';
           spectatorTarget = 1;
         }
+      } else {
+        player._inStorm = false;
       }
     }
     // === Victory check — last alive wins ===
@@ -2638,6 +2723,7 @@ function doLogin() {
     if (_aliveCount <= 1 && state === 'playing') {
       if (_lastAlive === player) {
         victoryWin = true;
+        playSound('victory');
         finalizeGameRewards();
         state = 'gameOver';
       } else if (_aliveCount === 0 || (_lastAlive && _lastAlive !== player)) {
@@ -2650,8 +2736,8 @@ function doLogin() {
       state = 'gameOver';
     }
 
-    // Wave-based spawning (MOBA-style)
-    updateOfflineWaveSystem(dt);
+    // BR mode — no PVE waves. The 7 bots ARE the opponents.
+    // (updateOfflineWaveSystem retained for multiplayer/network mode only.)
     // Combo window tick
     updateComboState(dt);
 
@@ -2832,6 +2918,15 @@ function doLogin() {
     player.y = Math.max(player.radius, Math.min(WORLD_H - player.radius, player.y));
     if (Math.abs(moveX) > 0.01 || Math.abs(moveY) > 0.01) {
       player.facingAngle = Math.atan2(moveY, moveX);
+      // Footstep SFX every ~0.35s while moving; biome-aware when autotile grid exists
+      player._stepTimer = (player._stepTimer || 0) - dt;
+      if (player._stepTimer <= 0) {
+        player._stepTimer = 0.34 + Math.random() * 0.08;
+        var _tsz = (typeof HOMM3_ART !== 'undefined' && HOMM3_ART && HOMM3_ART.tilesetMeta) ? HOMM3_ART.tilesetMeta.tileW : 64;
+        var _tx = Math.floor(player.x / _tsz), _ty = Math.floor(player.y / _tsz);
+        var _bi = (typeof _biomeAt === 'function') ? _biomeAt(_tx, _ty) : 0;
+        playSound(_bi === 1 ? 'step_dirt' : 'step_grass');
+      }
       // Feed playerTrail for offline mode (network mode pushes in networkUpdate)
       playerTrail.push({ x: player.x, y: player.y });
       if (playerTrail.length > playerTrailMax) playerTrail.shift();
@@ -2870,6 +2965,7 @@ function doLogin() {
         player._attackStart = gameTime;
         player._attackUntil = gameTime + _atkDur;
         player._attackFacing = angle;
+        playSound('shoot');
         // Spawn class-specific visual projectile (fireball/arrow/slash)
         var projSpeed = 350;
         var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
@@ -2914,6 +3010,7 @@ function doLogin() {
         var _pColor = selectedClass === 'warrior' ? '#dd2020' : (selectedClass === 'mage' ? '#a080ff' : '#ffaa33');
         emit(closest.x, closest.y, _pType, { color: _pColor });
         floatText(closest.x, closest.y - 20, _dmgValue + (_isCrit ? '!' : ''), { type: _isCrit ? 'crit' : 'normal' });
+        playSound('hit');
         applyKnockback(closest, _dmgValue, player.x, player.y);
         if (closest.hp <= 0) {
           closest.alive = false;
@@ -4141,6 +4238,26 @@ function doLogin() {
       }
       CHAR_SPRITE_IMGS[cls] = entry;
     });
+  })();
+
+  // BR UI assets (Phase 2): storm warning bar + rank crowns + killfeed card.
+  var BR_UI = {
+    stormBar: null, stormBarReady: false,
+    crowns: { gold: null, silver: null, bronze: null }, crownsReady: 0,
+    killfeedCard: null, killfeedCardReady: false
+  };
+  (function preloadBRUi() {
+    function _loadImg(path, onReady) {
+      var im = new Image();
+      im.onload = function() { if (onReady) onReady(); };
+      im.src = path;
+      return im;
+    }
+    BR_UI.stormBar = _loadImg('assets/ui_br/storm_bar.png', function() { BR_UI.stormBarReady = true; });
+    BR_UI.crowns.gold = _loadImg('assets/ui_br/crown_gold.png', function() { BR_UI.crownsReady++; });
+    BR_UI.crowns.silver = _loadImg('assets/ui_br/crown_silver.png', function() { BR_UI.crownsReady++; });
+    BR_UI.crowns.bronze = _loadImg('assets/ui_br/crown_bronze.png', function() { BR_UI.crownsReady++; });
+    BR_UI.killfeedCard = _loadImg('assets/ui_br/killfeed_card.png', function() { BR_UI.killfeedCardReady = true; });
   })();
 
   // homm3_bright: tileset floor, monster sheet, decor, 9-slice UI
@@ -7756,7 +7873,15 @@ function doLogin() {
     _drawCapsule(centerLeft, cellY1, centerW, capRoundH, 'rgba(20,20,35,0.92)', '#88ccff');
     ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var statusText = '第' + wave + '波  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
+    // BR HUD: alive count is the headline stat (was PVE "第X波")
+    var _aliveCount = 0;
+    if (offlineMode) {
+      if (player && player.alive !== false) _aliveCount++;
+      if (offlineBots) for (var _ac = 0; _ac < offlineBots.length; _ac++) if (offlineBots[_ac].alive) _aliveCount++;
+    } else {
+      _aliveCount = allPlayers ? allPlayers.filter(function(p){ return p.alive; }).length : 0;
+    }
+    var statusText = '剩余 ' + _aliveCount + ' 人  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
     ctx.fillText(statusText, centerLeft + centerW / 2, cellY1 + capRoundH / 2);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
@@ -7965,19 +8090,40 @@ function doLogin() {
       ctx.fillText('🛡 新手保护 ' + pvpLeft + '秒', W / 2, 20);
       ctx.restore();
     }
-    // Kill feed display (right side, below skill bar to avoid overlap)
-    var kfBaseY = 295; // below skill bar (5 slots * 44px + 60px start = 280)
+    // BR killfeed — top-right, only the latest 3, larger font, 9-slice card
+    var _kfMax = 3;
+    var _kfFS = Math.max(11, Math.round(Math.min(W, H) * 0.018));
+    var _kfCardW = Math.min(Math.round(W * 0.55), 320);
+    var _kfCardH = Math.round(_kfFS * 1.7);
+    var _kfBaseY = Math.round(H * 0.12); // right below the top HUD bar
+    var _kfRightX = W - 6;
+    // Cap rendered count to 3 — tick timers on ALL entries
+    var _kfVisible = 0;
     for (var kfi = killFeed.length - 1; kfi >= 0; kfi--) {
       killFeed[kfi].time -= 0.016;
       if (killFeed[kfi].time <= 0) { killFeed.splice(kfi, 1); continue; }
-      var kfAlpha = Math.min(1, killFeed[kfi].time / 0.5);
-      var kfY = kfBaseY + (killFeed.length - 1 - kfi) * 18;
+    }
+    for (var kfi2 = Math.max(0, killFeed.length - _kfMax); kfi2 < killFeed.length; kfi2++) {
+      var kfEntry = killFeed[kfi2];
+      var kfAlpha = Math.min(1, kfEntry.time / 0.5);
+      var kfY = _kfBaseY + _kfVisible * (_kfCardH + 4);
+      _kfVisible++;
       ctx.save();
-      ctx.globalAlpha = kfAlpha * 0.85;
-      ctx.fillStyle = '#000'; ctx.fillRect(W - 180, kfY - 10, 170, 16);
+      ctx.globalAlpha = kfAlpha * 0.95;
+      // Card — prefer 9-slice parchment, fallback to dark pill
+      var _u9 = (typeof draw9Slice === 'function') ? draw9Slice(ctx, _kfRightX - _kfCardW, kfY, _kfCardW, _kfCardH, { cornerSize: 10, alpha: kfAlpha * 0.9 }) : false;
+      if (!_u9) {
+        ctx.fillStyle = 'rgba(0,0,0,0.72)';
+        ctx.fillRect(_kfRightX - _kfCardW, kfY, _kfCardW, _kfCardH);
+        ctx.strokeStyle = 'rgba(255,215,0,0.35)'; ctx.lineWidth = 1;
+        ctx.strokeRect(_kfRightX - _kfCardW + 0.5, kfY + 0.5, _kfCardW - 1, _kfCardH - 1);
+      }
       ctx.globalAlpha = kfAlpha;
-      ctx.fillStyle = killFeed[kfi].color; ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText(killFeed[kfi].text, W - 15, kfY + 2);
+      ctx.fillStyle = kfEntry.color;
+      ctx.font = 'bold ' + _kfFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(kfEntry.text, _kfRightX - 10, kfY + _kfCardH / 2);
+      ctx.textBaseline = 'alphabetic';
       ctx.restore();
     }
     } // end screenshotMode else block (US-306)
@@ -8081,6 +8227,39 @@ function doLogin() {
       ctx.fillStyle = screenFlash.color;
       ctx.fillRect(0, 0, W, H);
       ctx.globalAlpha = 1;
+    }
+
+    // Storm warning bar — red pulsing banner when player is outside safe zone
+    if (stormZone.active && player && player.alive !== false && player._inStorm && BR_UI.stormBarReady) {
+      var _sbW = Math.min(W - 40, 420);
+      var _sbH = Math.round(_sbW * 48 / 512); // preserve aspect
+      var _sbX = (W - _sbW) / 2;
+      var _sbY = Math.round(H * 0.13);
+      var _sbPulse = 0.85 + 0.15 * Math.sin(Date.now() / 180);
+      ctx.save();
+      ctx.globalAlpha = _sbPulse;
+      ctx.drawImage(BR_UI.stormBar, _sbX, _sbY, _sbW, _sbH);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + Math.round(_sbH * 0.52) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(80,0,0,0.7)'; ctx.lineWidth = 3;
+      var _sbText = '⚠ 毒圈伤害中 ⚠';
+      ctx.strokeText(_sbText, W / 2, _sbY + _sbH / 2);
+      ctx.fillText(_sbText, W / 2, _sbY + _sbH / 2);
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
+
+    // Player hurt vignette — red radial fade from edges inward
+    if (playerHurtVignette.timer > 0) {
+      playerHurtVignette.timer = Math.max(0, playerHurtVignette.timer - 0.016);
+      var _hvt = playerHurtVignette.timer / playerHurtVignette.duration;
+      var _hvGrad = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.28, W/2, H/2, Math.max(W,H)*0.65);
+      _hvGrad.addColorStop(0, 'rgba(200,0,0,0)');
+      _hvGrad.addColorStop(1, 'rgba(220,20,20,' + (0.55 * _hvt).toFixed(3) + ')');
+      ctx.fillStyle = _hvGrad;
+      ctx.fillRect(0, 0, W, H);
     }
 
     // Storm damage vignette — red pulsing overlay when player is outside safe zone
@@ -9407,13 +9586,25 @@ function doLogin() {
     var spectateElapsed = (gameTime || 0) - spectatorDeathTime;
     var remaining = Math.max(0, Math.ceil(SPECTATOR_AUTO_SKIP - spectateElapsed));
     ctx.save();
-    // Banner at top
-    ctx.fillStyle = 'rgba(0,0,0,0.7)';
-    ctx.fillRect(0, 0, W, 40);
-    ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    ctx.fillStyle = '#f44';
+    // BR-style "KILLED BY" big card — greys the screen and shows who killed you.
+    // Fades in during first 0.5s of spectating.
+    var _fadeT = Math.min(1, spectateElapsed / 0.5);
+    ctx.fillStyle = 'rgba(0,0,0,' + (0.55 * _fadeT).toFixed(3) + ')';
+    ctx.fillRect(0, 0, W, H);
+    var _titleFS = Math.round(Math.min(W, H) * 0.065);
+    var _subFS = Math.round(_titleFS * 0.42);
     ctx.textAlign = 'center';
-    ctx.fillText('💀 你已阵亡 — 观战模式 (' + remaining + 's 后自动退出)', W / 2, 26);
+    ctx.fillStyle = '#ff3030';
+    ctx.font = 'bold ' + _titleFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)'; ctx.lineWidth = Math.max(4, _titleFS * 0.12);
+    ctx.globalAlpha = _fadeT;
+    ctx.strokeText(deathCause || '你已阵亡', W / 2, H * 0.32);
+    ctx.fillText(deathCause || '你已阵亡', W / 2, H * 0.32);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#ccc';
+    ctx.font = _subFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+    ctx.fillText('观战中 — ' + remaining + 's 后自动退出', W / 2, H * 0.32 + _titleFS * 0.9);
+    ctx.globalAlpha = 1;
 
     if (target) {
       // Show target info
@@ -9579,9 +9770,17 @@ function doLogin() {
     ctx.beginPath(); ctx.moveTo(statsPanelX + statsPanelW * 2 / 3, statsPanelY + 10); ctx.lineTo(statsPanelX + statsPanelW * 2 / 3, statsPanelY + statsPanelH - 10); ctx.stroke();
     // Icons + labels + values
     var colX = [statsPanelX + statsPanelW / 6, statsPanelX + statsPanelW / 2, statsPanelX + statsPanelW * 5 / 6];
-    var icons = ['⏱', '⚔', '▲'];
-    var labels = ['生存时间', '击杀数', '最高波次'];
-    var values = [Math.floor(gameTime) + 's', '' + kills, '第' + wave + '波'];
+    // BR stats — "排名" replaces legacy wave count.
+    var _placement = 1;
+    if (offlineMode && offlineBots) {
+      var _aliveOthers = 0;
+      for (var _pli = 0; _pli < offlineBots.length; _pli++) if (offlineBots[_pli].alive) _aliveOthers++;
+      if (player && player.alive === false) _placement = _aliveOthers + 1; // survived 8 - (dead) = dead at this rank
+      else _placement = 1;
+    }
+    var icons = ['⏱', '⚔', '🏆'];
+    var labels = ['生存时间', '击杀数', '排名'];
+    var values = [Math.floor(gameTime) + 's', '' + kills, '#' + _placement + '/8'];
     var iconColors = ['#88ccff', '#ff8866', '#ffd700'];
     for (var _ci = 0; _ci < 3; _ci++) {
       ctx.font = '24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = iconColors[_ci];
