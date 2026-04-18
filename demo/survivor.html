@@ -2401,6 +2401,8 @@ function doLogin() {
     _generateBRStructures();
     // homm3_bright decor scatter — retries once assets finish loading if empty
     _generateHomm3Decor();
+    // Autotile biome grid rebuilds to match current WORLD_W/H
+    _biomeGrid = null;
 
     // Storm zone — starts shrinking after 60s, center = map center
     stormZone.active = true;
@@ -4112,9 +4114,9 @@ function doLogin() {
     frameW: 64, frameH: 64,
     // Direction row offset inside an anim's 4-row block. Order U/L/D/R.
     classes: {
-      warrior: { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims },
-      mage:    { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims },
-      scout:   { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims }
+      warrior: { sheet: HOMM3_ART_BASE + 'player_warrior.png', anims: _homm3PlayerAnims },
+      mage:    { sheet: HOMM3_ART_BASE + 'player_mage.png',    anims: _homm3PlayerAnims },
+      scout:   { sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims }
     }
   };
   var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
@@ -4192,29 +4194,100 @@ function doLogin() {
     loadJSON(HOMM3_ART_BASE + 'ui9/meta.json', function(j) { HOMM3_ART.ui9Meta = j; });
   })();
 
-  // Tiled floor across the whole world — deterministic per-tile variant by hash.
+  // Per-tile biome grid — built once from a seed so variants/seams are stable
+  // across frames. biomeAt returns 'grass' | 'dirt' | 'stone'.
+  var _biomeGrid = null;   // Int8Array, 0=grass 1=dirt 2=stone
+  var _biomeCols = 0, _biomeRows = 0;
+  function _initBiomeGrid() {
+    if (!HOMM3_ART.tilesetMeta) return;
+    var tsz = HOMM3_ART.tilesetMeta.tileW;
+    _biomeCols = Math.ceil(WORLD_W / tsz);
+    _biomeRows = Math.ceil(WORLD_H / tsz);
+    _biomeGrid = new Int8Array(_biomeCols * _biomeRows); // zero-init = all grass
+    var _s = 5150;
+    function rnd() { _s = ((_s | 0) * 1103515245 + 12345) & 0x7fffffff; return (_s & 0xffff) / 0xffff; }
+    // Scatter patches — ellipses. Dirt roughly 1.7% tiles, stone 0.5%.
+    var total = _biomeCols * _biomeRows;
+    var nDirt = Math.max(6, Math.round(total / 60));
+    var nStone = Math.max(2, Math.round(total / 220));
+    function stamp(biome, count, rxMax, ryMax) {
+      for (var i = 0; i < count; i++) {
+        var cx = Math.floor(rnd() * _biomeCols);
+        var cy = Math.floor(rnd() * _biomeRows);
+        var rx = 1 + Math.floor(rnd() * rxMax);
+        var ry = 1 + Math.floor(rnd() * ryMax);
+        for (var dy = -ry; dy <= ry; dy++) {
+          for (var dx = -rx; dx <= rx; dx++) {
+            var nx = cx + dx, ny = cy + dy;
+            if (nx < 0 || ny < 0 || nx >= _biomeCols || ny >= _biomeRows) continue;
+            var ndx = dx / rx, ndy = dy / ry;
+            if (ndx * ndx + ndy * ndy > 1) continue;
+            _biomeGrid[ny * _biomeCols + nx] = biome;
+          }
+        }
+      }
+    }
+    stamp(1, nDirt, 3, 2);    // dirt — slightly elongated
+    stamp(2, nStone, 2, 2);   // stone — more compact
+  }
+  function _biomeAt(tx, ty) {
+    // Boundary samples read as grass (per ArtDesigner spec)
+    if (tx < 0 || ty < 0 || tx >= _biomeCols || ty >= _biomeRows || !_biomeGrid) return 0;
+    return _biomeGrid[ty * _biomeCols + tx];
+  }
+
+  // Tiled floor across the whole world. New schema (seams + variants) uses
+  // 4-bit autotile; old schema (tiles[] with grass0/1, dirt0/1, stone0/1)
+  // falls back to per-tile hash pick.
   function drawTilesetFloor(ctx, camX, camY) {
     if (!HOMM3_ART.tilesetReady || !HOMM3_ART.tilesetMeta) return;
-    var tsz = HOMM3_ART.tilesetMeta.tileW; // 64
-    var grass0 = HOMM3_ART.tileIndex.grass0, grass1 = HOMM3_ART.tileIndex.grass1;
-    if (!grass0) return;
-    // Visible world range (clamped to [0, WORLD])
+    var meta = HOMM3_ART.tilesetMeta;
+    var tsz = meta.tileW;
+    var img = HOMM3_ART.tilesetImg;
+    var hasSeams = !!(meta.seams && meta.seams.grass_dirt && meta.variants);
+    if (hasSeams && !_biomeGrid) _initBiomeGrid();
     var x0 = Math.max(0, Math.floor(camX / tsz));
     var y0 = Math.max(0, Math.floor(camY / tsz));
     var x1 = Math.min(Math.ceil(WORLD_W / tsz), Math.ceil((camX + W) / tsz));
     var y1 = Math.min(Math.ceil(WORLD_H / tsz), Math.ceil((camY + H) / tsz));
-    var img = HOMM3_ART.tilesetImg;
-    for (var ty = y0; ty < y1; ty++) {
-      for (var tx = x0; tx < x1; tx++) {
-        // Deterministic hash — variant + occasional dirt/stone patches.
-        var h = (tx * 73856093) ^ (ty * 19349663);
-        h = (h >>> 0) % 100;
-        var tile;
-        if (h < 4 && HOMM3_ART.tileIndex.stone0) tile = HOMM3_ART.tileIndex.stone0;
-        else if (h < 9 && HOMM3_ART.tileIndex.dirt0) tile = HOMM3_ART.tileIndex.dirt0;
-        else if (h < 12 && HOMM3_ART.tileIndex.dirt1) tile = HOMM3_ART.tileIndex.dirt1;
-        else tile = (h & 1) ? grass1 : grass0;
-        ctx.drawImage(img, tile.px.x, tile.px.y, tsz, tsz, tx * tsz, ty * tsz, tsz, tsz);
+    if (hasSeams) {
+      var vgrass = meta.variants.grass, vdirt = meta.variants.dirt, vstone = meta.variants.stone;
+      var seamsGD = meta.seams.grass_dirt, seamsGS = meta.seams.grass_stone;
+      for (var ty = y0; ty < y1; ty++) {
+        for (var tx = x0; tx < x1; tx++) {
+          var h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
+          var self = _biomeAt(tx, ty);
+          var tile;
+          if (self === 1) {
+            tile = vdirt[h % vdirt.length];
+          } else if (self === 2) {
+            tile = vstone[h % vstone.length];
+          } else {
+            // grass — check 4 neighbors; prefer dirt seam over stone seam (arbitrary precedence)
+            var n = _biomeAt(tx, ty - 1), e = _biomeAt(tx + 1, ty), s = _biomeAt(tx, ty + 1), w = _biomeAt(tx - 1, ty);
+            var mDirt = (n === 1 ? 1 : 0) | (e === 1 ? 2 : 0) | (s === 1 ? 4 : 0) | (w === 1 ? 8 : 0);
+            var mStone = (n === 2 ? 1 : 0) | (e === 2 ? 2 : 0) | (s === 2 ? 4 : 0) | (w === 2 ? 8 : 0);
+            if (mDirt) tile = seamsGD[mDirt];
+            else if (mStone) tile = seamsGS[mStone];
+            else tile = vgrass[h % vgrass.length];
+          }
+          if (tile) ctx.drawImage(img, tile.px.x, tile.px.y, tsz, tsz, tx * tsz, ty * tsz, tsz, tsz);
+        }
+      }
+    } else {
+      // Legacy schema fallback — per-tile hash
+      var grass0 = HOMM3_ART.tileIndex.grass0, grass1 = HOMM3_ART.tileIndex.grass1;
+      if (!grass0) return;
+      for (var ty2 = y0; ty2 < y1; ty2++) {
+        for (var tx2 = x0; tx2 < x1; tx2++) {
+          var h2 = ((tx2 * 73856093) ^ (ty2 * 19349663)) >>> 0 % 100;
+          var tl;
+          if (h2 < 4 && HOMM3_ART.tileIndex.stone0) tl = HOMM3_ART.tileIndex.stone0;
+          else if (h2 < 9 && HOMM3_ART.tileIndex.dirt0) tl = HOMM3_ART.tileIndex.dirt0;
+          else if (h2 < 12 && HOMM3_ART.tileIndex.dirt1) tl = HOMM3_ART.tileIndex.dirt1;
+          else tl = (h2 & 1) ? grass1 : grass0;
+          ctx.drawImage(img, tl.px.x, tl.px.y, tsz, tsz, tx2 * tsz, ty2 * tsz, tsz, tsz);
+        }
       }
     }
     // World boundary — dark vignette outside the playable area
