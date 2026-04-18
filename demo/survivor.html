@@ -2505,6 +2505,23 @@ function doLogin() {
     _generateHomm3Decor();
     // Autotile biome grid rebuilds to match current WORLD_W/H
     _biomeGrid = null;
+    // Experiment C: place 3 strategic points on a triangle around world center.
+    // Avoids spawn (320px clearance) and stays inside the storm zone.
+    STRAT_POINTS.pointsInWorld = [];
+    var _spTypes = ['watchtower', 'temple', 'camp'];
+    for (var _spi = 0; _spi < _spTypes.length; _spi++) {
+      var _spAng = Math.PI * 2 * _spi / _spTypes.length - Math.PI / 2;
+      var _spR = Math.min(WORLD_W, WORLD_H) * 0.28;
+      var _spX = WORLD_W / 2 + Math.cos(_spAng) * _spR;
+      var _spY = WORLD_H / 2 + Math.sin(_spAng) * _spR;
+      STRAT_POINTS.pointsInWorld.push({
+        type: _spTypes[_spi], x: _spX, y: _spY,
+        owner: null,      // null / 0 (player) / 1..7 (bot factionId-ish)
+        progress: 0,      // 0..100
+        buffUntil: 0,     // gameTime when buff expires
+        captureRadius: 90 // standing-zone radius
+      });
+    }
 
     // Storm zone — starts shrinking after 60s, center = map center
     stormZone.active = true;
@@ -2641,6 +2658,119 @@ function doLogin() {
       if (!_brMobState.respawnPending) {
         _brMobState.bossTimer = 180 + Math.random() * 60;
         _brMobState.respawnPending = true;
+      }
+    }
+  }
+
+  // === Experiment C: strategic capture points ===
+  var _CAPTURE_RATE = 14;   // progress per second while uncontested
+  var _BUFF_DURATION = 30;  // seconds after capture
+  function updateStrategicPoints(dt) {
+    if (!STRAT_POINTS.pointsInWorld.length || !player) return;
+    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+      var pt = STRAT_POINTS.pointsInWorld[i];
+      // Detect occupants (player + bots) inside capture radius
+      var inside = []; // { entity, faction }
+      var pdx = player.x - pt.x, pdy = player.y - pt.y;
+      if (player.alive !== false && pdx * pdx + pdy * pdy < pt.captureRadius * pt.captureRadius) {
+        inside.push({ e: player, faction: player.factionId });
+      }
+      for (var bi = 0; bi < offlineBots.length; bi++) {
+        var b = offlineBots[bi];
+        if (!b.alive) continue;
+        var bdx = b.x - pt.x, bdy = b.y - pt.y;
+        if (bdx * bdx + bdy * bdy < pt.captureRadius * pt.captureRadius) {
+          inside.push({ e: b, faction: b.factionId });
+        }
+      }
+      if (inside.length === 0) continue;
+      // Determine contest state: only one faction present → progress; multiple → stalled
+      var factionSet = {};
+      inside.forEach(function(o) { factionSet[o.faction] = true; });
+      var factions = Object.keys(factionSet);
+      if (factions.length > 1) continue; // contested — no progress
+      var occupyingFaction = +factions[0];
+      if (pt.owner === occupyingFaction) continue; // already owned
+      pt.progress += _CAPTURE_RATE * dt;
+      if (pt.progress >= 100) {
+        pt.progress = 0;
+        pt.owner = occupyingFaction;
+        pt.buffUntil = gameTime + _BUFF_DURATION;
+        // Feedback: only notify local player-involved captures
+        if (occupyingFaction === player.factionId) {
+          var _ptName = { watchtower: '哨塔', temple: '神庙', camp: '营地' }[pt.type] || pt.type;
+          floatText(pt.x, pt.y - 40, '★ 占领 ' + _ptName + ' +' + _BUFF_DURATION + 's buff', { color: '#ffd700', size: 16 });
+          screenFlash.color = '#ffd700'; screenFlash.alpha = 0.22;
+          playSound('kill');
+        }
+      }
+    }
+  }
+  // Apply strategic point buffs to the local player each frame
+  function applyStrategicBuffs(dt) {
+    if (!STRAT_POINTS.pointsInWorld.length || !player) return;
+    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+      var pt = STRAT_POINTS.pointsInWorld[i];
+      if (pt.owner !== player.factionId || gameTime > pt.buffUntil) continue;
+      if (pt.type === 'temple') {
+        player.hp = Math.min(player.maxHp, player.hp + 2 * dt);
+      }
+      // vision & radar handled passively in drawMinimap / drawGame when checking isBuffActive
+    }
+  }
+  function playerHasStratBuff(type) {
+    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+      var pt = STRAT_POINTS.pointsInWorld[i];
+      if (pt.owner === (player && player.factionId) && pt.type === type && gameTime < pt.buffUntil) return true;
+    }
+    return false;
+  }
+  // World-space render of strategic points + capture bar above.
+  function drawStrategicPoints(ctx, camX, camY) {
+    if (!STRAT_POINTS.pointsInWorld.length || !STRAT_POINTS.meta) return;
+    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+      var pt = STRAT_POINTS.pointsInWorld[i];
+      var meta = STRAT_POINTS.meta.points[pt.type];
+      if (!meta) continue;
+      var imgBox = STRAT_POINTS.imgs[pt.type];
+      // Capture-zone glow ring when anyone is inside or mid-capture
+      if (pt.progress > 0 || pt.owner != null) {
+        ctx.save();
+        ctx.globalAlpha = 0.25 + 0.15 * Math.abs(Math.sin(Date.now() / 280));
+        var ownerColor = pt.owner == null ? '#ffffff'
+                       : (pt.owner === (player && player.factionId) ? '#ffd700' : '#ff4040');
+        ctx.fillStyle = ownerColor;
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.captureRadius, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      // Sprite
+      if (imgBox && imgBox._ready) {
+        ctx.drawImage(imgBox.img, pt.x - meta.anchor.x, pt.y - meta.anchor.y);
+      } else {
+        // Fallback marker
+        ctx.fillStyle = '#8a8'; ctx.fillRect(pt.x - 20, pt.y - 80, 40, 100);
+      }
+      // Capture progress bar (world space, above sprite)
+      if (pt.progress > 0 && pt.progress < 100) {
+        var bw = 80, bh = 8;
+        var bx = pt.x - bw / 2, by = pt.y - meta.h - 8;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+        ctx.fillStyle = '#333';
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(bx, by, bw * (pt.progress / 100), bh);
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+      }
+      // Owner buff timer bar (when player owns)
+      if (pt.owner != null && gameTime < pt.buffUntil) {
+        var rem = pt.buffUntil - gameTime;
+        var bx2 = pt.x - 40, by2 = pt.y - meta.h - 16;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(bx2 - 1, by2 - 1, 82, 5);
+        var pct = Math.max(0, rem / _BUFF_DURATION);
+        ctx.fillStyle = pt.owner === (player && player.factionId) ? '#40ff80' : '#ff4040';
+        ctx.fillRect(bx2, by2, 80 * pct, 3);
       }
     }
   }
@@ -2968,6 +3098,9 @@ function doLogin() {
     // BR + MOBA: continuous mob field (no "第 N 波" banner) — bots and
     // players farm to level up; boss drops on cadence.
     updateBRMobField(dt);
+    // Experiment C: capture tick + buff application on strategic points
+    updateStrategicPoints(dt);
+    applyStrategicBuffs(dt);
     // Combo window tick
     updateComboState(dt);
 
@@ -3263,22 +3396,26 @@ function doLogin() {
             // Boss ('bossTypeId' present on offlineEnemies, not bots, but handled below)
           }
           else { farmKills++; player._farmKills = (player._farmKills || 0) + 1; }
-          // Boss kill bonus (Experiment B): legendary XP shard + screen flash
+          // Boss kill bonus (Experiment B): legendary XP shard + screen flash.
+          // Delayed 0.4s via setTimeout so it doesn't collide visually with the
+          // combo banner / levelUp dialog spawned on the same frame.
           if (closest.bossTypeId) {
             var _bossXP = 120;
-            floatText(closest.x, closest.y - 30, '★ BOSS SHARD +' + _bossXP + ' XP', { color: '#ffd700', size: 18 });
-            screenFlash.color = '#ffd700'; screenFlash.alpha = 0.4;
+            var _bx = closest.x, _by = closest.y;
             playerXP += _bossXP;
-            // Also drop extra gems around the boss
+            // Extra gems immediately (pickup goes through magnet anyway)
             for (var _bsi = 0; _bsi < 8; _bsi++) {
               var _bsa = Math.PI * 2 * _bsi / 8;
               gems.push({
-                x: closest.x + Math.cos(_bsa) * 8,
-                y: closest.y + Math.sin(_bsa) * 8,
+                x: _bx + Math.cos(_bsa) * 8, y: _by + Math.sin(_bsa) * 8,
                 xp: 15, radius: 5, _t: 0, gemTier: 'large',
                 vx: Math.cos(_bsa) * 120, vy: Math.sin(_bsa) * 120 - 40, magnetized: false
               });
             }
+            setTimeout(function() {
+              if (typeof floatText === 'function') floatText(_bx, _by - 30, '★ BOSS SHARD +' + _bossXP + ' XP', { color: '#ffd700', size: 18 });
+              screenFlash.color = '#ffd700'; screenFlash.alpha = 0.4;
+            }, 400);
           }
           // Kill burst — bigger particles + hit-stop kill level + heavier shake
           emit(closest.x, closest.y, 'kill', { color: closest.color });
@@ -4507,6 +4644,39 @@ function doLogin() {
         _sharedByPath[p] = entry;
       }
       CHAR_SPRITE_IMGS[cls] = entry;
+    });
+  })();
+
+  // Strategic points (Experiment C, 2026-04-19). Each point has a
+  // capture zone (radius 60). Standing in the zone alone progresses the
+  // capture bar (0 → 100 in 10s). Once captured, grants a 30s buff.
+  var STRAT_POINTS = {
+    meta: null, ready: 0, imgs: {}, // { watchtower, temple, camp }
+    captureFillImgs: {}, captureFillReady: 0,
+    pointsInWorld: [] // { type, x, y, owner, progress, buffUntil, buffType }
+  };
+  (function preloadStrategic() {
+    function loadJSON(path, cb) {
+      try {
+        var xhr = new XMLHttpRequest(); xhr.open('GET', path, true);
+        xhr.onload = function() { if (xhr.status < 400) { try { cb(JSON.parse(xhr.responseText)); } catch (e) {} } };
+        xhr.send();
+      } catch (e) {}
+    }
+    loadJSON('assets/strategic/index.json', function(j) {
+      STRAT_POINTS.meta = j;
+      ['watchtower', 'temple', 'camp'].forEach(function(k) {
+        var im = new Image();
+        im.onload = (function(key){ return function(){ STRAT_POINTS.imgs[key]._ready = true; STRAT_POINTS.ready++; }; })(k);
+        im.src = 'assets/strategic/' + j.points[k].file;
+        STRAT_POINTS.imgs[k] = { img: im, _ready: false };
+      });
+      ['neutral', 'team1', 'team2'].forEach(function(k) {
+        var im = new Image();
+        im.onload = (function(key){ return function(){ STRAT_POINTS.captureFillImgs[key]._ready = true; STRAT_POINTS.captureFillReady++; }; })(k);
+        im.src = 'assets/strategic/' + j.captureBar.fillTextures[k];
+        STRAT_POINTS.captureFillImgs[k] = { img: im, _ready: false };
+      });
     });
   })();
 
@@ -7185,6 +7355,8 @@ function doLogin() {
     drawBRStructures(ctx, cameraX, cameraY);
     // homm3_bright scattered decor (trees, rocks, houses, fences, crates)
     drawHomm3Decor(ctx, cameraX, cameraY);
+    // Experiment C: strategic capture points
+    drawStrategicPoints(ctx, cameraX, cameraY);
     // Fixed spawn points (MOBA-style) — drawn in world space over terrain
     drawSpawnPointMarkers(cameraX, cameraY);
 
@@ -8202,10 +8374,20 @@ function doLogin() {
         isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default',
         animState: _bMoving ? 'walk' : 'idle'
       });
-      // Name + level label — red for enemies
+      // Name + archetype + level. Archetype tag uses its own color so
+      // the playstyle is readable at a glance (Testor 2026-04-19 feedback).
+      ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      var _bpLabel = bp.name + ' L' + (bp.level || 1);
       ctx.fillStyle = isEnemy ? '#f88' : '#fff';
-      ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(bp.name + ' L' + (bp.level || 1), bp.x, bp.y - bp.radius - 14);
+      ctx.fillText(_bpLabel, bp.x, bp.y - bp.radius - 24);
+      if (bp.archetypeName) {
+        ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+        ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 2.5;
+        ctx.strokeText('[' + bp.archetypeName + ']', bp.x, bp.y - bp.radius - 12);
+        ctx.fillStyle = bp.archetypeColor || '#ffd700';
+        ctx.fillText('[' + bp.archetypeName + ']', bp.x, bp.y - bp.radius - 12);
+      }
       // HP bar
       var botBarW = 34;
       ctx.fillStyle = '#222'; ctx.fillRect(bp.x - botBarW/2, bp.y - bp.radius - 8, botBarW, 4);
@@ -9227,6 +9409,27 @@ function doLogin() {
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(scx, scy, sr, 0, Math.PI * 2); ctx.stroke();
     }
+    // Strategic points on minimap — diamond icon with owner color
+    if (STRAT_POINTS.pointsInWorld.length) {
+      for (var _spMi = 0; _spMi < STRAT_POINTS.pointsInWorld.length; _spMi++) {
+        var _spMp = STRAT_POINTS.pointsInWorld[_spMi];
+        var _spMx = mmX + (_spMp.x / WORLD_W) * mmW;
+        var _spMy = mmY + (_spMp.y / WORLD_H) * mmH;
+        var _spPlayerOwns = (player && _spMp.owner === player.factionId && gameTime < _spMp.buffUntil);
+        var _spOwned = _spMp.owner != null && gameTime < _spMp.buffUntil;
+        ctx.save();
+        ctx.fillStyle = _spPlayerOwns ? '#40ff80' : (_spOwned ? '#ff4040' : '#cccccc');
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(_spMx, _spMy - 4);
+        ctx.lineTo(_spMx + 3, _spMy);
+        ctx.lineTo(_spMx, _spMy + 4);
+        ctx.lineTo(_spMx - 3, _spMy);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+    }
     // Boss crown marker on minimap — pulsing gold crown so everyone knows
     // where to converge for the objective.
     if (_activeBossRef && _activeBossRef.alive) {
@@ -9887,11 +10090,13 @@ function doLogin() {
         ctx.arc(cx + cardW / 2, cy + cardH - 24, 16, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = '#0e0e1a'; ctx.font = 'bold 17px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(String(i + 1), cx + cardW / 2, cy + cardH - 18);
-        // Synergy preview (Experiment A): if picking this card at its next
-        // stack level would fulfil an EVOLUTION_RECIPE partner, badge the
-        // card with "⭐ 进化预备 → <target>". Helps players see build paths.
+        // Synergy preview (Experiment A, Testor 2026-04-19: show path from the
+        // first level-up). Priority ready > almost > potential.
+        //   ready   : picking this brings both to Lv3+ (will evolve next LU)
+        //   almost  : self and partner both ≥ Lv2 after pick — 1 level away
+        //   potential: any recipe this card is part of (shows destination)
         var _nextLvl = (skillLevels[card.id] || 0) + 1;
-        var _synergyTarget = null;
+        var _syReady = null, _syAlmost = null, _syPotential = null;
         for (var _si = 0; _si < EVOLUTION_RECIPES.length; _si++) {
           var _rec = EVOLUTION_RECIPES[_si];
           if (evolvedSkills[_rec.result]) continue;
@@ -9899,19 +10104,27 @@ function doLogin() {
           if (_rec.a === card.id) _partner = _rec.b;
           else if (_rec.b === card.id) _partner = _rec.a;
           if (!_partner) continue;
-          if (_nextLvl >= 3 && (skillLevels[_partner] || 0) >= 3) {
-            _synergyTarget = _rec; break;
-          }
+          var _pLvl = skillLevels[_partner] || 0;
+          if (_nextLvl >= 3 && _pLvl >= 3) _syReady = _rec;
+          else if (_nextLvl >= 2 && _pLvl >= 2) { if (!_syAlmost) _syAlmost = _rec; }
+          else if (!_syPotential) _syPotential = _rec;
         }
-        if (_synergyTarget) {
+        var _syStage = _syReady || _syAlmost || _syPotential;
+        if (_syStage) {
           ctx.save();
-          var _syY = cy - 12;
-          ctx.globalAlpha = 0.55 + 0.45 * Math.abs(Math.sin(Date.now() / 320));
-          ctx.fillStyle = _synergyTarget.color || '#ffd700';
-          ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
-          ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+          var _syY = cy - 18;
+          var _syColor = _syStage.color || '#ffd700';
+          var _syPrefix = _syReady ? '⭐ 进化就绪 → '
+                        : _syAlmost ? '✨ 即将进化 → '
+                        : '可合成 → ';
+          ctx.globalAlpha = _syReady ? (0.65 + 0.35 * Math.abs(Math.sin(Date.now() / 320)))
+                          : _syAlmost ? 0.95
+                          : 0.85;
+          ctx.fillStyle = _syColor;
+          ctx.strokeStyle = '#000'; ctx.lineWidth = 3.5;
+          ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
           ctx.textAlign = 'center';
-          var _syT = '⭐ 进化 ' + (_synergyTarget.name || '');
+          var _syT = _syPrefix + (_syStage.name || '');
           ctx.strokeText(_syT, cx + cardW / 2, _syY);
           ctx.fillText(_syT, cx + cardW / 2, _syY);
           ctx.restore();
@@ -10961,6 +11174,8 @@ function doLogin() {
     get decorItems() { return _decorItems; },
     get decorRegions() { return _decorRegions; },
     get waveSpawnPoints() { return _waveSpawnPoints; },
+    get stratPoints() { return STRAT_POINTS.pointsInWorld; },
+    get playerXP() { return playerXP; },
     get brStructures() { return _brStructures; },
     get tutorialDone() { return tutorialDone; },
     set tutorialDone(v) { tutorialDone = !!v; if (v) _tutorialSkipRect = null; },
