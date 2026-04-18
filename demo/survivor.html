@@ -216,8 +216,9 @@ function doLogin() {
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // mapGenerator (US-015): world map (reduced from 2400 for tighter PvP encounters)
-  var WORLD_W = 1200, WORLD_H = 1200;
+  // mapGenerator (US-015): world = 2x screen; camera follows player with edge clamp.
+  // WORLD_W/H derived from W/H at startOfflineDemo so world scales with viewport.
+  var WORLD_W = W * 2, WORLD_H = H * 2;
   var cameraX = 0, cameraY = 0; // camera offset
 
   // === NETWORK (server-authoritative) ===
@@ -1007,8 +1008,7 @@ function doLogin() {
     else stopBgm();
   }
 
-  // World / camera system (US-185)
-  var WORLD_SIZE = 1600;
+  // World / camera system (US-185) — camX/camY mirror cameraX/cameraY (legacy alias used by bg particles/debris)
   var camX = 0, camY = 0;
   var gridSpacing = 40;
 
@@ -1281,7 +1281,7 @@ function doLogin() {
     bgParticles = [];
     for (var i = 0; i < 80; i++) {
       bgParticles.push({
-        x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE,
+        x: Math.random() * WORLD_W, y: Math.random() * WORLD_H,
         vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15,
         alpha: Math.random() * 0.4 + 0.15, radius: Math.random() * 3 + 1,
         hue: Math.random() * 60 + 200
@@ -1296,7 +1296,7 @@ function doLogin() {
     for (var i = 0; i < 40; i++) {
       var kind = Math.random() < 0.4 ? 'wisp' : 'debris';
       floatingDebris.push({
-        x: Math.random() * WORLD_SIZE, y: Math.random() * WORLD_SIZE,
+        x: Math.random() * WORLD_W, y: Math.random() * WORLD_H,
         vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
         kind: kind, size: kind === 'wisp' ? (2 + Math.random() * 4) : (1 + Math.random() * 2),
         hue: Math.random() * 360, phase: Math.random() * Math.PI * 2,
@@ -2342,6 +2342,14 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
+
+    // World = screen * 2 (0.5 screen padding on each side). Recompute here in case
+    // the viewport changed between page load and game start.
+    WORLD_W = W * 2;
+    WORLD_H = H * 2;
+    // Re-center player in freshly-sized world (startGame placed them at old center).
+    player.x = WORLD_W / 2;
+    player.y = WORLD_H / 2;
 
     // Initialize wave system — wave 1 starts on first update tick
     _initSpawnPoints();
@@ -6254,8 +6262,8 @@ function doLogin() {
       var dsx = d.x - camX + W / 2, dsy = d.y - camY + H / 2;
       if (dsx < -30 || dsx > W + 30 || dsy < -30 || dsy > H + 30) continue;
       d.x += d.vx * 0.016; d.y += d.vy * 0.016;
-      if (d.x < 0) d.x = WORLD_SIZE; if (d.x > WORLD_SIZE) d.x = 0;
-      if (d.y < 0) d.y = WORLD_SIZE; if (d.y > WORLD_SIZE) d.y = 0;
+      if (d.x < 0) d.x = WORLD_W; if (d.x > WORLD_W) d.x = 0;
+      if (d.y < 0) d.y = WORLD_H; if (d.y > WORLD_H) d.y = 0;
       if (d.kind === 'wisp') {
         // energyWisp: soft glowing orb
         var wAlpha = 0.15 + 0.1 * Math.sin(gameTime * 2 + d.phase);
@@ -9847,6 +9855,11 @@ function doLogin() {
     get gameMode() { return gameMode; },
     get gameTimer() { return gameTime; },
     get W() { return W; }, get H() { return H; },
+    get WORLD_W() { return WORLD_W; }, get WORLD_H() { return WORLD_H; },
+    get cameraX() { return cameraX; }, get cameraY() { return cameraY; },
+    get stormZone() { return stormZone; },
+    get offlineBots() { return offlineBots; },
+    get offlineEnemies() { return offlineEnemies; },
     get allPlayers() { return allPlayers; },
     get isDailyMode() { return isDailyMode; },
     get entities() { return entities; },
