@@ -2399,6 +2399,8 @@ function doLogin() {
     }
     // === Generate PUBG-style buildings, crates, walls across the map ===
     _generateBRStructures();
+    // homm3_bright decor scatter — retries once assets finish loading if empty
+    _generateHomm3Decor();
 
     // Storm zone — starts shrinking after 60s, center = map center
     stormZone.active = true;
@@ -4096,46 +4098,240 @@ function doLogin() {
   // === LPC CHARACTER SPRITE SHEETS ===
   // Config mirrors demo/assets/characters/sprites.json (locked by GameDesigner v1, 2026-04-11).
   // Inlined so we don't need a fetch() round-trip (works under file:// too).
+  // homm3_bright art style active (Leo decision 2026-04-18).
+  // Until warrior/scout sprites exist, all 3 classes share the mage sheet for
+  // visual consistency; gameplay stats remain per-class.
+  var HOMM3_ART_BASE = 'assets/style_homm3_bright/';
+  var _homm3PlayerAnims = {
+    idle:   { rowBase: 2, rowFromDir: false, frames: 1, fps: 1,  skipFrame0: false },
+    walk:   { rowBase: 0, rowFromDir: true,  frames: 4, fps: 10, skipFrame0: false },
+    attack: { rowBase: 4, rowFromDir: false, frames: 3, fps: 12, skipFrame0: false },
+    death:  { rowBase: 5, rowFromDir: false, frames: 3, fps: 8,  skipFrame0: false, loop: false }
+  };
   var CHAR_SPRITE_CFG = {
     frameW: 64, frameH: 64,
     // Direction row offset inside an anim's 4-row block. Order U/L/D/R.
     classes: {
-      warrior: {
-        sheet: 'assets/characters/lpc_warrior.png',
-        anims: {
-          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
-          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
-          attack: { rowBase: 12, frames: 6, fps: 12, skipFrame0: false }
-        }
-      },
-      mage: {
-        sheet: 'assets/characters/lpc_mage.png',
-        anims: {
-          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
-          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
-          attack: { rowBase: 0,  frames: 7, fps: 12, skipFrame0: false }
-        }
-      },
-      scout: {
-        sheet: 'assets/characters/lpc_scout.png',
-        anims: {
-          idle:   { rowBase: 8,  frames: 1, fps: 1,  skipFrame0: false },
-          walk:   { rowBase: 8,  frames: 8, fps: 10, skipFrame0: true  },
-          attack: { rowBase: 16, frames: 13, fps: 14, skipFrame0: false }
-        }
-      }
+      warrior: { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims },
+      mage:    { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims },
+      scout:   { sheet: HOMM3_ART_BASE + 'player_mage.png', anims: _homm3PlayerAnims }
     }
   };
   var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
   (function preloadCharSprites() {
+    // Dedup sheet paths so 3 classes sharing the homm3 mage sheet load one image.
+    var _sharedByPath = {};
     Object.keys(CHAR_SPRITE_CFG.classes).forEach(function(cls) {
-      var entry = { img: new Image(), ready: false, failed: false };
-      entry.img.onload  = function() { entry.ready = true; };
-      entry.img.onerror = function() { entry.failed = true; };
-      entry.img.src = CHAR_SPRITE_CFG.classes[cls].sheet;
+      var p = CHAR_SPRITE_CFG.classes[cls].sheet;
+      var entry = _sharedByPath[p];
+      if (!entry) {
+        entry = { img: new Image(), ready: false, failed: false };
+        entry.img.onload  = function() { entry.ready = true; };
+        entry.img.onerror = function() { entry.failed = true; };
+        entry.img.src = p;
+        _sharedByPath[p] = entry;
+      }
       CHAR_SPRITE_IMGS[cls] = entry;
     });
   })();
+
+  // homm3_bright: tileset floor, monster sheet, decor, 9-slice UI
+  var HOMM3_ART = {
+    tilesetImg: null, tilesetReady: false, tilesetMeta: null, tileIndex: {},
+    monsterImg: null, monsterReady: false, monsterMeta: null,
+    decorImgs: {}, decorMeta: null,
+    ui9: {}, ui9Meta: null, ui9Ready: false
+  };
+  (function preloadHomm3Art() {
+    function loadJSON(path, cb) {
+      try {
+        var xhr = new XMLHttpRequest(); xhr.open('GET', path, true);
+        xhr.onload = function() { if (xhr.status < 400) { try { cb(JSON.parse(xhr.responseText)); } catch (e) {} } };
+        xhr.send();
+      } catch (e) {}
+    }
+    function loadImg(path) {
+      var im = new Image(); im.src = path;
+      var box = { img: im, ready: false };
+      im.onload = function() { box.ready = true; };
+      return box;
+    }
+    // Tileset
+    HOMM3_ART.tilesetImg = new Image();
+    HOMM3_ART.tilesetImg.onload = function() { HOMM3_ART.tilesetReady = true; };
+    HOMM3_ART.tilesetImg.src = HOMM3_ART_BASE + 'tileset.png';
+    loadJSON(HOMM3_ART_BASE + 'tileset.json', function(j) {
+      HOMM3_ART.tilesetMeta = j;
+      for (var i = 0; i < j.tiles.length; i++) HOMM3_ART.tileIndex[j.tiles[i].id] = j.tiles[i];
+    });
+    // Monster
+    HOMM3_ART.monsterImg = new Image();
+    HOMM3_ART.monsterImg.onload = function() { HOMM3_ART.monsterReady = true; };
+    HOMM3_ART.monsterImg.src = HOMM3_ART_BASE + 'monster_orc.png';
+    loadJSON(HOMM3_ART_BASE + 'monster_orc.json', function(j) { HOMM3_ART.monsterMeta = j; });
+    // Decor
+    loadJSON(HOMM3_ART_BASE + 'decor/index.json', function(j) {
+      HOMM3_ART.decorMeta = j;
+      for (var i = 0; i < j.items.length; i++) {
+        var it = j.items[i];
+        var im = new Image();
+        (function(name) { im.onload = function() { HOMM3_ART.decorImgs[name]._ready = true; }; })(it.name);
+        im.src = HOMM3_ART_BASE + it.file;
+        HOMM3_ART.decorImgs[it.name] = { img: im, meta: it, _ready: false };
+      }
+    });
+    // 9-slice UI
+    var _ui9Keys = ['tl', 't', 'tr', 'l', 'c', 'r', 'bl', 'b', 'br'];
+    var _ui9Loaded = 0;
+    _ui9Keys.forEach(function(k) {
+      var im = new Image();
+      im.onload = function() { _ui9Loaded++; if (_ui9Loaded === _ui9Keys.length) HOMM3_ART.ui9Ready = true; };
+      im.src = HOMM3_ART_BASE + 'ui9/' + k + '.png';
+      HOMM3_ART.ui9[k] = im;
+    });
+    loadJSON(HOMM3_ART_BASE + 'ui9/meta.json', function(j) { HOMM3_ART.ui9Meta = j; });
+  })();
+
+  // Tiled floor across the whole world — deterministic per-tile variant by hash.
+  function drawTilesetFloor(ctx, camX, camY) {
+    if (!HOMM3_ART.tilesetReady || !HOMM3_ART.tilesetMeta) return;
+    var tsz = HOMM3_ART.tilesetMeta.tileW; // 64
+    var grass0 = HOMM3_ART.tileIndex.grass0, grass1 = HOMM3_ART.tileIndex.grass1;
+    if (!grass0) return;
+    // Visible world range (clamped to [0, WORLD])
+    var x0 = Math.max(0, Math.floor(camX / tsz));
+    var y0 = Math.max(0, Math.floor(camY / tsz));
+    var x1 = Math.min(Math.ceil(WORLD_W / tsz), Math.ceil((camX + W) / tsz));
+    var y1 = Math.min(Math.ceil(WORLD_H / tsz), Math.ceil((camY + H) / tsz));
+    var img = HOMM3_ART.tilesetImg;
+    for (var ty = y0; ty < y1; ty++) {
+      for (var tx = x0; tx < x1; tx++) {
+        // Deterministic hash — variant + occasional dirt/stone patches.
+        var h = (tx * 73856093) ^ (ty * 19349663);
+        h = (h >>> 0) % 100;
+        var tile;
+        if (h < 4 && HOMM3_ART.tileIndex.stone0) tile = HOMM3_ART.tileIndex.stone0;
+        else if (h < 9 && HOMM3_ART.tileIndex.dirt0) tile = HOMM3_ART.tileIndex.dirt0;
+        else if (h < 12 && HOMM3_ART.tileIndex.dirt1) tile = HOMM3_ART.tileIndex.dirt1;
+        else tile = (h & 1) ? grass1 : grass0;
+        ctx.drawImage(img, tile.px.x, tile.px.y, tsz, tsz, tx * tsz, ty * tsz, tsz, tsz);
+      }
+    }
+    // World boundary — dark vignette outside the playable area
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    if (camX < 0) ctx.fillRect(camX, camY, -camX, H);
+    if (camY < 0) ctx.fillRect(Math.max(camX, 0), camY, W, -camY);
+    if (camX + W > WORLD_W) ctx.fillRect(WORLD_W, camY, camX + W - WORLD_W, H);
+    if (camY + H > WORLD_H) ctx.fillRect(Math.max(camX, 0), WORLD_H, W, camY + H - WORLD_H);
+  }
+
+  // 9-slice stretch: corners fixed, edges repeat/stretch, center fills.
+  function draw9Slice(ctx, x, y, w, h, opts) {
+    if (!HOMM3_ART.ui9Ready) return false;
+    var cs = (opts && opts.cornerSize) || 16;
+    var alpha = (opts && opts.alpha != null) ? opts.alpha : 1;
+    var u9 = HOMM3_ART.ui9;
+    var midW = Math.max(0, w - cs * 2);
+    var midH = Math.max(0, h - cs * 2);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    // Source slice size is 64px; we draw 16px corners so we grab src 0..64 → dst cs.
+    var S = 64;
+    ctx.drawImage(u9.tl, 0, 0, S, S, x, y, cs, cs);
+    ctx.drawImage(u9.tr, 0, 0, S, S, x + w - cs, y, cs, cs);
+    ctx.drawImage(u9.bl, 0, 0, S, S, x, y + h - cs, cs, cs);
+    ctx.drawImage(u9.br, 0, 0, S, S, x + w - cs, y + h - cs, cs, cs);
+    if (midW > 0) {
+      ctx.drawImage(u9.t, 0, 0, S, S, x + cs, y, midW, cs);
+      ctx.drawImage(u9.b, 0, 0, S, S, x + cs, y + h - cs, midW, cs);
+    }
+    if (midH > 0) {
+      ctx.drawImage(u9.l, 0, 0, S, S, x, y + cs, cs, midH);
+      ctx.drawImage(u9.r, 0, 0, S, S, x + w - cs, y + cs, cs, midH);
+    }
+    if (midW > 0 && midH > 0) ctx.drawImage(u9.c, 0, 0, S, S, x + cs, y + cs, midW, midH);
+    ctx.restore();
+    return true;
+  }
+
+  // Decor scatter — deterministic layout with collision filtering.
+  var _decorItems = []; // { name, x, y, meta }
+  function _generateHomm3Decor() {
+    _decorItems = [];
+    if (!HOMM3_ART.decorMeta) return; // will retry next startOfflineDemo
+    var items = HOMM3_ART.decorMeta.items;
+    var _seed = 91011;
+    function rnd() { _seed = ((_seed | 0) * 1103515245 + 12345) & 0x7fffffff; return (_seed & 0xffff) / 0xffff; }
+    // Weights — trees most common, houses rare
+    var pool = [
+      { name: 'tree_big', w: 4 }, { name: 'tree_small', w: 6 },
+      { name: 'rock', w: 3 }, { name: 'house', w: 1 },
+      { name: 'fence', w: 2 }, { name: 'crate', w: 2 }
+    ];
+    var poolTotal = 0; for (var pi = 0; pi < pool.length; pi++) poolTotal += pool[pi].w;
+    function pickName() {
+      var r = rnd() * poolTotal;
+      for (var i = 0; i < pool.length; i++) { r -= pool[i].w; if (r <= 0) return pool[i].name; }
+      return pool[0].name;
+    }
+    // Target density: ~1 decor per 240×240 world area → scales with world size.
+    var target = Math.round((WORLD_W * WORLD_H) / (240 * 240));
+    var cx = WORLD_W / 2, cy = WORLD_H / 2;
+    var attempts = 0;
+    while (_decorItems.length < target && attempts < target * 6) {
+      attempts++;
+      var name = pickName();
+      var it = null;
+      for (var ii = 0; ii < items.length; ii++) if (items[ii].name === name) { it = items[ii]; break; }
+      if (!it) continue;
+      var dx = 40 + rnd() * (WORLD_W - 80);
+      var dy = 40 + rnd() * (WORLD_H - 80);
+      // Keep center ~200px clear for player spawn + immediate combat space
+      if (Math.abs(dx - cx) < 200 && Math.abs(dy - cy) < 200) continue;
+      // Avoid BR structure footprints
+      var hit = false;
+      for (var si = 0; si < _brStructures.length; si++) {
+        var s = _brStructures[si];
+        if (dx > s.x - 24 && dx < s.x + s.w + 24 && dy > s.y - 24 && dy < s.y + s.h + 24) { hit = true; break; }
+      }
+      if (hit) continue;
+      // Avoid other decor (loose spacing)
+      for (var di = 0; di < _decorItems.length; di++) {
+        var d = _decorItems[di];
+        if (Math.abs(dx - d.x) < 48 && Math.abs(dy - d.y) < 48) { hit = true; break; }
+      }
+      if (hit) continue;
+      _decorItems.push({ name: name, x: dx, y: dy, meta: it });
+    }
+  }
+
+  // Draw decor in world space; y-sorted so further items render behind.
+  function drawHomm3Decor(ctx, camX, camY) {
+    // Lazy-regenerate once assets load — handles the case where startOfflineDemo
+    // fired before the decor/index.json fetch completed.
+    if (!_decorItems.length && HOMM3_ART.decorMeta && offlineMode) _generateHomm3Decor();
+    if (!_decorItems.length) return;
+    var pad = 80;
+    var camL = camX - pad, camR = camX + W + pad, camT = camY - pad, camB = camY + H + pad;
+    // Cull + sort by anchor y
+    var vis = [];
+    for (var i = 0; i < _decorItems.length; i++) {
+      var d = _decorItems[i];
+      if (d.x < camL || d.x > camR || d.y < camT || d.y > camB) continue;
+      vis.push(d);
+    }
+    vis.sort(function(a, b) { return a.y - b.y; });
+    for (var k = 0; k < vis.length; k++) {
+      var d2 = vis[k];
+      var box = HOMM3_ART.decorImgs[d2.name];
+      if (!box || !box._ready) continue;
+      var m = d2.meta;
+      // Anchor = bottom-center of sprite glued to world (d2.x, d2.y)
+      var dx = d2.x - m.anchor.x;
+      var dy = d2.y - m.anchor.y;
+      ctx.drawImage(box.img, dx, dy);
+    }
+  }
   // Debug hook — only mounted on localhost / ?debug=1 so production is zero-cost.
   // Testor uses this for sprite-sheet.spec.js assertions (see PM decision 2026-04-11).
   (function mountSpriteDebug() {
@@ -4328,7 +4524,8 @@ function doLogin() {
       if (!cfg.anims[state]) state = 'idle';
       var animDef = cfg.anims[state];
       var dirOff = charDirOffset(facingAngle);
-      var row = animDef.rowBase + dirOff;
+      var _addDir = (animDef.rowFromDir === undefined) ? true : !!animDef.rowFromDir;
+      var row = animDef.rowBase + (_addDir ? dirOff : 0);
       // Frame index: walking skips frame 0 (LPC idle pose), attack uses full range
       var frameCount = animDef.frames;
       var frameIdx;
@@ -4410,6 +4607,31 @@ function doLogin() {
 
   // === ENEMY SPRITES — Canvas-drawn creatures per enemy type ===
   function drawEnemySprite(ctx, x, y, r, type, themeColor, gt) {
+    // homm3_bright: render as orc sprite sheet. Facing derived from angle-to-player
+    // since AI chases; idle enemies default to facing down.
+    if (HOMM3_ART.monsterReady && HOMM3_ART.monsterMeta) {
+      var meta = HOMM3_ART.monsterMeta;
+      var fw = meta.frameW, fh = meta.frameH;
+      var ang = (typeof player !== 'undefined' && player) ? Math.atan2(player.y - y, player.x - x) : Math.PI / 2;
+      var dir = charDirOffset(ang); // U/L/D/R = 0/1/2/3
+      var frameCount = meta.anims.walk.frames;
+      var fps = meta.anims.walk.fps;
+      var frameIdx = Math.floor((gt || 0) * fps) % frameCount;
+      var sx = frameIdx * fw, sy = dir * fh;
+      // Scale sheet 64px to ~4.5x enemy radius (matches player sprite scaling)
+      var dh = r * 4.5, dw = dh;
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(HOMM3_ART.monsterImg, sx, sy, fw, fh, x - dw / 2, y - dh * 0.72, dw, dh);
+      // Hostile hit-flash tint overlay
+      if (themeColor === '#fff') {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(x - dw / 2, y - dh * 0.72, dw, dh);
+      }
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.translate(x, y);
     switch (type) {
@@ -6247,12 +6469,16 @@ function doLogin() {
     }
     ctx.globalAlpha = 1;
 
+    // homm3_bright floor tileset (painterly grass/dirt/stone) — covers world
+    drawTilesetFloor(ctx, cameraX, cameraY);
     // Zone overlays — draw colored zone regions on the map
     drawZoneOverlays(ctx, cameraX, cameraY);
     // Terrain obstacles — rocks, bushes, water, lava, etc.
     drawTerrain(ctx, cameraX, cameraY);
     // BR structures — buildings, walls, crates (world-space)
     drawBRStructures(ctx, cameraX, cameraY);
+    // homm3_bright scattered decor (trees, rocks, houses, fences, crates)
+    drawHomm3Decor(ctx, cameraX, cameraY);
     // Fixed spawn points (MOBA-style) — drawn in world space over terrain
     drawSpawnPointMarkers(cameraX, cameraY);
 
@@ -8153,22 +8379,24 @@ function doLogin() {
     var mmX = W - mmW - Math.round(6 * _mmZs);
     var mmY = Math.round((_topBarH - mmH) / 2);
     ctx.save();
-    // Outer glow
-    ctx.shadowColor = 'rgba(255,215,0,0.4)';
-    ctx.shadowBlur = 10;
-    // Panel base
-    var mmGrad = ctx.createLinearGradient(mmX, mmY, mmX, mmY + mmH);
-    mmGrad.addColorStop(0, 'rgba(20,20,40,0.72)');
-    mmGrad.addColorStop(1, 'rgba(4,4,12,0.8)');
-    ctx.fillStyle = mmGrad;
-    ctx.fillRect(mmX, mmY, mmW, mmH);
-    // Gold border
-    ctx.strokeStyle = 'rgba(255,215,0,0.7)'; ctx.lineWidth = 2;
-    ctx.strokeRect(mmX + 0.5, mmY + 0.5, mmW - 1, mmH - 1);
-    ctx.shadowBlur = 0;
-    // Inner hairline
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-    ctx.strokeRect(mmX + 3, mmY + 3, mmW - 6, mmH - 6);
+    // homm3_bright 9-slice frame if assets ready; otherwise gradient + gold fallback.
+    var _mmUsed9 = draw9Slice(ctx, mmX, mmY, mmW, mmH, { cornerSize: Math.round(12 * _mmZs), alpha: 0.95 });
+    if (!_mmUsed9) {
+      ctx.shadowColor = 'rgba(255,215,0,0.4)';
+      ctx.shadowBlur = 10;
+      var mmGrad = ctx.createLinearGradient(mmX, mmY, mmX, mmY + mmH);
+      mmGrad.addColorStop(0, 'rgba(20,20,40,0.72)');
+      mmGrad.addColorStop(1, 'rgba(4,4,12,0.8)');
+      ctx.fillStyle = mmGrad;
+      ctx.fillRect(mmX, mmY, mmW, mmH);
+      ctx.strokeStyle = 'rgba(255,215,0,0.7)'; ctx.lineWidth = 2;
+      ctx.strokeRect(mmX + 0.5, mmY + 0.5, mmW - 1, mmH - 1);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+      ctx.strokeRect(mmX + 3, mmY + 3, mmW - 6, mmH - 6);
+    } else {
+      ctx.shadowBlur = 0;
+    }
     // Camera viewport indicator
     ctx.globalAlpha = 0.3;
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
@@ -9860,6 +10088,8 @@ function doLogin() {
     get stormZone() { return stormZone; },
     get offlineBots() { return offlineBots; },
     get offlineEnemies() { return offlineEnemies; },
+    get HOMM3_ART() { return HOMM3_ART; },
+    get decorItems() { return _decorItems; },
     get allPlayers() { return allPlayers; },
     get isDailyMode() { return isDailyMode; },
     get entities() { return entities; },
