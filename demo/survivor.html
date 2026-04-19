@@ -268,6 +268,22 @@ function doLogin() {
     biomeAtlases: {},           // key: biome id (2/4/5/6) -> { img, ready, cols, rows, tileW, tileH }
     _pendingLoad: false
   };
+  // Round 5 combat FX pack (ArtDesigner 2026-04-21). captureBar rows 0-3,
+  // rivalTrail frames 0-3, nemesisAura (animated SVG), stateFloats ribbons 0-5.
+  var COMBAT_FX = {
+    captureBar:  { img: new Image(), ready: false, barW: 128, barH: 16, rowH: 24 },
+    rivalTrail:  { img: new Image(), ready: false, frameSize: 32 },
+    nemesisAura: { img: new Image(), ready: false, size: 160, anchorX: 80, anchorY: 80 },
+    stateFloats: { img: new Image(), ready: false, ribbonW: 160, ribbonH: 24, rowH: 32 }
+  };
+  (function _preloadCombatFX() {
+    Object.keys(COMBAT_FX).forEach(function(k) {
+      var e = COMBAT_FX[k];
+      e.img.onload = function() { e.ready = true; };
+      var file = ({ captureBar: 'capture_bar.svg', rivalTrail: 'rival_trail.svg', nemesisAura: 'nemesis_aura.svg', stateFloats: 'state_floats.svg' })[k];
+      e.img.src = 'assets/combat/' + file;
+    });
+  })();
   (function _preloadMapArt() {
     // Rasterise SVG atlas to an offscreen bitmap canvas so every per-tile
     // drawImage hits a cached raster instead of re-rasterising the SVG each
@@ -3637,6 +3653,23 @@ function doLogin() {
     }
   }
 
+  // === Round 5 M: archetype-driven combat profile (Leo 2026-04-21) ===
+  // Per-archetype tactic controls bot engage behaviour so every match feels
+  // like 7 distinct opponents rather than "all bots swarm forward". The style
+  // id is consumed in the engage-state movement block below.
+  var ARCHETYPE_TACTICS = {
+    assassin:     { range: 110, flee: 0.30, style: 'flank'       },
+    bruiser:      { range: 85,  flee: 0.15, style: 'rush'        },
+    tank:         { range: 100, flee: 0.08, style: 'rush'        },
+    glasscannon:  { range: 380, flee: 0.45, style: 'behindAlly'  },
+    speedster:    { range: 200, flee: 0.25, style: 'orbit'       },
+    sharpshooter: { range: 600, flee: 0.25, style: 'kite'        },
+    duelist:      { range: 140, flee: 0.20, style: 'duel'        }
+  };
+  function _archetypeProfile(b) {
+    return ARCHETYPE_TACTICS[b.archetype] || ARCHETYPE_TACTICS.bruiser;
+  }
+
   // === Experiment C: strategic capture points ===
   var _CAPTURE_RATE = 14;   // progress per second while uncontested
   var _BUFF_DURATION = 30;  // seconds after capture
@@ -3659,38 +3692,74 @@ function doLogin() {
         }
       }
       if (inside.length === 0) continue;
-      // Determine contest state: only one faction present → progress; multiple → stalled
+      // Determine contest state: only one faction present → progress; multiple → decay
       var factionSet = {};
       inside.forEach(function(o) { factionSet[o.faction] = true; });
       var factions = Object.keys(factionSet);
-      if (factions.length > 1) continue; // contested — no progress
+      if (factions.length > 1) {
+        // Round 5 L: contested — progress decays so "打败对方才继续"
+        pt.progress = Math.max(0, pt.progress - _CAPTURE_RATE * 0.6 * dt);
+        pt._contested = true;
+        continue;
+      }
+      pt._contested = false;
       var occupyingFaction = +factions[0];
       if (pt.owner === occupyingFaction) continue; // already owned
       pt.progress += _CAPTURE_RATE * dt;
       if (pt.progress >= 100) {
         pt.progress = 0;
+        var prevOwner = pt.owner;
         pt.owner = occupyingFaction;
         pt.buffUntil = gameTime + _BUFF_DURATION;
-        // Feedback: only notify local player-involved captures
+        var _ptLabel = { watchtower: '哨塔', temple: '神庙', camp: '营地' }[pt.type] || pt.type;
+        var _ptName = pt.name ? (pt.name + '(' + _ptLabel + ')') : _ptLabel;
+        // Round 5 L: killFeed for every capture event — makes map control visible
+        var _factionName = function(f) {
+          if (player && f === player.factionId) return '你';
+          for (var _fi = 0; _fi < offlineBots.length; _fi++) {
+            if (offlineBots[_fi].factionId === f) return offlineBots[_fi].name || 'Bot';
+          }
+          return 'Bot';
+        };
+        var newName = _factionName(occupyingFaction);
+        if (prevOwner != null && prevOwner !== occupyingFaction) {
+          killFeed.push({ text: newName + ' 击败 ' + _factionName(prevOwner) + ' 夺得 ' + _ptName, color: '#ffb030', time: 5 });
+        } else {
+          killFeed.push({ text: newName + ' 控制了 ' + _ptName, color: '#ffd060', time: 5 });
+        }
+        // Local player feedback
         if (occupyingFaction === player.factionId) {
-          var _ptName = { watchtower: '哨塔', temple: '神庙', camp: '营地' }[pt.type] || pt.type;
-          floatText(pt.x, pt.y - 40, '★ 占领 ' + _ptName + ' +' + _BUFF_DURATION + 's buff', { color: '#ffd700', size: 16 });
+          floatText(pt.x, pt.y - 40, '★ 占领 ' + _ptLabel + ' +' + _BUFF_DURATION + 's buff', { color: '#ffd700', size: 16 });
           screenFlash.color = '#ffd700'; screenFlash.alpha = 0.22;
           playSound('kill');
         }
       }
     }
   }
-  // Apply strategic point buffs to the local player each frame
+  // Apply strategic point buffs to the local player AND bots each frame.
+  // Round 5 L: bots that own a temple now heal the same 2 HP/s as the player,
+  // so capturing a point is a tangible advantage (not just a label).
   function applyStrategicBuffs(dt) {
-    if (!STRAT_POINTS.pointsInWorld.length || !player) return;
-    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
-      var pt = STRAT_POINTS.pointsInWorld[i];
-      if (pt.owner !== player.factionId || gameTime > pt.buffUntil) continue;
-      if (pt.type === 'temple') {
-        player.hp = Math.min(player.maxHp, player.hp + 2 * dt);
+    if (!STRAT_POINTS.pointsInWorld.length) return;
+    if (player) {
+      for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+        var pt = STRAT_POINTS.pointsInWorld[i];
+        if (pt.owner !== player.factionId || gameTime > pt.buffUntil) continue;
+        if (pt.type === 'temple') {
+          player.hp = Math.min(player.maxHp, player.hp + 2 * dt);
+        }
       }
-      // vision & radar handled passively in drawMinimap / drawGame when checking isBuffActive
+    }
+    for (var _bi = 0; _bi < offlineBots.length; _bi++) {
+      var _bb = offlineBots[_bi];
+      if (!_bb.alive) continue;
+      for (var _pi = 0; _pi < STRAT_POINTS.pointsInWorld.length; _pi++) {
+        var _pp = STRAT_POINTS.pointsInWorld[_pi];
+        if (_pp.owner !== _bb.factionId || gameTime > _pp.buffUntil) continue;
+        if (_pp.type === 'temple') {
+          _bb.hp = Math.min(_bb.maxHp, _bb.hp + 2 * dt);
+        }
+      }
     }
   }
   function playerHasStratBuff(type) {
@@ -3725,18 +3794,35 @@ function doLogin() {
         // Fallback marker
         ctx.fillStyle = '#8a8'; ctx.fillRect(pt.x - 20, pt.y - 80, 40, 100);
       }
-      // Capture progress bar (world space, above sprite)
+      // Capture progress bar — Round 5 sprite pack (4 rows in capture_bar.svg).
+      // row 0 ally-blue, 1 enemy-red, 2 neutral-gold, 3 contested pulse.
       if (pt.progress > 0 && pt.progress < 100) {
-        var bw = 80, bh = 8;
-        var bx = pt.x - bw / 2, by = pt.y - meta.h - 8;
-        ctx.fillStyle = 'rgba(0,0,0,0.6)';
-        ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
-        ctx.fillStyle = '#333';
-        ctx.fillRect(bx, by, bw, bh);
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(bx, by, bw * (pt.progress / 100), bh);
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
-        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        var bw = 128, bh = 16;
+        var bx = pt.x - bw / 2, by = pt.y - meta.h - 14;
+        var cb = COMBAT_FX.captureBar;
+        // Row selection: contested > captured-by-enemy > captured-by-player > neutral
+        var _row = 2;
+        if (pt._contested) _row = 3;
+        else if (pt.owner != null) _row = (pt.owner === (player && player.factionId)) ? 0 : 1;
+        if (cb.ready) {
+          // Dim background (ghost) bar
+          ctx.globalAlpha = 0.35;
+          ctx.drawImage(cb.img, 0, _row * cb.rowH, cb.barW, cb.barH, bx, by, bw, bh);
+          ctx.globalAlpha = 1;
+          // Filled portion — slice source by progress so no clip() is needed
+          var _pctW = bw * (pt.progress / 100);
+          var _srcW = cb.barW * (pt.progress / 100);
+          ctx.drawImage(cb.img, 0, _row * cb.rowH, _srcW, cb.barH, bx, by, _pctW, bh);
+        } else {
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+          ctx.fillStyle = '#333';
+          ctx.fillRect(bx, by, bw, bh);
+          ctx.fillStyle = pt._contested ? '#ff8060' : (pt.owner === (player && player.factionId) ? '#7ac4f0' : (pt.owner != null ? '#ff7a5a' : '#ffd700'));
+          ctx.fillRect(bx, by, bw * (pt.progress / 100), bh);
+          ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+          ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        }
       }
       // Owner buff timer bar (when player owns)
       if (pt.owner != null && gameTime < pt.buffUntil) {
@@ -3835,10 +3921,65 @@ function doLogin() {
       // Snapshot pre-move position for collision slide + stuck detection.
       var _bPreX = b.x, _bPreY = b.y;
 
+      // Round 5 N: rival trail — emit a soft red particle at feet every 50ms
+      // while actively chasing the player. Makes the rival readable on minimap
+      // and in pursuit, without requiring the sprite atlas to be ready.
+      if (rivalState.botId === b.factionId || rivalState.nemesisId === b.factionId) {
+        b._trailT = (b._trailT || 0) - dt;
+        if (b._trailT <= 0) {
+          b._trailT = 0.05;
+          var _trailColor = rivalState.nemesisId === b.factionId ? '#c090ff' : '#ff6060';
+          particles.push({
+            x: b.x + (Math.random() - 0.5) * 10,
+            y: b.y + (b.radius || 32) * 0.6,
+            vx: 0, vy: -8,
+            life: 0.48, maxLife: 0.48,
+            color: _trailColor, size: 6, particleType: 'circle'
+          });
+        }
+      }
+
+      // --- Round 5 N: rival / nemesis target override ---
+      // Nemesis hunts the player regardless of distance; rival engages the
+      // player inside a 1200px aggression radius. These override normal target
+      // selection below so labelled bots *feel* personal, not cosmetic.
+      var _forcePlayer = false;
+      if (player && player.alive) {
+        if (rivalState.nemesisId === b.factionId) {
+          _forcePlayer = true;
+        } else if (rivalState.botId === b.factionId) {
+          var _rvdx = player.x - b.x, _rvdy = player.y - b.y;
+          if (_rvdx * _rvdx + _rvdy * _rvdy < 1200 * 1200) _forcePlayer = true;
+        }
+      }
+
+      // --- Round 5 L: capture decision every 4-6s ---
+      // Claim nearby strategic points when safe. Priority lower than forced
+      // rival/nemesis engagement and lower than flee.
+      b._nextCapture = (b._nextCapture || 0) - dt;
+      if (b._nextCapture <= 0) {
+        b._nextCapture = 4 + Math.random() * 2;
+        if (!_forcePlayer && b._aiState !== 'flee' && b.hp > (b.maxHp || 1) * 0.5 && STRAT_POINTS.pointsInWorld.length) {
+          var bestPt = null, bestPtD = 800;
+          for (var _spi = 0; _spi < STRAT_POINTS.pointsInWorld.length; _spi++) {
+            var _pt = STRAT_POINTS.pointsInWorld[_spi];
+            if (_pt.owner === b.factionId && gameTime < _pt.buffUntil) continue;
+            var _pdxC = _pt.x - b.x, _pdyC = _pt.y - b.y;
+            var _pdC = Math.sqrt(_pdxC * _pdxC + _pdyC * _pdyC);
+            if (_pdC < bestPtD) { bestPtD = _pdC; bestPt = _pt; }
+          }
+          if (bestPt) {
+            b._aiState = 'capture';
+            b._captureTarget = bestPt;
+            b._captureAnnounced = false;
+          }
+        }
+      }
+
       // --- AI decision every 0.5-2s ---
       if (b._nextDecision <= 0) {
         b._nextDecision = 0.6 + Math.random() * 0.9;
-        // Check if outside safe zone → flee toward center
+        // Storm flee
         if (stormZone.active) {
           var _sdBot = Math.sqrt((b.x - stormZone.centerX) * (b.x - stormZone.centerX) + (b.y - stormZone.centerY) * (b.y - stormZone.centerY));
           if (_sdBot > stormZone.radius * 0.8) {
@@ -3846,7 +3987,19 @@ function doLogin() {
             b._aiTarget = null;
           }
         }
-        if (b._aiState !== 'flee') {
+        // Archetype HP flee — each archetype has its own break threshold
+        var _tactic = _archetypeProfile(b);
+        if (b._aiState !== 'flee' && b.hp < (b.maxHp || 1) * _tactic.flee && !_forcePlayer) {
+          // Nemesis and rival don't flee (they pursue at all costs).
+          b._aiState = 'flee';
+          b._aiTarget = null;
+        }
+        if (_forcePlayer) {
+          b._aiState = 'engage'; b._aiTarget = player;
+        } else if (b._aiState === 'capture' && b._captureTarget && b._captureTarget.owner !== b.factionId) {
+          // Already pursuing a capture — keep unless an enemy is about to
+          // interrupt; engage state check below handles that.
+        } else if (b._aiState !== 'flee') {
           // 1) Look for nearest enemy player anywhere
           var bestTarget = null, bestDist = 1400;
           for (var pi = 0; pi < _allBR.length; pi++) {
@@ -3857,8 +4010,7 @@ function doLogin() {
             var _td = Math.sqrt(_tdx * _tdx + _tdy * _tdy);
             if (_td < bestDist) { bestDist = _td; bestTarget = _tgt; }
           }
-          // 2) Look for nearest mob within 340px — prefer farming over
-          //    engaging a far-away player (MOBA jungle pattern)
+          // 2) Nearest mob within 340px — prefer farm over far-away chase
           var bestMob = null, bestMobDist = 340;
           for (var _mi = 0; _mi < offlineEnemies.length; _mi++) {
             var _m = offlineEnemies[_mi];
@@ -3867,21 +4019,35 @@ function doLogin() {
             var _md = Math.sqrt(_mdx * _mdx + _mdy * _mdy);
             if (_md < bestMobDist) { bestMobDist = _md; bestMob = _m; }
           }
+          // Round 5 M: duelist avoids group fights — if 2+ enemies within 400,
+          // disengage to 'push' (hunting for a 1v1 elsewhere).
+          if (_tactic.style === 'duel' && bestTarget) {
+            var _nearby = 0;
+            for (var _di = 0; _di < _allBR.length; _di++) {
+              var _dt2 = _allBR[_di];
+              if (_dt2 === b || !_dt2.alive) continue;
+              if (gameMode === 'team' && _dt2.factionId === b.factionId) continue;
+              var _ddx = _dt2.x - b.x, _ddy = _dt2.y - b.y;
+              if (_ddx * _ddx + _ddy * _ddy < 400 * 400) _nearby++;
+            }
+            if (_nearby >= 2) { b._aiState = 'push'; b._aiTarget = null; bestTarget = null; }
+          }
           if (bestTarget && bestDist < 420) {
-            // Close player trumps farming
             b._aiState = 'engage'; b._aiTarget = bestTarget;
           } else if (bestMob) {
             b._aiState = 'farm'; b._aiTarget = bestMob;
           } else if (bestTarget) {
             b._aiState = 'engage'; b._aiTarget = bestTarget;
-          } else {
+          } else if (b._aiState !== 'capture') {
             b._aiState = 'push'; b._aiTarget = null;
           }
         }
       }
 
       // --- Movement ---
-      var bSpeed = b.speed || 100;
+      // Round 5 N: rival rage buff (+20% speed/attack) for 15s after hatred ≥ 5
+      var _rageMul = (b._rageUntil && gameTime < b._rageUntil) ? 1.2 : 1.0;
+      var bSpeed = (b.speed || 100) * _rageMul;
       if (b._aiState === 'flee') {
         // Move toward storm center (storm is damaging)
         var _fcx = stormZone.centerX - b.x, _fcy = stormZone.centerY - b.y;
@@ -3928,24 +4094,114 @@ function doLogin() {
         b.x += (mvx / ml) * bSpeed * 0.75 * dt;
         b.y += (mvy / ml) * bSpeed * 0.75 * dt;
         b.facingAngle = Math.atan2(mvy, mvx);
+      } else if (b._aiState === 'capture' && b._captureTarget) {
+        // Round 5 L: march to capture point and channel until owned.
+        var _cp = b._captureTarget;
+        if (_cp.owner === b.factionId && gameTime < _cp.buffUntil) {
+          b._aiState = 'push'; b._captureTarget = null;
+        } else {
+          var _cdx = _cp.x - b.x, _cdy = _cp.y - b.y;
+          var _cd = Math.sqrt(_cdx * _cdx + _cdy * _cdy) || 0.001;
+          b.facingAngle = Math.atan2(_cdy, _cdx);
+          var _standR = _cp.captureRadius * 0.7;
+          if (_cd > _standR) {
+            b.x += (_cdx / _cd) * bSpeed * dt;
+            b.y += (_cdy / _cd) * bSpeed * dt;
+          } else if (!b._captureAnnounced || gameTime - (b._captureAnnounceT || 0) > 3) {
+            b._captureAnnounced = true;
+            b._captureAnnounceT = gameTime;
+            if (typeof floatText === 'function') floatText(b.x, b.y - 44, 'CAPTURING', { color: '#ffd060', size: 12 });
+          }
+          // Enemy interrupt — any enemy within 320px breaks channel to engage
+          for (var _xi = 0; _xi < _allBR.length; _xi++) {
+            var _xt = _allBR[_xi];
+            if (_xt === b || !_xt.alive) continue;
+            if (gameMode === 'team' && _xt.factionId === b.factionId) continue;
+            var _xdx = _xt.x - b.x, _xdy = _xt.y - b.y;
+            if (_xdx * _xdx + _xdy * _xdy < 320 * 320) {
+              b._aiState = 'engage'; b._aiTarget = _xt; break;
+            }
+          }
+        }
       } else if (b._aiState === 'engage' && b._aiTarget && b._aiTarget.alive) {
         var _edx = b._aiTarget.x - b.x, _edy = b._aiTarget.y - b.y;
-        var _ed = Math.sqrt(_edx * _edx + _edy * _edy);
+        var _ed = Math.sqrt(_edx * _edx + _edy * _edy) || 0.001;
         b.facingAngle = Math.atan2(_edy, _edx);
-        // Approach to attack range (~120px), strafe slightly
-        var engageRange = b.playerClass === 'scout' ? 180 : (b.playerClass === 'mage' ? 160 : 80);
-        if (_ed > engageRange) {
-          b.x += (_edx / _ed) * bSpeed * dt;
-          b.y += (_edy / _ed) * bSpeed * dt;
-        } else if (_ed < engageRange * 0.5) {
-          // Too close — back up slightly
-          b.x -= (_edx / _ed) * bSpeed * 0.3 * dt;
-          b.y -= (_edy / _ed) * bSpeed * 0.3 * dt;
+        // Round 5 M: archetype-driven engage profile
+        var _tac = _archetypeProfile(b);
+        var engageRange = _tac.range;
+        var _style = _tac.style;
+        // Lateral tangent for flank / orbit / kite
+        var _nx = -_edy / _ed, _ny = _edx / _ed;
+        // Orbit direction flips every ~2s to avoid predictable arcs
+        var _orbitDir = (Math.floor(gameTime / 2 + bi) % 2) ? 1 : -1;
+        if (_style === 'kite') {
+          // Stay at range ~engageRange, back off if closer than 0.8×
+          if (_ed < engageRange * 0.8) {
+            b.x -= (_edx / _ed) * bSpeed * 0.9 * dt;
+            b.y -= (_edy / _ed) * bSpeed * 0.9 * dt;
+          } else if (_ed > engageRange * 1.15) {
+            b.x += (_edx / _ed) * bSpeed * 0.5 * dt;
+            b.y += (_edy / _ed) * bSpeed * 0.5 * dt;
+          }
+        } else if (_style === 'orbit') {
+          // Strafe around target while closing the gap
+          if (_ed > engageRange) {
+            b.x += (_edx / _ed) * bSpeed * 0.8 * dt;
+            b.y += (_edy / _ed) * bSpeed * 0.8 * dt;
+          }
+          b.x += _nx * _orbitDir * bSpeed * 0.7 * dt;
+          b.y += _ny * _orbitDir * bSpeed * 0.7 * dt;
+        } else if (_style === 'flank') {
+          // Approach at a 45° angle so the closing vector is side-on
+          if (_ed > engageRange) {
+            b.x += ((_edx / _ed) * 0.7 + _nx * _orbitDir * 0.5) * bSpeed * dt;
+            b.y += ((_edy / _ed) * 0.7 + _ny * _orbitDir * 0.5) * bSpeed * dt;
+          }
+        } else if (_style === 'behindAlly') {
+          // Hug the highest-HP teammate (tank/bruiser) while they absorb fire
+          var _ally = null, _allyHp = 0;
+          for (var _ai = 0; _ai < offlineBots.length; _ai++) {
+            var _ab = offlineBots[_ai];
+            if (_ab === b || !_ab.alive) continue;
+            if (_ab.factionId !== b.factionId && gameMode === 'team') continue;
+            if (_ab.archetype === b.archetype) continue;
+            if ((_ab.hp || 0) > _allyHp) { _allyHp = _ab.hp; _ally = _ab; }
+          }
+          if (_ally) {
+            // Stay 80px behind ally (opposite to target)
+            var _alx = _ally.x + (b.x - b._aiTarget.x) / _ed * 80;
+            var _aly = _ally.y + (b.y - b._aiTarget.y) / _ed * 80;
+            var _adx = _alx - b.x, _ady = _aly - b.y;
+            var _ad = Math.sqrt(_adx * _adx + _ady * _ady) || 0.001;
+            if (_ad > 15) {
+              b.x += (_adx / _ad) * bSpeed * dt;
+              b.y += (_ady / _ad) * bSpeed * dt;
+            }
+          } else {
+            // No ally — act like sharpshooter kite
+            if (_ed < engageRange * 0.8) {
+              b.x -= (_edx / _ed) * bSpeed * 0.8 * dt;
+              b.y -= (_edy / _ed) * bSpeed * 0.8 * dt;
+            }
+          }
+        } else {
+          // 'rush' / 'duel' / default — close to engageRange
+          if (_ed > engageRange) {
+            b.x += (_edx / _ed) * bSpeed * dt;
+            b.y += (_edy / _ed) * bSpeed * dt;
+          } else if (_ed < engageRange * 0.5) {
+            b.x -= (_edx / _ed) * bSpeed * 0.3 * dt;
+            b.y -= (_edy / _ed) * bSpeed * 0.3 * dt;
+          }
         }
         // --- Attack ---
         if (_ed < engageRange + 30 && b._attackTimer <= 0) {
-          b._attackTimer = b.attackCooldown;
-          var _aDmg = b.attackDamage + Math.floor(Math.random() * 4);
+          b._attackTimer = b.attackCooldown / _rageMul;
+          // Round 5 N: nemesis stacks damage with each player kill (cap ×1.5)
+          var _nemMul = (rivalState.nemesisId === b.factionId && b._nemesisStreak)
+            ? Math.min(1.5, 1 + 0.15 * b._nemesisStreak) : 1;
+          var _aDmg = Math.floor((b.attackDamage + Math.floor(Math.random() * 4)) * _rageMul * _nemMul);
           b._aiTarget.hp -= _aDmg;
           // Visual feedback
           var _projAngle = Math.atan2(_edy, _edx);
@@ -3971,6 +4227,10 @@ function doLogin() {
             var killerName = b.name || 'Bot';
             killFeed.push({ text: killerName + ' 击杀了 ' + victimName, color: '#fa0', time: 5 });
             emit(b._aiTarget.x, b._aiTarget.y, '#ff4444', 18, 100);
+            // Round 5 N: nemesis kill streak — +15% dmg per kill (capped above)
+            if (rivalState.nemesisId === b.factionId) {
+              b._nemesisStreak = (b._nemesisStreak || 0) + 1;
+            }
             // Player killed by bot → spectator
             if (b._aiTarget === player || b._aiTarget.isLocal) {
               // Experiment G: nemesis tracking — 2 kills by same bot escalates
@@ -4406,6 +4666,15 @@ function doLogin() {
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
         closest.hp -= _dmgValue;
+        // Round 5 N: rival hatred — each player hit on rival adds +1; >= 5 triggers 15s rage
+        if (closest.isBot && rivalState.botId === closest.factionId) {
+          closest._rivalHatred = (closest._rivalHatred || 0) + 1;
+          if (closest._rivalHatred >= 5 && !(closest._rageUntil && gameTime < closest._rageUntil)) {
+            closest._rageUntil = gameTime + 15;
+            if (typeof floatText === 'function') floatText(closest.x, closest.y - 60, 'RAGE!', { color: '#ff4040', size: 18 });
+            killFeed.push({ text: '⚠ ' + (closest.name || 'Rival') + ' 狂暴!', color: '#ff4040', time: 4 });
+          }
+        }
         // Wave 1: hit feedback — hitStop + shake + damage number + particles + knockback
         triggerHitStop(_isCrit ? 'crit' : 'normal');
         screenShake(_isCrit ? 'medium' : 'light');
@@ -4441,6 +4710,10 @@ function doLogin() {
               triggerRivalSlainBanner((closest.name || 'NEMESIS') + ' (NEMESIS)');
               rivalState.nemesisId = -1;
               rivalState.killedBy = 0;
+              // Round 5 N: RIVALRY ENDED global broadcast
+              killFeed.push({ text: '★ RIVALRY ENDED — 你击败了 ' + (closest.name || 'NEMESIS') + ' ★', color: '#9ae06a', time: 6 });
+              if (typeof floatText === 'function') floatText(closest.x, closest.y - 80, 'RIVALRY ENDED!', { color: '#9ae06a', size: 22 });
+              screenFlash.color = '#9ae06a'; screenFlash.alpha = 0.35;
             }
           }
           else { farmKills++; player._farmKills = (player._farmKills || 0) + 1; }
@@ -9623,6 +9896,15 @@ function doLogin() {
       var _bMoving = (_bdx * _bdx + _bdy * _bdy) > 0.04;
       bp._prevX = bp.x; bp._prevY = bp.y;
       if (_bMoving) bpAngle = Math.atan2(_bdy, _bdx);
+      // Round 5 N: nemesis burning aura — drawn UNDER the character sprite.
+      // SVG has built-in pulse/rotate animations; we just blit.
+      if (rivalState.nemesisId === bp.factionId && COMBAT_FX.nemesisAura.ready) {
+        var _auraSz = COMBAT_FX.nemesisAura.size;
+        ctx.drawImage(COMBAT_FX.nemesisAura.img,
+          bp.x - COMBAT_FX.nemesisAura.anchorX,
+          bp.y - COMBAT_FX.nemesisAura.anchorY + 8,
+          _auraSz, _auraSz);
+      }
       drawCharacterSprite(bp.x, bp.y, bp.radius, bp.characterType || 'warrior', bpAngle, {
         isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default',
         animState: _bMoving ? 'walk' : 'idle'
