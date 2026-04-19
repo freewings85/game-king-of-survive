@@ -707,6 +707,7 @@ function doLogin() {
   };
   var player, entities = [], particles = [], floats = [], gems = [], coins = [];
   var skillPickups = []; // Experiment D: skill drops from bot kills
+  var _ultReadyBtn = null; // HUD hit-rect when class ultimate is ready
   var bossSlainBanner = { active: false, timer: 0, duration: 1.8, name: '' };
   var bossBuffChoice = { active: false, options: [], rects: [] };
   var worldEvent = { active: false, kind: '', phase: 'idle', phaseTimer: 0, target: null, banner: '', timeLeft: 0, nextAt: 30 };
@@ -1499,6 +1500,9 @@ function doLogin() {
     player._ultimateUnlocked = true;
     player._ultimateReady = true;
     var u = CLASS_ULTIMATES[selectedClass] || CLASS_ULTIMATES.warrior;
+    player._ultimateName = u.name;
+    player._ultimateIcon = u.icon;
+    player._ultimateColor = u.color;
     synergyBanner.active = true;
     synergyBanner.timer = 0;
     synergyBanner.duration = 2.0;
@@ -3724,6 +3728,15 @@ function doLogin() {
     // Combo window tick
     updateComboState(dt);
     updateSkillPickups(dt);
+    // Round 2: drain queued level-ups once banners clear
+    if (_levelUpQueue.pending > 0) {
+      _levelUpQueue.wait -= dt;
+      var _stillBanner = (bossSlainBanner.active || synergyBanner.active);
+      if (!_stillBanner && _levelUpQueue.wait <= 0 && state === 'playing') {
+        _levelUpQueue.pending--;
+        triggerLevelUp();
+      }
+    }
     // Experiment D: boss slain banner timer
     if (bossSlainBanner.active) {
       bossSlainBanner.timer += dt;
@@ -7941,8 +7954,18 @@ function doLogin() {
   // Curve (Leo 2026-04-18): Lv1→2 = 30 XP (~3 normal mobs), then +20 per level.
   //   1→2:30, 2→3:50, 3→4:70, 4→5:90, 5→6:110, 6→7:130, 7→8:150, 8→9:170.
   // A 5–8 min match averages 15–25 XP drops → 3–5 level-ups.
+  var _levelUpQueue = { pending: 0, wait: 0 };
   function triggerLevelUp() {
     if (state === 'levelUp') return;
+    // Round 2: defer level-up if a high-priority banner is showing so the
+    // BOSS SLAIN / combo / RIVAL SLAIN banner gets its 1.2s spotlight.
+    var _bannerActive = (bossSlainBanner.active || synergyBanner.active ||
+                         (comboState.popupTimer > 0 && comboState.lastShownCount >= 2));
+    if (_bannerActive) {
+      _levelUpQueue.pending++;
+      _levelUpQueue.wait = Math.max(_levelUpQueue.wait, 1.2);
+      return;
+    }
     playerLevel++;
     playerXP = Math.max(0, playerXP - xpToNextLevel);
     xpToNextLevel = 30 + (playerLevel - 1) * 20;
@@ -9056,33 +9079,6 @@ function doLogin() {
         ctx.closePath(); ctx.fill();
       }
       ctx.globalAlpha = 1;
-      // Experiment G: rival / nemesis badge + ring
-      var _isRival = rivalState.botId === bp.factionId;
-      var _isNemesis = rivalState.nemesisId === bp.factionId;
-      if (_isRival || _isNemesis) {
-        var _ringPulse = 0.6 + 0.4 * Math.sin(gameTime * 3);
-        ctx.save();
-        ctx.globalAlpha = 0.9 * _ringPulse;
-        ctx.strokeStyle = _isNemesis ? '#ff00aa' : '#ff3333';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([5, 4]);
-        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 10, 0, Math.PI * 2); ctx.stroke();
-        ctx.setLineDash([]);
-        // Badge above name
-        var _badgeTxt = _isNemesis ? 'NEMESIS' : 'RIVAL';
-        var _badgeCol = _isNemesis ? '#ff00aa' : '#ff4040';
-        ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        var _bw = ctx.measureText(_badgeTxt).width + 8;
-        ctx.fillRect(bp.x - _bw / 2, bp.y - bp.radius - 42, _bw, 14);
-        ctx.strokeStyle = _badgeCol; ctx.lineWidth = 1.5;
-        ctx.strokeRect(bp.x - _bw / 2, bp.y - bp.radius - 42, _bw, 14);
-        ctx.fillStyle = _badgeCol;
-        ctx.fillText(_badgeTxt, bp.x, bp.y - bp.radius - 32);
-        ctx.restore();
-      }
       var bpAngle = bp.facingAngle || 0;
       if (bp._prevX == null) { bp._prevX = bp.x; bp._prevY = bp.y; }
       var _bdx = bp.x - bp._prevX, _bdy = bp.y - bp._prevY;
@@ -9093,6 +9089,43 @@ function doLogin() {
         isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default',
         animState: _bMoving ? 'walk' : 'idle'
       });
+      // Experiment G (round 2): rival / nemesis ring + badge drawn AFTER sprite
+      // so the red glow sits on top of the character art and actually reads.
+      var _rivAlive = (rivalState && rivalState.botId != null && rivalState.botId >= 0);
+      var _nemAlive = (rivalState && rivalState.nemesisId != null && rivalState.nemesisId >= 0);
+      var _isRival = _rivAlive && rivalState.botId === bp.factionId;
+      var _isNemesis = _nemAlive && rivalState.nemesisId === bp.factionId;
+      if (_isRival || _isNemesis) {
+        var _ringPulse = 0.6 + 0.4 * Math.sin(gameTime * 3);
+        var _rCol = _isNemesis ? '#ff00aa' : '#ff3333';
+        ctx.save();
+        ctx.globalAlpha = 0.95 * _ringPulse;
+        ctx.strokeStyle = _rCol;
+        ctx.lineWidth = 5;
+        ctx.setLineDash([7, 5]);
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 14 + 3 * _ringPulse, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 0.5 + 0.3 * _ringPulse;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 0.18 + 0.15 * _ringPulse;
+        ctx.fillStyle = _rCol;
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 30, 0, Math.PI * 2); ctx.fill();
+        // Badge above name — emoji icon + label
+        var _badgeTxt = _isNemesis ? '👺 NEMESIS' : '👹 RIVAL';
+        ctx.globalAlpha = 1;
+        ctx.font = 'bold 13px "Apple Color Emoji", "Segoe UI Emoji", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        var _bw = ctx.measureText(_badgeTxt).width + 14;
+        var _by = bp.y - bp.radius - 46;
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(bp.x - _bw / 2, _by, _bw, 18);
+        ctx.strokeStyle = _rCol; ctx.lineWidth = 2;
+        ctx.strokeRect(bp.x - _bw / 2, _by, _bw, 18);
+        ctx.fillStyle = _rCol;
+        ctx.fillText(_badgeTxt, bp.x, _by + 14);
+        ctx.restore();
+      }
       // Name + archetype + level. Archetype tag uses its own color so
       // the playstyle is readable at a glance (Testor 2026-04-19 feedback).
       ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
@@ -9811,20 +9844,27 @@ function doLogin() {
     drawOffScreenEnemyArrows();
     // Combo popup (Double/Triple/Penta/...)
     drawComboPopup();
-    // Experiment F: Ultimate-ready HUD hint
+    // Experiment F: Ultimate-ready HUD button (tap-to-fire)
+    _ultReadyBtn = null;
     if (player && player._ultimateReady) {
       var _uu = CLASS_ULTIMATES[selectedClass] || CLASS_ULTIMATES.warrior;
       var _uPulse = 0.6 + 0.4 * Math.sin(gameTime * 5);
+      var _ubW = 140, _ubH = 38, _ubX = W - _ubW - 10, _ubY = H * 0.14;
+      _ultReadyBtn = { x: _ubX, y: _ubY, w: _ubW, h: _ubH };
       ctx.save();
-      ctx.globalAlpha = 0.85 * _uPulse;
-      ctx.fillStyle = '#000'; ctx.fillRect(W - 138, H * 0.14, 128, 30);
-      ctx.strokeStyle = _uu.color; ctx.lineWidth = 2;
-      ctx.strokeRect(W - 138, H * 0.14, 128, 30);
-      ctx.globalAlpha = 1;
-      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Apple Color Emoji", Arial, sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#150a00';
+      ctx.fillRect(_ubX, _ubY, _ubW, _ubH);
+      ctx.globalAlpha = 0.4 + 0.4 * _uPulse;
       ctx.fillStyle = _uu.color;
-      ctx.fillText(_uu.icon + ' ' + _uu.name + ' 双击', W - 74, H * 0.14 + 15);
+      ctx.fillRect(_ubX, _ubY, _ubW, _ubH);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = _uu.color; ctx.lineWidth = 2 + _uPulse * 1.5;
+      ctx.strokeRect(_ubX, _ubY, _ubW, _ubH);
+      ctx.font = 'bold 15px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Apple Color Emoji", Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+      ctx.fillText(_uu.icon + ' ' + _uu.name + ' 点击/双击', _ubX + _ubW / 2, _ubY + _ubH / 2);
       ctx.textBaseline = 'alphabetic';
       ctx.restore();
     }
@@ -10236,6 +10276,20 @@ function doLogin() {
       if (!mp.alive) continue;
       var mpx = mmX + (mp.x / WORLD_W) * mmW;
       var mpy = mmY + (mp.y / WORLD_H) * mmH;
+      // Round 2: RIVAL / NEMESIS highlight on minimap — pulsing red halo + dot
+      var _mpIsRival = (rivalState.botId === mp.factionId);
+      var _mpIsNemesis = (rivalState.nemesisId === mp.factionId);
+      if (_mpIsRival || _mpIsNemesis) {
+        var _mpPulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.006);
+        ctx.save();
+        ctx.globalAlpha = _mpPulse;
+        ctx.fillStyle = _mpIsNemesis ? '#ff00aa' : '#ff3030';
+        ctx.beginPath(); ctx.arc(mpx, mpy, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(mpx, mpy, 6, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
       // Class-colored dot with shape indicator
       var mpClass = mp.isLocal ? (player.playerClass || selectedClass) : (mp.characterType || 'warrior');
       var mpDotColor = mp.isLocal ? '#4af' : (mp.factionId === player.factionId ? '#0c0' : mp.color);
@@ -11672,6 +11726,14 @@ function doLogin() {
     if (!audioCtx) { initAudio(); if (musicEnabled) startBgm(); } // Init audio on first click (browser policy)
     var r = canvas.getBoundingClientRect();
     var cx = (ev.clientX - r.left) * W / r.width, cy = (ev.clientY - r.top) * H / r.height;
+    // Experiment F: tap the ULT READY HUD button to cast
+    if (state === 'playing' && _ultReadyBtn && player && player._ultimateReady) {
+      var _ub = _ultReadyBtn;
+      if (cx >= _ub.x && cx <= _ub.x + _ub.w && cy >= _ub.y && cy <= _ub.y + _ub.h) {
+        castClassUltimate();
+        return;
+      }
+    }
     // Experiment D: boss perma buff choice (consumes click before game actions)
     if (bossBuffChoice.active) {
       for (var _bbi = 0; _bbi < bossBuffChoice.rects.length; _bbi++) {
@@ -11959,6 +12021,23 @@ function doLogin() {
     get entities() { return entities; },
     get playerLevel() { return playerLevel; },
     get kills() { return kills; },
+    // Round 2 experiment hooks — exposed for Testor real-playtest
+    get rivalState() { return rivalState; },
+    get skillPickups() { return skillPickups; },
+    get eventPickups() { return eventPickups; },
+    get meteorMarkers() { return meteorMarkers; },
+    get worldEvent() { return worldEvent; },
+    get bossSlainBanner() { return bossSlainBanner; },
+    get bossBuffChoice() { return bossBuffChoice; },
+    get synergyBanner() { return synergyBanner; },
+    get ultimateReady() { return !!(player && player._ultimateReady); },
+    get ultimateName() { var u = CLASS_ULTIMATES[selectedClass]; return u ? u.name : null; },
+    get ultimateUnlocked() { return !!(player && player._ultimateUnlocked); },
+    triggerWorldEvent: function(kind) { return triggerWorldEvent(kind || 'airdrop'); },
+    grantClassUltimate: function() { return grantClassUltimate(); },
+    castClassUltimate: function() { return castClassUltimate(); },
+    dropSkillPickup: function(x, y, tint) { return dropSkillPickup(x, y, tint); },
+    applyBossBuff: function(idx) { return applyBossBuff(idx); },
     startGame: function(daily) { startGame(daily); },
     finalizeGameRewards: typeof finalizeGameRewards === 'function' ? finalizeGameRewards : function() {}
   };

@@ -1709,3 +1709,204 @@ export function rotTrollFrame(dir, anim, f) {
     mist + pustules
   );
 }
+
+// ─────────────────────────────────────────────────────────────
+// ROUND 3 — Rival/Nemesis + Synergy auras + Kill juice
+// ─────────────────────────────────────────────────────────────
+
+// Rival badge — 24×24, red triangle with exclamation, sits above bot head.
+export function rivalBadge() {
+  return svg(24, 24,
+    `<defs><radialGradient id="rb_glow" cx="50%" cy="55%" r="60%"><stop offset="0%" stop-color="#ff8080" stop-opacity="0.85"/><stop offset="100%" stop-color="#c41a1a" stop-opacity="0"/></radialGradient></defs>` +
+    `<ellipse cx="12" cy="14" rx="11" ry="7" fill="url(#rb_glow)"/>` +
+    // triangle body
+    `<polygon points="12,3 22,20 2,20" fill="#c41a1a" stroke="#2a0606" stroke-width="1.2" stroke-linejoin="round"/>` +
+    `<polygon points="12,5 20,18.5 4,18.5" fill="none" stroke="#ff8080" stroke-width="0.6"/>` +
+    // exclamation
+    `<rect x="11" y="8" width="2" height="6" fill="#fff6a8" stroke="#2a0606" stroke-width="0.3"/>` +
+    `<circle cx="12" cy="16.5" r="1.1" fill="#fff6a8" stroke="#2a0606" stroke-width="0.3"/>`
+  );
+}
+
+// Nemesis badge — 24×24, purple crowned skull.
+export function nemesisBadge() {
+  return svg(24, 24,
+    `<defs><radialGradient id="nb_glow" cx="50%" cy="55%" r="60%"><stop offset="0%" stop-color="#d8a8ff" stop-opacity="0.85"/><stop offset="100%" stop-color="#5a1a8a" stop-opacity="0"/></radialGradient></defs>` +
+    `<ellipse cx="12" cy="14" rx="11" ry="8" fill="url(#nb_glow)"/>` +
+    // skull cranium
+    `<path d="M12 5 Q5 5 5 12 Q5 16 7 18 L7 20 L10 20 L10 18 L14 18 L14 20 L17 20 L17 18 Q19 16 19 12 Q19 5 12 5 Z" fill="#f0ecdc" stroke="#2a0606" stroke-width="1"/>` +
+    // eyes
+    `<circle cx="9" cy="12" r="1.6" fill="#2a0606"/>` +
+    `<circle cx="15" cy="12" r="1.6" fill="#2a0606"/>` +
+    `<circle cx="9" cy="12" r="0.6" fill="#c490e8"/>` +
+    `<circle cx="15" cy="12" r="0.6" fill="#c490e8"/>` +
+    // nose + teeth
+    `<polygon points="12,13.5 11,16 13,16" fill="#2a0606"/>` +
+    `<line x1="10" y1="18" x2="10" y2="20" stroke="#2a0606" stroke-width="0.7"/>` +
+    `<line x1="12" y1="18" x2="12" y2="20" stroke="#2a0606" stroke-width="0.7"/>` +
+    `<line x1="14" y1="18" x2="14" y2="20" stroke="#2a0606" stroke-width="0.7"/>` +
+    // crown spikes
+    `<polygon points="5,7 5,3 8,5" fill="#c490e8" stroke="#2a0606" stroke-width="0.6"/>` +
+    `<polygon points="10,4 12,1 14,4" fill="#c490e8" stroke="#2a0606" stroke-width="0.6"/>` +
+    `<polygon points="19,7 19,3 16,5" fill="#c490e8" stroke="#2a0606" stroke-width="0.6"/>`
+  );
+}
+
+// Shared pulse ring — 80×80, center hollow for sprite.
+function pulseRing(coreHex, rimHex, labelHex) {
+  return svg(80, 80,
+    `<defs>` +
+    `<radialGradient id="pr_${coreHex.slice(1)}" cx="50%" cy="50%" r="50%">` +
+      `<stop offset="55%" stop-color="${coreHex}" stop-opacity="0"/>` +
+      `<stop offset="78%" stop-color="${coreHex}" stop-opacity="0.85"/>` +
+      `<stop offset="95%" stop-color="${rimHex}" stop-opacity="0.55"/>` +
+      `<stop offset="100%" stop-color="${rimHex}" stop-opacity="0"/>` +
+    `</radialGradient>` +
+    `</defs>` +
+    `<circle cx="40" cy="40" r="38" fill="url(#pr_${coreHex.slice(1)})"/>` +
+    // 8 tick marks around rim for menace
+    `<g stroke="${labelHex}" stroke-width="1.6" stroke-linecap="round" opacity="0.85">` +
+      `<line x1="40" y1="6"  x2="40" y2="12"/>` +
+      `<line x1="40" y1="68" x2="40" y2="74"/>` +
+      `<line x1="6"  y1="40" x2="12" y2="40"/>` +
+      `<line x1="68" y1="40" x2="74" y2="40"/>` +
+      `<line x1="16" y1="16" x2="20" y2="20"/>` +
+      `<line x1="60" y1="60" x2="64" y2="64"/>` +
+      `<line x1="60" y1="20" x2="64" y2="16"/>` +
+      `<line x1="16" y1="64" x2="20" y2="60"/>` +
+    `</g>`
+  );
+}
+export function rivalPulseRing()   { return pulseRing('#c41a1a', '#ff6a6a', '#fff6a8'); }
+export function nemesisPulseRing() { return pulseRing('#7a2ac4', '#c490e8', '#fff6a8'); }
+
+// ─────────────────────────────────────────────────────────────
+// Synergy auras — 80×80 particle halos, for player-wrap when
+// a synergy combo is active. 5 categories.
+// ─────────────────────────────────────────────────────────────
+function synergyAura(core, rim, specks, name) {
+  const id = `sa_${name}`;
+  const dots = [];
+  // Deterministic speck placement around ring r=30..36.
+  const rnd = mulberry(name.charCodeAt(0) * 37 + name.length);
+  for (let i = 0; i < 14; i++) {
+    const ang = (i / 14) * Math.PI * 2 + rnd() * 0.4;
+    const r = 28 + rnd() * 10;
+    const x = 40 + Math.cos(ang) * r;
+    const y = 40 + Math.sin(ang) * r;
+    const s = 1 + rnd() * 1.8;
+    const c = i % 2 === 0 ? specks[0] : specks[1];
+    dots.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.toFixed(1)}" fill="${c}" opacity="0.9"/>`);
+  }
+  return svg(80, 80,
+    `<defs><radialGradient id="${id}" cx="50%" cy="50%" r="50%">` +
+      `<stop offset="50%" stop-color="${core}" stop-opacity="0"/>` +
+      `<stop offset="72%" stop-color="${core}" stop-opacity="0.55"/>` +
+      `<stop offset="92%" stop-color="${rim}" stop-opacity="0.7"/>` +
+      `<stop offset="100%" stop-color="${rim}" stop-opacity="0"/>` +
+    `</radialGradient></defs>` +
+    `<circle cx="40" cy="40" r="38" fill="url(#${id})"/>` +
+    dots.join('')
+  );
+}
+export function synergyAuraFire()      { return synergyAura('#ff6a1a', '#ffd46a', ['#ffecb0', '#ff8a28'], 'fire'); }
+export function synergyAuraFrost()     { return synergyAura('#6ad8ff', '#e8fbff', ['#ffffff', '#a8e4ff'], 'frost'); }
+export function synergyAuraLightning() { return synergyAura('#4a6aff', '#fff6a8', ['#fffcc8', '#8aa0ff'], 'lightning'); }
+export function synergyAuraVenom()     { return synergyAura('#28a840', '#c490e8', ['#b6f07a', '#d8a8ff'], 'venom'); }
+export function synergyAuraHoly()      { return synergyAura('#f4d42a', '#fff6a8', ['#fff6a8', '#ffffff'], 'holy'); }
+
+// ─────────────────────────────────────────────────────────────
+// Kill juice — shatter burst + combo counter frame + rival banner
+// ─────────────────────────────────────────────────────────────
+
+// Shatter burst — 64×64, scattered bones/coins/skill shards on death.
+export function killShatter() {
+  const rnd = mulberry(4242);
+  const parts = [];
+  // radial impact streaks
+  for (let i = 0; i < 10; i++) {
+    const ang = (i / 10) * Math.PI * 2;
+    const x1 = 32 + Math.cos(ang) * 12;
+    const y1 = 32 + Math.sin(ang) * 12;
+    const x2 = 32 + Math.cos(ang) * (20 + rnd() * 8);
+    const y2 = 32 + Math.sin(ang) * (20 + rnd() * 8);
+    parts.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#fff6a8" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>`);
+  }
+  // gold coins
+  for (let i = 0; i < 5; i++) {
+    const ang = rnd() * Math.PI * 2;
+    const r = 14 + rnd() * 14;
+    const x = 32 + Math.cos(ang) * r;
+    const y = 32 + Math.sin(ang) * r;
+    parts.push(
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4" fill="${P.gold}" stroke="${P.goldLo}" stroke-width="0.6"/>` +
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.2" fill="${P.goldHi}"/>`
+    );
+  }
+  // bone shards
+  for (let i = 0; i < 4; i++) {
+    const ang = rnd() * Math.PI * 2;
+    const r = 10 + rnd() * 18;
+    const x = 32 + Math.cos(ang) * r;
+    const y = 32 + Math.sin(ang) * r;
+    const rot = (rnd() * 360).toFixed(0);
+    parts.push(`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot})"><rect x="-3" y="-1" width="6" height="2" fill="#f0ecdc" stroke="#2a1a08" stroke-width="0.4"/><circle cx="-3" cy="0" r="1.3" fill="#f0ecdc" stroke="#2a1a08" stroke-width="0.4"/><circle cx="3" cy="0" r="1.3" fill="#f0ecdc" stroke="#2a1a08" stroke-width="0.4"/></g>`);
+  }
+  // central shockwave
+  return svg(64, 64,
+    `<defs><radialGradient id="ks_core" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff6a8" stop-opacity="1"/><stop offset="35%" stop-color="#ff8a28" stop-opacity="0.85"/><stop offset="70%" stop-color="#c41a1a" stop-opacity="0.35"/><stop offset="100%" stop-color="#c41a1a" stop-opacity="0"/></radialGradient></defs>` +
+    `<circle cx="32" cy="32" r="30" fill="url(#ks_core)"/>` +
+    `<circle cx="32" cy="32" r="8" fill="none" stroke="#fff6a8" stroke-width="1.4" opacity="0.9"/>` +
+    parts.join('')
+  );
+}
+
+// Combo counter frame — 120×40, parchment/metal UI like fighting games.
+export function comboFrame() {
+  return svg(120, 40,
+    `<defs>` +
+    `<linearGradient id="cf_bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3a2410"/><stop offset="100%" stop-color="#1a0a04"/></linearGradient>` +
+    `<linearGradient id="cf_rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff6a8"/><stop offset="50%" stop-color="${P.gold}"/><stop offset="100%" stop-color="${P.goldLo}"/></linearGradient>` +
+    `</defs>` +
+    // outer bevel
+    `<path d="M6 2 L114 2 L118 6 L118 34 L114 38 L6 38 L2 34 L2 6 Z" fill="url(#cf_bg)" stroke="url(#cf_rim)" stroke-width="1.8"/>` +
+    // inner hairline
+    `<path d="M8 5 L112 5 L115 8 L115 32 L112 35 L8 35 L5 32 L5 8 Z" fill="none" stroke="#1a0a04" stroke-width="0.6"/>` +
+    // rivets
+    `<circle cx="10" cy="10" r="1.4" fill="${P.gold}" stroke="#1a0a04" stroke-width="0.4"/>` +
+    `<circle cx="110" cy="10" r="1.4" fill="${P.gold}" stroke="#1a0a04" stroke-width="0.4"/>` +
+    `<circle cx="10" cy="30" r="1.4" fill="${P.gold}" stroke="#1a0a04" stroke-width="0.4"/>` +
+    `<circle cx="110" cy="30" r="1.4" fill="${P.gold}" stroke="#1a0a04" stroke-width="0.4"/>` +
+    // label "COMBO" left
+    `<text x="10" y="26" font-family="Georgia, serif" font-weight="bold" font-size="14" fill="${P.goldHi}" stroke="#1a0a04" stroke-width="0.6">COMBO</text>` +
+    // separator
+    `<line x1="62" y1="8" x2="62" y2="32" stroke="${P.goldLo}" stroke-width="1"/>` +
+    // placeholder number slot (Developer draws live number on top)
+    `<rect x="66" y="8" width="48" height="24" fill="#0a0502" opacity="0.5"/>` +
+    `<text x="74" y="28" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="${P.gold}" stroke="#1a0a04" stroke-width="0.6">×N</text>`
+  );
+}
+
+// Kill-banner builder — 512×96, used for RIVAL SLAIN / NEMESIS SLAIN / etc.
+function killBanner(label, bgA, bgB, strokeColor, accent) {
+  return svg(512, 96,
+    `<defs>` +
+    `<linearGradient id="kb_${label.replace(/\W/g,'')}_bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${bgA}"/><stop offset="100%" stop-color="${bgB}"/></linearGradient>` +
+    `<linearGradient id="kb_${label.replace(/\W/g,'')}_rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff6a8"/><stop offset="50%" stop-color="${P.gold}"/><stop offset="100%" stop-color="${P.goldLo}"/></linearGradient>` +
+    `<radialGradient id="kb_${label.replace(/\W/g,'')}_glow" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="${accent}" stop-opacity="0.8"/><stop offset="100%" stop-color="${accent}" stop-opacity="0"/></radialGradient>` +
+    `</defs>` +
+    // outer glow halo behind the banner
+    `<ellipse cx="256" cy="48" rx="240" ry="44" fill="url(#kb_${label.replace(/\W/g,'')}_glow)"/>` +
+    // parchment/steel banner shape with chevron ends
+    `<path d="M20 20 L40 48 L20 76 L492 76 L472 48 L492 20 Z" fill="url(#kb_${label.replace(/\W/g,'')}_bg)" stroke="url(#kb_${label.replace(/\W/g,'')}_rim)" stroke-width="3"/>` +
+    `<path d="M30 28 L48 48 L30 68 L482 68 L464 48 L482 28 Z" fill="none" stroke="${strokeColor}" stroke-width="1"/>` +
+    // decorative side icons
+    `<polygon points="60,48 68,40 68,56" fill="${accent}" stroke="#1a0a04" stroke-width="0.8"/>` +
+    `<polygon points="452,48 444,40 444,56" fill="${accent}" stroke="#1a0a04" stroke-width="0.8"/>` +
+    // label text (centered)
+    `<text x="256" y="62" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="42" fill="${P.goldHi}" stroke="#1a0a04" stroke-width="1.4" letter-spacing="2">${label}</text>`
+  );
+}
+export function rivalSlainBanner()   { return killBanner('RIVAL SLAIN!',   '#5a0a0a', '#1a0202', '#ff6a6a', '#c41a1a'); }
+export function nemesisSlainBanner() { return killBanner('NEMESIS SLAIN!', '#3a0a5a', '#0a0218', '#d8a8ff', '#7a2ac4'); }
+export function bossSlainBanner()    { return killBanner('BOSS SLAIN!',    '#3a2410', '#1a0a04', '#fff6a8', '#f4d42a'); }
