@@ -5,7 +5,7 @@
   "cols": 4,
   "rows": 2,
   "biome": "snow",
-  "palette": ["#f4f8fc", "#b8c8d8", "#c0e0f0", "#1e4a2a", "#8aa0b8"],
+  "palette": ["#e8f0f5", "#b8d4e0", "#c8dce8", "#2d4a3a", "#ffffff"],
   "tiles": [
     { "name": "snow_fresh",        "col": 0, "row": 0, "walkable": true },
     { "name": "snow_footprints",   "col": 1, "row": 0, "walkable": true },

@@ -1,106 +1,114 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
-  <!-- Swamp tileset 256×128 = 4×2 @ 64px. Row0=base ground variants, Row1=accents. -->
+  <!-- Swamp v2. Palette per Leo: #2d5a3d base + #4a7a5a moss + #1a3a2a mud + #6b8ea0 water.
+       4×2 @ 64px. Row0=base ground, Row1=accents. -->
   <defs>
-    <linearGradient id="sw_g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4a5e30"/><stop offset="100%" stop-color="#2e3e1e"/>
+    <linearGradient id="sw2g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a7050"/>
+      <stop offset="100%" stop-color="#1e4028"/>
     </linearGradient>
-    <linearGradient id="sw_w" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#5c806a"/><stop offset="100%" stop-color="#2e4a3a"/>
+    <linearGradient id="sw2w" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ea0b4"/>
+      <stop offset="100%" stop-color="#4a6e82"/>
     </linearGradient>
   </defs>
 
-  <!-- ===== Row 0 : base swamp ground variants ===== -->
-  <!-- (0,0) flat mossy ground -->
+  <!-- ===== Row 0 : swamp ground base ===== -->
+  <!-- (0,0) mossy deep swamp -->
   <g>
-    <rect x="0" y="0" width="64" height="64" fill="url(#sw_g)"/>
-    <g fill="#5a7236" opacity="0.55">
-      <circle cx="12" cy="14" r="3"/><circle cx="40" cy="26" r="2.5"/>
-      <circle cx="22" cy="46" r="2.8"/><circle cx="54" cy="52" r="3"/>
-      <circle cx="48" cy="8" r="2"/>
+    <rect x="0" y="0" width="64" height="64" fill="url(#sw2g)"/>
+    <g fill="#4a7a5a" opacity="0.85">
+      <circle cx="12" cy="14" r="3.5"/><circle cx="40" cy="26" r="3"/>
+      <circle cx="22" cy="46" r="3.2"/><circle cx="54" cy="52" r="3.5"/>
+      <circle cx="48" cy="8" r="2.5"/>
     </g>
-    <g fill="#2a3818" opacity="0.5">
-      <circle cx="8" cy="36" r="2"/><circle cx="32" cy="58" r="2"/><circle cx="60" cy="22" r="2"/>
+    <g fill="#1a3a2a">
+      <circle cx="8" cy="36" r="2.5"/><circle cx="32" cy="58" r="2.3"/><circle cx="60" cy="22" r="2.3"/>
     </g>
   </g>
-  <!-- (1,0) ground with dry grass tufts -->
+  <!-- (1,0) swamp ground + reed tufts -->
   <g transform="translate(64,0)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <g stroke="#8a9a48" stroke-width="1.5" stroke-linecap="round">
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <g stroke="#4a7a5a" stroke-width="1.6" stroke-linecap="round">
       <line x1="10" y1="30" x2="10" y2="22"/><line x1="13" y1="30" x2="13" y2="24"/>
       <line x1="7"  y1="30" x2="7"  y2="24"/>
       <line x1="44" y1="52" x2="44" y2="44"/><line x1="47" y1="52" x2="47" y2="46"/>
       <line x1="41" y1="52" x2="41" y2="46"/>
       <line x1="30" y1="14" x2="30" y2="8"/><line x1="33" y1="14" x2="33" y2="10"/>
     </g>
-    <g fill="#2a3818" opacity="0.4"><circle cx="54" cy="18" r="2"/><circle cx="20" cy="48" r="2"/></g>
+    <g fill="#1a3a2a"><circle cx="54" cy="18" r="2.5"/><circle cx="20" cy="48" r="2.3"/></g>
   </g>
-  <!-- (2,0) muddy patch -->
+  <!-- (2,0) muddy patch (dark) -->
   <g transform="translate(128,0)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <ellipse cx="32" cy="40" rx="26" ry="14" fill="#3a2a18"/>
-    <ellipse cx="26" cy="36" rx="10" ry="5" fill="#5a3e22" opacity="0.8"/>
-    <circle cx="44" cy="44" r="3" fill="#2a1e10"/>
-    <circle cx="22" cy="48" r="2.5" fill="#2a1e10"/>
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <ellipse cx="32" cy="40" rx="26" ry="14" fill="#1a3a2a"/>
+    <ellipse cx="26" cy="36" rx="10" ry="5" fill="#0a2418" opacity="0.85"/>
+    <circle cx="44" cy="44" r="3.2" fill="#040e08"/>
+    <circle cx="22" cy="48" r="2.8" fill="#040e08"/>
+    <g stroke="#4a7a5a" stroke-width="0.8" fill="none" opacity="0.5">
+      <path d="M10 18 Q20 14 30 18"/>
+    </g>
   </g>
-  <!-- (3,0) water pool -->
+  <!-- (3,0) water pool (blue-gray, Leo color) -->
   <g transform="translate(192,0)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <ellipse cx="32" cy="34" rx="26" ry="18" fill="url(#sw_w)" stroke="#1e2e1a" stroke-width="1.5"/>
-    <path d="M14 30 Q22 28 30 30" stroke="#aacdb4" stroke-width="1.2" fill="none" opacity="0.7"/>
-    <path d="M34 42 Q44 40 52 42" stroke="#aacdb4" stroke-width="1.2" fill="none" opacity="0.6"/>
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <ellipse cx="32" cy="34" rx="26" ry="18" fill="url(#sw2w)" stroke="#1a3a2a" stroke-width="2"/>
+    <path d="M14 30 Q22 28 30 30" stroke="#c0dce0" stroke-width="1.3" fill="none" opacity="0.75"/>
+    <path d="M34 42 Q44 40 52 42" stroke="#c0dce0" stroke-width="1.3" fill="none" opacity="0.65"/>
     <!-- lily pad -->
-    <ellipse cx="42" cy="32" rx="6" ry="3" fill="#5a8a3a" stroke="#2a4a1a" stroke-width="1"/>
+    <ellipse cx="42" cy="32" rx="6" ry="3" fill="#4a7a5a" stroke="#1a3a2a" stroke-width="1.2"/>
   </g>
 
   <!-- ===== Row 1 : accents ===== -->
-  <!-- (0,1) dead log -->
+  <!-- (0,1) dead log (dark, Leo 黑枯木) -->
   <g transform="translate(0,64)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <rect x="8" y="28" width="48" height="10" fill="#4a331a" stroke="#1e1208" stroke-width="1.5" rx="2"/>
-    <line x1="14" y1="30" x2="14" y2="36" stroke="#1e1208"/>
-    <line x1="26" y1="30" x2="26" y2="36" stroke="#1e1208"/>
-    <line x1="40" y1="30" x2="40" y2="36" stroke="#1e1208"/>
-    <circle cx="8" cy="33" r="4" fill="#3a2a14" stroke="#1e1208" stroke-width="1"/>
-    <circle cx="56" cy="33" r="4" fill="#3a2a14" stroke="#1e1208" stroke-width="1"/>
-    <g fill="#7a8a3a" opacity="0.7">
-      <circle cx="18" cy="26" r="1.5"/><circle cx="34" cy="25" r="1.5"/><circle cx="46" cy="27" r="1.2"/>
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <rect x="8" y="28" width="48" height="10" fill="#1a0e04" stroke="#000" stroke-width="1.5" rx="2"/>
+    <line x1="14" y1="30" x2="14" y2="36" stroke="#000"/>
+    <line x1="26" y1="30" x2="26" y2="36" stroke="#000"/>
+    <line x1="40" y1="30" x2="40" y2="36" stroke="#000"/>
+    <circle cx="8" cy="33" r="4" fill="#120a02" stroke="#000" stroke-width="1"/>
+    <circle cx="56" cy="33" r="4" fill="#120a02" stroke="#000" stroke-width="1"/>
+    <g fill="#4a7a5a" opacity="0.85">
+      <circle cx="18" cy="26" r="1.6"/><circle cx="34" cy="25" r="1.6"/><circle cx="46" cy="27" r="1.3"/>
     </g>
   </g>
-  <!-- (1,1) mushroom ring -->
+  <!-- (1,1) small mushrooms (muted, smaller so base color dominates) -->
   <g transform="translate(64,64)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <g stroke="#1e1208" stroke-width="1.2">
-      <g><ellipse cx="20" cy="24" rx="5" ry="3" fill="#c84a3a"/><rect x="18" y="25" width="4" height="5" fill="#f0e0c0"/><circle cx="19" cy="23" r="1" fill="#fff"/></g>
-      <g><ellipse cx="44" cy="22" rx="4" ry="2.5" fill="#c84a3a"/><rect x="43" y="23" width="3" height="4" fill="#f0e0c0"/></g>
-      <g><ellipse cx="30" cy="46" rx="6" ry="3.5" fill="#c84a3a"/><rect x="27" y="47" width="5" height="6" fill="#f0e0c0"/><circle cx="28" cy="45" r="1" fill="#fff"/><circle cx="32" cy="46" r="0.8" fill="#fff"/></g>
-      <g><ellipse cx="50" cy="48" rx="4" ry="2.5" fill="#c84a3a"/><rect x="49" y="49" width="3" height="4" fill="#f0e0c0"/></g>
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <g stroke="#0a1e14" stroke-width="1.2">
+      <g><ellipse cx="20" cy="26" rx="4" ry="2.5" fill="#a8382a"/><rect x="18" y="27" width="4" height="4" fill="#d8c8a0"/><circle cx="19" cy="25" r="0.8" fill="#fff"/></g>
+      <g><ellipse cx="44" cy="24" rx="3.5" ry="2" fill="#a8382a"/><rect x="43" y="25" width="3" height="3" fill="#d8c8a0"/></g>
+      <g><ellipse cx="30" cy="46" rx="5" ry="3" fill="#a8382a"/><rect x="27" y="47" width="5" height="5" fill="#d8c8a0"/><circle cx="28" cy="45" r="0.8" fill="#fff"/></g>
+      <g><ellipse cx="50" cy="48" rx="3.5" ry="2" fill="#a8382a"/><rect x="49" y="49" width="3" height="3" fill="#d8c8a0"/></g>
     </g>
+    <g fill="#4a7a5a" opacity="0.7"><circle cx="10" cy="40" r="2"/><circle cx="12" cy="18" r="1.5"/></g>
   </g>
-  <!-- (2,1) reeds / cattail -->
+  <!-- (2,1) cattails / reeds -->
   <g transform="translate(128,64)">
-    <rect width="64" height="64" fill="url(#sw_g)"/>
-    <g stroke="#3a4a1a" stroke-width="1.8" stroke-linecap="round" fill="none">
+    <rect width="64" height="64" fill="url(#sw2g)"/>
+    <g stroke="#1a3a2a" stroke-width="2" stroke-linecap="round" fill="none">
       <line x1="14" y1="56" x2="14" y2="20"/>
       <line x1="22" y1="56" x2="22" y2="14"/>
       <line x1="34" y1="56" x2="34" y2="22"/>
       <line x1="46" y1="56" x2="46" y2="18"/>
       <line x1="54" y1="56" x2="54" y2="26"/>
     </g>
-    <g fill="#5a3e1a" stroke="#1e1208" stroke-width="1">
+    <g fill="#1a0e04" stroke="#000" stroke-width="1">
       <rect x="12" y="18" width="4" height="10" rx="2"/>
       <rect x="20" y="12" width="4" height="10" rx="2"/>
       <rect x="32" y="20" width="4" height="10" rx="2"/>
       <rect x="44" y="16" width="4" height="10" rx="2"/>
     </g>
   </g>
-  <!-- (3,1) bubbling swamp water -->
+  <!-- (3,1) deep swamp water -->
   <g transform="translate(192,64)">
-    <rect width="64" height="64" fill="url(#sw_w)"/>
-    <g fill="#aacdb4" opacity="0.85" stroke="#1e2e1a" stroke-width="0.8">
-      <circle cx="18" cy="20" r="3"/><circle cx="44" cy="30" r="2.5"/><circle cx="28" cy="44" r="3.5"/>
-      <circle cx="50" cy="50" r="2"/><circle cx="12" cy="48" r="2"/>
+    <rect width="64" height="64" fill="url(#sw2w)"/>
+    <g fill="#c0dce0" opacity="0.85" stroke="#1a3a2a" stroke-width="0.8">
+      <circle cx="18" cy="20" r="3.2"/><circle cx="44" cy="30" r="2.7"/><circle cx="28" cy="44" r="3.5"/>
+      <circle cx="50" cy="50" r="2.2"/><circle cx="12" cy="48" r="2.2"/>
     </g>
-    <path d="M6 12 Q14 10 22 12" stroke="#cde8d0" stroke-width="1" fill="none" opacity="0.6"/>
-    <path d="M34 56 Q44 54 58 56" stroke="#cde8d0" stroke-width="1" fill="none" opacity="0.6"/>
+    <path d="M6 12 Q14 10 22 12" stroke="#dce8ec" stroke-width="1.2" fill="none" opacity="0.7"/>
+    <path d="M34 56 Q44 54 58 56" stroke="#dce8ec" stroke-width="1.2" fill="none" opacity="0.7"/>
+    <ellipse cx="32" cy="32" rx="26" ry="18" fill="none" stroke="#4a6e82" stroke-width="1.2" opacity="0.5"/>
   </g>
 </svg>

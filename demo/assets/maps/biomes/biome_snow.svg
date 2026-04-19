@@ -1,115 +1,120 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" shape-rendering="crispEdges">
-  <!-- Snow tileset 256×128 = 4×2 @ 64px. White snow + ice cracks + evergreens. -->
+  <!-- Snow v2. Palette per Leo: #e8f0f5 snow base + #b8d4e0 ice blue + #2d4a3a evergreen + #c8dce8 ice cracks. -->
   <defs>
-    <linearGradient id="sn_s" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f4f8fc"/><stop offset="100%" stop-color="#b8c8d8"/>
+    <linearGradient id="sn2s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#c8dce8"/>
     </linearGradient>
-    <linearGradient id="sn_i" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#c0e0f0"/><stop offset="100%" stop-color="#4a7a9a"/>
+    <linearGradient id="sn2i" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8ecf4"/>
+      <stop offset="100%" stop-color="#6a9ab8"/>
     </linearGradient>
   </defs>
 
   <!-- Row 0 -->
-  <!-- (0,0) fresh snow -->
+  <!-- (0,0) fresh pure-white snow -->
   <g>
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <g fill="#fff" opacity="0.9">
-      <circle cx="10" cy="12" r="2"/><circle cx="30" cy="22" r="2"/>
-      <circle cx="54" cy="16" r="1.8"/><circle cx="18" cy="40" r="2"/>
-      <circle cx="46" cy="46" r="2"/><circle cx="34" cy="54" r="1.8"/>
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <g fill="#ffffff">
+      <circle cx="10" cy="12" r="2.3"/><circle cx="30" cy="22" r="2.3"/>
+      <circle cx="54" cy="16" r="2"/><circle cx="18" cy="40" r="2.3"/>
+      <circle cx="46" cy="46" r="2.3"/><circle cx="34" cy="54" r="2"/>
     </g>
-    <g stroke="#a0b8cc" stroke-width="0.6" fill="none" opacity="0.5">
+    <g stroke="#b8d4e0" stroke-width="0.7" fill="none" opacity="0.6">
       <path d="M0 28 Q20 26 40 28 T64 26"/>
       <path d="M0 48 Q20 46 40 48 T64 46"/>
     </g>
   </g>
-  <!-- (1,0) snow with footprints -->
+  <!-- (1,0) footprints -->
   <g transform="translate(64,0)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <g fill="#8aa0b8" opacity="0.8">
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <g fill="#b8d4e0">
       <ellipse cx="12" cy="14" rx="3" ry="4"/>
       <ellipse cx="22" cy="24" rx="3" ry="4"/>
       <ellipse cx="32" cy="34" rx="3" ry="4"/>
       <ellipse cx="42" cy="44" rx="3" ry="4"/>
       <ellipse cx="52" cy="54" rx="3" ry="4"/>
     </g>
-    <g fill="#fff" opacity="0.9">
-      <circle cx="50" cy="14" r="2"/><circle cx="8" cy="50" r="2"/>
+    <g fill="#ffffff">
+      <circle cx="50" cy="14" r="2.2"/><circle cx="8" cy="50" r="2.2"/>
     </g>
   </g>
-  <!-- (2,0) packed snow -->
+  <!-- (2,0) packed snow (wind ripples) -->
   <g transform="translate(128,0)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <g stroke="#a0b8cc" stroke-width="1" fill="none">
-      <path d="M0 16 Q16 10 32 16 T64 14"/>
-      <path d="M0 36 Q16 30 32 36 T64 34"/>
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <g stroke="#b8d4e0" stroke-width="1.1" fill="none">
+      <path d="M0 14 Q16 8 32 14 T64 12"/>
+      <path d="M0 34 Q16 28 32 34 T64 32"/>
       <path d="M0 54 Q16 48 32 54 T64 52"/>
     </g>
-    <g fill="#fff"><circle cx="18" cy="22" r="1.5"/><circle cx="46" cy="42" r="1.5"/></g>
+    <g fill="#ffffff"><circle cx="18" cy="22" r="1.7"/><circle cx="46" cy="42" r="1.7"/></g>
+    <g stroke="#c8dce8" stroke-width="0.8" fill="none" opacity="0.8">
+      <path d="M4 20 L14 18"/><path d="M46 26 L56 24"/>
+    </g>
   </g>
-  <!-- (3,0) ice patch -->
+  <!-- (3,0) ice patch (Leo 淡蓝冰裂) -->
   <g transform="translate(192,0)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <polygon points="8,20 22,12 40,14 52,22 56,40 44,52 26,54 12,44" fill="url(#sn_i)" stroke="#3a5a7a" stroke-width="1.5"/>
-    <g stroke="#3a5a7a" stroke-width="0.8" fill="none">
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <polygon points="8,20 22,12 40,14 52,22 56,40 44,52 26,54 12,44" fill="url(#sn2i)" stroke="#4a7a9a" stroke-width="1.8"/>
+    <g stroke="#4a7a9a" stroke-width="1" fill="none">
       <line x1="22" y1="20" x2="40" y2="44"/>
       <line x1="14" y1="32" x2="50" y2="30"/>
       <line x1="30" y1="16" x2="34" y2="50"/>
     </g>
-    <g fill="#fff" opacity="0.6"><circle cx="26" cy="22" r="1"/><circle cx="42" cy="38" r="1"/></g>
+    <g fill="#ffffff" opacity="0.8"><circle cx="26" cy="22" r="1.3"/><circle cx="42" cy="38" r="1.3"/></g>
   </g>
 
   <!-- Row 1 -->
-  <!-- (0,1) pine tree small -->
+  <!-- (0,1) evergreen pine (dark #2d4a3a) -->
   <g transform="translate(0,64)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <g stroke="#0a2810" stroke-width="1.5">
-      <polygon points="32,8 42,24 22,24" fill="#1e4a2a"/>
-      <polygon points="32,18 46,38 18,38" fill="#2a5a30"/>
-      <polygon points="32,30 50,50 14,50" fill="#1e4a2a"/>
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <g stroke="#0a1e14" stroke-width="1.6">
+      <polygon points="32,8 42,24 22,24" fill="#2d4a3a"/>
+      <polygon points="32,18 46,38 18,38" fill="#1e3828"/>
+      <polygon points="32,30 50,50 14,50" fill="#2d4a3a"/>
       <rect x="29" y="50" width="6" height="8" fill="#3a2210"/>
     </g>
-    <!-- snow on branches -->
-    <g fill="#fff" opacity="0.9">
+    <g fill="#ffffff" opacity="0.95">
       <polygon points="24,24 40,24 36,26 28,26"/>
       <polygon points="20,38 44,38 40,40 24,40"/>
       <polygon points="16,50 48,50 42,52 22,52"/>
     </g>
-    <ellipse cx="32" cy="58" rx="12" ry="2" fill="#8aa0b8" opacity="0.5"/>
+    <ellipse cx="32" cy="58" rx="12" ry="2.3" fill="#b8d4e0" opacity="0.75"/>
   </g>
-  <!-- (1,1) ice crack / frozen puddle -->
+  <!-- (1,1) frozen pond (big ice crack) -->
   <g transform="translate(64,64)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <ellipse cx="32" cy="34" rx="22" ry="14" fill="url(#sn_i)" stroke="#3a5a7a" stroke-width="1.5"/>
-    <g stroke="#3a5a7a" stroke-width="1.2" fill="none">
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <ellipse cx="32" cy="34" rx="22" ry="14" fill="url(#sn2i)" stroke="#4a7a9a" stroke-width="1.8"/>
+    <g stroke="#4a7a9a" stroke-width="1.4" fill="none">
       <line x1="18" y1="28" x2="46" y2="42"/>
       <line x1="32" y1="22" x2="32" y2="46"/>
       <line x1="46" y1="28" x2="18" y2="42"/>
       <line x1="12" y1="36" x2="52" y2="34"/>
     </g>
+    <g fill="#ffffff" opacity="0.7"><circle cx="26" cy="30" r="1"/><circle cx="40" cy="38" r="1"/></g>
   </g>
   <!-- (2,1) snow drift -->
   <g transform="translate(128,64)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <path d="M0 48 Q16 30 32 40 Q48 50 64 32 L64 64 L0 64 Z" fill="#fff" stroke="#8aa0b8" stroke-width="1.2"/>
-    <g stroke="#a0b8cc" stroke-width="0.8" fill="none" opacity="0.6">
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <path d="M0 48 Q16 30 32 40 Q48 50 64 32 L64 64 L0 64 Z" fill="#ffffff" stroke="#b8d4e0" stroke-width="1.3"/>
+    <g stroke="#b8d4e0" stroke-width="0.9" fill="none" opacity="0.65">
       <path d="M4 52 Q20 40 34 46"/>
       <path d="M36 44 Q48 52 60 40"/>
     </g>
-    <g fill="#fff"><circle cx="20" cy="22" r="1.2"/><circle cx="50" cy="18" r="1.2"/></g>
+    <g fill="#ffffff"><circle cx="20" cy="22" r="1.3"/><circle cx="50" cy="18" r="1.3"/></g>
   </g>
-  <!-- (3,1) small evergreen cluster -->
+  <!-- (3,1) pine cluster -->
   <g transform="translate(192,64)">
-    <rect width="64" height="64" fill="url(#sn_s)"/>
-    <g stroke="#0a2810" stroke-width="1.2">
-      <polygon points="18,24 24,38 12,38" fill="#2a5a30"/>
-      <polygon points="18,32 28,48 8,48" fill="#1e4a2a"/>
+    <rect width="64" height="64" fill="url(#sn2s)"/>
+    <g stroke="#0a1e14" stroke-width="1.4">
+      <polygon points="18,24 24,38 12,38" fill="#2d4a3a"/>
+      <polygon points="18,32 28,48 8,48" fill="#1e3828"/>
       <rect x="16" y="48" width="4" height="5" fill="#3a2210"/>
-      <polygon points="44,20 50,34 38,34" fill="#2a5a30"/>
-      <polygon points="44,28 54,44 34,44" fill="#1e4a2a"/>
+      <polygon points="44,20 50,34 38,34" fill="#2d4a3a"/>
+      <polygon points="44,28 54,44 34,44" fill="#1e3828"/>
       <rect x="42" y="44" width="4" height="5" fill="#3a2210"/>
     </g>
-    <g fill="#fff" opacity="0.9">
+    <g fill="#ffffff">
       <polygon points="12,38 24,38 20,40 14,40"/>
       <polygon points="8,48 28,48 24,50 12,50"/>
       <polygon points="38,34 50,34 46,36 40,36"/>

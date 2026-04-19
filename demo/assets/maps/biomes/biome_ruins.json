@@ -5,7 +5,7 @@
   "cols": 4,
   "rows": 2,
   "biome": "ruins",
-  "palette": ["#9e988a", "#5e5848", "#b0a898", "#5a7236", "#c84a3a"],
+  "palette": ["#6a6a5a", "#4a5a4a", "#2a2a2a", "#7a7a68", "#8a8876"],
   "tiles": [
     { "name": "ruins_pavement",    "col": 0, "row": 0, "walkable": true },
     { "name": "ruins_cobblestone", "col": 1, "row": 0, "walkable": true },

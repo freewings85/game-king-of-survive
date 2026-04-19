@@ -5,7 +5,7 @@
   "cols": 4,
   "rows": 2,
   "biome": "desert",
-  "palette": ["#e6c27a", "#b8893a", "#a87a3a", "#4a7a3a", "#f0e8c8"],
+  "palette": ["#d4a24a", "#a06c2a", "#8a4a1a", "#2d6a38", "#f0dca0"],
   "tiles": [
     { "name": "desert_sand_a",     "col": 0, "row": 0, "walkable": true },
     { "name": "desert_dune",       "col": 1, "row": 0, "walkable": true },

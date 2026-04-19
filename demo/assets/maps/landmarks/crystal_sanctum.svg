@@ -1,87 +1,178 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
-  <!-- HoMM3 bright cartoon: central landmark — Crystal Sanctum
-       饱和紫水晶 + 金基座 + 翠绿光晕；可远望识别。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="512" viewBox="0 0 384 512">
+  <!-- HoMM3 bright cartoon: CENTRAL LANDMARK v2 — Crystal Sanctum (WOW edition)
+       384×512. Anchor = bottom center (192, 498). 主塔 + 4 围塔 + 星形大理石 + 光晕 + 闪烁。 -->
   <defs>
-    <radialGradient id="halo" cx="50%" cy="55%" r="55%">
-      <stop offset="0%" stop-color="#aaff88" stop-opacity="0.55"/>
-      <stop offset="55%" stop-color="#6ad06a" stop-opacity="0.2"/>
+    <radialGradient id="halo2" cx="50%" cy="58%" r="55%">
+      <stop offset="0%"   stop-color="#d8a8ff" stop-opacity="0.75"/>
+      <stop offset="35%"  stop-color="#aaff88" stop-opacity="0.40"/>
+      <stop offset="70%"  stop-color="#6ad06a" stop-opacity="0.15"/>
       <stop offset="100%" stop-color="#6ad06a" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="crystal" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f0b8ff"/>
-      <stop offset="40%" stop-color="#b068e8"/>
-      <stop offset="100%" stop-color="#5a2a8a"/>
+    <radialGradient id="halo3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#fff4d0" stop-opacity="0.9"/>
+      <stop offset="70%"  stop-color="#ffd966" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#ffd966" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cryMain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#f8d0ff"/>
+      <stop offset="40%"  stop-color="#b068e8"/>
+      <stop offset="100%" stop-color="#3a1070"/>
     </linearGradient>
-    <linearGradient id="crystal2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ffd0ff"/>
-      <stop offset="100%" stop-color="#8848c8"/>
+    <linearGradient id="crySide" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#ffd0ff"/>
+      <stop offset="100%" stop-color="#6828b8"/>
     </linearGradient>
-    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#e8cf78"/>
-      <stop offset="60%" stop-color="#a67a2a"/>
-      <stop offset="100%" stop-color="#5c3a10"/>
+    <linearGradient id="marble" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#f8f4e8"/>
+      <stop offset="60%" stop-color="#d0c8b0"/>
+      <stop offset="100%" stop-color="#7a6a4a"/>
     </linearGradient>
-    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d0c8b0"/>
-      <stop offset="100%" stop-color="#6a604a"/>
+    <linearGradient id="goldBand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff0a8"/>
+      <stop offset="50%" stop-color="#ffd966"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
     </linearGradient>
   </defs>
 
-  <!-- 地面阴影 / 光晕 -->
-  <ellipse cx="128" cy="290" rx="112" ry="26" fill="#000" opacity="0.35"/>
-  <circle cx="128" cy="180" r="140" fill="url(#halo)"/>
+  <!-- ==== outer ground shadow + halo ==== -->
+  <ellipse cx="192" cy="490" rx="180" ry="36" fill="#000" opacity="0.42"/>
+  <circle cx="192" cy="280" r="210" fill="url(#halo2)">
+    <animate attributeName="r" values="200;220;200" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;1;0.8" dur="4s" repeatCount="indefinite"/>
+  </circle>
 
-  <!-- 石阶基座（三层） -->
-  <g stroke="#2a1a08" stroke-width="2" stroke-linejoin="round">
-    <polygon points="24,298 232,298 210,276 46,276" fill="url(#stone)"/>
-    <polygon points="46,276 210,276 192,258 64,258" fill="url(#stone)"/>
-    <polygon points="64,258 192,258 176,242 80,242" fill="url(#stone)"/>
+  <!-- ==== star-shaped marble platform (8-point star, ~256px across) ==== -->
+  <g stroke="#2a1a08" stroke-width="3" stroke-linejoin="round">
+    <!-- outer shadow star (darker) -->
+    <polygon fill="#3a2a14"
+      points="192,504 222,478 258,484 240,452 274,434 238,420 248,386 214,394 192,362 170,394 136,386 146,420 110,434 144,452 126,484 162,478"
+      transform="translate(0,8)"/>
+    <!-- main 8-point star -->
+    <polygon fill="url(#marble)"
+      points="192,500 222,474 258,480 240,448 274,430 238,416 248,382 214,390 192,358 170,390 136,382 146,416 110,430 144,448 126,480 162,474"/>
+    <!-- inner gold circle rim -->
+    <circle cx="192" cy="440" r="64" fill="#e8d894" stroke="#3a2208" stroke-width="2.5"/>
+    <circle cx="192" cy="440" r="58" fill="url(#goldBand)" stroke="#3a2208" stroke-width="1.2"/>
+    <!-- golden inlay glyphs on ring -->
+    <g fill="#3a2208" opacity="0.85">
+      <circle cx="192" cy="384" r="3"/>
+      <circle cx="248" cy="440" r="3"/>
+      <circle cx="192" cy="496" r="3"/>
+      <circle cx="136" cy="440" r="3"/>
+      <circle cx="232" cy="400" r="2.5"/>
+      <circle cx="232" cy="480" r="2.5"/>
+      <circle cx="152" cy="480" r="2.5"/>
+      <circle cx="152" cy="400" r="2.5"/>
+    </g>
   </g>
 
-  <!-- 金基座 -->
-  <g stroke="#3a2208" stroke-width="2.5" stroke-linejoin="round">
-    <polygon points="80,242 176,242 168,212 88,212" fill="url(#base)"/>
-    <polygon points="88,212 168,212 160,202 96,202" fill="#ffd966"/>
-    <rect x="96" y="202" width="64" height="6" fill="#8a5a18" stroke="none"/>
-    <!-- 金饰纹 -->
-    <circle cx="100" cy="228" r="4" fill="#ffd966" stroke="#3a2208" stroke-width="1.5"/>
-    <circle cx="128" cy="230" r="5" fill="#ffee88" stroke="#3a2208" stroke-width="1.5"/>
-    <circle cx="156" cy="228" r="4" fill="#ffd966" stroke="#3a2208" stroke-width="1.5"/>
-  </g>
-
-  <!-- 侧翼小水晶 -->
+  <!-- ==== 4 satellite crystal spires (BACK row drawn first for depth) ==== -->
+  <!-- Back-left -->
   <g stroke="#2a0840" stroke-width="2.5" stroke-linejoin="round">
-    <polygon points="68,210 82,170 96,210 82,220" fill="url(#crystal2)"/>
-    <polygon points="160,210 174,170 188,210 174,220" fill="url(#crystal2)"/>
+    <polygon fill="#6a4a1a" points="112,410 148,410 144,420 116,420"/>
+    <polygon fill="url(#crySide)" points="118,410 142,410 146,330 114,330"/>
+    <polygon fill="url(#crySide)" points="114,330 146,330 130,280"/>
+    <polygon fill="#f0b8ff" opacity="0.55" points="118,410 126,410 126,330 118,330"/>
+    <polygon fill="#f0b8ff" opacity="0.45" points="118,330 126,330 130,298"/>
+    <!-- tip star -->
+    <circle cx="130" cy="278" r="4" fill="#fffbd0" stroke="#ffd700" stroke-width="1">
+      <animate attributeName="r" values="3;5;3" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- Back-right -->
+  <g stroke="#2a0840" stroke-width="2.5" stroke-linejoin="round">
+    <polygon fill="#6a4a1a" points="236,410 272,410 268,420 240,420"/>
+    <polygon fill="url(#crySide)" points="242,410 266,410 270,330 238,330"/>
+    <polygon fill="url(#crySide)" points="238,330 270,330 254,280"/>
+    <polygon fill="#f0b8ff" opacity="0.55" points="242,410 250,410 250,330 242,330"/>
+    <polygon fill="#f0b8ff" opacity="0.45" points="242,330 250,330 254,298"/>
+    <circle cx="254" cy="278" r="4" fill="#fffbd0" stroke="#ffd700" stroke-width="1">
+      <animate attributeName="r" values="3;5;3" dur="2.1s" repeatCount="indefinite"/>
+    </circle>
   </g>
 
-  <!-- 中央主水晶（大六棱柱） -->
-  <g stroke="#2a0840" stroke-width="3" stroke-linejoin="round">
-    <!-- 柱身 -->
-    <polygon points="104,200 152,200 160,110 96,110" fill="url(#crystal)"/>
-    <!-- 顶端尖锥 -->
-    <polygon points="96,110 160,110 128,30" fill="url(#crystal)"/>
-    <!-- 左侧高光 -->
-    <polygon points="104,200 120,200 120,110 104,110" fill="#e0a8ff" opacity="0.55"/>
-    <polygon points="104,110 120,110 128,70" fill="#e0a8ff" opacity="0.5"/>
-    <!-- 中线亮面 -->
-    <polyline points="128,30 128,200" fill="none" stroke="#ffe0ff" stroke-width="2" opacity="0.7"/>
+  <!-- ==== CENTRAL MAIN CRYSTAL TOWER (extra tall, double layered) ==== -->
+  <!-- main glow behind main crystal -->
+  <circle cx="192" cy="260" r="130" fill="url(#halo3)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <g stroke="#1e0430" stroke-width="3.5" stroke-linejoin="round">
+    <!-- crystal hexagonal base on gold ring -->
+    <polygon fill="#8a5e18" points="152,420 232,420 236,438 148,438"/>
+    <polygon fill="url(#goldBand)" points="156,420 228,420 232,408 152,408"/>
+
+    <!-- main shaft -->
+    <polygon fill="url(#cryMain)" points="152,420 232,420 240,160 144,160"/>
+    <!-- pointed top -->
+    <polygon fill="url(#cryMain)" points="144,160 240,160 192,40"/>
+    <!-- left highlight -->
+    <polygon fill="#f8d0ff" opacity="0.6" points="152,420 172,420 172,160 144,160"/>
+    <polygon fill="#f8d0ff" opacity="0.5" points="144,160 172,160 192,90"/>
+    <!-- bright center line -->
+    <line x1="192" y1="40" x2="192" y2="420" stroke="#fffbff" stroke-width="3" opacity="0.75"/>
+    <!-- inner facet lines -->
+    <line x1="168" y1="160" x2="168" y2="420" stroke="#2a0840" stroke-width="1.2" opacity="0.7"/>
+    <line x1="216" y1="160" x2="216" y2="420" stroke="#2a0840" stroke-width="1.2" opacity="0.7"/>
   </g>
 
-  <!-- 顶部星芒 -->
-  <g fill="#fffbd0" stroke="#ffd700" stroke-width="1.5">
-    <polygon points="128,6 132,24 150,28 132,32 128,50 124,32 106,28 124,24"/>
+  <!-- top star burst -->
+  <g>
+    <polygon fill="#fffbd0" stroke="#ffd700" stroke-width="2"
+             points="192,8 200,34 228,40 202,48 192,76 182,48 156,40 182,34"/>
+    <circle cx="192" cy="40" r="8" fill="#fff4a0" opacity="0.85">
+      <animate attributeName="r" values="6;12;6" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite"/>
+    </circle>
   </g>
 
-  <!-- 浮空小水晶碎片 -->
+  <!-- ==== FRONT satellite crystal spires (drawn LAST to be on top) ==== -->
+  <!-- Front-left -->
+  <g stroke="#2a0840" stroke-width="2.5" stroke-linejoin="round">
+    <polygon fill="#6a4a1a" points="72,460 124,460 118,472 78,472"/>
+    <polygon fill="url(#crySide)" points="80,460 116,460 120,352 76,352"/>
+    <polygon fill="url(#crySide)" points="76,352 120,352 98,288"/>
+    <polygon fill="#f0b8ff" opacity="0.6" points="80,460 94,460 94,352 76,352"/>
+    <polygon fill="#f0b8ff" opacity="0.5" points="76,352 94,352 98,312"/>
+    <line x1="98" y1="288" x2="98" y2="460" stroke="#fffbff" stroke-width="1.5" opacity="0.7"/>
+    <circle cx="98" cy="286" r="5" fill="#fffbd0" stroke="#ffd700" stroke-width="1.2">
+      <animate attributeName="r" values="4;7;4" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- Front-right -->
+  <g stroke="#2a0840" stroke-width="2.5" stroke-linejoin="round">
+    <polygon fill="#6a4a1a" points="260,460 312,460 306,472 266,472"/>
+    <polygon fill="url(#crySide)" points="268,460 304,460 308,352 264,352"/>
+    <polygon fill="url(#crySide)" points="264,352 308,352 286,288"/>
+    <polygon fill="#f0b8ff" opacity="0.6" points="268,460 282,460 282,352 264,352"/>
+    <polygon fill="#f0b8ff" opacity="0.5" points="264,352 282,352 286,312"/>
+    <line x1="286" y1="288" x2="286" y2="460" stroke="#fffbff" stroke-width="1.5" opacity="0.7"/>
+    <circle cx="286" cy="286" r="5" fill="#fffbd0" stroke="#ffd700" stroke-width="1.2">
+      <animate attributeName="r" values="4;7;4" dur="1.9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- ==== floating crystal shards (animated bob) ==== -->
   <g stroke="#2a0840" stroke-width="1.5" stroke-linejoin="round">
-    <polygon points="40,120 48,108 56,120 48,130" fill="#d48aff"/>
-    <polygon points="200,140 210,126 220,140 210,152" fill="#d48aff"/>
-    <polygon points="52,180 58,172 64,180 58,188" fill="#e8a8ff"/>
-    <polygon points="196,92 204,82 212,92 204,102" fill="#e8a8ff"/>
+    <g>
+      <polygon fill="#d48aff" points="40,170 52,152 64,170 52,186"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -6; 0 0" dur="3s" repeatCount="indefinite"/>
+    </g>
+    <g>
+      <polygon fill="#d48aff" points="320,200 334,180 348,200 334,218"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -6; 0 0" dur="3.5s" repeatCount="indefinite"/>
+    </g>
+    <g>
+      <polygon fill="#e8a8ff" points="54,300 62,288 70,300 62,312"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="2.6s" repeatCount="indefinite"/>
+    </g>
+    <g>
+      <polygon fill="#e8a8ff" points="316,120 326,106 336,120 326,134"/>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -5; 0 0" dur="2.8s" repeatCount="indefinite"/>
+    </g>
   </g>
 
-  <!-- 底部台阶高光 -->
-  <polyline points="46,276 210,276" fill="none" stroke="#fff4c8" stroke-width="1.2" opacity="0.7"/>
-  <polyline points="64,258 192,258" fill="none" stroke="#fff4c8" stroke-width="1.2" opacity="0.6"/>
+  <!-- ==== platform rim highlight ==== -->
+  <polyline points="162,474 222,474" fill="none" stroke="#fffbe0" stroke-width="2" opacity="0.85"/>
+  <polyline points="146,416 238,416" fill="none" stroke="#fffbe0" stroke-width="1.5" opacity="0.7"/>
 </svg>

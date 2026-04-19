@@ -5,7 +5,7 @@
   "cols": 4,
   "rows": 2,
   "biome": "swamp",
-  "palette": ["#3a4a22", "#5a7236", "#2a3818", "#5c806a", "#4a331a"],
+  "palette": ["#2d5a3d", "#4a7a5a", "#1a3a2a", "#6b8ea0", "#1a0e04"],
   "tiles": [
     { "name": "swamp_ground_a",    "col": 0, "row": 0, "walkable": true },
     { "name": "swamp_ground_b",    "col": 1, "row": 0, "walkable": true },
