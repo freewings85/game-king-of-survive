@@ -4557,6 +4557,26 @@ function doLogin() {
 
   function offlinePlayerUpdate(dt) {
     if (!player || !player.alive) return;
+    // Emergency unstick (Leo 2026-04-21 hotfix): if the player's collider is
+    // overlapping a decor blocker (e.g. spawn placed inside a fence), search
+    // outward in 8 directions for a clear cell and teleport. Runs at most
+    // once per second so it doesn't fight legitimate "press into wall" input.
+    if (typeof isBlockedByDecor === 'function' && isBlockedByDecor(player.x, player.y, player.radius * 0.55)) {
+      player._unstickT = (player._unstickT || 0) + dt;
+      if (player._unstickT > 0.4) {
+        player._unstickT = 0;
+        for (var _us = 1; _us <= 6; _us++) {
+          for (var _ua = 0; _ua < 8; _ua++) {
+            var _uang = _ua * Math.PI / 4;
+            var _ux = player.x + Math.cos(_uang) * 40 * _us;
+            var _uy = player.y + Math.sin(_uang) * 40 * _us;
+            if (!isBlockedByDecor(_ux, _uy, player.radius * 0.55)) {
+              player.x = _ux; player.y = _uy; _us = 999; break;
+            }
+          }
+        }
+      }
+    }
     // Move player based on input (keyboard/mouse)
     var moveX = 0, moveY = 0;
     if (joystick.active && (Math.abs(joystick.dx) > 0.01 || Math.abs(joystick.dy) > 0.01)) {
@@ -6584,6 +6604,11 @@ function doLogin() {
     _decorBlockAABBs = [];
     _decorBlockGrid = new Map();
     if (!_decorItems) return;
+    // Hotfix (Leo 2026-04-21): clear collider footprint within 200px of every
+    // spawn point so the player can't get jammed inside a procedural fence/house
+    // at match start. Visual decor still draws — only collision is suppressed.
+    var _spawnList = (typeof MAP_DATA !== 'undefined' && MAP_DATA && MAP_DATA.spawnPoints) ? MAP_DATA.spawnPoints : [];
+    var _SPAWN_CLEAR_R2 = 200 * 200;
     for (var i = 0; i < _decorItems.length; i++) {
       var d = _decorItems[i];
       if (!_isBarrier(d) || !d.meta || !d.meta.collider) continue;
@@ -6591,6 +6616,15 @@ function doLogin() {
       var ay = d.meta.anchor ? d.meta.anchor.y : d.meta.h;
       var cbx = d.x - ax + d.meta.collider.x;
       var cby = d.y - ay + d.meta.collider.y;
+      var _ccx = cbx + d.meta.collider.w / 2;
+      var _ccy = cby + d.meta.collider.h / 2;
+      var _skipSpawn = false;
+      for (var _spi = 0; _spi < _spawnList.length; _spi++) {
+        var _sp = _spawnList[_spi];
+        var _sdx = _ccx - _sp.x, _sdy = _ccy - _sp.y;
+        if (_sdx * _sdx + _sdy * _sdy < _SPAWN_CLEAR_R2) { _skipSpawn = true; break; }
+      }
+      if (_skipSpawn) continue;
       var aabb = { x: cbx, y: cby, w: d.meta.collider.w, h: d.meta.collider.h, name: d.name };
       _decorBlockAABBs.push(aabb);
       // Insert into every cell it overlaps
@@ -12479,6 +12513,9 @@ function doLogin() {
   });
 
   // === VIRTUAL JOYSTICK (touch + mouse fallback) ===
+  // Debug exposure for QA — lets headless tests poke joystick state directly.
+  window.__joystick = joystick;
+  window.__isBlockedByDecor = function(x, y, r) { return isBlockedByDecor(x, y, r); };
   function joystickStart(x, y, id) {
     if (state !== 'playing') return false;
     if (x < W * 0.45) {
