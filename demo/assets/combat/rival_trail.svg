@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32">
+  <!-- Rival red trail particle atlas. 4 frames × 32×32.
+       Frame 0 = brightest/largest, Frame 3 = dimmest/smallest.
+       Developer emits 1 particle per 40-60ms under rival feet, picks frame by age. -->
+  <defs>
+    <radialGradient id="trail0" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#fff8a0" stop-opacity="1"/>
+      <stop offset="35%" stop-color="#ff6a3a" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#8a1a0a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="trail1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ffb060" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#8a1a0a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="trail2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#d84a3a" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#5a0a02" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="trail3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#8a1a0a" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#5a0a02" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Frame 0 : fresh ember -->
+  <g transform="translate(0,0)">
+    <circle cx="16" cy="16" r="14" fill="url(#trail0)"/>
+    <circle cx="16" cy="16" r="4" fill="#fff8d0"/>
+    <polygon points="16,4 19,14 28,14 20,20 24,30 16,24 8,30 12,20 4,14 13,14"
+             fill="#fff8a0" opacity="0.7"/>
+  </g>
+
+  <!-- Frame 1 : glowing -->
+  <g transform="translate(32,0)">
+    <circle cx="16" cy="16" r="12" fill="url(#trail1)"/>
+    <circle cx="16" cy="16" r="3" fill="#ffb060"/>
+  </g>
+
+  <!-- Frame 2 : fading -->
+  <g transform="translate(64,0)">
+    <circle cx="16" cy="16" r="9" fill="url(#trail2)"/>
+  </g>
+
+  <!-- Frame 3 : smoke ember -->
+  <g transform="translate(96,0)">
+    <circle cx="16" cy="16" r="6" fill="url(#trail3)"/>
+  </g>
+</svg>

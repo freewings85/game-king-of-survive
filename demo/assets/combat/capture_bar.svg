@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="96" viewBox="0 0 144 96">
+  <!-- Capture progress bar templates, 3 faction colors + animated flag icon.
+       Row layout: each bar 128×16, anchor (64, row_center).
+       Row 0 = player blue   (fill ref: .fillBlue)
+       Row 1 = enemy red     (fill ref: .fillRed)
+       Row 2 = neutral gold  (fill ref: .fillGold)
+       Row 3 = contested pulse (mixed, used when 2 factions channel simultaneously)
+       Width=128 fill demo @ 100%, Developer scales fill rect width by progress.
+  -->
+  <defs>
+    <linearGradient id="capBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1008"/><stop offset="100%" stop-color="#050200"/>
+    </linearGradient>
+    <linearGradient id="capBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ac4f0"/><stop offset="100%" stop-color="#2a6ea8"/>
+    </linearGradient>
+    <linearGradient id="capRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff7a5a"/><stop offset="100%" stop-color="#a82a18"/>
+    </linearGradient>
+    <linearGradient id="capGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe880"/><stop offset="100%" stop-color="#b8881a"/>
+    </linearGradient>
+    <linearGradient id="capMix" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"  stop-color="#7ac4f0"/>
+      <stop offset="45%" stop-color="#2a6ea8"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="55%" stop-color="#a82a18"/>
+      <stop offset="100%" stop-color="#ff7a5a"/>
+    </linearGradient>
+    <pattern id="capStripe" width="8" height="16" patternUnits="userSpaceOnUse">
+      <rect width="8" height="16" fill="#ffffff" opacity="0.12"/>
+      <polygon points="0,16 4,0 8,0 4,16" fill="#ffffff" opacity="0.18"/>
+    </pattern>
+  </defs>
+
+  <!-- Row 0: player blue bar -->
+  <g transform="translate(8,4)">
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="url(#capBg)" stroke="#000" stroke-width="1.5"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capBlue)" class="fillBlue"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capStripe)">
+      <animateTransform attributeName="transform" type="translate" values="0 0; 8 0" dur="0.8s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="none" stroke="#7ac4f0" stroke-width="1" opacity="0.8"/>
+    <text x="64" y="13" fill="#fff" font-family="Arial, system-ui" font-size="10" font-weight="bold" text-anchor="middle" style="paint-order:stroke;stroke:#000;stroke-width:2px;">CAPTURING</text>
+  </g>
+
+  <!-- Row 1: enemy red bar -->
+  <g transform="translate(8,28)">
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="url(#capBg)" stroke="#000" stroke-width="1.5"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capRed)" class="fillRed"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capStripe)">
+      <animateTransform attributeName="transform" type="translate" values="0 0; 8 0" dur="0.8s" repeatCount="indefinite"/>
+    </rect>
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="none" stroke="#ff7a5a" stroke-width="1" opacity="0.8"/>
+    <text x="64" y="13" fill="#fff" font-family="Arial, system-ui" font-size="10" font-weight="bold" text-anchor="middle" style="paint-order:stroke;stroke:#000;stroke-width:2px;">ENEMY CAPTURING</text>
+  </g>
+
+  <!-- Row 2: neutral gold bar (unclaimed) -->
+  <g transform="translate(8,52)">
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="url(#capBg)" stroke="#000" stroke-width="1.5"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capGold)" class="fillGold"/>
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="none" stroke="#ffd700" stroke-width="1" opacity="0.8"/>
+    <text x="64" y="13" fill="#1a1008" font-family="Arial, system-ui" font-size="10" font-weight="bold" text-anchor="middle">NEUTRAL</text>
+  </g>
+
+  <!-- Row 3: contested pulse (two factions channel) -->
+  <g transform="translate(8,76)">
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="url(#capBg)" stroke="#000" stroke-width="1.5"/>
+    <rect x="2" y="2" width="124" height="12" rx="2" fill="url(#capMix)"/>
+    <rect x="0" y="0" width="128" height="16" rx="3" fill="none" stroke="#ffd700" stroke-width="1.5" opacity="0.9">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="0.6s" repeatCount="indefinite"/>
+    </rect>
+    <text x="64" y="13" fill="#fff" font-family="Arial, system-ui" font-size="10" font-weight="bold" text-anchor="middle" style="paint-order:stroke;stroke:#000;stroke-width:2px;">CONTESTED!</text>
+  </g>
+</svg>

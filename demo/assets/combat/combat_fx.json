@@ -1,0 +1,60 @@
+{
+  "captureBar": {
+    "image": "capture_bar.svg",
+    "barW": 128,
+    "barH": 16,
+    "rowOffsetY": 24,
+    "padding": 8,
+    "rows": [
+      { "idx": 0, "name": "player",    "faction": "ally",    "color": "#7ac4f0", "textColor": "#ffffff", "description": "玩家 capture 中（蓝）" },
+      { "idx": 1, "name": "enemy",     "faction": "hostile", "color": "#ff7a5a", "textColor": "#ffffff", "description": "敌对 bot capture 中（红）" },
+      { "idx": 2, "name": "neutral",   "faction": "none",    "color": "#ffd700", "textColor": "#1a1008", "description": "无主据点（金）" },
+      { "idx": 3, "name": "contested", "faction": "mixed",   "color": "#ffd700", "textColor": "#ffffff", "description": "争夺中（脉冲金边）" }
+    ],
+    "usage": "每据点上方 drawImage(barRow) 或 div+css。进度用 clip/transform: scaleX(p) on inner fill rect."
+  },
+  "rivalTrail": {
+    "image": "rival_trail.svg",
+    "frameSize": 32,
+    "frameCount": 4,
+    "frames": [
+      { "idx": 0, "ageMs": 0,   "alpha": 1.0,  "scale": 1.0  },
+      { "idx": 1, "ageMs": 120, "alpha": 0.85, "scale": 0.85 },
+      { "idx": 2, "ageMs": 240, "alpha": 0.65, "scale": 0.7  },
+      { "idx": 3, "ageMs": 360, "alpha": 0.35, "scale": 0.55 }
+    ],
+    "emitIntervalMs": 50,
+    "lifetimeMs": 480,
+    "usage": "Rival 追踪玩家时每 50ms 在脚下生成 1 颗粒子，按 age 选 frame。z 序位于地面之上、角色之下。"
+  },
+  "nemesisAura": {
+    "image": "nemesis_aura.svg",
+    "size": 160,
+    "anchor": { "x": 80, "y": 80 },
+    "builtinAnimation": true,
+    "usage": "drawImage(aura, nemesisX - 80, nemesisY - 80 + 8, 160, 160) 在角色脚下。内建 animate（pulse + rotate + skull shake），无需代码驱动。",
+    "zIndex": "above_tile_below_entity"
+  },
+  "stateFloats": {
+    "image": "state_floats.svg",
+    "ribbonW": 160,
+    "ribbonH": 24,
+    "rowOffsetY": 32,
+    "padding": 16,
+    "labels": [
+      { "idx": 0, "name": "CAPTURING",     "color": "#7ac4f0", "textColor": "#ffffff", "duration": 2000, "trigger": "bot/player 开始 channel" },
+      { "idx": 1, "name": "CAPTURED!",     "color": "#ffd700", "textColor": "#2a1a04", "duration": 2500, "trigger": "据点完成占领" },
+      { "idx": 2, "name": "HATRED +1",     "color": "#ff7a5a", "textColor": "#ffffff", "duration": 1500, "trigger": "rival 被玩家命中" },
+      { "idx": 3, "name": "RAGE!",         "color": "#ffb060", "textColor": "#ffffff", "duration": 2500, "trigger": "rival hatred≥5 狂暴" },
+      { "idx": 4, "name": "NEMESIS",       "color": "#c0a0ff", "textColor": "#ffffff", "duration": 2500, "trigger": "玩家被同 bot 杀 2+ 次触发" },
+      { "idx": 5, "name": "RIVALRY ENDED!","color": "#9ae06a", "textColor": "#ffffff", "duration": 3000, "trigger": "玩家击杀 nemesis，全场广播" }
+    ],
+    "animation": {
+      "popInScale":   "0.4 → 1.1 → 1.0 over 250ms cubic-out",
+      "floatUp":      "translate +0 → +22px over full duration",
+      "fadeOut":      "opacity 1 → 0 over last 400ms",
+      "recommendation": "CSS keyframes 或 canvas 每帧手工绘制均可；头顶浮字建议放在角色 screenY - 48 位置"
+    },
+    "usage": "drawImage(ribbon, entityX - 80, entityY - 48 + floatUp, 160, 24) 加上 scale/opacity 动画。"
+  }
+}

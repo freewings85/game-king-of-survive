@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <!-- State float templates. 6 labels @ 192×32, row layout.
+       Each row = ribbon background + text. Developer renders SAME ribbon via drawImage,
+       or uses CSS div overlay with matching colors from state_floats.json.
+       Animated: pop-in scale + fade-up.
+  -->
+  <defs>
+    <linearGradient id="rbBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ac4f0"/><stop offset="100%" stop-color="#1a4a7a"/>
+    </linearGradient>
+    <linearGradient id="rbGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffea80"/><stop offset="100%" stop-color="#8a5e10"/>
+    </linearGradient>
+    <linearGradient id="rbRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff7a5a"/><stop offset="100%" stop-color="#8a1a0a"/>
+    </linearGradient>
+    <linearGradient id="rbPurple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c0a0ff"/><stop offset="100%" stop-color="#3a1a6a"/>
+    </linearGradient>
+    <linearGradient id="rbOrange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb060"/><stop offset="100%" stop-color="#a84818"/>
+    </linearGradient>
+    <linearGradient id="rbGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9ae06a"/><stop offset="100%" stop-color="#2a6a1a"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    .ribbonText {
+      font-family: "PingFang SC","Noto Sans CJK SC","Microsoft YaHei",Arial,system-ui,sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      fill: #fff;
+      paint-order: stroke;
+      stroke: #000;
+      stroke-width: 2.2px;
+      text-anchor: middle;
+    }
+  </style>
+
+  <!-- Row 0: CAPTURING (blue) -->
+  <g transform="translate(16,4)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbBlue)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText">CAPTURING</text>
+  </g>
+
+  <!-- Row 1: CAPTURED! (gold) -->
+  <g transform="translate(16,36)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbGold)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText" fill="#2a1a04">CAPTURED!</text>
+  </g>
+
+  <!-- Row 2: HATRED +1 (red) -->
+  <g transform="translate(16,68)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbRed)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText">HATRED +1</text>
+  </g>
+
+  <!-- Row 3: RAGE! (orange, rival frenzy) -->
+  <g transform="translate(16,100)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbOrange)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText">RAGE!</text>
+  </g>
+
+  <!-- Row 4: NEMESIS (purple) -->
+  <g transform="translate(16,132)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbPurple)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText">NEMESIS</text>
+  </g>
+
+  <!-- Row 5: RIVALRY ENDED! (green) -->
+  <g transform="translate(16,164)">
+    <path d="M0 12 L8 0 L152 0 L160 12 L152 24 L8 24 Z" fill="url(#rbGreen)" stroke="#000" stroke-width="1.8" stroke-linejoin="round"/>
+    <text x="80" y="17" class="ribbonText">RIVALRY ENDED!</text>
+  </g>
+</svg>
