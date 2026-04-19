@@ -706,6 +706,14 @@ function doLogin() {
     return {state: state, px: player.x, py: player.y, hp: player.hp, maxHp: player.maxHp, enemies: nearEnemies, wave: wave, kills: kills, gameMode: gameMode, totalEnemies: entities.filter(function(e){return e.type==='enemy'&&!e.dead;}).length, players: playersInfo, victoryTriggered: victoryState ? victoryState.active : false, gameTime: gameTime || 0, spawnZoneCount: spawnZones ? spawnZones.length : 0, playerLevel: playerLevel, xp: playerXP, xpToNextLevel: xpToNextLevel, pendingSkillPoints: pendingSkillPoints, dps: dpsDisplay, maxDps: maxDps, totalDamage: totalDamage, gold: gold, lastEarnedGold: _lastEarnedGold, ownedSkills: ownedSkills, skillLevels: skillLevels};
   };
   var player, entities = [], particles = [], floats = [], gems = [], coins = [];
+  var skillPickups = []; // Experiment D: skill drops from bot kills
+  var bossSlainBanner = { active: false, timer: 0, duration: 1.8, name: '' };
+  var bossBuffChoice = { active: false, options: [], rects: [] };
+  var worldEvent = { active: false, kind: '', phase: 'idle', phaseTimer: 0, target: null, banner: '', timeLeft: 0, nextAt: 30 };
+  var eventPickups = []; // airdrops / vault chests
+  var meteorMarkers = []; // meteor impact warnings
+  var rivalState = { botId: -1, killedBy: 0, nemesisId: -1 };
+  var synergyBanner = { active: false, timer: 0, duration: 1.5, text: '', color: '#fff' };
   var offlineSkillFx = []; // class-based projectile VFX for offline mode
   var wave, waveTimer, gameTime, kills, killStreak, maxStreak;
   var farmKills = 0; // mob kills — separate from player kills (Leo 2026-04-18)
@@ -1109,6 +1117,466 @@ function doLogin() {
     }
     if (comboState.popupTimer > 0) comboState.popupTimer -= dt;
   }
+
+  // Experiment D: drop victim's "loot" — a random skill the player doesn't have at max.
+  function dropSkillPickup(x, y, tint) {
+    var pool = [];
+    for (var i = 0; i < SKILL_IDS.length; i++) {
+      var sid = SKILL_IDS[i];
+      var lv = skillLevels[sid] || 0;
+      if (lv < 5) pool.push(sid);
+    }
+    if (!pool.length) return;
+    var picked = pool[Math.floor(Math.random() * pool.length)];
+    skillPickups.push({
+      x: x, y: y, skillId: picked, life: 8.0, maxLife: 8.0,
+      bob: 0, color: (SKILL_DATA[picked] && SKILL_DATA[picked].color) || tint || '#ffd700'
+    });
+  }
+
+  function updateSkillPickups(dt) {
+    if (!player) return;
+    for (var i = skillPickups.length - 1; i >= 0; i--) {
+      var sp = skillPickups[i];
+      sp.life -= dt;
+      sp.bob = (sp.bob || 0) + dt;
+      if (sp.life <= 0) { skillPickups.splice(i, 1); continue; }
+      var dx = player.x - sp.x, dy = player.y - sp.y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < (player.radius || 12) + 24) {
+        applySkill(sp.skillId);
+        var sd = SKILL_DATA[sp.skillId] || { name: sp.skillId, icon: '★' };
+        floatText(player.x, player.y - 48, (sd.icon || '★') + ' +1 ' + (sd.name || sp.skillId), { color: '#ffd700', size: 14 });
+        emit(sp.x, sp.y, '#ffd700', 18, 140);
+        if (typeof playSound === 'function') playSound('pickup_gold');
+        skillPickups.splice(i, 1);
+      }
+    }
+  }
+
+  function drawSkillPickups() {
+    if (!skillPickups.length) return;
+    var t = (typeof gameTime === 'number') ? gameTime : (Date.now() * 0.001);
+    for (var i = 0; i < skillPickups.length; i++) {
+      var sp = skillPickups[i];
+      var fade = Math.min(1, sp.life / 1.2);
+      var cx = sp.x, cy = sp.y;
+      var bob = Math.sin((sp.bob || 0) * 3) * 4;
+      // Gold pillar of light
+      ctx.save();
+      ctx.globalAlpha = 0.55 * fade;
+      var grad = ctx.createLinearGradient(cx, cy - 140, cx, cy + 8);
+      grad.addColorStop(0, 'rgba(255,215,0,0)');
+      grad.addColorStop(0.4, 'rgba(255,230,120,0.45)');
+      grad.addColorStop(1, 'rgba(255,215,0,0.85)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(cx - 18, cy + 6);
+      ctx.lineTo(cx + 18, cy + 6);
+      ctx.lineTo(cx + 8, cy - 140);
+      ctx.lineTo(cx - 8, cy - 140);
+      ctx.closePath();
+      ctx.fill();
+      // Sparkles
+      var sp2 = (t * 2) % 1;
+      ctx.globalAlpha = 0.6 * fade;
+      ctx.fillStyle = '#fffae0';
+      for (var k = 0; k < 3; k++) {
+        var sy = cy + 6 - ((sp2 + k * 0.33) % 1) * 140;
+        var sx = cx + Math.sin(sy * 0.05 + k) * 10;
+        ctx.beginPath(); ctx.arc(sx, sy, 1.6, 0, Math.PI * 2); ctx.fill();
+      }
+      // Icon disc with skill color ring
+      ctx.globalAlpha = fade;
+      var discR = 18;
+      ctx.fillStyle = 'rgba(20,20,40,0.85)';
+      ctx.beginPath(); ctx.arc(cx, cy - 26 + bob, discR, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = sp.color || '#ffd700';
+      ctx.stroke();
+      ctx.lineWidth = 1; ctx.strokeStyle = '#ffd700'; ctx.globalAlpha = 0.8 * fade;
+      ctx.beginPath(); ctx.arc(cx, cy - 26 + bob, discR + 3, 0, Math.PI * 2); ctx.stroke();
+      // Icon glyph
+      var sd = SKILL_DATA[sp.skillId] || { icon: '★' };
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px "Noto Sans SC", "Apple Color Emoji", "Segoe UI Emoji", Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(sd.icon || '★', cx, cy - 26 + bob);
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
+  }
+
+  // Experiment D: boss slain perma buff — 3 options presented mid-slowmo.
+  var BOSS_PERMA_BUFFS = [
+    { id: 'hp', name: '+40 最大生命', color: '#ff5050', icon: '❤', apply: function() { player.maxHp += 40; player.hp = Math.min(player.maxHp, player.hp + 40); } },
+    { id: 'dmg', name: '+15% 攻击力', color: '#ffaa20', icon: '⚔', apply: function() { player.attackDamage = Math.round(player.attackDamage * 1.15); } },
+    { id: 'spd', name: '+10% 移速', color: '#55ff88', icon: '🏃', apply: function() { player.speed *= 1.10; } },
+    { id: 'cd', name: '-10% 冷却', color: '#88ccff', icon: '⚡', apply: function() { player.attackCooldown *= 0.90; } },
+    { id: 'crit', name: '+8% 暴击', color: '#ffee40', icon: '💥', apply: function() { player.critChance = Math.min(0.8, (player.critChance || 0) + 0.08); } },
+    { id: 'regen', name: '+2 HP/s 回血', color: '#40ff80', icon: '♥', apply: function() { player.hpRegen = (player.hpRegen || 0) + 2; } }
+  ];
+  function openBossBuffChoice() {
+    var pool = BOSS_PERMA_BUFFS.slice();
+    for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    bossBuffChoice.options = pool.slice(0, 3);
+    bossBuffChoice.rects = [];
+    bossBuffChoice.active = true;
+  }
+  function applyBossBuff(idx) {
+    if (!bossBuffChoice.active) return;
+    var opt = bossBuffChoice.options[idx];
+    if (!opt) return;
+    opt.apply();
+    floatText(player.x, player.y - 60, '🏆 ' + opt.name, { color: opt.color, size: 16 });
+    bossBuffChoice.active = false;
+    bossBuffChoice.options = [];
+    bossBuffChoice.rects = [];
+  }
+
+  // Experiment E: dynamic world events — airdrop / meteor / doubleXP / vault
+  var WORLD_EVENT_KINDS = ['airdrop', 'meteor', 'doubleXP', 'vault'];
+  function triggerWorldEvent(kind) {
+    worldEvent.kind = kind;
+    worldEvent.phase = 'warning';
+    worldEvent.phaseTimer = 10; // 10s warning
+    worldEvent.active = true;
+    if (kind === 'airdrop') worldEvent.banner = '⚠ 空投来袭! 抢占金色补给箱!';
+    else if (kind === 'meteor') worldEvent.banner = '⚠ 流星雨预警! 避开红圈!';
+    else if (kind === 'doubleXP') worldEvent.banner = '⚠ 30 秒后双倍经验!';
+    else if (kind === 'vault') worldEvent.banner = '⚠ 宝库开启! 前往最近据点 channel 5 秒!';
+    // Choose target location
+    if (kind === 'airdrop' || kind === 'vault') {
+      var cx = stormZone.centerX || WORLD_W / 2;
+      var cy = stormZone.centerY || WORLD_H / 2;
+      var r = (stormZone.radius || 400) * 0.55;
+      var ang = Math.random() * Math.PI * 2;
+      worldEvent.target = { x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r };
+    } else {
+      worldEvent.target = null;
+    }
+    if (typeof playSound === 'function') playSound('warning');
+  }
+  function updateWorldEvent(dt) {
+    if (!player) return;
+    worldEvent.phaseTimer -= dt;
+    if (!worldEvent.active) {
+      worldEvent.nextAt -= dt;
+      if (worldEvent.nextAt <= 0) {
+        var kind = WORLD_EVENT_KINDS[Math.floor(Math.random() * WORLD_EVENT_KINDS.length)];
+        triggerWorldEvent(kind);
+        worldEvent.nextAt = 60 + Math.random() * 30;
+      }
+      return;
+    }
+    if (worldEvent.phase === 'warning' && worldEvent.phaseTimer <= 0) {
+      // Transition into active phase
+      if (worldEvent.kind === 'airdrop' && worldEvent.target) {
+        eventPickups.push({ kind: 'airdrop', x: worldEvent.target.x, y: worldEvent.target.y, life: 30, dropT: 0 });
+        worldEvent.banner = '⬇ 空投已着陆!';
+        worldEvent.phase = 'active';
+        worldEvent.phaseTimer = 30;
+      } else if (worldEvent.kind === 'vault' && worldEvent.target) {
+        eventPickups.push({ kind: 'vault', x: worldEvent.target.x, y: worldEvent.target.y, life: 30, channel: 0 });
+        worldEvent.banner = '✦ 宝库开启! 前往 channel 5 秒!';
+        worldEvent.phase = 'active';
+        worldEvent.phaseTimer = 30;
+      } else if (worldEvent.kind === 'meteor') {
+        worldEvent.phase = 'active';
+        worldEvent.phaseTimer = 6;
+        worldEvent._waveT = 0;
+        worldEvent.banner = '☄ 流星雨进行中!';
+      } else if (worldEvent.kind === 'doubleXP') {
+        worldEvent.phase = 'active';
+        worldEvent.phaseTimer = 30;
+        worldEvent.banner = '⚡ 双倍经验激活!';
+        player._doubleXPUntil = gameTime + 30;
+      }
+    }
+    if (worldEvent.phase === 'active') {
+      if (worldEvent.kind === 'meteor') {
+        worldEvent._waveT = (worldEvent._waveT || 0) + dt;
+        if (worldEvent._waveT >= 1.8) {
+          worldEvent._waveT = 0;
+          // Spawn 3 meteor warnings near player
+          for (var mk = 0; mk < 3; mk++) {
+            var _mAng = Math.random() * Math.PI * 2;
+            var _mDist = 120 + Math.random() * 160;
+            var _mx = player.x + Math.cos(_mAng) * _mDist;
+            var _my = player.y + Math.sin(_mAng) * _mDist;
+            meteorMarkers.push({ x: _mx, y: _my, warn: 1.2, impactRadius: 90, damage: 40, impacted: false });
+          }
+        }
+      }
+      if (worldEvent.phaseTimer <= 0) {
+        worldEvent.active = false;
+        worldEvent.phase = 'idle';
+        worldEvent.banner = '';
+      }
+    }
+    // Meteor marker update
+    for (var _mi = meteorMarkers.length - 1; _mi >= 0; _mi--) {
+      var _mm = meteorMarkers[_mi];
+      _mm.warn -= dt;
+      if (_mm.warn <= 0 && !_mm.impacted) {
+        _mm.impacted = true;
+        _mm.fade = 0.4;
+        var _pdx = player.x - _mm.x, _pdy = player.y - _mm.y;
+        if (_pdx * _pdx + _pdy * _pdy < _mm.impactRadius * _mm.impactRadius) {
+          player.hp -= _mm.damage;
+          triggerPlayerHurt && triggerPlayerHurt();
+          screenShake(10, 400);
+        }
+        // Damage enemies caught in radius too
+        for (var _ei = 0; _ei < offlineEnemies.length; _ei++) {
+          var _en = offlineEnemies[_ei]; if (!_en.alive) continue;
+          var _ex = _en.x - _mm.x, _ey = _en.y - _mm.y;
+          if (_ex * _ex + _ey * _ey < _mm.impactRadius * _mm.impactRadius) _en.hp -= _mm.damage;
+        }
+        for (var _bi = 0; _bi < offlineBots.length; _bi++) {
+          var _bb = offlineBots[_bi]; if (!_bb.alive) continue;
+          var _bx = _bb.x - _mm.x, _by = _bb.y - _mm.y;
+          if (_bx * _bx + _by * _by < _mm.impactRadius * _mm.impactRadius) _bb.hp -= _mm.damage;
+        }
+        emit(_mm.x, _mm.y, '#ff6030', 30, 180);
+      } else if (_mm.impacted) {
+        _mm.fade -= dt;
+        if (_mm.fade <= 0) meteorMarkers.splice(_mi, 1);
+      }
+    }
+    // Event pickup update
+    for (var _epi = eventPickups.length - 1; _epi >= 0; _epi--) {
+      var _ep = eventPickups[_epi];
+      _ep.life -= dt;
+      _ep.dropT = (_ep.dropT || 0) + dt;
+      if (_ep.life <= 0) { eventPickups.splice(_epi, 1); continue; }
+      var _dxE = player.x - _ep.x, _dyE = player.y - _ep.y;
+      var _dE = Math.sqrt(_dxE * _dxE + _dyE * _dyE);
+      if (_ep.kind === 'airdrop' && _dE < 28) {
+        playerXP += 100;
+        dropSkillPickup(_ep.x, _ep.y, '#ffd700');
+        dropSkillPickup(_ep.x + 12, _ep.y - 10, '#ffd700');
+        floatText(player.x, player.y - 48, '🎁 空投! +100 XP + 2 技能卡', { color: '#ffd700', size: 14 });
+        emit(_ep.x, _ep.y, '#ffd700', 40, 220);
+        screenFlash.color = '#ffd700'; screenFlash.alpha = 0.5;
+        eventPickups.splice(_epi, 1);
+        continue;
+      }
+      if (_ep.kind === 'vault') {
+        if (_dE < 60) {
+          _ep.channel = (_ep.channel || 0) + dt;
+          if (_ep.channel >= 5) {
+            playerXP += 200;
+            for (var _vk = 0; _vk < 4; _vk++) dropSkillPickup(_ep.x + (Math.random() - 0.5) * 40, _ep.y + (Math.random() - 0.5) * 40, '#b064ff');
+            floatText(player.x, player.y - 60, '🗝 宝库开启! +200 XP + 4 技能卡', { color: '#d080ff', size: 15 });
+            emit(_ep.x, _ep.y, '#b064ff', 60, 260);
+            screenFlash.color = '#b064ff'; screenFlash.alpha = 0.55;
+            eventPickups.splice(_epi, 1);
+            continue;
+          }
+        } else {
+          _ep.channel = 0;
+        }
+      }
+    }
+  }
+
+  function drawWorldEventWorld() {
+    // Meteor markers (warning + impact)
+    for (var i = 0; i < meteorMarkers.length; i++) {
+      var mm = meteorMarkers[i];
+      if (!mm.impacted) {
+        var warnRatio = mm.warn / 1.2;
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#ff3020';
+        ctx.beginPath(); ctx.arc(mm.x, mm.y, mm.impactRadius * (1 - warnRatio * 0.1), 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = '#ffaa33'; ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.arc(mm.x, mm.y, mm.impactRadius, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, mm.fade / 0.4);
+        ctx.fillStyle = '#ffaa20';
+        ctx.beginPath(); ctx.arc(mm.x, mm.y, mm.impactRadius, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    }
+    // Airdrop / vault
+    for (var j = 0; j < eventPickups.length; j++) {
+      var ep = eventPickups[j];
+      var tt = (ep.dropT || 0);
+      var bob = Math.sin(tt * 3) * 3;
+      ctx.save();
+      var col = ep.kind === 'airdrop' ? '#ffd700' : '#b064ff';
+      // Pillar of light
+      ctx.globalAlpha = 0.35;
+      var lg = ctx.createLinearGradient(ep.x, ep.y - 180, ep.x, ep.y + 8);
+      lg.addColorStop(0, 'rgba(0,0,0,0)'); lg.addColorStop(1, col);
+      ctx.fillStyle = lg;
+      ctx.beginPath();
+      ctx.moveTo(ep.x - 22, ep.y + 8); ctx.lineTo(ep.x + 22, ep.y + 8);
+      ctx.lineTo(ep.x + 10, ep.y - 180); ctx.lineTo(ep.x - 10, ep.y - 180);
+      ctx.closePath(); ctx.fill();
+      // Chest body
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#2a1908';
+      ctx.fillRect(ep.x - 14, ep.y - 10 + bob, 28, 20);
+      ctx.fillStyle = col;
+      ctx.fillRect(ep.x - 14, ep.y - 10 + bob, 28, 5);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(ep.x - 3, ep.y + bob, 6, 10);
+      ctx.fillStyle = col;
+      ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.strokeRect(ep.x - 14, ep.y - 10 + bob, 28, 20);
+      // Channel ring for vault
+      if (ep.kind === 'vault') {
+        var ring = 60;
+        ctx.strokeStyle = col; ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath(); ctx.arc(ep.x, ep.y, ring, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        if ((ep.channel || 0) > 0) {
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(ep.x, ep.y, ring + 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (ep.channel / 5));
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+    // DoubleXP aura on player
+    if (player && player._doubleXPUntil && gameTime < player._doubleXPUntil) {
+      ctx.save();
+      ctx.globalAlpha = 0.35 + 0.15 * Math.sin(gameTime * 3);
+      ctx.strokeStyle = '#ffdd40'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(player.x, player.y, (player.radius || 12) + 14, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#ffdd40';
+      ctx.beginPath(); ctx.arc(player.x, player.y, (player.radius || 12) + 20, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Strategic point pulse halo (visible from 500px away)
+  function drawStratPulse() {
+    if (!STRAT_POINTS || !STRAT_POINTS.pointsInWorld || !STRAT_POINTS.pointsInWorld.length) return;
+    var pulse = 0.5 + 0.4 * Math.sin(gameTime * 2);
+    for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+      var p = STRAT_POINTS.pointsInWorld[i];
+      var owned = gameTime < p.buffUntil && p.owner != null;
+      var mine = owned && player && p.owner === player.factionId;
+      var col = mine ? '#4aaaff' : (owned ? '#ff4a4a' : '#e8e8f0');
+      var rr = 180;
+      ctx.save();
+      ctx.globalAlpha = 0.32 + 0.18 * pulse;
+      var g = ctx.createRadialGradient(p.x, p.y, Math.max(1, rr * 0.15), p.x, p.y, Math.max(2, rr));
+      g.addColorStop(0, col);
+      g.addColorStop(0.7, col + '55');
+      g.addColorStop(1, col + '00');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, Math.PI * 2); ctx.fill();
+      // Outer breathing ring
+      ctx.globalAlpha = 0.55 + 0.3 * pulse;
+      ctx.strokeStyle = col; ctx.lineWidth = 3;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath(); ctx.arc(p.x, p.y, rr * (0.85 + 0.1 * pulse), 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
+  // Experiment F: class ultimate unlock at Lv5
+  var CLASS_ULTIMATES = {
+    warrior: { name: '地震', icon: '🌋', color: '#ff6040', desc: '半径 200 范围击晕 + 80 伤害' },
+    mage:    { name: '流星', icon: '☄',  color: '#ff40a0', desc: '召唤 8 颗流星 · 每颗 50 AOE' },
+    scout:   { name: '影杀', icon: '🗡',  color: '#a040ff', desc: '闪现至最远敌人背后斩杀' }
+  };
+  function grantClassUltimate() {
+    player._ultimateUnlocked = true;
+    player._ultimateReady = true;
+    var u = CLASS_ULTIMATES[selectedClass] || CLASS_ULTIMATES.warrior;
+    synergyBanner.active = true;
+    synergyBanner.timer = 0;
+    synergyBanner.duration = 2.0;
+    synergyBanner.text = '🔓 ULTIMATE: ' + u.icon + ' ' + u.name;
+    synergyBanner.color = u.color;
+    screenFlash.color = u.color; screenFlash.alpha = 0.55;
+    screenShake(14, 600);
+    emit(player.x, player.y, u.color, 50, 240);
+  }
+  function castClassUltimate() {
+    if (!player._ultimateReady) return false;
+    player._ultimateReady = false;
+    var kind = selectedClass;
+    var u = CLASS_ULTIMATES[kind] || CLASS_ULTIMATES.warrior;
+    screenFlash.color = u.color; screenFlash.alpha = 0.7;
+    screenShake(16, 700);
+    floatText(player.x, player.y - 60, u.icon + ' ' + u.name + '!', { color: u.color, size: 24 });
+    if (kind === 'warrior') {
+      // AOE stun + damage
+      var rr = 200;
+      for (var _ei = 0; _ei < offlineEnemies.length; _ei++) {
+        var _en = offlineEnemies[_ei]; if (!_en.alive) continue;
+        var dx = _en.x - player.x, dy = _en.y - player.y;
+        if (dx * dx + dy * dy < rr * rr) { _en.hp -= 80; _en._stunUntil = gameTime + 1.5; }
+      }
+      for (var _bi = 0; _bi < offlineBots.length; _bi++) {
+        var _bb = offlineBots[_bi]; if (!_bb.alive) continue;
+        var dx2 = _bb.x - player.x, dy2 = _bb.y - player.y;
+        if (dx2 * dx2 + dy2 * dy2 < rr * rr) { _bb.hp -= 80; _bb._stunUntil = gameTime + 1.5; }
+      }
+      if (!window._aoeSweep) window._aoeSweep = [];
+      window._aoeSweep.push({ x: player.x, y: player.y, radius: 0, maxRadius: rr, life: 0.6, maxLife: 0.6, color: u.color });
+      emit(player.x, player.y, u.color, 60, 260);
+    } else if (kind === 'mage') {
+      // Spawn 8 meteors in a ring
+      for (var mi = 0; mi < 8; mi++) {
+        var ang = mi * Math.PI * 2 / 8 + Math.random() * 0.3;
+        var dist = 80 + Math.random() * 120;
+        meteorMarkers.push({
+          x: player.x + Math.cos(ang) * dist,
+          y: player.y + Math.sin(ang) * dist,
+          warn: 0.6, impactRadius: 70, damage: 50, impacted: false, _playerCast: true
+        });
+      }
+    } else {
+      // Scout: find farthest enemy in sight, blink behind & strike
+      var _tgt = null, _bestD = 0;
+      var scanSources = [offlineEnemies, offlineBots];
+      for (var ss = 0; ss < scanSources.length; ss++) {
+        var arr = scanSources[ss];
+        for (var ti = 0; ti < arr.length; ti++) {
+          var e = arr[ti]; if (!e.alive) continue;
+          var dx3 = e.x - player.x, dy3 = e.y - player.y;
+          var d2 = dx3 * dx3 + dy3 * dy3;
+          if (d2 > _bestD && d2 < 500 * 500) { _bestD = d2; _tgt = e; }
+        }
+      }
+      if (_tgt) {
+        var ang2 = Math.atan2(_tgt.y - player.y, _tgt.x - player.x);
+        player.x = _tgt.x - Math.cos(ang2) * 30;
+        player.y = _tgt.y - Math.sin(ang2) * 30;
+        _tgt.hp -= 200;
+        emit(_tgt.x, _tgt.y, u.color, 30, 180);
+      }
+    }
+    return true;
+  }
+
+  // Experiment G: rival slain banner
+  function triggerRivalSlainBanner(name) {
+    bossSlainBanner.active = true;
+    bossSlainBanner.timer = 0;
+    bossSlainBanner.duration = 1.5;
+    bossSlainBanner.name = 'YOU SLAIN ' + name + ' THE RIVAL!';
+    bossSlainBanner._rivalMode = true;
+    screenFlash.color = '#ff3366'; screenFlash.alpha = 0.6;
+    screenShake(12, 500);
+  }
   // drawOffScreenEnemyArrows — direction indicators for hostile enemies outside the viewport
   function drawOffScreenEnemyArrows() {
     if (!player) return;
@@ -1203,10 +1671,10 @@ function doLogin() {
     // Shadow / glow
     ctx.shadowColor = comboState.popupColor;
     ctx.shadowBlur = 8;
-    ctx.font = 'bold 19px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; // 32 × 60%
+    ctx.font = 'bold 38px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(0,0,0,0.95)';
+    ctx.lineWidth = 6;
     ctx.strokeText(comboState.popupText, 0, 0);
     ctx.fillStyle = comboState.popupColor;
     ctx.fillText(comboState.popupText, 0, 0);
@@ -1216,6 +1684,126 @@ function doLogin() {
     ctx.fillStyle = '#fff';
     ctx.strokeText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
     ctx.fillText('x ' + comboState.lastShownCount + ' 连杀', 0, 15);
+    ctx.restore();
+    ctx.lineWidth = 1;
+  }
+
+  // Experiment D: BOSS SLAIN banner (shared with rival slain variant)
+  function drawBossSlainBanner() {
+    if (!bossSlainBanner.active) return;
+    var t = bossSlainBanner.timer / bossSlainBanner.duration;
+    var alpha = t < 0.15 ? t / 0.15 : (t > 0.8 ? (1 - t) / 0.2 : 1);
+    var scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.6 : 1.2 - Math.sin((t - 0.2) * 3) * 0.04;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha) * 0.55;
+    ctx.fillStyle = bossSlainBanner._rivalMode ? '#220011' : '#1a0e00';
+    ctx.fillRect(0, H * 0.35, W, H * 0.16);
+    ctx.globalAlpha = Math.max(0, alpha);
+    ctx.translate(W / 2, H * 0.43);
+    ctx.scale(scale, scale);
+    ctx.font = 'bold 48px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 7;
+    var title = bossSlainBanner._rivalMode ? bossSlainBanner.name : 'BOSS SLAIN!';
+    ctx.strokeText(title, 0, 0);
+    var col = bossSlainBanner._rivalMode ? '#ff4080' : '#ffd700';
+    var grad = ctx.createLinearGradient(0, -24, 0, 24);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(0.5, col);
+    grad.addColorStop(1, bossSlainBanner._rivalMode ? '#aa1040' : '#aa7000');
+    ctx.fillStyle = grad;
+    ctx.fillText(title, 0, 0);
+    if (!bossSlainBanner._rivalMode && bossSlainBanner.name) {
+      ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.fillStyle = '#ffdca0';
+      ctx.fillText('— ' + bossSlainBanner.name + ' —', 0, 36);
+    }
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+    ctx.lineWidth = 1;
+  }
+
+  // Experiment D: boss perma buff 3-choice overlay
+  function drawBossBuffChoice() {
+    if (!bossBuffChoice.active) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 22px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 选择永久强化', W / 2, H * 0.34);
+    var cardW = Math.min(W * 0.28, 120), cardH = 140;
+    var gap = 12;
+    var total = cardW * 3 + gap * 2;
+    var startX = (W - total) / 2;
+    var cy = H * 0.40;
+    bossBuffChoice.rects = [];
+    for (var i = 0; i < bossBuffChoice.options.length; i++) {
+      var opt = bossBuffChoice.options[i];
+      var cx = startX + i * (cardW + gap);
+      bossBuffChoice.rects.push({ x: cx, y: cy, w: cardW, h: cardH, idx: i });
+      ctx.fillStyle = '#1a1a2c';
+      ctx.fillRect(cx, cy, cardW, cardH);
+      ctx.strokeStyle = opt.color; ctx.lineWidth = 3;
+      ctx.strokeRect(cx, cy, cardW, cardH);
+      ctx.fillStyle = opt.color;
+      ctx.font = 'bold 36px "Apple Color Emoji", "Segoe UI Emoji", Arial, sans-serif';
+      ctx.fillText(opt.icon, cx + cardW / 2, cy + 52);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.fillText(opt.name, cx + cardW / 2, cy + 92);
+      ctx.fillStyle = '#aaa';
+      ctx.font = '11px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.fillText('永久 · 当局', cx + cardW / 2, cy + 116);
+    }
+    ctx.font = '12px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText('点击卡片选择', W / 2, cy + cardH + 20);
+    ctx.restore();
+    ctx.lineWidth = 1;
+  }
+
+  // Experiment F: synergy center banner
+  function drawSynergyBanner() {
+    if (!synergyBanner.active) return;
+    var t = synergyBanner.timer / synergyBanner.duration;
+    var alpha = t < 0.2 ? t / 0.2 : (t > 0.8 ? (1 - t) / 0.2 : 1);
+    var scale = 1 + Math.sin(Math.min(1, t) * Math.PI) * 0.15;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, alpha);
+    ctx.translate(W / 2, H * 0.30);
+    ctx.scale(scale, scale);
+    ctx.font = 'bold 34px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = synergyBanner.color; ctx.shadowBlur = 14;
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+    ctx.strokeText(synergyBanner.text, 0, 0);
+    ctx.fillStyle = synergyBanner.color;
+    ctx.fillText(synergyBanner.text, 0, 0);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
+    ctx.lineWidth = 1;
+  }
+
+  // Experiment E: world event warning banner (HUD space)
+  function drawWorldEventBanner() {
+    if (!worldEvent.active || !worldEvent.banner) return;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = '#18060c';
+    ctx.fillRect(0, H * 0.125, W, 36);
+    ctx.strokeStyle = '#ffcc33'; ctx.lineWidth = 2;
+    ctx.strokeRect(0, H * 0.125, W, 36);
+    ctx.fillStyle = '#ffcc33';
+    ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var txt = worldEvent.banner;
+    if (worldEvent.phase === 'warning') {
+      txt += '  (' + Math.max(0, Math.ceil(worldEvent.phaseTimer)) + 's)';
+    }
+    ctx.fillText(txt, W / 2, H * 0.125 + 18);
+    ctx.textBaseline = 'alphabetic';
     ctx.restore();
     ctx.lineWidth = 1;
   }
@@ -1968,6 +2556,12 @@ function doLogin() {
 
     // Reset rendering state
     entities = []; particles = []; floats = []; gems = []; coins = []; offlineSkillFx = [];
+    skillPickups = []; eventPickups = []; meteorMarkers = [];
+    bossSlainBanner = { active: false, timer: 0, duration: 1.8, name: '' };
+    bossBuffChoice = { active: false, options: [], rects: [] };
+    worldEvent = { active: false, kind: '', phase: 'idle', phaseTimer: 0, target: null, banner: '', timeLeft: 0, nextAt: 45 };
+    rivalState = { botId: -1, killedBy: 0, nemesisId: -1 };
+    synergyBanner = { active: false, timer: 0, duration: 1.5, text: '', color: '#fff' };
     fireTrails = []; explosionAoe = [];
     groundHazards = []; safeZoneRadius = 500;
     enemyProjectiles = [];
@@ -2481,6 +3075,15 @@ function doLogin() {
         _patrolAngle: Math.random() * Math.PI * 2,
         _nextDecision: 0.5 + Math.random() * 2
       });
+    }
+    // Experiment G: pick a random bot as the player's RIVAL (solo mode only)
+    if (gameMode !== 'team' && offlineBots.length > 0) {
+      var _rivIdx = Math.floor(Math.random() * offlineBots.length);
+      rivalState.botId = offlineBots[_rivIdx].factionId;
+      rivalState.killedBy = 0;
+      rivalState.nemesisId = -1;
+    } else {
+      rivalState.botId = -1; rivalState.killedBy = 0; rivalState.nemesisId = -1;
     }
     // === Generate PUBG-style buildings, crates, walls across the map ===
     _generateBRStructures();
@@ -2998,6 +3601,22 @@ function doLogin() {
             emit(b._aiTarget.x, b._aiTarget.y, '#ff4444', 18, 100);
             // Player killed by bot → spectator
             if (b._aiTarget === player || b._aiTarget.isLocal) {
+              // Experiment G: nemesis tracking — 2 kills by same bot escalates
+              rivalState.killedBy = rivalState.killedBy || 0;
+              rivalState._lastKillerFaction = rivalState._lastKillerFaction || -1;
+              if (rivalState._lastKillerFaction === b.factionId) {
+                rivalState.killedBy++;
+                if (rivalState.killedBy >= 2 && rivalState.nemesisId !== b.factionId) {
+                  rivalState.nemesisId = b.factionId;
+                  b.hp = b.maxHp = Math.round(b.maxHp * 1.5);
+                  b.attackDamage = Math.round(b.attackDamage * 1.3);
+                  b.radius = Math.round((b.radius || 32) * 1.15);
+                  killFeed.push({ text: '⚠ ' + killerName + ' 已升级为你的 NEMESIS!', color: '#ff00aa', time: 6 });
+                }
+              } else {
+                rivalState._lastKillerFaction = b.factionId;
+                rivalState.killedBy = 1;
+              }
               deathCause = '被 ' + killerName + ' 击杀';
               deathTip = deathCause;
               state = 'spectating';
@@ -3048,6 +3667,7 @@ function doLogin() {
     if (stormZone.active && gameTime > (stormZone._shrinkDelay || 45)) {
       stormZone.radius = Math.max(stormZone._minRadius || 80, stormZone.radius - stormZone.shrinkRate * dt);
     }
+    if (stormZone.active && !(stormZone.radius > 1)) stormZone.radius = 1;
     // Player storm damage
     if (stormZone.active && player.alive) {
       var _psd = Math.sqrt((player.x - stormZone.centerX) * (player.x - stormZone.centerX) + (player.y - stormZone.centerY) * (player.y - stormZone.centerY));
@@ -3103,6 +3723,19 @@ function doLogin() {
     applyStrategicBuffs(dt);
     // Combo window tick
     updateComboState(dt);
+    updateSkillPickups(dt);
+    // Experiment D: boss slain banner timer
+    if (bossSlainBanner.active) {
+      bossSlainBanner.timer += dt;
+      if (bossSlainBanner.timer >= bossSlainBanner.duration) bossSlainBanner.active = false;
+    }
+    // Experiment F: synergy banner timer
+    if (synergyBanner.active) {
+      synergyBanner.timer += dt;
+      if (synergyBanner.timer >= synergyBanner.duration) synergyBanner.active = false;
+    }
+    // Experiment E: world events tick
+    updateWorldEvent(dt);
 
     // === Class-based projectile FX update (trail particles) ===
     for (var _fxi = offlineSkillFx.length - 1; _fxi >= 0; _fxi--) {
@@ -3194,10 +3827,12 @@ function doLogin() {
       var _gdx = player.x - _gg.x, _gdy = player.y - _gg.y;
       var _gd = Math.sqrt(_gdx * _gdx + _gdy * _gdy);
       if (_gd < pickupR) {
-        // Collected — grant XP, spawn burst particles, remove
-        playerXP += _gg.xp || 10;
+        // Experiment E: double XP event multiplier
+        var _xpGain = _gg.xp || 10;
+        if (player._doubleXPUntil && gameTime < player._doubleXPUntil) _xpGain *= 2;
+        playerXP += _xpGain;
         emit(_gg.x, _gg.y, '#88ffff', 6, 60);
-        floatText(player.x, player.y - 24, '+' + (_gg.xp || 10) + 'XP', { color: '#88ffdd', size: 11 });
+        floatText(player.x, player.y - 24, '+' + _xpGain + 'XP', { color: '#88ffdd', size: 11 });
         playSound('pickup_gem');
         gems.splice(_gi, 1);
         if (playerXP >= xpToNextLevel) triggerLevelUp();
@@ -3391,9 +4026,22 @@ function doLogin() {
             var _heal = Math.round(player.maxHp * 0.30);
             player.hp = Math.min(player.maxHp, player.hp + _heal);
             floatText(player.x, player.y - 56, '+' + _heal + ' HP', { color: '#4fff80', size: 14 });
-            screenFlash.color = '#f44'; screenFlash.alpha = 0.22;
+            // Experiment D: full-screen flash + heavy shake on bot kill
+            screenFlash.color = '#ffd700'; screenFlash.alpha = 0.55;
+            screenShake(10, 220);
             triggerHitStop('crit');
-            // Boss ('bossTypeId' present on offlineEnemies, not bots, but handled below)
+            dropSkillPickup(closest.x, closest.y, closest.color || '#ffd700');
+            // Experiment G: rival kill special handling
+            if (rivalState.botId === closest.factionId) {
+              playerXP += 80;
+              triggerRivalSlainBanner(closest.name || '宿敌');
+              rivalState.botId = -1;
+            } else if (rivalState.nemesisId === closest.factionId) {
+              playerXP += 120;
+              triggerRivalSlainBanner((closest.name || 'NEMESIS') + ' (NEMESIS)');
+              rivalState.nemesisId = -1;
+              rivalState.killedBy = 0;
+            }
           }
           else { farmKills++; player._farmKills = (player._farmKills || 0) + 1; }
           // Boss kill bonus (Experiment B): legendary XP shard + screen flash.
@@ -3416,6 +4064,13 @@ function doLogin() {
               if (typeof floatText === 'function') floatText(_bx, _by - 30, '★ BOSS SHARD +' + _bossXP + ' XP', { color: '#ffd700', size: 18 });
               screenFlash.color = '#ffd700'; screenFlash.alpha = 0.4;
             }, 400);
+            // Experiment D: slow-mo + BOSS SLAIN banner + 3-choice perma buff
+            triggerHitStop('bossKill');
+            screenShake(18, 700);
+            bossSlainBanner.active = true;
+            bossSlainBanner.timer = 0;
+            bossSlainBanner.name = closest.bossTypeName || 'BOSS';
+            openBossBuffChoice();
           }
           // Kill burst — bigger particles + hit-stop kill level + heavier shake
           emit(closest.x, closest.y, 'kill', { color: closest.color });
@@ -3578,6 +4233,16 @@ function doLogin() {
       if (evolvedSkills[r.result]) continue;
       if ((skillLevels[r.a] || 0) >= 3 && (skillLevels[r.b] || 0) >= 3) {
         evolvedSkills[r.result] = true;
+        // Experiment F: synergy center banner "A × B = RESULT!"
+        var _aN = (SKILL_DATA[r.a] && SKILL_DATA[r.a].name) || r.a;
+        var _bN = (SKILL_DATA[r.b] && SKILL_DATA[r.b].name) || r.b;
+        synergyBanner.active = true;
+        synergyBanner.timer = 0;
+        synergyBanner.duration = 1.5;
+        synergyBanner.text = _aN + ' × ' + _bN + ' = ' + r.name + '!';
+        synergyBanner.color = r.color || '#ffd700';
+        player._synergyColor = r.color || '#ffd700';
+        player._synergyActive = true;
         // Power spike announcement (US-226)
         triggerPowerSpike('POWER UP! ' + r.name);
         // evolveCutscene (US-289): dramatic evolution announcement
@@ -6135,7 +6800,8 @@ function doLogin() {
   var HITSTOP_PRESETS = {
     normal: 0.04,
     crit:   0.08,
-    kill:   0.12
+    kill:   0.12,
+    bossKill: 0.5
   };
   function triggerHitStop(level) {
     var dur = HITSTOP_PRESETS[level];
@@ -7280,6 +7946,10 @@ function doLogin() {
     playerLevel++;
     playerXP = Math.max(0, playerXP - xpToNextLevel);
     xpToNextLevel = 30 + (playerLevel - 1) * 20;
+    // Experiment F: grant class ultimate at Lv5 (once per match)
+    if (playerLevel === 5 && !player._ultimateUnlocked) {
+      grantClassUltimate();
+    }
     // LEVEL UP! visual burst — big floating text + screen flash + ring
     if (player) {
       floatText(player.x, player.y - 50, 'LEVEL UP!', { color: '#ffd700', size: 22 });
@@ -7640,6 +8310,13 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(g.x, g.y, gs * 0.4, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
     }
+
+    // Experiment D: skill loot pickups (gold pillars)
+    drawSkillPickups();
+    // Experiment E: airdrop / vault / meteor world event visuals
+    drawWorldEventWorld();
+    // Strategic point pulse halos (world-space)
+    drawStratPulse();
 
     // Class-based projectile visuals (offline mode: fireball/arrow/slash)
     for (var _fri = 0; _fri < offlineSkillFx.length; _fri++) {
@@ -8138,7 +8815,10 @@ function doLogin() {
     var glowAlpha = 0.12 + Math.sin(gameTime * 3) * 0.05 + rageAlpha;
     ctx.globalAlpha = glowAlpha;
     var furyColor = isFury ? '#f44' : (player.shieldActive ? '#88f' : '#4488ff');
-    var grad = ctx.createRadialGradient(player.x, player.y, player.radius, player.x, player.y, player.radius * 3);
+    // Experiment F: synergy aura tint overrides plain aura when active
+    if (player._synergyActive && player._synergyColor) furyColor = player._synergyColor;
+    var _pr = Math.max(1, player.radius || 1);
+    var grad = ctx.createRadialGradient(player.x, player.y, _pr, player.x, player.y, _pr * 3);
     grad.addColorStop(0, furyColor);
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
@@ -8376,6 +9056,33 @@ function doLogin() {
         ctx.closePath(); ctx.fill();
       }
       ctx.globalAlpha = 1;
+      // Experiment G: rival / nemesis badge + ring
+      var _isRival = rivalState.botId === bp.factionId;
+      var _isNemesis = rivalState.nemesisId === bp.factionId;
+      if (_isRival || _isNemesis) {
+        var _ringPulse = 0.6 + 0.4 * Math.sin(gameTime * 3);
+        ctx.save();
+        ctx.globalAlpha = 0.9 * _ringPulse;
+        ctx.strokeStyle = _isNemesis ? '#ff00aa' : '#ff3333';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 10, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        // Badge above name
+        var _badgeTxt = _isNemesis ? 'NEMESIS' : 'RIVAL';
+        var _badgeCol = _isNemesis ? '#ff00aa' : '#ff4040';
+        ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        var _bw = ctx.measureText(_badgeTxt).width + 8;
+        ctx.fillRect(bp.x - _bw / 2, bp.y - bp.radius - 42, _bw, 14);
+        ctx.strokeStyle = _badgeCol; ctx.lineWidth = 1.5;
+        ctx.strokeRect(bp.x - _bw / 2, bp.y - bp.radius - 42, _bw, 14);
+        ctx.fillStyle = _badgeCol;
+        ctx.fillText(_badgeTxt, bp.x, bp.y - bp.radius - 32);
+        ctx.restore();
+      }
       var bpAngle = bp.facingAngle || 0;
       if (bp._prevX == null) { bp._prevX = bp.x; bp._prevY = bp.y; }
       var _bdx = bp.x - bp._prevX, _bdy = bp.y - bp._prevY;
@@ -9104,6 +9811,30 @@ function doLogin() {
     drawOffScreenEnemyArrows();
     // Combo popup (Double/Triple/Penta/...)
     drawComboPopup();
+    // Experiment F: Ultimate-ready HUD hint
+    if (player && player._ultimateReady) {
+      var _uu = CLASS_ULTIMATES[selectedClass] || CLASS_ULTIMATES.warrior;
+      var _uPulse = 0.6 + 0.4 * Math.sin(gameTime * 5);
+      ctx.save();
+      ctx.globalAlpha = 0.85 * _uPulse;
+      ctx.fillStyle = '#000'; ctx.fillRect(W - 138, H * 0.14, 128, 30);
+      ctx.strokeStyle = _uu.color; ctx.lineWidth = 2;
+      ctx.strokeRect(W - 138, H * 0.14, 128, 30);
+      ctx.globalAlpha = 1;
+      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Apple Color Emoji", Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = _uu.color;
+      ctx.fillText(_uu.icon + ' ' + _uu.name + ' 双击', W - 74, H * 0.14 + 15);
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
+    // Experiment D: BOSS SLAIN + rival banners
+    drawBossSlainBanner();
+    // Experiment F: synergy banner + world event banner
+    drawSynergyBanner();
+    drawWorldEventBanner();
+    // Experiment D: boss perma buff choice overlay (drawn last, blocks input)
+    drawBossBuffChoice();
     // killMilestoneBanner (US-338): draw killBanner with slide animation
     if (killMilestoneBanner.active) {
       killMilestoneBanner.timer += 0.016;
@@ -10931,12 +11662,27 @@ function doLogin() {
   // Double-click for ultimate (mobile-friendly)
   var _lastClickTime = 0;
   canvas.addEventListener('dblclick', function(ev) {
-    if (state === 'playing') useUltimate();
+    if (state === 'playing') {
+      // Experiment F: class ultimate fires on dblclick if unlocked
+      if (player && player._ultimateReady) { castClassUltimate(); return; }
+      useUltimate();
+    }
   });
   canvas.addEventListener('click', function(ev) {
     if (!audioCtx) { initAudio(); if (musicEnabled) startBgm(); } // Init audio on first click (browser policy)
     var r = canvas.getBoundingClientRect();
     var cx = (ev.clientX - r.left) * W / r.width, cy = (ev.clientY - r.top) * H / r.height;
+    // Experiment D: boss perma buff choice (consumes click before game actions)
+    if (bossBuffChoice.active) {
+      for (var _bbi = 0; _bbi < bossBuffChoice.rects.length; _bbi++) {
+        var _bbr = bossBuffChoice.rects[_bbi];
+        if (cx >= _bbr.x && cx <= _bbr.x + _bbr.w && cy >= _bbr.y && cy <= _bbr.y + _bbr.h) {
+          applyBossBuff(_bbr.idx);
+          return;
+        }
+      }
+      return;
+    }
     // Wave 2: level-up card click
     if (state === 'levelUp' && WAVE2_CARD_RECTS.length > 0) {
       for (var cri = 0; cri < WAVE2_CARD_RECTS.length; cri++) {
