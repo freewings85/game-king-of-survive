@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="128" viewBox="0 0 384 128">
+  <!-- 3 mountain variants, each 128×128. Anchor = bottom center (64, 124).
+       Col 0: snowy peak (尖锋雪山)
+       Col 1: rocky ridge (双峰岩岭)
+       Col 2: volcano (活火山, 顶部熔岩 + 烟)  -->
+  <defs>
+    <linearGradient id="rock1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a7a68"/><stop offset="100%" stop-color="#3a3028"/>
+    </linearGradient>
+    <linearGradient id="rock2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9a8878"/><stop offset="100%" stop-color="#4a3a30"/>
+    </linearGradient>
+    <linearGradient id="rockV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a3a2a"/><stop offset="100%" stop-color="#1e1208"/>
+    </linearGradient>
+    <linearGradient id="lava" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffea5a"/><stop offset="60%" stop-color="#ff8a2a"/><stop offset="100%" stop-color="#c42a0a"/>
+    </linearGradient>
+    <radialGradient id="smoke" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d0c8b8" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#a09888" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ================ Mountain 1: Snowy Peak (col 0) ================ -->
+  <g>
+    <!-- ground shadow -->
+    <ellipse cx="64" cy="122" rx="58" ry="8" fill="#000" opacity="0.35"/>
+    <!-- base rock -->
+    <polygon points="8,122 26,86 46,52 64,20 82,50 102,82 120,122"
+             fill="url(#rock1)" stroke="#1e1208" stroke-width="2" stroke-linejoin="round"/>
+    <!-- shadow face (right-side darker) -->
+    <polygon points="64,20 82,50 102,82 120,122 64,122" fill="#2a2018" opacity="0.35"/>
+    <!-- snow cap -->
+    <polygon points="64,20 78,44 86,54 74,50 64,60 54,50 42,54 50,44" fill="#fff" stroke="#1e1208" stroke-width="1.8" stroke-linejoin="round"/>
+    <!-- snow streaks down ridges -->
+    <path d="M64 60 Q60 72 56 82" fill="none" stroke="#f0f4fa" stroke-width="3" stroke-linecap="round"/>
+    <path d="M64 60 Q68 72 72 82" fill="none" stroke="#f0f4fa" stroke-width="3" stroke-linecap="round"/>
+    <!-- rock crevices -->
+    <g stroke="#1e1208" stroke-width="1.2" fill="none">
+      <path d="M30 90 L40 110"/>
+      <path d="M88 80 L100 108"/>
+      <path d="M50 100 L58 118"/>
+    </g>
+    <!-- left highlight -->
+    <polygon points="46,52 64,20 58,30 52,40 46,52" fill="#b8ac96" opacity="0.5"/>
+  </g>
+
+  <!-- ================ Mountain 2: Rocky Ridge (col 1) ================ -->
+  <g transform="translate(128,0)">
+    <ellipse cx="64" cy="122" rx="60" ry="8" fill="#000" opacity="0.35"/>
+    <!-- double-peak silhouette -->
+    <polygon points="4,122 18,98 36,70 50,50 62,64 78,40 92,62 108,88 124,122"
+             fill="url(#rock2)" stroke="#1e1208" stroke-width="2" stroke-linejoin="round"/>
+    <!-- shadow side -->
+    <polygon points="78,40 92,62 108,88 124,122 62,122 62,64" fill="#2a1e14" opacity="0.4"/>
+    <!-- rocky boulders at base -->
+    <g stroke="#1e1208" stroke-width="1.5">
+      <ellipse cx="16" cy="118" rx="10" ry="5" fill="#6a5a48"/>
+      <ellipse cx="108" cy="118" rx="12" ry="6" fill="#6a5a48"/>
+      <circle cx="32" cy="116" r="4" fill="#5a4a38"/>
+      <circle cx="96" cy="114" r="5" fill="#5a4a38"/>
+    </g>
+    <!-- small ridge lines -->
+    <g stroke="#1e1208" stroke-width="1.2" fill="none">
+      <path d="M50 50 L44 82 L40 110"/>
+      <path d="M78 40 L84 70 L90 100"/>
+      <path d="M62 64 L58 92 L54 116"/>
+    </g>
+    <!-- sparse vegetation tufts -->
+    <g fill="#4a7a3a" stroke="#1e3a14" stroke-width="0.8">
+      <ellipse cx="30" cy="104" rx="4" ry="2"/>
+      <ellipse cx="58" cy="112" rx="4" ry="2"/>
+      <ellipse cx="86" cy="108" rx="5" ry="2.5"/>
+    </g>
+    <!-- top highlight -->
+    <polygon points="36,70 50,50 44,60 38,72" fill="#c0b4a0" opacity="0.55"/>
+    <polygon points="62,64 78,40 70,50 64,60" fill="#c0b4a0" opacity="0.5"/>
+  </g>
+
+  <!-- ================ Mountain 3: Volcano (col 2) ================ -->
+  <g transform="translate(256,0)">
+    <ellipse cx="64" cy="122" rx="60" ry="9" fill="#000" opacity="0.4"/>
+    <!-- body -->
+    <polygon points="8,122 28,80 50,42 80,42 100,80 120,122"
+             fill="url(#rockV)" stroke="#0a0604" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="80,42 100,80 120,122 64,122" fill="#000" opacity="0.35"/>
+    <!-- crater rim -->
+    <ellipse cx="65" cy="42" rx="18" ry="5" fill="#1e1208" stroke="#0a0604" stroke-width="1.5"/>
+    <!-- lava inside crater -->
+    <ellipse cx="65" cy="42" rx="14" ry="3.2" fill="url(#lava)"/>
+    <!-- lava flows down -->
+    <path d="M54 42 Q46 64 50 88 Q52 108 56 122" fill="url(#lava)" stroke="#8a1a08" stroke-width="1.5"/>
+    <path d="M76 42 Q82 60 78 84 Q74 104 72 122" fill="url(#lava)" stroke="#8a1a08" stroke-width="1.5"/>
+    <!-- lava glow highlights -->
+    <path d="M54 42 Q49 60 52 80" stroke="#ffea5a" stroke-width="1.5" fill="none" opacity="0.85"/>
+    <path d="M76 42 Q80 58 78 78" stroke="#ffea5a" stroke-width="1.5" fill="none" opacity="0.85"/>
+    <!-- smoke puffs -->
+    <g>
+      <circle cx="56" cy="26" r="10" fill="url(#smoke)"/>
+      <circle cx="70" cy="14" r="12" fill="url(#smoke)"/>
+      <circle cx="82" cy="24" r="9" fill="url(#smoke)"/>
+      <circle cx="64" cy="4" r="8" fill="url(#smoke)"/>
+    </g>
+    <!-- ember sparks -->
+    <g fill="#ffc040">
+      <circle cx="56" cy="34" r="1.2"/><circle cx="74" cy="30" r="1"/><circle cx="68" cy="20" r="1"/>
+    </g>
+    <!-- rock crevices -->
+    <g stroke="#0a0604" stroke-width="1" fill="none">
+      <path d="M30 86 L38 108"/>
+      <path d="M98 86 L92 108"/>
+    </g>
+  </g>
+</svg>

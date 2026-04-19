@@ -1,0 +1,14 @@
+{
+  "image": "mountains.svg",
+  "spriteW": 128,
+  "spriteH": 128,
+  "cols": 3,
+  "rows": 1,
+  "anchor": { "x": 64, "y": 124 },
+  "walkable": false,
+  "variants": [
+    { "name": "snowy_peak",  "col": 0, "row": 0, "bioms": ["snow", "plain"], "rarity": "common" },
+    { "name": "rocky_ridge", "col": 1, "row": 0, "bioms": ["ruins", "plain", "desert"], "rarity": "common" },
+    { "name": "volcano",     "col": 2, "row": 0, "bioms": ["desert", "ruins"], "rarity": "rare", "emitsLight": true }
+  ]
+}
