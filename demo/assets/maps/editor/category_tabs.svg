@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="56" viewBox="0 0 384 56">
+  <!-- Category tabs for editor left panel. 3 tabs × 128×48, inactive + active row.
+       Actually: row 0 = inactive, but we only need 1 row; use 2 rows in 56h for safety.
+       Tabs: Tiles / Structures / Pins — row shows inactive state. Active = use selected palette card frame. -->
+  <defs>
+    <linearGradient id="tabBG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a6a3a"/><stop offset="100%" stop-color="#4a2a14"/>
+    </linearGradient>
+    <linearGradient id="tabBGA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd966"/><stop offset="100%" stop-color="#c89028"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 0: Tiles tab (inactive) -->
+  <g transform="translate(4,4)">
+    <path d="M0 44 L0 8 Q0 4 4 4 L116 4 Q120 4 120 8 L120 44 Z" fill="url(#tabBG)" stroke="#1e1208" stroke-width="2"/>
+    <!-- tile icon: little 2x2 grid -->
+    <g transform="translate(10,14)" stroke="#1e1208" stroke-width="1.2">
+      <rect x="0" y="0" width="10" height="10" fill="#5e9a3a"/>
+      <rect x="10" y="0" width="10" height="10" fill="#c8a54a"/>
+      <rect x="0" y="10" width="10" height="10" fill="#5aa5d8"/>
+      <rect x="10" y="10" width="10" height="10" fill="#b0a898"/>
+    </g>
+    <text x="42" y="30" fill="#f0e8c8" font-family="Arial, system-ui" font-size="15" font-weight="bold">TILES</text>
+  </g>
+
+  <!-- 1: Structures tab (active) -->
+  <g transform="translate(132,4)">
+    <path d="M0 44 L0 8 Q0 4 4 4 L116 4 Q120 4 120 8 L120 44 Z" fill="url(#tabBGA)" stroke="#3a2208" stroke-width="2.5"/>
+    <!-- structure icon: little house -->
+    <g transform="translate(10,12)" stroke="#1e1208" stroke-width="1.5">
+      <rect x="2" y="8" width="16" height="12" fill="#8a5e22"/>
+      <polygon points="0,8 10,0 20,8" fill="#c84a3a"/>
+      <rect x="8" y="14" width="4" height="6" fill="#3a2208"/>
+    </g>
+    <text x="42" y="30" fill="#3a2208" font-family="Arial, system-ui" font-size="15" font-weight="bold">BUILDINGS</text>
+    <!-- active underline glow -->
+    <line x1="0" y1="44" x2="120" y2="44" stroke="#fff4c8" stroke-width="1.5" opacity="0.8"/>
+  </g>
+
+  <!-- 2: Pins tab (inactive) -->
+  <g transform="translate(260,4)">
+    <path d="M0 44 L0 8 Q0 4 4 4 L116 4 Q120 4 120 8 L120 44 Z" fill="url(#tabBG)" stroke="#1e1208" stroke-width="2"/>
+    <!-- pin icon -->
+    <g transform="translate(14,10)" stroke="#1e1208" stroke-width="1.5">
+      <path d="M10 2 Q18 2 18 10 Q18 18 10 26 Q2 18 2 10 Q2 2 10 2 Z" fill="#c84a3a"/>
+      <circle cx="10" cy="10" r="3" fill="#f0e8c8"/>
+    </g>
+    <text x="42" y="30" fill="#f0e8c8" font-family="Arial, system-ui" font-size="15" font-weight="bold">PINS</text>
+  </g>
+</svg>

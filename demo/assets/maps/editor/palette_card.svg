@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="96" viewBox="0 0 192 96">
+  <!-- Palette card frames (64×80 each, 3 states). HoMM3 warm parchment style.
+       col 0 = default, col 1 = hover, col 2 = selected -->
+  <defs>
+    <linearGradient id="cardBG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8d09a"/><stop offset="100%" stop-color="#b89060"/>
+    </linearGradient>
+    <linearGradient id="cardBGH" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fce4ae"/><stop offset="100%" stop-color="#d8a870"/>
+    </linearGradient>
+    <linearGradient id="cardBGS" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffecb0"/><stop offset="100%" stop-color="#f0a040"/>
+    </linearGradient>
+  </defs>
+
+  <!-- col 0 default -->
+  <g transform="translate(8,8)">
+    <rect x="0" y="0" width="48" height="64" rx="4" fill="url(#cardBG)" stroke="#3a2208" stroke-width="2"/>
+    <rect x="4" y="4" width="40" height="40" fill="#4a3a24" stroke="#1e1208" stroke-width="1"/>
+    <!-- corner gold pips -->
+    <circle cx="4" cy="4" r="1.5" fill="#ffd966"/>
+    <circle cx="44" cy="4" r="1.5" fill="#ffd966"/>
+    <circle cx="4" cy="44" r="1.5" fill="#ffd966"/>
+    <circle cx="44" cy="44" r="1.5" fill="#ffd966"/>
+    <!-- label bar -->
+    <rect x="4" y="48" width="40" height="12" fill="#5a3a0a"/>
+    <rect x="4" y="48" width="40" height="2" fill="#8a5e22"/>
+  </g>
+
+  <!-- col 1 hover -->
+  <g transform="translate(72,8)">
+    <rect x="0" y="0" width="48" height="64" rx="4" fill="url(#cardBGH)" stroke="#ffd966" stroke-width="2.5"/>
+    <rect x="4" y="4" width="40" height="40" fill="#5a4a34" stroke="#1e1208" stroke-width="1"/>
+    <circle cx="4" cy="4" r="1.5" fill="#fff4c8"/>
+    <circle cx="44" cy="4" r="1.5" fill="#fff4c8"/>
+    <circle cx="4" cy="44" r="1.5" fill="#fff4c8"/>
+    <circle cx="44" cy="44" r="1.5" fill="#fff4c8"/>
+    <rect x="4" y="48" width="40" height="12" fill="#8a5e22"/>
+    <rect x="4" y="48" width="40" height="2" fill="#ffd966"/>
+    <!-- outer glow hint -->
+    <rect x="-2" y="-2" width="52" height="68" rx="6" fill="none" stroke="#ffd966" stroke-width="1" opacity="0.5"/>
+  </g>
+
+  <!-- col 2 selected -->
+  <g transform="translate(136,8)">
+    <rect x="0" y="0" width="48" height="64" rx="4" fill="url(#cardBGS)" stroke="#ffd700" stroke-width="3"/>
+    <rect x="4" y="4" width="40" height="40" fill="#6a4a24" stroke="#3a2208" stroke-width="1.5"/>
+    <!-- 4 corner gems -->
+    <polygon points="4,4 7,1 10,4 7,7" fill="#ffd700" stroke="#3a2208" stroke-width="0.8"/>
+    <polygon points="38,4 41,1 44,4 41,7" fill="#ffd700" stroke="#3a2208" stroke-width="0.8"/>
+    <polygon points="4,38 7,41 4,44 1,41" fill="#ffd700" stroke="#3a2208" stroke-width="0.8"/>
+    <polygon points="44,38 47,41 44,44 41,41" fill="#ffd700" stroke="#3a2208" stroke-width="0.8"/>
+    <rect x="4" y="48" width="40" height="12" fill="#a04828"/>
+    <rect x="4" y="48" width="40" height="2" fill="#ffd966"/>
+    <!-- selection check -->
+    <polygon points="36,42 42,36 44,38 36,46 30,40 32,38" fill="#4aa54a" stroke="#1e1208" stroke-width="1"/>
+  </g>
+</svg>

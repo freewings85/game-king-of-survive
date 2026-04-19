@@ -1,0 +1,67 @@
+{
+  "icons": {
+    "image": "editor_icons.svg",
+    "iconSize": 32,
+    "cellW": 32,
+    "cellH": 64,
+    "offsetY": 16,
+    "list": [
+      { "idx": 0,  "name": "brush"     },
+      { "idx": 1,  "name": "eraser"    },
+      { "idx": 2,  "name": "bucket"    },
+      { "idx": 3,  "name": "select"    },
+      { "idx": 4,  "name": "pan"       },
+      { "idx": 5,  "name": "pin"       },
+      { "idx": 6,  "name": "grid"      },
+      { "idx": 7,  "name": "undo"      },
+      { "idx": 8,  "name": "redo"      },
+      { "idx": 9,  "name": "save"      },
+      { "idx": 10, "name": "load"      },
+      { "idx": 11, "name": "export"    }
+    ]
+  },
+  "paletteCard": {
+    "image": "palette_card.svg",
+    "cardW": 64,
+    "cardH": 80,
+    "padding": 8,
+    "states": [
+      { "name": "default",  "col": 0 },
+      { "name": "hover",    "col": 1 },
+      { "name": "selected", "col": 2 }
+    ]
+  },
+  "pins": {
+    "image": "pin_icons.svg",
+    "size": 48,
+    "list": [
+      { "idx": 0, "name": "spawn_point",      "color": "#4aa54a", "description": "玩家出生点（绿旗）" },
+      { "idx": 1, "name": "storm_center",     "color": "#6a5aff", "description": "风暴收缩中心（紫旋）" },
+      { "idx": 2, "name": "strategic_point",  "color": "#ffd700", "description": "战略据点（金星）" },
+      { "idx": 3, "name": "boss_spawn",       "color": "#c84a3a", "description": "Boss 刷新点（红骷髅王冠）" },
+      { "idx": 4, "name": "mob_spawn",        "color": "#8a5e22", "description": "小怪刷新点（棕爪印）" }
+    ]
+  },
+  "tabs": {
+    "image": "category_tabs.svg",
+    "tabW": 128,
+    "tabH": 48,
+    "offsetX": 4,
+    "offsetY": 4,
+    "list": [
+      { "idx": 0, "name": "tiles",      "state": "inactive" },
+      { "idx": 1, "name": "structures", "state": "active_example" },
+      { "idx": 2, "name": "pins",       "state": "inactive" }
+    ]
+  },
+  "theme": {
+    "bg":            "#2a1a08",
+    "panel":         "#3a2814",
+    "border":        "#1e1208",
+    "accentGold":    "#ffd700",
+    "accentWarm":    "#ffd966",
+    "text":          "#f0e8c8",
+    "textDim":       "#a89878",
+    "selected":      "#ffecb0"
+  }
+}
