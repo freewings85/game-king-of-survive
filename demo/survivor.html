@@ -227,6 +227,25 @@ function doLogin() {
   var WORLD_W = W * 2, WORLD_H = H * 2;
   var cameraX = 0, cameraY = 0; // camera offset
 
+  // Static handcrafted map (Leo 2026-04-20). Loaded from demo/maps/default.json
+  // and consumed by startOfflineDemo when ready. If fetch fails the game falls
+  // back to the original procedural generation so local file:// still boots.
+  var MAP_DATA = null;
+  (function _loadStaticMap() {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'maps/default.json', true);
+      xhr.onload = function() {
+        if (xhr.status < 400) {
+          try { MAP_DATA = JSON.parse(xhr.responseText); }
+          catch (e) { console.warn('[map] default.json parse failed', e); }
+        }
+      };
+      xhr.onerror = function() { console.warn('[map] default.json load failed'); };
+      xhr.send();
+    } catch (e) {}
+  })();
+
   // === NETWORK (server-authoritative) ===
   var serverUrl = window.location.origin; // same origin as page
   var networkInputTimer = 0;
@@ -1109,6 +1128,53 @@ function doLogin() {
       comboState.popupTimer = 0.93; // 1.4 × 2/3
       comboState.lastShownCount = comboState.count;
       if (typeof playSound === 'function') playSound('combo');
+      // Round 3 K: combo tier buffs — stacking transient rewards
+      if (!player) return;
+      if (comboState.count === 2) {
+        player._comboSpdUntil = gameTime + 5;
+        floatText(player.x, player.y - 40, '+20% 移速 5s', { color: '#88ff66', size: 13 });
+      } else if (comboState.count === 3) {
+        player._comboAtkUntil = gameTime + 5;
+        floatText(player.x, player.y - 40, '+50% 攻击 5s', { color: '#ff8844', size: 14 });
+      } else if (comboState.count === 4) {
+        // RAMPAGE — free ultimate charge
+        player._ultimateUnlocked = true;
+        player._ultimateReady = true;
+        var u = CLASS_ULTIMATES[selectedClass] || CLASS_ULTIMATES.warrior;
+        player._ultimateName = u.name; player._ultimateIcon = u.icon; player._ultimateColor = u.color;
+        floatText(player.x, player.y - 40, '🔓 ULT 免费充能!', { color: '#ffd700', size: 15 });
+      } else if (comboState.count >= 5) {
+        player._comboInvUntil = gameTime + 3;
+        floatText(player.x, player.y - 40, '⚡ 无敌 3s!', { color: '#44ffaa', size: 16 });
+        screenFlash.color = '#44ffaa'; screenFlash.alpha = 0.4;
+      }
+    }
+  }
+  // Round 3 K: shatter debris burst on kill
+  var killShatters = [];
+  function triggerKillShatter(x, y) {
+    killShatters.push({ x: x, y: y, life: 0.28, maxLife: 0.28, rot: (Math.random() - 0.5) * 0.8 });
+  }
+  function updateKillShatters(dt) {
+    for (var i = killShatters.length - 1; i >= 0; i--) {
+      killShatters[i].life -= dt;
+      if (killShatters[i].life <= 0) killShatters.splice(i, 1);
+    }
+  }
+  function drawKillShatters() {
+    if (!R3_ART.killShatter.ready) return;
+    for (var i = 0; i < killShatters.length; i++) {
+      var s = killShatters[i];
+      var t = 1 - s.life / s.maxLife; // 0→1
+      var scale = 0.6 + t * 1.0;
+      var alpha = 1 - t;
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.rot * (1 + t));
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(R3_ART.killShatter.img, -32, -32, 64, 64);
+      ctx.restore();
     }
   }
   function updateComboState(dt) {
@@ -1692,37 +1758,55 @@ function doLogin() {
     ctx.lineWidth = 1;
   }
 
-  // Experiment D: BOSS SLAIN banner (shared with rival slain variant)
+  // Experiment D/H: BOSS / RIVAL / NEMESIS banner (PNG art when available)
   function drawBossSlainBanner() {
     if (!bossSlainBanner.active) return;
     var t = bossSlainBanner.timer / bossSlainBanner.duration;
     var alpha = t < 0.15 ? t / 0.15 : (t > 0.8 ? (1 - t) / 0.2 : 1);
-    var scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.6 : 1.2 - Math.sin((t - 0.2) * 3) * 0.04;
+    var scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.4 : 1.0;
+    // Pick the correct PNG banner
+    var bannerEntry = null;
+    if (bossSlainBanner._nemesisKill && R3_ART.nemesisBanner.ready) bannerEntry = R3_ART.nemesisBanner;
+    else if (bossSlainBanner._rivalMode && !bossSlainBanner._announceMode && R3_ART.rivalBanner.ready) bannerEntry = R3_ART.rivalBanner;
+    else if (!bossSlainBanner._rivalMode && R3_ART.bossBanner.ready) bannerEntry = R3_ART.bossBanner;
     ctx.save();
-    ctx.globalAlpha = Math.max(0, alpha) * 0.55;
-    ctx.fillStyle = bossSlainBanner._rivalMode ? '#220011' : '#1a0e00';
-    ctx.fillRect(0, H * 0.35, W, H * 0.16);
+    // Dim backdrop
+    ctx.globalAlpha = Math.max(0, alpha) * 0.5;
+    ctx.fillStyle = bossSlainBanner._nemesisKill ? '#1a0024' : (bossSlainBanner._rivalMode ? '#220011' : '#1a0e00');
+    ctx.fillRect(0, H * 0.32, W, H * 0.20);
     ctx.globalAlpha = Math.max(0, alpha);
-    ctx.translate(W / 2, H * 0.43);
+    ctx.translate(W / 2, H * 0.42);
     ctx.scale(scale, scale);
-    ctx.font = 'bold 48px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 7;
-    var title = bossSlainBanner._rivalMode ? bossSlainBanner.name : 'BOSS SLAIN!';
-    ctx.strokeText(title, 0, 0);
-    var col = bossSlainBanner._rivalMode ? '#ff4080' : '#ffd700';
-    var grad = ctx.createLinearGradient(0, -24, 0, 24);
-    grad.addColorStop(0, '#fff');
-    grad.addColorStop(0.5, col);
-    grad.addColorStop(1, bossSlainBanner._rivalMode ? '#aa1040' : '#aa7000');
-    ctx.fillStyle = grad;
-    ctx.fillText(title, 0, 0);
-    if (!bossSlainBanner._rivalMode && bossSlainBanner.name) {
-      ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
-      ctx.fillStyle = '#ffdca0';
-      ctx.fillText('— ' + bossSlainBanner.name + ' —', 0, 36);
+    if (bannerEntry && !bossSlainBanner._announceMode) {
+      // PNG banner (512×96 art). Center horizontally.
+      var _bWscale = Math.min(W * 0.92 / 512, 1.1);
+      var _bw = 512 * _bWscale;
+      var _bh = 96 * _bWscale;
+      ctx.drawImage(bannerEntry.img, -_bw / 2, -_bh / 2, _bw, _bh);
+      // Boss species subtitle
+      if (!bossSlainBanner._rivalMode && bossSlainBanner.name) {
+        ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+        ctx.fillStyle = '#ffdca0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('— ' + bossSlainBanner.name + ' —', 0, _bh / 2 + 14);
+        ctx.textBaseline = 'alphabetic';
+      }
+    } else {
+      // Fallback / announcement mode — text banner
+      ctx.font = 'bold 40px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 6;
+      var title = bossSlainBanner._announceMode ? bossSlainBanner.name
+                : bossSlainBanner._nemesisKill ? 'NEMESIS SLAIN!'
+                : bossSlainBanner._rivalMode ? (bossSlainBanner.name || 'RIVAL SLAIN!')
+                : 'BOSS SLAIN!';
+      ctx.strokeText(title, 0, 0);
+      var col = bossSlainBanner._nemesisKill ? '#c490e8' : (bossSlainBanner._rivalMode ? '#ff4080' : '#ffd700');
+      var grad = ctx.createLinearGradient(0, -24, 0, 24);
+      grad.addColorStop(0, '#fff'); grad.addColorStop(0.5, col); grad.addColorStop(1, '#552200');
+      ctx.fillStyle = grad;
+      ctx.fillText(title, 0, 0);
+      ctx.textBaseline = 'alphabetic';
     }
-    ctx.textBaseline = 'alphabetic';
     ctx.restore();
     ctx.lineWidth = 1;
   }
@@ -2856,6 +2940,36 @@ function doLogin() {
   var _brStructures = []; // { type, x, y, w, h, angle, color }
   function _generateBRStructures() {
     _brStructures = [];
+    // Handcrafted map path: take structures verbatim from MAP_DATA.
+    if (MAP_DATA && MAP_DATA.structures && MAP_DATA.structures.length) {
+      for (var msi = 0; msi < MAP_DATA.structures.length; msi++) {
+        var ms = MAP_DATA.structures[msi];
+        // Normalise: editor uses `kind`, renderer still checks `type`.
+        var st = {
+          type: ms.kind || ms.type || 'building',
+          x: ms.x, y: ms.y, w: ms.w, h: ms.h,
+          color: ms.color || '#555565',
+          label: ms.label || null
+        };
+        _brStructures.push(st);
+      }
+      // Collision: landmarks/mountains/buildings/walls/crates/sandbags block;
+      // bridges are passable (skipped).
+      for (var csi = 0; csi < _brStructures.length; csi++) {
+        var _st0 = _brStructures[csi];
+        if (_st0.type === 'bridge') continue;
+        var _stcx0 = _st0.x + _st0.w / 2;
+        var _stcy0 = _st0.y + _st0.h / 2;
+        var _str0 = Math.max(_st0.w, _st0.h) / 2;
+        terrainObstacles.push({
+          x: _stcx0, y: _stcy0, radius: _str0,
+          type: 'rock',
+          _rect: { x: _st0.x, y: _st0.y, width: _st0.w, height: _st0.h },
+          _brStruct: _st0
+        });
+      }
+      return;
+    }
     var _rng = function(seed) { seed = ((seed | 0) * 1103515245 + 12345) & 0x7fffffff; return seed; };
     var _seed = 7654;
     function _rnd() { _seed = _rng(_seed); return (_seed & 0xffff) / 0xffff; }
@@ -2987,6 +3101,77 @@ function doLogin() {
           ctx2.strokeStyle = 'rgba(0,0,0,0.3)'; ctx2.lineWidth = 0.5;
           ctx2.stroke();
         }
+      } else if (s.type === 'bridge') {
+        // Wooden bridge — planks + railings. Passable.
+        ctx2.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx2.fillRect(sx + 3, sy + 3, s.w, s.h);
+        ctx2.fillStyle = s.color || '#8a6a3a';
+        ctx2.fillRect(sx, sy, s.w, s.h);
+        ctx2.strokeStyle = '#5c3e1a'; ctx2.lineWidth = 1.5;
+        var planks = Math.max(3, Math.floor(s.w / 24));
+        for (var pk = 0; pk <= planks; pk++) {
+          var px = sx + pk * (s.w / planks);
+          ctx2.beginPath(); ctx2.moveTo(px, sy); ctx2.lineTo(px, sy + s.h); ctx2.stroke();
+        }
+        ctx2.strokeStyle = '#4a2e12'; ctx2.lineWidth = 3;
+        ctx2.beginPath(); ctx2.moveTo(sx, sy + 2); ctx2.lineTo(sx + s.w, sy + 2); ctx2.stroke();
+        ctx2.beginPath(); ctx2.moveTo(sx, sy + s.h - 2); ctx2.lineTo(sx + s.w, sy + s.h - 2); ctx2.stroke();
+      } else if (s.type === 'mountain') {
+        // Impassable rocky ridge
+        var mcx = sx + s.w / 2, mcy = sy + s.h / 2;
+        ctx2.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx2.beginPath(); ctx2.ellipse(mcx + 4, mcy + 8, s.w * 0.48, s.h * 0.42, 0, 0, Math.PI * 2); ctx2.fill();
+        var mgrad = ctx2.createLinearGradient(mcx, sy, mcx, sy + s.h);
+        var base = s.color || '#8a8a90';
+        mgrad.addColorStop(0, '#ffffff');
+        mgrad.addColorStop(0.25, base);
+        mgrad.addColorStop(1, '#3a3a42');
+        ctx2.fillStyle = mgrad;
+        ctx2.beginPath();
+        ctx2.moveTo(sx, sy + s.h);
+        ctx2.lineTo(sx + s.w * 0.3, sy + s.h * 0.2);
+        ctx2.lineTo(sx + s.w * 0.55, sy + s.h * 0.5);
+        ctx2.lineTo(sx + s.w * 0.8, sy + s.h * 0.15);
+        ctx2.lineTo(sx + s.w, sy + s.h);
+        ctx2.closePath();
+        ctx2.fill();
+        ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 1.5;
+        ctx2.stroke();
+      } else if (s.type === 'landmark') {
+        // Big memorable structure — base + roof + optional label
+        ctx2.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx2.fillRect(sx + 6, sy + 10, s.w, s.h);
+        var lgrad = ctx2.createLinearGradient(sx, sy, sx, sy + s.h);
+        var lbase = s.color || '#b8a060';
+        lgrad.addColorStop(0, '#ffffff');
+        lgrad.addColorStop(0.2, lbase);
+        lgrad.addColorStop(1, '#1c1c24');
+        ctx2.fillStyle = lgrad;
+        ctx2.fillRect(sx, sy, s.w, s.h);
+        // Roof-like top triangle
+        ctx2.fillStyle = 'rgba(255,215,140,0.9)';
+        ctx2.beginPath();
+        ctx2.moveTo(sx, sy);
+        ctx2.lineTo(sx + s.w / 2, sy - s.h * 0.18);
+        ctx2.lineTo(sx + s.w, sy);
+        ctx2.closePath(); ctx2.fill();
+        ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 2;
+        ctx2.strokeRect(sx, sy, s.w, s.h);
+        // Windows
+        ctx2.fillStyle = 'rgba(255,240,180,0.9)';
+        for (var lw = 0; lw < 3; lw++) {
+          ctx2.fillRect(sx + s.w * (0.2 + lw * 0.25), sy + s.h * 0.35, s.w * 0.12, s.h * 0.14);
+        }
+        if (s.label) {
+          ctx2.font = 'bold 14px sans-serif';
+          ctx2.textAlign = 'center';
+          ctx2.lineWidth = 3;
+          ctx2.strokeStyle = 'rgba(0,0,0,0.85)';
+          ctx2.fillStyle = '#ffe8a0';
+          ctx2.strokeText(s.label, sx + s.w / 2, sy - s.h * 0.22);
+          ctx2.fillText(s.label, sx + s.w / 2, sy - s.h * 0.22);
+          ctx2.textAlign = 'left';
+        }
       }
     }
   }
@@ -3003,11 +3188,21 @@ function doLogin() {
 
     // World = screen * 2 (0.5 screen padding on each side). Recompute here in case
     // the viewport changed between page load and game start.
-    WORLD_W = W * 2;
-    WORLD_H = H * 2;
+    if (MAP_DATA && MAP_DATA.width && MAP_DATA.height) {
+      WORLD_W = MAP_DATA.width;
+      WORLD_H = MAP_DATA.height;
+    } else {
+      WORLD_W = W * 2;
+      WORLD_H = H * 2;
+    }
     // Re-center player in freshly-sized world (startGame placed them at old center).
-    player.x = WORLD_W / 2;
-    player.y = WORLD_H / 2;
+    if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length) {
+      var _psp = MAP_DATA.spawnPoints[0];
+      player.x = _psp.x; player.y = _psp.y;
+    } else {
+      player.x = WORLD_W / 2;
+      player.y = WORLD_H / 2;
+    }
 
     // Initialize wave system — wave 1 starts on first update tick
     _initSpawnPoints();
@@ -3040,11 +3235,19 @@ function doLogin() {
       var _tmp = _botArchetypes[_si]; _botArchetypes[_si] = _botArchetypes[_sj]; _botArchetypes[_sj] = _tmp;
     }
     for (var bi = 0; bi < 7; bi++) {
-      // BR spawn: spread around the world at 0.75 × half-diagonal so bots
-      // start at the map perimeter. They converge when the storm shrinks.
+      // BR spawn: prefer handcrafted spawnPoints[1..7] if a static map is loaded.
+      // Fall back to perimeter ring when generating procedurally.
       var bAngle = Math.PI * 2 * bi / 7 + 0.3;
       var _halfDiag = Math.min(WORLD_W, WORLD_H) * 0.38;
       var bDist = _halfDiag + Math.random() * _halfDiag * 0.25;
+      var _botX, _botY;
+      if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length > bi + 1) {
+        var _mspi = MAP_DATA.spawnPoints[bi + 1];
+        _botX = _mspi.x; _botY = _mspi.y;
+      } else {
+        _botX = WORLD_W / 2 + Math.cos(bAngle) * bDist;
+        _botY = WORLD_H / 2 + Math.sin(bAngle) * bDist;
+      }
       var _bc = _botClasses[bi];
       var _arch = _botArchetypes[bi % _botArchetypes.length];
       var _botHP = Math.round((_bc === 'warrior' ? 280 : (_bc === 'mage' ? 200 : 220)) * _arch.hpMul);
@@ -3055,8 +3258,8 @@ function doLogin() {
         archetype: _arch.id,
         archetypeName: _arch.name,
         archetypeColor: _arch.color,
-        x: WORLD_W / 2 + Math.cos(bAngle) * bDist,
-        y: WORLD_H / 2 + Math.sin(bAngle) * bDist,
+        x: _botX,
+        y: _botY,
         playerClass: _bc,
         skinId: _botSkins[bi],
         isBot: true,
@@ -3083,11 +3286,16 @@ function doLogin() {
     // Experiment G: pick a random bot as the player's RIVAL (solo mode only)
     if (gameMode !== 'team' && offlineBots.length > 0) {
       var _rivIdx = Math.floor(Math.random() * offlineBots.length);
-      rivalState.botId = offlineBots[_rivIdx].factionId;
+      var _rivalBot = offlineBots[_rivIdx];
+      rivalState.botId = _rivalBot.factionId;
       rivalState.killedBy = 0;
       rivalState.nemesisId = -1;
+      rivalState._pendingAnnounce = 3.0; // defer 3s so tutorial/HUD settle
+      rivalState._announceName = _rivalBot.name || 'RIVAL';
+      rivalState._announceArch = _rivalBot.archetypeName || '';
     } else {
       rivalState.botId = -1; rivalState.killedBy = 0; rivalState.nemesisId = -1;
+      rivalState._pendingAnnounce = 0;
     }
     // === Generate PUBG-style buildings, crates, walls across the map ===
     _generateBRStructures();
@@ -3112,31 +3320,45 @@ function doLogin() {
     _generateHomm3Decor();
     // Autotile biome grid rebuilds to match current WORLD_W/H
     _biomeGrid = null;
-    // Experiment C: place 3 strategic points on a triangle around world center.
-    // Avoids spawn (320px clearance) and stays inside the storm zone.
+    // Strategic points — handcrafted from MAP_DATA when available (5 fixed),
+    // otherwise fall back to the procedural triangle around map center.
     STRAT_POINTS.pointsInWorld = [];
-    var _spTypes = ['watchtower', 'temple', 'camp'];
-    for (var _spi = 0; _spi < _spTypes.length; _spi++) {
-      var _spAng = Math.PI * 2 * _spi / _spTypes.length - Math.PI / 2;
-      var _spR = Math.min(WORLD_W, WORLD_H) * 0.28;
-      var _spX = WORLD_W / 2 + Math.cos(_spAng) * _spR;
-      var _spY = WORLD_H / 2 + Math.sin(_spAng) * _spR;
-      STRAT_POINTS.pointsInWorld.push({
-        type: _spTypes[_spi], x: _spX, y: _spY,
-        owner: null,      // null / 0 (player) / 1..7 (bot factionId-ish)
-        progress: 0,      // 0..100
-        buffUntil: 0,     // gameTime when buff expires
-        captureRadius: 90 // standing-zone radius
-      });
+    if (MAP_DATA && MAP_DATA.stratPoints && MAP_DATA.stratPoints.length) {
+      for (var _mspI = 0; _mspI < MAP_DATA.stratPoints.length; _mspI++) {
+        var _msp = MAP_DATA.stratPoints[_mspI];
+        STRAT_POINTS.pointsInWorld.push({
+          type: _msp.type || 'camp',
+          x: _msp.x, y: _msp.y,
+          name: _msp.name || null,
+          owner: null, progress: 0, buffUntil: 0,
+          captureRadius: _msp.captureRadius || 90
+        });
+      }
+    } else {
+      var _spTypes = ['watchtower', 'temple', 'camp'];
+      for (var _spi = 0; _spi < _spTypes.length; _spi++) {
+        var _spAng = Math.PI * 2 * _spi / _spTypes.length - Math.PI / 2;
+        var _spR = Math.min(WORLD_W, WORLD_H) * 0.28;
+        var _spX = WORLD_W / 2 + Math.cos(_spAng) * _spR;
+        var _spY = WORLD_H / 2 + Math.sin(_spAng) * _spR;
+        STRAT_POINTS.pointsInWorld.push({
+          type: _spTypes[_spi], x: _spX, y: _spY,
+          owner: null, progress: 0, buffUntil: 0,
+          captureRadius: 90
+        });
+      }
     }
 
-    // Storm zone — starts shrinking after 60s, center = map center
+    // Storm zone — center from MAP_DATA.stormCenter when present.
     stormZone.active = true;
-    // BR pacing: the safe zone starts ~75% of world, holds briefly, then
-    // shrinks fast so all 8 players must converge within ~90s.
     stormZone.radius = Math.max(WORLD_W, WORLD_H) * 0.75;
-    stormZone.centerX = WORLD_W / 2;
-    stormZone.centerY = WORLD_H / 2;
+    if (MAP_DATA && MAP_DATA.stormCenter) {
+      stormZone.centerX = MAP_DATA.stormCenter.x;
+      stormZone.centerY = MAP_DATA.stormCenter.y;
+    } else {
+      stormZone.centerX = WORLD_W / 2;
+      stormZone.centerY = WORLD_H / 2;
+    }
     // BR + MOBA: early minutes are farming, final minute is forced engagement.
     stormZone.shrinkRate = 18; // px/s
     stormZone._shrinkDelay = 30; // farm window before pressure begins
@@ -3149,6 +3371,12 @@ function doLogin() {
   // Named boss camps (Leo spec 2026-04-18): 5 predefined points, position
   // scales with WORLD_W/H so the regions feel coherent at any map size.
   function _bossCamps() {
+    if (MAP_DATA && MAP_DATA.bossPoints && MAP_DATA.bossPoints.length) {
+      // Convert absolute coords to fractional so downstream code still works.
+      return MAP_DATA.bossPoints.map(function(bp) {
+        return { name: bp.name, fx: bp.x / WORLD_W, fy: bp.y / WORLD_H };
+      });
+    }
     return [
       { name: '北岭废墟', fx: 0.50, fy: 0.15 },
       { name: '南岸石阵', fx: 0.50, fy: 0.85 },
@@ -3728,6 +3956,21 @@ function doLogin() {
     // Combo window tick
     updateComboState(dt);
     updateSkillPickups(dt);
+    updateKillShatters(dt);
+    // Round 3 H: announce RIVAL once countdown elapses
+    if (rivalState._pendingAnnounce > 0) {
+      rivalState._pendingAnnounce -= dt;
+      if (rivalState._pendingAnnounce <= 0 && rivalState.botId >= 0) {
+        bossSlainBanner.active = true;
+        bossSlainBanner.timer = 0;
+        bossSlainBanner.duration = 2.4;
+        bossSlainBanner.name = '⚡ 你的 RIVAL: ' + rivalState._announceName +
+                               (rivalState._announceArch ? ' ('+rivalState._announceArch+')' : '');
+        bossSlainBanner._rivalMode = true;
+        bossSlainBanner._announceMode = true;
+        screenFlash.color = '#ff3030'; screenFlash.alpha = 0.3;
+      }
+    }
     // Round 2: drain queued level-ups once banners clear
     if (_levelUpQueue.pending > 0) {
       _levelUpQueue.wait -= dt;
@@ -3925,8 +4168,10 @@ function doLogin() {
       if (pdist > 15) { moveX = pdx/pdist; moveY = pdy/pdist; }
     }
     var _pOldX = player.x, _pOldY = player.y;
-    var _pNewX = player.x + moveX * player.speed * dt;
-    var _pNewY = player.y + moveY * player.speed * dt;
+    // Round 3 K: combo speed buff
+    var _spdMul = (player._comboSpdUntil && gameTime < player._comboSpdUntil) ? 1.20 : 1.0;
+    var _pNewX = player.x + moveX * player.speed * _spdMul * dt;
+    var _pNewY = player.y + moveY * player.speed * _spdMul * dt;
     // Decor collision — slide on walls so movement isn't fully blocked.
     // Radius uses a smaller collision radius than visual (player.radius*0.55)
     // so sprite can visually hug walls but collider only catches the body core.
@@ -4016,6 +4261,8 @@ function doLogin() {
         }
         // Wave 1: damage roll with crit chance
         var _rawDmg = player.attackDamage;
+        // Round 3 K: combo attack buff (+50% for 5s)
+        if (player._comboAtkUntil && gameTime < player._comboAtkUntil) _rawDmg *= 1.5;
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
         closest.hp -= _dmgValue;
@@ -4087,6 +4334,7 @@ function doLogin() {
           }
           // Kill burst — bigger particles + hit-stop kill level + heavier shake
           emit(closest.x, closest.y, 'kill', { color: closest.color });
+          triggerKillShatter(closest.x, closest.y);
           triggerHitStop('kill');
           screenShake('medium');
           floatText(closest.x, closest.y, '+' + Math.floor(player.attackDamage), { color: '#ffd700', size: 16 });
@@ -4149,7 +4397,7 @@ function doLogin() {
       var cdx = e.x - player.x, cdy = e.y - player.y;
       var cd = Math.sqrt(cdx*cdx + cdy*cdy);
       if (cd < player.radius + e.radius + 2) {
-        player.hp -= 3 * dt;
+        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt;
         // Fire a discrete hit feedback at most every 0.4s per enemy
         e._nextHitFxAt = e._nextHitFxAt || 0;
         if (gameTime >= e._nextHitFxAt) {
@@ -4429,6 +4677,8 @@ function doLogin() {
     rock:    { color: '#666', blocking: true, blockProjectile: true, label: '岩石' },
     bush:    { color: '#2a5a2a', blocking: false, stealth: true, label: '灌木' },
     water:   { color: '#2244aa', blocking: false, slowFactor: 0.3, label: '水域' },
+    // deep_water: handcrafted-map rivers — impassable to bodies, projectiles fly over
+    deep_water: { color: '#1e4c90', blocking: true, blockProjectile: false, label: '深水' },
     lava:    { color: '#cc3300', blocking: false, damagePerSec: 15, label: '岩浆' },
     healing: { color: '#44cc88', blocking: false, healPerSec: 5, label: '治疗神殿' },
     speed_pad: { color: '#00c8ff', blocking: false, speedBoost: 1.5, boostDuration: 3, label: '加速带' }
@@ -4503,6 +4753,10 @@ function doLogin() {
   function drawTerrain(ctx, camX, camY) {
     for (var i = 0; i < terrainObstacles.length; i++) {
       var obs = terrainObstacles[i];
+      // Tile-derived obstacles (e.g. handcrafted rivers) are already painted by
+      // the tile layer and by _brStruct, so skip the circle overlay.
+      if (obs._isTileObstacle) continue;
+      if (obs._brStruct) continue;
       var sx = obs.x - camX, sy = obs.y - camY;
       if (sx < -obs.radius - 20 || sx > W + obs.radius + 20 || sy < -obs.radius - 20 || sy > H + obs.radius + 20) continue;
       var tType = terrainTypes[obs.type];
@@ -5337,6 +5591,38 @@ function doLogin() {
     });
   })();
 
+  // Round 3: rival / synergy / kill-juice art pack from demo/assets/r3
+  var R3_ART = {
+    rivalBadge:   { img: new Image(), ready: false },
+    rivalRing:    { img: new Image(), ready: false },
+    rivalBanner:  { img: new Image(), ready: false },
+    nemesisBadge: { img: new Image(), ready: false },
+    nemesisRing:  { img: new Image(), ready: false },
+    nemesisBanner:{ img: new Image(), ready: false },
+    bossBanner:   { img: new Image(), ready: false },
+    killShatter:  { img: new Image(), ready: false },
+    comboFrame:   { img: new Image(), ready: false },
+    synergy: { fire: { img: new Image(), ready: false }, frost: { img: new Image(), ready: false }, lightning: { img: new Image(), ready: false }, venom: { img: new Image(), ready: false }, holy: { img: new Image(), ready: false } }
+  };
+  (function preloadR3() {
+    function load(k, file) { var e = R3_ART[k]; e.img.onload = function() { e.ready = true; }; e.img.src = 'assets/r3/' + file; }
+    function loadSy(k, file) { var e = R3_ART.synergy[k]; e.img.onload = function() { e.ready = true; }; e.img.src = 'assets/r3/' + file; }
+    load('rivalBadge', 'rival_badge.png');
+    load('rivalRing', 'rival_pulse_ring.png');
+    load('rivalBanner', 'rival_slain_banner.png');
+    load('nemesisBadge', 'nemesis_badge.png');
+    load('nemesisRing', 'nemesis_pulse_ring.png');
+    load('nemesisBanner', 'nemesis_slain_banner.png');
+    load('bossBanner', 'boss_slain_banner.png');
+    load('killShatter', 'kill_shatter.png');
+    load('comboFrame', 'combo_frame.png');
+    loadSy('fire', 'synergy_aura_fire.png');
+    loadSy('frost', 'synergy_aura_frost.png');
+    loadSy('lightning', 'synergy_aura_lightning.png');
+    loadSy('venom', 'synergy_aura_venom.png');
+    loadSy('holy', 'synergy_aura_holy.png');
+  })();
+
   // Strategic points (Experiment C, 2026-04-19). Each point has a
   // capture zone (radius 60). Standing in the zone alone progresses the
   // capture bar (0 → 100 in 10s). Once captured, grants a 30s buff.
@@ -5456,19 +5742,49 @@ function doLogin() {
     });
   })();
 
-  // Per-tile biome grid — built once from a seed so variants/seams are stable
-  // across frames. biomeAt returns 'grass' | 'dirt' | 'stone'.
-  var _biomeGrid = null;   // Int8Array, 0=grass 1=dirt 2=stone
+  // Per-tile biome grid. Values 0=grass 1=dirt 2=stone 3=water 4=sand 5=swamp 6=snow.
+  // Ids 0-2 use the homm3 autotile sprite atlas; 3-6 are flat colour fills.
+  var _biomeGrid = null;
   var _biomeCols = 0, _biomeRows = 0;
   function _initBiomeGrid() {
     if (!HOMM3_ART.tilesetMeta) return;
     var tsz = HOMM3_ART.tilesetMeta.tileW;
+    // Handcrafted map: copy tiles[] from MAP_DATA and add water to obstacles.
+    if (MAP_DATA && MAP_DATA.tiles && MAP_DATA.cols && MAP_DATA.rows) {
+      _biomeCols = MAP_DATA.cols;
+      _biomeRows = MAP_DATA.rows;
+      _biomeGrid = new Uint8Array(_biomeCols * _biomeRows);
+      for (var ti = 0; ti < _biomeGrid.length && ti < MAP_DATA.tiles.length; ti++) {
+        _biomeGrid[ti] = MAP_DATA.tiles[ti] | 0;
+      }
+      // Water collision: merge contiguous water tiles per-row into rect obstacles.
+      for (var wy = 0; wy < _biomeRows; wy++) {
+        var wx = 0;
+        while (wx < _biomeCols) {
+          if (_biomeGrid[wy * _biomeCols + wx] === 3) {
+            var runStart = wx;
+            while (wx < _biomeCols && _biomeGrid[wy * _biomeCols + wx] === 3) wx++;
+            var runLen = wx - runStart;
+            var rx = runStart * tsz, ry = wy * tsz, rw = runLen * tsz, rh = tsz;
+            terrainObstacles.push({
+              x: rx + rw / 2, y: ry + rh / 2,
+              radius: Math.max(rw, rh) / 2 * 0.55, // inset so bridge edges stay walkable
+              type: 'deep_water',
+              _rect: { x: rx, y: ry, width: rw, height: rh },
+              _isTileObstacle: true
+            });
+          } else {
+            wx++;
+          }
+        }
+      }
+      return;
+    }
     _biomeCols = Math.ceil(WORLD_W / tsz);
     _biomeRows = Math.ceil(WORLD_H / tsz);
-    _biomeGrid = new Int8Array(_biomeCols * _biomeRows); // zero-init = all grass
+    _biomeGrid = new Uint8Array(_biomeCols * _biomeRows); // zero-init = all grass
     var _s = 5150;
     function rnd() { _s = ((_s | 0) * 1103515245 + 12345) & 0x7fffffff; return (_s & 0xffff) / 0xffff; }
-    // Scatter patches — ellipses. Dirt roughly 1.7% tiles, stone 0.5%.
     var total = _biomeCols * _biomeRows;
     var nDirt = Math.max(6, Math.round(total / 60));
     var nStone = Math.max(2, Math.round(total / 220));
@@ -5489,8 +5805,8 @@ function doLogin() {
         }
       }
     }
-    stamp(1, nDirt, 3, 2);    // dirt — slightly elongated
-    stamp(2, nStone, 2, 2);   // stone — more compact
+    stamp(1, nDirt, 3, 2);
+    stamp(2, nStone, 2, 2);
   }
   function _biomeAt(tx, ty) {
     // Boundary samples read as grass (per ArtDesigner spec)
@@ -5515,11 +5831,45 @@ function doLogin() {
     if (hasSeams) {
       var vgrass = meta.variants.grass, vdirt = meta.variants.dirt, vstone = meta.variants.stone;
       var seamsGD = meta.seams.grass_dirt, seamsGS = meta.seams.grass_stone;
+      // Flat fallback colours for biomes without sprite art (Leo map 2026-04-20).
+      var FLAT_FILL = {
+        3: { base: '#3a74c4', edge: '#1e4c90' }, // water
+        4: { base: '#e0c077', edge: '#b09040' }, // sand
+        5: { base: '#4a5a2c', edge: '#2a3a18' }, // swamp
+        6: { base: '#eef2f8', edge: '#b8c4d4' }  // snow
+      };
       for (var ty = y0; ty < y1; ty++) {
         for (var tx = x0; tx < x1; tx++) {
           var h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
           var self = _biomeAt(tx, ty);
           var tile;
+          if (self >= 3) {
+            var ff = FLAT_FILL[self];
+            if (ff) {
+              ctx.fillStyle = ff.base;
+              ctx.fillRect(tx * tsz, ty * tsz, tsz, tsz);
+              // Subtle hatch so biome reads more solid at distance
+              ctx.fillStyle = ((h & 1) === 0) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+              ctx.fillRect(tx * tsz, ty * tsz, tsz, tsz);
+              if (self === 3) {
+                // Water ripple dashes
+                ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(tx * tsz + 10 + (h & 7), ty * tsz + 20);
+                ctx.lineTo(tx * tsz + 26 + (h & 7), ty * tsz + 20);
+                ctx.moveTo(tx * tsz + 36 - (h & 5), ty * tsz + 44);
+                ctx.lineTo(tx * tsz + 54 - (h & 5), ty * tsz + 44);
+                ctx.stroke();
+              } else if (self === 6) {
+                // Snow sparkle
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillRect(tx * tsz + 8 + (h & 15), ty * tsz + 10 + (h & 11), 2, 2);
+                ctx.fillRect(tx * tsz + 40 - (h & 9), ty * tsz + 48 - (h & 7), 2, 2);
+              }
+            }
+            continue;
+          }
           if (self === 1) {
             tile = vdirt[h % vdirt.length];
           } else if (self === 2) {
@@ -8336,6 +8686,8 @@ function doLogin() {
 
     // Experiment D: skill loot pickups (gold pillars)
     drawSkillPickups();
+    // Round 3 K: kill shatter debris bursts
+    drawKillShatters();
     // Experiment E: airdrop / vault / meteor world event visuals
     drawWorldEventWorld();
     // Strategic point pulse halos (world-space)
@@ -9089,41 +9441,64 @@ function doLogin() {
         isBot: true, color: bp.color || '#f44', shield: bp.shieldActive, skinId: bp.skinId || 'default',
         animState: _bMoving ? 'walk' : 'idle'
       });
-      // Experiment G (round 2): rival / nemesis ring + badge drawn AFTER sprite
-      // so the red glow sits on top of the character art and actually reads.
+      // Experiment H (round 3): rival / nemesis art pack — PNG ring + badge.
       var _rivAlive = (rivalState && rivalState.botId != null && rivalState.botId >= 0);
       var _nemAlive = (rivalState && rivalState.nemesisId != null && rivalState.nemesisId >= 0);
       var _isRival = _rivAlive && rivalState.botId === bp.factionId;
       var _isNemesis = _nemAlive && rivalState.nemesisId === bp.factionId;
       if (_isRival || _isNemesis) {
-        var _ringPulse = 0.6 + 0.4 * Math.sin(gameTime * 3);
-        var _rCol = _isNemesis ? '#ff00aa' : '#ff3333';
+        var _hz = _isNemesis ? 0.8 : 1.0;
+        var _phase = Math.sin(gameTime * Math.PI * _hz);
+        var _ringScale = _isNemesis ? (1 + 0.10 * (_phase * 0.5 + 0.5))
+                                    : (1 + 0.075 * (_phase * 0.5 + 0.5));
+        var _ringAlpha = 0.55 + 0.30 * (_phase * 0.5 + 0.5);
+        var _rCol = _isNemesis ? '#c490e8' : '#ff4040';
+        var _ringEntry = _isNemesis ? R3_ART.nemesisRing : R3_ART.rivalRing;
+        var _badgeEntry = _isNemesis ? R3_ART.nemesisBadge : R3_ART.rivalBadge;
         ctx.save();
-        ctx.globalAlpha = 0.95 * _ringPulse;
-        ctx.strokeStyle = _rCol;
-        ctx.lineWidth = 5;
-        ctx.setLineDash([7, 5]);
-        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 14 + 3 * _ringPulse, 0, Math.PI * 2); ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.globalAlpha = 0.5 + 0.3 * _ringPulse;
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 4, 0, Math.PI * 2); ctx.stroke();
-        ctx.globalAlpha = 0.18 + 0.15 * _ringPulse;
+        if (_ringEntry.ready) {
+          var _rs = 80 * _ringScale * (bp.radius / 28);
+          ctx.globalAlpha = _ringAlpha;
+          ctx.drawImage(_ringEntry.img, bp.x - _rs / 2, bp.y - _rs / 2, _rs, _rs);
+        } else {
+          ctx.globalAlpha = _ringAlpha;
+          ctx.strokeStyle = _rCol; ctx.lineWidth = 5;
+          ctx.setLineDash([7, 5]);
+          ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 16 * _ringScale, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        // Red triangle ⚠ indicator + label above head (round 3 Leo spec)
+        ctx.globalAlpha = 0.7 + 0.3 * (_phase * 0.5 + 0.5);
+        var _triY = bp.y - bp.radius - 30;
         ctx.fillStyle = _rCol;
-        ctx.beginPath(); ctx.arc(bp.x, bp.y, bp.radius + 30, 0, Math.PI * 2); ctx.fill();
-        // Badge above name — emoji icon + label
-        var _badgeTxt = _isNemesis ? '👺 NEMESIS' : '👹 RIVAL';
+        ctx.beginPath();
+        ctx.moveTo(bp.x, _triY);
+        ctx.lineTo(bp.x - 8, _triY + 10);
+        ctx.lineTo(bp.x + 8, _triY + 10);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Arial, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('!', bp.x, _triY + 6);
+        ctx.textBaseline = 'alphabetic';
+        // PNG badge next to triangle
+        var _by = bp.y - bp.radius - 52;
+        if (_badgeEntry.ready) {
+          ctx.globalAlpha = 0.6 + 0.4 * (_phase * 0.5 + 0.5);
+          ctx.drawImage(_badgeEntry.img, bp.x - 12, _by - 8, 24, 24);
+        }
+        // Label
         ctx.globalAlpha = 1;
-        ctx.font = 'bold 13px "Apple Color Emoji", "Segoe UI Emoji", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
-        ctx.textAlign = 'center';
-        var _bw = ctx.measureText(_badgeTxt).width + 14;
-        var _by = bp.y - bp.radius - 46;
+        var _badgeTxt = _isNemesis ? 'NEMESIS' : 'RIVAL';
+        ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+        var _bw = ctx.measureText(_badgeTxt).width + 12;
         ctx.fillStyle = 'rgba(0,0,0,0.85)';
-        ctx.fillRect(bp.x - _bw / 2, _by, _bw, 18);
-        ctx.strokeStyle = _rCol; ctx.lineWidth = 2;
-        ctx.strokeRect(bp.x - _bw / 2, _by, _bw, 18);
+        ctx.fillRect(bp.x - _bw / 2, _by + 18, _bw, 14);
+        ctx.strokeStyle = _rCol; ctx.lineWidth = 1.5;
+        ctx.strokeRect(bp.x - _bw / 2, _by + 18, _bw, 14);
         ctx.fillStyle = _rCol;
-        ctx.fillText(_badgeTxt, bp.x, _by + 14);
+        ctx.textAlign = 'center';
+        ctx.fillText(_badgeTxt, bp.x, _by + 29);
         ctx.restore();
       }
       // Name + archetype + level. Archetype tag uses its own color so
@@ -10276,19 +10651,19 @@ function doLogin() {
       if (!mp.alive) continue;
       var mpx = mmX + (mp.x / WORLD_W) * mmW;
       var mpy = mmY + (mp.y / WORLD_H) * mmH;
-      // Round 2: RIVAL / NEMESIS highlight on minimap — pulsing red halo + dot
+      // Round 3 H: RIVAL / NEMESIS minimap — blink at 2Hz
       var _mpIsRival = (rivalState.botId === mp.factionId);
       var _mpIsNemesis = (rivalState.nemesisId === mp.factionId);
       if (_mpIsRival || _mpIsNemesis) {
-        var _mpPulse = 0.6 + 0.4 * Math.sin(Date.now() * 0.006);
-        ctx.save();
-        ctx.globalAlpha = _mpPulse;
-        ctx.fillStyle = _mpIsNemesis ? '#ff00aa' : '#ff3030';
-        ctx.beginPath(); ctx.arc(mpx, mpy, 9, 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(mpx, mpy, 6, 0, Math.PI * 2); ctx.stroke();
-        ctx.restore();
+        var _mpBlink = (Math.sin(Date.now() * 0.0126) > 0); // ~2Hz square-ish
+        if (_mpBlink) {
+          ctx.save();
+          ctx.fillStyle = _mpIsNemesis ? '#c490e8' : '#ff4040';
+          ctx.beginPath(); ctx.arc(mpx, mpy, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(mpx, mpy, 6, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
       }
       // Class-colored dot with shape indicator
       var mpClass = mp.isLocal ? (player.playerClass || selectedClass) : (mp.characterType || 'warrior');

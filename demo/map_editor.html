@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Map Editor · King of Survive</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; background: #161922; color: #e6e7ee; overflow: hidden; }
+  #app { display: grid; grid-template-rows: 44px 1fr; grid-template-columns: 220px 1fr 240px; height: 100vh; }
+  #topbar { grid-column: 1 / span 3; background: #1f2433; border-bottom: 1px solid #0d0f17; display: flex; align-items: center; padding: 0 10px; gap: 8px; }
+  #topbar h1 { font-size: 14px; margin: 0 12px 0 4px; letter-spacing: 1px; color: #ffd58a; }
+  #topbar .tool { background: #2a2f42; border: 1px solid #3a3f54; color: #e6e7ee; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  #topbar .tool:hover { background: #3a4058; }
+  #topbar .tool.primary { background: #c38a30; border-color: #e0a840; color: #fff; font-weight: bold; }
+  #topbar .spacer { flex: 1; }
+  #topbar .stat { font-size: 11px; color: #9aa0b8; margin-right: 8px; }
+  #palette { background: #1a1e2a; border-right: 1px solid #0d0f17; overflow-y: auto; padding: 8px; }
+  #palette h2 { font-size: 11px; color: #8a92ae; text-transform: uppercase; letter-spacing: 1px; margin: 10px 4px 6px; }
+  .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .p-btn { background: #232836; border: 1px solid #3a3f54; padding: 8px 6px; border-radius: 4px; cursor: pointer; text-align: center; font-size: 11px; transition: 0.15s; }
+  .p-btn:hover { background: #2e3448; }
+  .p-btn.active { border-color: #ffd58a; background: #3a2e18; box-shadow: 0 0 0 2px rgba(255,213,138,0.25); }
+  .p-sw { display: inline-block; width: 16px; height: 16px; border-radius: 3px; margin-right: 4px; vertical-align: middle; border: 1px solid rgba(0,0,0,0.4); }
+  #stage { position: relative; background: #0d0f17; overflow: hidden; }
+  #canvas { position: absolute; inset: 0; cursor: crosshair; display: block; width: 100%; height: 100%; }
+  #inspector { background: #1a1e2a; border-left: 1px solid #0d0f17; padding: 10px; overflow-y: auto; font-size: 12px; }
+  #inspector h2 { font-size: 11px; color: #8a92ae; text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 6px; }
+  #inspector .row { display: grid; grid-template-columns: 80px 1fr; gap: 6px; align-items: center; margin: 4px 0; }
+  #inspector input, #inspector select { background: #232836; color: #e6e7ee; border: 1px solid #3a3f54; border-radius: 3px; padding: 3px 6px; font-size: 12px; width: 100%; }
+  #inspector .del { background: #8a2a2a; border: 1px solid #b04040; color: #fff; padding: 4px 10px; border-radius: 3px; cursor: pointer; margin-top: 8px; font-size: 11px; }
+  .note { color: #8a92ae; font-size: 11px; line-height: 1.5; margin: 4px 2px; }
+  #overlay-hint { position: absolute; right: 10px; bottom: 10px; background: rgba(20,25,35,0.9); padding: 8px 10px; border-radius: 4px; font-size: 11px; color: #c6cadc; pointer-events: none; line-height: 1.6; }
+  .ok { color: #7fce8a; }
+  .warn { color: #f4c86a; }
+  #fileInput { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <h1>🗺 地图编辑器</h1>
+    <button class="tool" id="btnNew">新建</button>
+    <button class="tool" id="btnLoadDefault">加载 default</button>
+    <button class="tool" id="btnLoadFile">从文件加载</button>
+    <input type="file" id="fileInput" accept=".json,application/json" />
+    <button class="tool" id="btnSave">下载 JSON</button>
+    <button class="tool primary" id="btnExport">导出到游戏</button>
+    <div class="spacer"></div>
+    <span class="stat" id="statSize">40×40</span>
+    <span class="stat" id="statZoom">100%</span>
+    <span class="stat" id="statCursor">—</span>
+  </div>
+  <div id="palette"></div>
+  <div id="stage">
+    <canvas id="canvas"></canvas>
+    <div id="overlay-hint">
+      <b>操作:</b><br/>
+      左键 = 放置/画笔<br/>
+      右键拖动 = 平移<br/>
+      滚轮 = 缩放<br/>
+      Shift+左键 = 删除结构/pin<br/>
+      Esc = 取消选择
+    </div>
+  </div>
+  <div id="inspector"></div>
+</div>
+<script>
+(function() {
+'use strict';
+
+// === Configuration ===
+const TS = 64;
+const TILE_TYPES = [
+  { id: 0, name: '草地',  color: '#4d8a44', desc: 'grass' },
+  { id: 1, name: '泥土',  color: '#8a6a3a', desc: 'dirt' },
+  { id: 2, name: '石地',  color: '#8a8a90', desc: 'stone' },
+  { id: 3, name: '水',    color: '#3a74c4', desc: 'water' },
+  { id: 4, name: '沙漠',  color: '#e0c077', desc: 'sand' },
+  { id: 5, name: '沼泽',  color: '#4a5a2c', desc: 'swamp' },
+  { id: 6, name: '雪原',  color: '#eef2f8', desc: 'snow' }
+];
+const STRUCT_KINDS = [
+  { kind: 'building',  name: '小屋',    w: 88,  h: 72,  color: '#55555f' },
+  { kind: 'crate',     name: '木箱',    w: 32,  h: 32,  color: '#886633' },
+  { kind: 'wall',      name: '墙',      w: 16,  h: 128, color: '#606068' },
+  { kind: 'sandbag',   name: '沙袋',    w: 96,  h: 16,  color: '#8a7a5a' },
+  { kind: 'bridge',    name: '桥',      w: 128, h: 128, color: '#8a6a3a' },
+  { kind: 'mountain',  name: '山脉',    w: 96,  h: 96,  color: '#8a8a90' },
+  { kind: 'landmark',  name: '地标',    w: 144, h: 144, color: '#b8a060', label: '新地标' }
+];
+const PIN_KINDS = [
+  { id: 'spawn',       name: '出生点', color: '#7fce8a' },
+  { id: 'strat',       name: '据点',   color: '#f4c86a' },
+  { id: 'boss',        name: 'Boss',   color: '#d04a4a' },
+  { id: 'storm',       name: '风暴中心', color: '#9aa8ff' }
+];
+
+// === State ===
+const state = {
+  data: newMap(40, 40),
+  zoom: 0.4,
+  panX: 30, panY: 30,
+  tool: { mode: 'tile', tileId: 0, structKind: null, pinId: null },
+  isPainting: false,
+  isPanning: false,
+  lastPan: null,
+  selected: null // { kind: 'struct'|'strat'|'boss'|'spawn'|'storm', index: n }
+};
+
+function newMap(cols, rows) {
+  const tiles = new Array(cols * rows).fill(0);
+  const cx = cols * TS / 2, cy = rows * TS / 2;
+  return {
+    name: 'Untitled',
+    version: 1,
+    tileSize: TS,
+    cols, rows,
+    width: cols * TS, height: rows * TS,
+    biomes: [],
+    stormCenter: { x: cx, y: cy },
+    tiles,
+    structures: [],
+    spawnPoints: [],
+    stratPoints: [],
+    bossPoints: []
+  };
+}
+
+// === DOM refs ===
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const stage = document.getElementById('stage');
+const paletteEl = document.getElementById('palette');
+const inspectorEl = document.getElementById('inspector');
+
+// === Palette build ===
+function buildPalette() {
+  paletteEl.innerHTML = '';
+  const h = (s) => { const el = document.createElement('div'); el.innerHTML = s; return el.firstChild; };
+  const addH2 = (t) => { const e = document.createElement('h2'); e.textContent = t; paletteEl.appendChild(e); };
+  const addGrid = () => { const g = document.createElement('div'); g.className = 'p-grid'; paletteEl.appendChild(g); return g; };
+
+  addH2('Tile 画笔');
+  const tileGrid = addGrid();
+  TILE_TYPES.forEach(t => {
+    const b = h(`<div class="p-btn" data-mode="tile" data-id="${t.id}"><span class="p-sw" style="background:${t.color}"></span>${t.name}</div>`);
+    tileGrid.appendChild(b);
+  });
+
+  addH2('结构 (点击放置)');
+  const sGrid = addGrid();
+  STRUCT_KINDS.forEach(s => {
+    const b = h(`<div class="p-btn" data-mode="struct" data-kind="${s.kind}"><span class="p-sw" style="background:${s.color}"></span>${s.name}</div>`);
+    sGrid.appendChild(b);
+  });
+
+  addH2('特殊点');
+  const pGrid = addGrid();
+  PIN_KINDS.forEach(p => {
+    const b = h(`<div class="p-btn" data-mode="pin" data-id="${p.id}"><span class="p-sw" style="background:${p.color}"></span>${p.name}</div>`);
+    pGrid.appendChild(b);
+  });
+
+  addH2('选中工具');
+  const cGrid = addGrid();
+  cGrid.appendChild(h(`<div class="p-btn" data-mode="select">🖱 选取</div>`));
+  cGrid.appendChild(h(`<div class="p-btn" data-mode="pan">✋ 平移</div>`));
+
+  paletteEl.querySelectorAll('.p-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const mode = b.dataset.mode;
+      if (mode === 'tile') state.tool = { mode: 'tile', tileId: Number(b.dataset.id), structKind: null, pinId: null };
+      else if (mode === 'struct') state.tool = { mode: 'struct', tileId: null, structKind: b.dataset.kind, pinId: null };
+      else if (mode === 'pin') state.tool = { mode: 'pin', tileId: null, structKind: null, pinId: b.dataset.id };
+      else state.tool = { mode, tileId: null, structKind: null, pinId: null };
+      state.selected = null;
+      highlightPalette();
+      renderInspector();
+      draw();
+    });
+  });
+  highlightPalette();
+}
+function highlightPalette() {
+  paletteEl.querySelectorAll('.p-btn').forEach(b => {
+    b.classList.remove('active');
+    const m = b.dataset.mode;
+    if (m !== state.tool.mode) return;
+    if (m === 'tile' && Number(b.dataset.id) === state.tool.tileId) b.classList.add('active');
+    else if (m === 'struct' && b.dataset.kind === state.tool.structKind) b.classList.add('active');
+    else if (m === 'pin' && b.dataset.id === state.tool.pinId) b.classList.add('active');
+    else if (m === 'select' || m === 'pan') b.classList.add('active');
+  });
+}
+
+// === Inspector ===
+function renderInspector() {
+  inspectorEl.innerHTML = '';
+  const h = (s) => { const el = document.createElement('div'); el.innerHTML = s; return el.firstChild; };
+
+  // Map metadata
+  const meta = document.createElement('div');
+  meta.innerHTML = `<h2>地图属性</h2>`;
+  meta.appendChild(h(`<div class="row"><label>名称</label><input id="ipName" value="${state.data.name}"/></div>`));
+  meta.appendChild(h(`<div class="row"><label>宽×高(格)</label><input id="ipSize" value="${state.data.cols}x${state.data.rows}"/></div>`));
+  meta.appendChild(h(`<div class="row"><label>tile 大小</label><input id="ipTs" value="${state.data.tileSize}" disabled/></div>`));
+  meta.appendChild(h(`<div class="note">改变格子尺寸会重建画布(tiles 会被清空)</div>`));
+  inspectorEl.appendChild(meta);
+
+  meta.querySelector('#ipName').addEventListener('input', e => { state.data.name = e.target.value; });
+  meta.querySelector('#ipSize').addEventListener('change', e => {
+    const m = String(e.target.value).match(/(\d+)\s*[x×]\s*(\d+)/);
+    if (!m) return;
+    const c = Math.max(8, Math.min(128, Number(m[1])));
+    const r = Math.max(8, Math.min(128, Number(m[2])));
+    if (c !== state.data.cols || r !== state.data.rows) {
+      if (!confirm('调整尺寸将清空 tiles,确认?')) return;
+      state.data = newMap(c, r);
+      fitView(); draw(); renderInspector();
+      document.getElementById('statSize').textContent = `${c}×${r}`;
+    }
+  });
+
+  // Current tool
+  const tool = document.createElement('div');
+  let toolDesc = '';
+  if (state.tool.mode === 'tile') {
+    const t = TILE_TYPES.find(x => x.id === state.tool.tileId);
+    toolDesc = `画笔 · ${t ? t.name : ''}`;
+  } else if (state.tool.mode === 'struct') {
+    toolDesc = `结构 · ${STRUCT_KINDS.find(x => x.kind === state.tool.structKind)?.name || ''}`;
+  } else if (state.tool.mode === 'pin') {
+    toolDesc = `特殊点 · ${PIN_KINDS.find(x => x.id === state.tool.pinId)?.name || ''}`;
+  } else if (state.tool.mode === 'select') {
+    toolDesc = '选取模式';
+  } else if (state.tool.mode === 'pan') {
+    toolDesc = '平移模式';
+  }
+  tool.innerHTML = `<h2>当前工具</h2><div class="note">${toolDesc}</div>`;
+  inspectorEl.appendChild(tool);
+
+  // Selected item
+  if (state.selected) {
+    const sel = document.createElement('div');
+    sel.innerHTML = `<h2>已选中</h2>`;
+    const s = state.selected;
+    if (s.kind === 'struct') {
+      const st = state.data.structures[s.index];
+      if (!st) { state.selected = null; return renderInspector(); }
+      sel.appendChild(h(`<div class="row"><label>类型</label><input id="stKind" value="${st.kind}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>X</label><input id="stX" type="number" value="${Math.round(st.x)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>Y</label><input id="stY" type="number" value="${Math.round(st.y)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>宽</label><input id="stW" type="number" value="${Math.round(st.w)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>高</label><input id="stH" type="number" value="${Math.round(st.h)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>颜色</label><input id="stColor" value="${st.color || ''}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>标签</label><input id="stLabel" value="${st.label || ''}"/></div>`));
+      const del = h(`<button class="del">删除</button>`); sel.appendChild(del);
+      inspectorEl.appendChild(sel);
+      sel.querySelector('#stKind').addEventListener('input', e => { st.kind = e.target.value; draw(); });
+      sel.querySelector('#stX').addEventListener('input', e => { st.x = Number(e.target.value); draw(); });
+      sel.querySelector('#stY').addEventListener('input', e => { st.y = Number(e.target.value); draw(); });
+      sel.querySelector('#stW').addEventListener('input', e => { st.w = Number(e.target.value); draw(); });
+      sel.querySelector('#stH').addEventListener('input', e => { st.h = Number(e.target.value); draw(); });
+      sel.querySelector('#stColor').addEventListener('input', e => { st.color = e.target.value; draw(); });
+      sel.querySelector('#stLabel').addEventListener('input', e => { st.label = e.target.value; draw(); });
+      del.addEventListener('click', () => { state.data.structures.splice(s.index, 1); state.selected = null; renderInspector(); draw(); });
+    } else if (s.kind === 'strat') {
+      const sp = state.data.stratPoints[s.index];
+      sel.appendChild(h(`<div class="row"><label>类型</label><select id="spType"><option value="watchtower"${sp.type==='watchtower'?' selected':''}>哨塔</option><option value="temple"${sp.type==='temple'?' selected':''}>祭坛</option><option value="camp"${sp.type==='camp'?' selected':''}>营地</option></select></div>`));
+      sel.appendChild(h(`<div class="row"><label>名称</label><input id="spName" value="${sp.name || ''}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>X</label><input id="spX" type="number" value="${Math.round(sp.x)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>Y</label><input id="spY" type="number" value="${Math.round(sp.y)}"/></div>`));
+      const del = h(`<button class="del">删除</button>`); sel.appendChild(del);
+      inspectorEl.appendChild(sel);
+      sel.querySelector('#spType').addEventListener('change', e => { sp.type = e.target.value; draw(); });
+      sel.querySelector('#spName').addEventListener('input', e => { sp.name = e.target.value; draw(); });
+      sel.querySelector('#spX').addEventListener('input', e => { sp.x = Number(e.target.value); draw(); });
+      sel.querySelector('#spY').addEventListener('input', e => { sp.y = Number(e.target.value); draw(); });
+      del.addEventListener('click', () => { state.data.stratPoints.splice(s.index, 1); state.selected = null; renderInspector(); draw(); });
+    } else if (s.kind === 'boss') {
+      const bp = state.data.bossPoints[s.index];
+      sel.appendChild(h(`<div class="row"><label>名称</label><input id="bpName" value="${bp.name || ''}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>X</label><input id="bpX" type="number" value="${Math.round(bp.x)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>Y</label><input id="bpY" type="number" value="${Math.round(bp.y)}"/></div>`));
+      const del = h(`<button class="del">删除</button>`); sel.appendChild(del);
+      inspectorEl.appendChild(sel);
+      sel.querySelector('#bpName').addEventListener('input', e => { bp.name = e.target.value; draw(); });
+      sel.querySelector('#bpX').addEventListener('input', e => { bp.x = Number(e.target.value); draw(); });
+      sel.querySelector('#bpY').addEventListener('input', e => { bp.y = Number(e.target.value); draw(); });
+      del.addEventListener('click', () => { state.data.bossPoints.splice(s.index, 1); state.selected = null; renderInspector(); draw(); });
+    } else if (s.kind === 'spawn') {
+      const pt = state.data.spawnPoints[s.index];
+      sel.appendChild(h(`<div class="row"><label>X</label><input id="spwX" type="number" value="${Math.round(pt.x)}"/></div>`));
+      sel.appendChild(h(`<div class="row"><label>Y</label><input id="spwY" type="number" value="${Math.round(pt.y)}"/></div>`));
+      const del = h(`<button class="del">删除</button>`); sel.appendChild(del);
+      inspectorEl.appendChild(sel);
+      sel.querySelector('#spwX').addEventListener('input', e => { pt.x = Number(e.target.value); draw(); });
+      sel.querySelector('#spwY').addEventListener('input', e => { pt.y = Number(e.target.value); draw(); });
+      del.addEventListener('click', () => { state.data.spawnPoints.splice(s.index, 1); state.selected = null; renderInspector(); draw(); });
+    }
+  }
+
+  // Counts
+  const counts = document.createElement('div');
+  counts.innerHTML = `<h2>统计</h2>
+    <div class="note">结构: ${state.data.structures.length}</div>
+    <div class="note">据点: ${state.data.stratPoints.length} / Boss: ${state.data.bossPoints.length}</div>
+    <div class="note">出生点: ${state.data.spawnPoints.length}</div>
+    <div class="note">风暴中心: (${Math.round(state.data.stormCenter.x)}, ${Math.round(state.data.stormCenter.y)})</div>`;
+  inspectorEl.appendChild(counts);
+}
+
+// === Canvas sizing & coord transforms ===
+function resizeCanvas() {
+  const r = stage.getBoundingClientRect();
+  canvas.width = r.width * devicePixelRatio;
+  canvas.height = r.height * devicePixelRatio;
+  canvas.style.width = r.width + 'px';
+  canvas.style.height = r.height + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  draw();
+}
+function worldFromScreen(sx, sy) {
+  return { x: (sx - state.panX) / state.zoom, y: (sy - state.panY) / state.zoom };
+}
+function screenFromWorld(wx, wy) {
+  return { x: wx * state.zoom + state.panX, y: wy * state.zoom + state.panY };
+}
+
+function fitView() {
+  const r = stage.getBoundingClientRect();
+  const sx = r.width / state.data.width;
+  const sy = r.height / state.data.height;
+  state.zoom = Math.min(sx, sy) * 0.92;
+  state.panX = (r.width - state.data.width * state.zoom) / 2;
+  state.panY = (r.height - state.data.height * state.zoom) / 2;
+  document.getElementById('statZoom').textContent = Math.round(state.zoom * 100) + '%';
+}
+
+// === Draw ===
+function draw() {
+  const r = stage.getBoundingClientRect();
+  ctx.fillStyle = '#0d0f17';
+  ctx.fillRect(0, 0, r.width, r.height);
+
+  const z = state.zoom;
+  const tilePx = TS * z;
+  const wW = state.data.width * z, wH = state.data.height * z;
+
+  // Tiles
+  for (let ty = 0; ty < state.data.rows; ty++) {
+    for (let tx = 0; tx < state.data.cols; tx++) {
+      const tid = state.data.tiles[ty * state.data.cols + tx] | 0;
+      const c = TILE_TYPES[tid] ? TILE_TYPES[tid].color : '#444';
+      ctx.fillStyle = c;
+      ctx.fillRect(state.panX + tx * tilePx, state.panY + ty * tilePx, tilePx + 0.5, tilePx + 0.5);
+    }
+  }
+  // Tile grid
+  if (z > 0.35) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let tx = 0; tx <= state.data.cols; tx++) {
+      ctx.moveTo(state.panX + tx * tilePx, state.panY);
+      ctx.lineTo(state.panX + tx * tilePx, state.panY + wH);
+    }
+    for (let ty = 0; ty <= state.data.rows; ty++) {
+      ctx.moveTo(state.panX, state.panY + ty * tilePx);
+      ctx.lineTo(state.panX + wW, state.panY + ty * tilePx);
+    }
+    ctx.stroke();
+  }
+  // World bounds
+  ctx.strokeStyle = '#ffd58a'; ctx.lineWidth = 2;
+  ctx.strokeRect(state.panX, state.panY, wW, wH);
+
+  // Structures
+  state.data.structures.forEach((s, i) => {
+    const p = screenFromWorld(s.x, s.y);
+    const w = s.w * z, h = s.h * z;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(p.x + 3, p.y + 3, w, h);
+    ctx.fillStyle = s.color || '#666';
+    ctx.fillRect(p.x, p.y, w, h);
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1;
+    ctx.strokeRect(p.x, p.y, w, h);
+    if (s.kind === 'landmark' && s.label && z > 0.25) {
+      ctx.fillStyle = '#ffe8a0'; ctx.font = 'bold ' + Math.max(10, Math.round(14 * z)) + 'px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s.label, p.x + w / 2, p.y - 4);
+      ctx.textAlign = 'left';
+    }
+    if (state.selected && state.selected.kind === 'struct' && state.selected.index === i) {
+      ctx.strokeStyle = '#ffd58a'; ctx.lineWidth = 2; ctx.strokeRect(p.x - 2, p.y - 2, w + 4, h + 4);
+    }
+  });
+
+  // Pins
+  const drawPin = (p, color, label, sel) => {
+    const s = screenFromWorld(p.x, p.y);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath(); ctx.arc(s.x + 2, s.y + 2, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = sel ? '#ffd58a' : '#fff'; ctx.lineWidth = sel ? 3 : 1.5; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(label, s.x, s.y + 4);
+    ctx.textAlign = 'left';
+  };
+  state.data.spawnPoints.forEach((p, i) => drawPin(p, '#3da853', 'S', state.selected?.kind === 'spawn' && state.selected.index === i));
+  state.data.stratPoints.forEach((p, i) => drawPin(p, '#d09a30', 'P', state.selected?.kind === 'strat' && state.selected.index === i));
+  state.data.bossPoints.forEach((p, i) => drawPin(p, '#c03030', 'B', state.selected?.kind === 'boss' && state.selected.index === i));
+  if (state.data.stormCenter) drawPin(state.data.stormCenter, '#7a8ae0', '⦿', false);
+}
+
+// === Interaction ===
+let activeButton = 0;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  activeButton = e.button;
+  if (e.button === 2 || state.tool.mode === 'pan') {
+    state.isPanning = true;
+    state.lastPan = { x: e.clientX, y: e.clientY };
+    return;
+  }
+  const w = worldFromScreen(sx, sy);
+  // Shift+click → delete under cursor
+  if (e.shiftKey) {
+    if (tryDeleteAt(w)) { draw(); renderInspector(); return; }
+  }
+  // Tile paint mode
+  if (state.tool.mode === 'tile') {
+    state.isPainting = true;
+    paintTileAt(w);
+    draw();
+    return;
+  }
+  // Place struct
+  if (state.tool.mode === 'struct') {
+    const def = STRUCT_KINDS.find(k => k.kind === state.tool.structKind);
+    if (!def) return;
+    const s = { kind: def.kind, x: Math.round(w.x - def.w / 2), y: Math.round(w.y - def.h / 2), w: def.w, h: def.h, color: def.color };
+    if (def.label) s.label = def.label;
+    state.data.structures.push(s);
+    state.selected = { kind: 'struct', index: state.data.structures.length - 1 };
+    draw(); renderInspector();
+    return;
+  }
+  // Place pin
+  if (state.tool.mode === 'pin') {
+    const pid = state.tool.pinId;
+    if (pid === 'spawn') {
+      state.data.spawnPoints.push({ x: Math.round(w.x), y: Math.round(w.y) });
+      state.selected = { kind: 'spawn', index: state.data.spawnPoints.length - 1 };
+    } else if (pid === 'strat') {
+      state.data.stratPoints.push({ type: 'camp', name: '新据点', x: Math.round(w.x), y: Math.round(w.y) });
+      state.selected = { kind: 'strat', index: state.data.stratPoints.length - 1 };
+    } else if (pid === 'boss') {
+      state.data.bossPoints.push({ name: '新 Boss 点', x: Math.round(w.x), y: Math.round(w.y) });
+      state.selected = { kind: 'boss', index: state.data.bossPoints.length - 1 };
+    } else if (pid === 'storm') {
+      state.data.stormCenter = { x: Math.round(w.x), y: Math.round(w.y) };
+    }
+    draw(); renderInspector();
+    return;
+  }
+  // Select
+  if (state.tool.mode === 'select') {
+    const hit = findHit(w);
+    state.selected = hit;
+    draw(); renderInspector();
+  }
+});
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  if (state.isPanning) {
+    state.panX += e.clientX - state.lastPan.x;
+    state.panY += e.clientY - state.lastPan.y;
+    state.lastPan = { x: e.clientX, y: e.clientY };
+    draw(); return;
+  }
+  const w = worldFromScreen(sx, sy);
+  const tx = Math.floor(w.x / TS), ty = Math.floor(w.y / TS);
+  document.getElementById('statCursor').textContent = `tile ${tx},${ty} · px ${Math.round(w.x)},${Math.round(w.y)}`;
+  if (state.isPainting && state.tool.mode === 'tile') {
+    paintTileAt(w);
+    draw();
+  }
+});
+window.addEventListener('mouseup', () => {
+  state.isPainting = false; state.isPanning = false;
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const w = worldFromScreen(sx, sy);
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  state.zoom = Math.max(0.1, Math.min(3, state.zoom * factor));
+  // Pin so cursor stays on same world point
+  state.panX = sx - w.x * state.zoom;
+  state.panY = sy - w.y * state.zoom;
+  document.getElementById('statZoom').textContent = Math.round(state.zoom * 100) + '%';
+  draw();
+}, { passive: false });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { state.selected = null; draw(); renderInspector(); }
+});
+
+function paintTileAt(w) {
+  const tx = Math.floor(w.x / TS), ty = Math.floor(w.y / TS);
+  if (tx < 0 || ty < 0 || tx >= state.data.cols || ty >= state.data.rows) return;
+  state.data.tiles[ty * state.data.cols + tx] = state.tool.tileId | 0;
+}
+function tryDeleteAt(w) {
+  // structs
+  for (let i = state.data.structures.length - 1; i >= 0; i--) {
+    const s = state.data.structures[i];
+    if (w.x >= s.x && w.x <= s.x + s.w && w.y >= s.y && w.y <= s.y + s.h) {
+      state.data.structures.splice(i, 1);
+      if (state.selected && state.selected.kind === 'struct' && state.selected.index === i) state.selected = null;
+      return true;
+    }
+  }
+  // pins
+  const pinHit = findHit(w);
+  if (pinHit && pinHit.kind !== 'struct') {
+    const list = pinHit.kind === 'spawn' ? state.data.spawnPoints : pinHit.kind === 'strat' ? state.data.stratPoints : pinHit.kind === 'boss' ? state.data.bossPoints : null;
+    if (list) { list.splice(pinHit.index, 1); state.selected = null; return true; }
+  }
+  return false;
+}
+function findHit(w) {
+  // Pins first (larger hit area)
+  const testPins = [
+    { kind: 'spawn', arr: state.data.spawnPoints },
+    { kind: 'strat', arr: state.data.stratPoints },
+    { kind: 'boss', arr: state.data.bossPoints }
+  ];
+  for (const t of testPins) {
+    for (let i = 0; i < t.arr.length; i++) {
+      const p = t.arr[i];
+      const d = Math.hypot(w.x - p.x, w.y - p.y);
+      if (d < 16 / state.zoom) return { kind: t.kind, index: i };
+    }
+  }
+  // Structures
+  for (let i = state.data.structures.length - 1; i >= 0; i--) {
+    const s = state.data.structures[i];
+    if (w.x >= s.x && w.x <= s.x + s.w && w.y >= s.y && w.y <= s.y + s.h) return { kind: 'struct', index: i };
+  }
+  return null;
+}
+
+// === File ops ===
+document.getElementById('btnNew').addEventListener('click', () => {
+  if (!confirm('新建会清空当前地图,确认?')) return;
+  state.data = newMap(state.data.cols, state.data.rows);
+  state.selected = null;
+  fitView(); draw(); renderInspector();
+});
+document.getElementById('btnLoadDefault').addEventListener('click', () => {
+  fetch('maps/default.json').then(r => r.json()).then(d => {
+    loadMapData(d);
+  }).catch(e => alert('加载 default.json 失败: ' + e.message));
+});
+document.getElementById('btnLoadFile').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { loadMapData(JSON.parse(r.result)); }
+    catch (err) { alert('JSON 解析失败: ' + err.message); }
+  };
+  r.readAsText(f);
+});
+document.getElementById('btnSave').addEventListener('click', () => {
+  const str = JSON.stringify(state.data, null, 2);
+  const blob = new Blob([str], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (state.data.name || 'map') + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('btnExport').addEventListener('click', () => {
+  const str = JSON.stringify(state.data, null, 2);
+  const blob = new Blob([str], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'default.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('已下载 default.json\n将此文件放到 demo/maps/default.json 即可替换游戏主地图');
+});
+function loadMapData(d) {
+  if (!d || !d.cols || !d.rows || !d.tiles) { alert('地图数据无效'); return; }
+  state.data = Object.assign(newMap(d.cols, d.rows), d);
+  state.data.tiles = Array.from(d.tiles);
+  state.data.structures = d.structures || [];
+  state.data.spawnPoints = d.spawnPoints || [];
+  state.data.stratPoints = d.stratPoints || [];
+  state.data.bossPoints = d.bossPoints || [];
+  state.data.stormCenter = d.stormCenter || { x: d.width / 2, y: d.height / 2 };
+  state.selected = null;
+  fitView(); draw(); renderInspector();
+  document.getElementById('statSize').textContent = `${d.cols}×${d.rows}`;
+}
+
+// === Boot ===
+function boot() {
+  buildPalette();
+  renderInspector();
+  fitView();
+  resizeCanvas();
+  // Try load default on boot (best effort)
+  fetch('maps/default.json').then(r => r.ok ? r.json() : null).then(d => {
+    if (d) loadMapData(d);
+  }).catch(()=>{});
+}
+window.addEventListener('resize', resizeCanvas);
+boot();
+
+})();
+</script>
+</body>
+</html>
