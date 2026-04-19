@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="320" viewBox="0 0 256 320">
+  <!-- HoMM3 bright cartoon: central landmark — Crystal Sanctum
+       饱和紫水晶 + 金基座 + 翠绿光晕；可远望识别。 -->
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="55%" r="55%">
+      <stop offset="0%" stop-color="#aaff88" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#6ad06a" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#6ad06a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="crystal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0b8ff"/>
+      <stop offset="40%" stop-color="#b068e8"/>
+      <stop offset="100%" stop-color="#5a2a8a"/>
+    </linearGradient>
+    <linearGradient id="crystal2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd0ff"/>
+      <stop offset="100%" stop-color="#8848c8"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8cf78"/>
+      <stop offset="60%" stop-color="#a67a2a"/>
+      <stop offset="100%" stop-color="#5c3a10"/>
+    </linearGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0c8b0"/>
+      <stop offset="100%" stop-color="#6a604a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 地面阴影 / 光晕 -->
+  <ellipse cx="128" cy="290" rx="112" ry="26" fill="#000" opacity="0.35"/>
+  <circle cx="128" cy="180" r="140" fill="url(#halo)"/>
+
+  <!-- 石阶基座（三层） -->
+  <g stroke="#2a1a08" stroke-width="2" stroke-linejoin="round">
+    <polygon points="24,298 232,298 210,276 46,276" fill="url(#stone)"/>
+    <polygon points="46,276 210,276 192,258 64,258" fill="url(#stone)"/>
+    <polygon points="64,258 192,258 176,242 80,242" fill="url(#stone)"/>
+  </g>
+
+  <!-- 金基座 -->
+  <g stroke="#3a2208" stroke-width="2.5" stroke-linejoin="round">
+    <polygon points="80,242 176,242 168,212 88,212" fill="url(#base)"/>
+    <polygon points="88,212 168,212 160,202 96,202" fill="#ffd966"/>
+    <rect x="96" y="202" width="64" height="6" fill="#8a5a18" stroke="none"/>
+    <!-- 金饰纹 -->
+    <circle cx="100" cy="228" r="4" fill="#ffd966" stroke="#3a2208" stroke-width="1.5"/>
+    <circle cx="128" cy="230" r="5" fill="#ffee88" stroke="#3a2208" stroke-width="1.5"/>
+    <circle cx="156" cy="228" r="4" fill="#ffd966" stroke="#3a2208" stroke-width="1.5"/>
+  </g>
+
+  <!-- 侧翼小水晶 -->
+  <g stroke="#2a0840" stroke-width="2.5" stroke-linejoin="round">
+    <polygon points="68,210 82,170 96,210 82,220" fill="url(#crystal2)"/>
+    <polygon points="160,210 174,170 188,210 174,220" fill="url(#crystal2)"/>
+  </g>
+
+  <!-- 中央主水晶（大六棱柱） -->
+  <g stroke="#2a0840" stroke-width="3" stroke-linejoin="round">
+    <!-- 柱身 -->
+    <polygon points="104,200 152,200 160,110 96,110" fill="url(#crystal)"/>
+    <!-- 顶端尖锥 -->
+    <polygon points="96,110 160,110 128,30" fill="url(#crystal)"/>
+    <!-- 左侧高光 -->
+    <polygon points="104,200 120,200 120,110 104,110" fill="#e0a8ff" opacity="0.55"/>
+    <polygon points="104,110 120,110 128,70" fill="#e0a8ff" opacity="0.5"/>
+    <!-- 中线亮面 -->
+    <polyline points="128,30 128,200" fill="none" stroke="#ffe0ff" stroke-width="2" opacity="0.7"/>
+  </g>
+
+  <!-- 顶部星芒 -->
+  <g fill="#fffbd0" stroke="#ffd700" stroke-width="1.5">
+    <polygon points="128,6 132,24 150,28 132,32 128,50 124,32 106,28 124,24"/>
+  </g>
+
+  <!-- 浮空小水晶碎片 -->
+  <g stroke="#2a0840" stroke-width="1.5" stroke-linejoin="round">
+    <polygon points="40,120 48,108 56,120 48,130" fill="#d48aff"/>
+    <polygon points="200,140 210,126 220,140 210,152" fill="#d48aff"/>
+    <polygon points="52,180 58,172 64,180 58,188" fill="#e8a8ff"/>
+    <polygon points="196,92 204,82 212,92 204,102" fill="#e8a8ff"/>
+  </g>
+
+  <!-- 底部台阶高光 -->
+  <polyline points="46,276 210,276" fill="none" stroke="#fff4c8" stroke-width="1.2" opacity="0.7"/>
+  <polyline points="64,258 192,258" fill="none" stroke="#fff4c8" stroke-width="1.2" opacity="0.6"/>
+</svg>
