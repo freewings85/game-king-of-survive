@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" shape-rendering="geometricPrecision">
+  <!-- River autotile 256×256 = 4×4 @ 64px. 4-bit NESW mask index.
+       bit: N=1, E=2, S=4, W=8. grid layout:
+         (col,row) = (mask & 3, mask >> 2)
+         index = col + row*4  →  but easier: tile[mask] at (mask%4, mask/4)
+       Row 0: masks 0,1,2,3  (0=pond, 1=N, 2=E, 3=NE)
+       Row 1: masks 4,5,6,7  (4=S, 5=NS, 6=ES, 7=NES)
+       Row 2: masks 8,9,10,11 (8=W, 9=NW, 10=EW, 11=NEW)
+       Row 3: masks 12..15    (12=SW, 13=NSW, 14=ESW, 15=NESW cross)
+  -->
+  <defs>
+    <linearGradient id="wat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ac2e8"/>
+      <stop offset="100%" stop-color="#2a6a8a"/>
+    </linearGradient>
+    <linearGradient id="grs" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5e9a3a"/>
+      <stop offset="100%" stop-color="#3a6a22"/>
+    </linearGradient>
+    <!-- Single tile symbol: param via x/y/w/h clip, then we assemble by stamping -->
+  </defs>
+
+  <style>
+    .grass { fill: url(#grs); }
+    .water { fill: url(#wat); stroke: #2a4a5a; stroke-width: 1.4; stroke-linejoin: round; }
+    .bank  { fill: none; stroke: #6a4a1e; stroke-width: 1.2; }
+    .wave  { fill: none; stroke: #c4e8f4; stroke-width: 0.9; opacity: 0.75; stroke-linecap: round; }
+    .dot   { fill: #8a3; opacity: 0.6; }
+  </style>
+
+  <!-- Helper macro via repeated manual shapes. River path width = 28px centered. -->
+  <!-- We'll define each tile explicitly. center = 32. river half-width = 14. -->
+
+  <!-- ====== Row 0 ====== -->
+  <!-- mask 0 : isolated pond -->
+  <g>
+    <rect width="64" height="64" class="grass"/>
+    <circle cx="32" cy="32" r="18" class="water"/>
+    <ellipse cx="28" cy="28" rx="8" ry="3" class="wave"/>
+    <ellipse cx="36" cy="38" rx="6" ry="2" class="wave"/>
+  </g>
+  <!-- mask 1 : N only (dead-end from top) -->
+  <g transform="translate(64,0)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 34 Q46 46 32 46 Q18 46 18 34 Z" class="water"/>
+    <line x1="22" y1="8" x2="22" y2="34" class="wave"/>
+    <line x1="42" y1="6" x2="42" y2="36" class="wave"/>
+  </g>
+  <!-- mask 2 : E only -->
+  <g transform="translate(128,0)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M64 18 L64 46 L30 46 Q18 46 18 32 Q18 18 30 18 Z" class="water"/>
+    <line x1="56" y1="22" x2="30" y2="22" class="wave"/>
+    <line x1="58" y1="42" x2="28" y2="42" class="wave"/>
+  </g>
+  <!-- mask 3 : NE (elbow from N to E) -->
+  <g transform="translate(192,0)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 32 Q46 46 64 46 L64 18 Q52 18 46 14 L46 0 Z" class="water"/>
+    <!-- Better: two bands meeting at right-down corner -->
+    <path d="M18 0 L46 0 L46 18 L64 18 L64 46 Q46 46 46 28 L18 28 Z" class="water"/>
+    <path d="M22 4 Q22 24 30 24 L60 24" class="wave"/>
+  </g>
+
+  <!-- ====== Row 1 ====== -->
+  <!-- mask 4 : S only -->
+  <g transform="translate(0,64)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 64 L46 64 L46 30 Q46 18 32 18 Q18 18 18 30 Z" class="water"/>
+    <line x1="22" y1="56" x2="22" y2="30" class="wave"/>
+    <line x1="42" y1="58" x2="42" y2="28" class="wave"/>
+  </g>
+  <!-- mask 5 : N-S straight -->
+  <g transform="translate(64,64)">
+    <rect width="64" height="64" class="grass"/>
+    <rect x="18" y="0" width="28" height="64" class="water"/>
+    <line x1="22" y1="4" x2="22" y2="60" class="wave"/>
+    <line x1="42" y1="8" x2="42" y2="56" class="wave"/>
+  </g>
+  <!-- mask 6 : ES (elbow from E to S) -->
+  <g transform="translate(128,64)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M64 18 L64 46 L46 46 L46 64 L18 64 L18 36 Q18 18 32 18 Z" class="water"/>
+    <path d="M58 22 Q38 22 38 36 L38 60" class="wave"/>
+  </g>
+  <!-- mask 7 : NES (T, west closed) -->
+  <g transform="translate(192,64)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 18 L64 18 L64 46 L46 46 L46 64 L18 64 Z" class="water"/>
+    <line x1="22" y1="4" x2="22" y2="60" class="wave"/>
+    <line x1="56" y1="32" x2="46" y2="32" class="wave"/>
+  </g>
+
+  <!-- ====== Row 2 ====== -->
+  <!-- mask 8 : W only -->
+  <g transform="translate(0,128)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M0 18 L0 46 L34 46 Q46 46 46 32 Q46 18 34 18 Z" class="water"/>
+    <line x1="8"  y1="22" x2="34" y2="22" class="wave"/>
+    <line x1="6"  y1="42" x2="36" y2="42" class="wave"/>
+  </g>
+  <!-- mask 9 : NW (elbow from N to W) -->
+  <g transform="translate(64,128)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 28 L0 28 L0 0 Z" fill="none"/>
+    <path d="M18 0 L46 0 L46 18 L0 18 L0 46 Q18 46 18 28 Z" class="water"/>
+    <path d="M22 4 Q22 22 14 22 L4 22" class="wave"/>
+  </g>
+  <!-- mask 10 : E-W straight -->
+  <g transform="translate(128,128)">
+    <rect width="64" height="64" class="grass"/>
+    <rect x="0" y="18" width="64" height="28" class="water"/>
+    <line x1="4"  y1="22" x2="60" y2="22" class="wave"/>
+    <line x1="8"  y1="42" x2="56" y2="42" class="wave"/>
+  </g>
+  <!-- mask 11 : NEW (T, south closed) -->
+  <g transform="translate(192,128)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 18 L64 18 L64 46 L0 46 L0 18 L18 18 Z" class="water"/>
+    <line x1="4"  y1="32" x2="60" y2="32" class="wave"/>
+    <line x1="32" y1="4"  x2="32" y2="18" class="wave"/>
+  </g>
+
+  <!-- ====== Row 3 ====== -->
+  <!-- mask 12 : SW (elbow from S to W) -->
+  <g transform="translate(0,192)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 64 L46 64 L46 46 L0 46 L0 18 Q18 18 18 36 Z" class="water"/>
+    <path d="M22 60 Q22 38 14 38 L4 38" class="wave"/>
+  </g>
+  <!-- mask 13 : NSW (T, east closed) -->
+  <g transform="translate(64,192)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 18 L64 18 L64 18 Z" fill="none"/>
+    <path d="M18 0 L46 0 L46 64 L18 64 L18 46 L0 46 L0 18 L18 18 Z" class="water"/>
+    <line x1="22" y1="4"  x2="22" y2="60" class="wave"/>
+    <line x1="4"  y1="32" x2="18" y2="32" class="wave"/>
+  </g>
+  <!-- mask 14 : ESW (T, north closed) -->
+  <g transform="translate(128,192)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M0 18 L64 18 L64 46 L46 46 L46 64 L18 64 L18 46 L0 46 Z" class="water"/>
+    <line x1="4"  y1="32" x2="60" y2="32" class="wave"/>
+    <line x1="32" y1="46" x2="32" y2="60" class="wave"/>
+  </g>
+  <!-- mask 15 : NESW (4-way cross) -->
+  <g transform="translate(192,192)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M18 0 L46 0 L46 18 L64 18 L64 46 L46 46 L46 64 L18 64 L18 46 L0 46 L0 18 L18 18 Z" class="water"/>
+    <line x1="22" y1="4"  x2="22" y2="60" class="wave"/>
+    <line x1="42" y1="4"  x2="42" y2="60" class="wave"/>
+    <line x1="4"  y1="22" x2="60" y2="22" class="wave" opacity="0.55"/>
+    <line x1="4"  y1="42" x2="60" y2="42" class="wave" opacity="0.55"/>
+  </g>
+</svg>

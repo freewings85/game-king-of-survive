@@ -1,0 +1,28 @@
+{
+  "image": "river_autotile.svg",
+  "tileW": 64,
+  "tileH": 64,
+  "cols": 4,
+  "rows": 4,
+  "maskBits": { "N": 1, "E": 2, "S": 4, "W": 8 },
+  "layoutFormula": "col = mask & 3, row = mask >> 2",
+  "walkable": false,
+  "tiles": [
+    { "mask": 0,  "name": "pond",         "col": 0, "row": 0 },
+    { "mask": 1,  "name": "cap_north",    "col": 1, "row": 0 },
+    { "mask": 2,  "name": "cap_east",     "col": 2, "row": 0 },
+    { "mask": 3,  "name": "elbow_NE",     "col": 3, "row": 0 },
+    { "mask": 4,  "name": "cap_south",    "col": 0, "row": 1 },
+    { "mask": 5,  "name": "straight_NS",  "col": 1, "row": 1 },
+    { "mask": 6,  "name": "elbow_ES",     "col": 2, "row": 1 },
+    { "mask": 7,  "name": "T_NES",        "col": 3, "row": 1 },
+    { "mask": 8,  "name": "cap_west",     "col": 0, "row": 2 },
+    { "mask": 9,  "name": "elbow_NW",     "col": 1, "row": 2 },
+    { "mask": 10, "name": "straight_EW",  "col": 2, "row": 2 },
+    { "mask": 11, "name": "T_NEW",        "col": 3, "row": 2 },
+    { "mask": 12, "name": "elbow_SW",     "col": 0, "row": 3 },
+    { "mask": 13, "name": "T_NSW",        "col": 1, "row": 3 },
+    { "mask": 14, "name": "T_ESW",        "col": 2, "row": 3 },
+    { "mask": 15, "name": "cross_NESW",   "col": 3, "row": 3 }
+  ]
+}
