@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Snow minor. col 0 = frozen dragon fossil, col 1 = polar-bear den / ice cave. -->
+  <defs>
+    <linearGradient id="iceD" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c0e8f4" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#6aa8d8" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="caveDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a4a6a"/><stop offset="100%" stop-color="#0a1e3a"/>
+    </linearGradient>
+    <linearGradient id="iceWall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d8ecf4"/><stop offset="100%" stop-color="#6aa0c0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- === Frozen dragon fossil in ice === -->
+  <g>
+    <ellipse cx="64" cy="122" rx="60" ry="7" fill="#000" opacity="0.25"/>
+    <!-- ice block base -->
+    <polygon points="4,122 10,52 32,38 96,38 118,52 124,122" fill="url(#iceWall)" stroke="#3a6a8a" stroke-width="2" stroke-linejoin="round"/>
+    <!-- inner frozen tint -->
+    <polygon points="14,118 20,60 36,48 92,48 108,60 114,118" fill="url(#iceD)" opacity="0.6"/>
+
+    <!-- dragon skull inside -->
+    <g stroke="#3a2a14" stroke-width="1.8" fill="#d8ccb0">
+      <!-- big skull -->
+      <path d="M28 82 Q28 64 48 58 Q70 54 84 64 Q98 76 94 92 Q88 104 68 106 Q46 104 34 96 Z"/>
+      <!-- horn -->
+      <path d="M88 64 Q100 48 108 52 L96 70 Z" fill="#b8a890"/>
+      <!-- jaw -->
+      <path d="M34 96 Q50 108 80 108 Q94 104 94 92 L86 98 L70 104 L52 104 L36 98 Z" fill="#b8a890"/>
+      <!-- teeth -->
+      <g stroke="#1e1208" stroke-width="0.8" fill="#fff4d8">
+        <polygon points="42,96 44,104 46,96"/>
+        <polygon points="54,98 56,106 58,98"/>
+        <polygon points="68,98 70,106 72,98"/>
+        <polygon points="80,96 82,104 84,96"/>
+      </g>
+      <!-- eye socket -->
+      <ellipse cx="56" cy="76" rx="5" ry="4" fill="#1e1208"/>
+      <circle cx="55" cy="75" r="1.2" fill="#6aa8d8"/>
+    </g>
+    <!-- rib cage behind/below -->
+    <g stroke="#1e1208" stroke-width="1.2" fill="#c8bc9e" opacity="0.85">
+      <path d="M38 110 Q40 98 54 98 L52 114 Z"/>
+      <path d="M60 110 Q62 96 76 98 L74 114 Z"/>
+      <path d="M82 110 Q84 98 96 100 L92 114 Z"/>
+    </g>
+
+    <!-- ice shines -->
+    <g stroke="#fff" stroke-width="1" opacity="0.7" fill="none">
+      <line x1="20" y1="60" x2="28" y2="100"/>
+      <line x1="104" y1="62" x2="112" y2="108"/>
+      <line x1="60" y1="42" x2="66" y2="60"/>
+    </g>
+    <!-- icicles on top -->
+    <g fill="#d8ecf4" stroke="#3a6a8a" stroke-width="1">
+      <polygon points="20,38 22,52 24,38"/>
+      <polygon points="44,38 46,50 48,38"/>
+      <polygon points="80,38 82,52 84,38"/>
+      <polygon points="104,38 106,48 108,38"/>
+    </g>
+  </g>
+
+  <!-- === Polar bear den / ice cave === -->
+  <g transform="translate(128,0)">
+    <ellipse cx="64" cy="122" rx="60" ry="8" fill="#000" opacity="0.3"/>
+    <!-- snow mound -->
+    <path d="M4 122 Q14 64 46 44 Q64 34 82 44 Q114 64 124 122 Z" fill="#fff" stroke="#8aa0b8" stroke-width="2"/>
+    <!-- shadow right -->
+    <path d="M64 34 Q82 44 124 122 L64 122 Z" fill="#b8c8d8" opacity="0.55"/>
+    <!-- cave opening -->
+    <path d="M40 120 Q44 82 64 74 Q84 82 88 120 Z" fill="url(#caveDark)" stroke="#2a4a6a" stroke-width="2"/>
+    <!-- eyes inside cave -->
+    <g fill="#ffea5a">
+      <circle cx="58" cy="96" r="2"/>
+      <circle cx="70" cy="96" r="2"/>
+    </g>
+    <!-- icicles on cave edge -->
+    <g fill="#d8ecf4" stroke="#3a6a8a" stroke-width="1">
+      <polygon points="50,80 52,90 54,80"/>
+      <polygon points="62,76 64,86 66,76"/>
+      <polygon points="74,80 76,90 78,80"/>
+    </g>
+    <!-- bone on ground outside cave (hinting at bear's lair) -->
+    <g stroke="#3a2a10" stroke-width="1" fill="#f0e8c8">
+      <rect x="16" y="115" width="14" height="3" rx="1.5"/>
+      <circle cx="16" cy="116.5" r="2"/>
+      <circle cx="30" cy="116.5" r="2"/>
+    </g>
+    <!-- paw prints -->
+    <g fill="#b8c8d8" opacity="0.75">
+      <ellipse cx="100" cy="110" rx="3" ry="2.5"/>
+      <ellipse cx="108" cy="118" rx="3" ry="2.5"/>
+      <ellipse cx="112" cy="104" rx="3" ry="2.5"/>
+    </g>
+    <!-- snow crystals -->
+    <g fill="#fff">
+      <circle cx="30" cy="100" r="1.2"/><circle cx="96" cy="90" r="1.2"/>
+      <circle cx="50" cy="58" r="1"/><circle cx="78" cy="56" r="1"/>
+    </g>
+    <!-- frost highlights -->
+    <g stroke="#c0e0f0" stroke-width="0.8" fill="none" opacity="0.7">
+      <path d="M14 100 Q30 80 48 72"/>
+      <path d="M114 100 Q98 80 80 72"/>
+    </g>
+  </g>
+</svg>

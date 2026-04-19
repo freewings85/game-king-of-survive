@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Desert minor. col 0 = pyramid, col 1 = dino skeleton. -->
+  <defs>
+    <linearGradient id="pyr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0d090"/><stop offset="100%" stop-color="#a06a1a"/>
+    </linearGradient>
+    <linearGradient id="pyrDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c08a30"/><stop offset="100%" stop-color="#5a3a0a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- === Pyramid === -->
+  <g>
+    <ellipse cx="64" cy="120" rx="58" ry="9" fill="#000" opacity="0.35"/>
+    <!-- left lit face -->
+    <polygon points="8,118 64,14 64,118" fill="url(#pyr)" stroke="#1e0e04" stroke-width="2" stroke-linejoin="round"/>
+    <!-- right shadow face -->
+    <polygon points="64,14 120,118 64,118" fill="url(#pyrDark)" stroke="#1e0e04" stroke-width="2" stroke-linejoin="round"/>
+    <!-- stone courses (stripes) -->
+    <g stroke="#6a3a0a" stroke-width="0.6" fill="none">
+      <path d="M24 88 L104 88"/>
+      <path d="M36 68 L92 68"/>
+      <path d="M48 48 L80 48"/>
+    </g>
+    <!-- gold capstone glow -->
+    <polygon points="64,14 56,26 72,26" fill="#ffd966" stroke="#3a2208" stroke-width="1.5"/>
+    <polygon points="64,14 60,20 68,20" fill="#fff4c8"/>
+    <!-- entrance -->
+    <rect x="58" y="96" width="12" height="22" fill="#1e0a02" stroke="#3a2208" stroke-width="1.5"/>
+    <polygon points="58,96 64,88 70,96" fill="#3a2208" stroke="#1e0e04" stroke-width="1.2"/>
+    <!-- hieroglyphs -->
+    <g stroke="#6a3a0a" stroke-width="1" fill="none">
+      <circle cx="40" cy="90" r="2"/>
+      <rect x="46" y="88" width="3" height="4"/>
+      <circle cx="86" cy="94" r="2"/>
+      <rect x="92" y="92" width="3" height="4"/>
+    </g>
+    <!-- sand at base -->
+    <path d="M6 118 Q24 112 46 118 Q64 112 82 118 Q104 112 122 118 L122 124 L6 124 Z" fill="#e6c27a" stroke="#a87a3a" stroke-width="1"/>
+  </g>
+
+  <!-- === Giant skeleton (rib cage + skull) === -->
+  <g transform="translate(128,0)">
+    <ellipse cx="64" cy="120" rx="60" ry="8" fill="#000" opacity="0.3"/>
+    <!-- vertebrae -->
+    <g stroke="#3a2a10" stroke-width="1.5">
+      <g fill="#f0e8c8">
+        <circle cx="24" cy="94" r="5"/><circle cx="36" cy="94" r="5"/>
+        <circle cx="50" cy="94" r="5"/><circle cx="64" cy="94" r="5"/>
+        <circle cx="78" cy="94" r="5"/><circle cx="92" cy="94" r="5"/>
+      </g>
+    </g>
+    <!-- ribs (curved) -->
+    <g stroke="#3a2a10" stroke-width="2" fill="#f0e8c8">
+      <path d="M36 94 Q34 64 46 58 L44 94 Z"/>
+      <path d="M50 94 Q48 58 60 52 L58 94 Z"/>
+      <path d="M64 94 Q62 52 74 50 L72 94 Z"/>
+      <path d="M78 94 Q76 58 88 60 L86 94 Z"/>
+    </g>
+    <!-- skull (left, facing left) -->
+    <g stroke="#3a2a10" stroke-width="1.8">
+      <ellipse cx="18" cy="88" rx="12" ry="10" fill="#f0e8c8"/>
+      <polygon points="6,92 -4,90 -4,96 6,96" fill="#f0e8c8"/>
+      <circle cx="14" cy="86" r="2.5" fill="#1e1208"/>
+      <polygon points="8,94 12,98 16,94" fill="#1e1208"/>
+      <!-- teeth -->
+      <g stroke="#1e1208" stroke-width="0.8" fill="#f0e8c8">
+        <rect x="2" y="94" width="2" height="3"/>
+        <rect x="6" y="94" width="2" height="3"/>
+        <rect x="10" y="94" width="2" height="3"/>
+      </g>
+    </g>
+    <!-- tail bones -->
+    <g stroke="#3a2a10" stroke-width="1.5" fill="#f0e8c8">
+      <circle cx="104" cy="96" r="4"/>
+      <circle cx="114" cy="102" r="3.5"/>
+      <circle cx="122" cy="110" r="3"/>
+    </g>
+    <!-- leg bone at base -->
+    <g stroke="#3a2a10" stroke-width="1.8" fill="#f0e8c8">
+      <rect x="40" y="104" width="6" height="18" rx="2"/>
+      <rect x="70" y="104" width="6" height="18" rx="2"/>
+    </g>
+    <!-- sand base -->
+    <path d="M0 118 Q24 112 50 118 Q78 112 100 118 Q120 112 128 118 L128 128 L0 128 Z" fill="#e6c27a" stroke="#a87a3a" stroke-width="1" opacity="0.95"/>
+  </g>
+</svg>

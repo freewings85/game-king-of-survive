@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Swamp minor landmarks. 2×1 @ 128×128. Anchor bottom-center (64,124). -->
+  <defs>
+    <linearGradient id="wHat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a3a7a"/><stop offset="100%" stop-color="#1e0a3a"/>
+    </linearGradient>
+    <linearGradient id="wWall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a6a3a"/><stop offset="100%" stop-color="#4a2a14"/>
+    </linearGradient>
+  </defs>
+
+  <!-- === Witch hut === -->
+  <g>
+    <ellipse cx="64" cy="120" rx="50" ry="8" fill="#000" opacity="0.35"/>
+    <!-- chicken legs -->
+    <g stroke="#3a2a14" stroke-width="2.5" fill="none">
+      <path d="M48 112 Q50 98 46 86"/>
+      <path d="M80 112 Q78 98 82 86"/>
+    </g>
+    <!-- claws -->
+    <g stroke="#1e1208" stroke-width="1.8" fill="#6a4a1a">
+      <path d="M44 116 L40 112 M44 116 L44 110 M44 116 L48 112"/>
+      <path d="M84 116 L80 112 M84 116 L84 110 M84 116 L88 112"/>
+    </g>
+    <!-- hut body -->
+    <polygon points="28,86 100,86 100,56 28,56" fill="url(#wWall)" stroke="#1e1208" stroke-width="2"/>
+    <!-- log planks -->
+    <g stroke="#3a2208" stroke-width="1">
+      <line x1="28" y1="66" x2="100" y2="66"/>
+      <line x1="28" y1="76" x2="100" y2="76"/>
+    </g>
+    <!-- door -->
+    <rect x="56" y="68" width="16" height="18" fill="#2a1a08" stroke="#1e1208" stroke-width="1.5"/>
+    <!-- window (glowing) -->
+    <rect x="38" y="62" width="10" height="10" fill="#f4c450" stroke="#1e1208" stroke-width="1.5"/>
+    <line x1="43" y1="62" x2="43" y2="72" stroke="#1e1208"/>
+    <line x1="38" y1="67" x2="48" y2="67" stroke="#1e1208"/>
+    <!-- roof (pointed, mossy) -->
+    <polygon points="20,56 108,56 78,22 50,22" fill="url(#wHat)" stroke="#1e1208" stroke-width="2" stroke-linejoin="round"/>
+    <!-- chimney -->
+    <rect x="72" y="20" width="10" height="18" fill="#4a3028" stroke="#1e1208" stroke-width="1.5"/>
+    <!-- smoke -->
+    <g fill="#c0b8a8" opacity="0.7">
+      <circle cx="77" cy="14" r="5"/><circle cx="82" cy="6" r="4"/>
+    </g>
+    <!-- skull decor -->
+    <g stroke="#1e1208" stroke-width="1" fill="#f0e8c8">
+      <circle cx="40" cy="48" r="4"/>
+      <circle cx="38" cy="48" r="1" fill="#1e1208"/><circle cx="42" cy="48" r="1" fill="#1e1208"/>
+    </g>
+    <!-- vines hanging -->
+    <g stroke="#2a3818" stroke-width="1.3" fill="none">
+      <path d="M30 56 Q28 66 34 78"/>
+      <path d="M98 56 Q102 66 96 80"/>
+    </g>
+  </g>
+
+  <!-- === Mushroom ring === -->
+  <g transform="translate(128,0)">
+    <ellipse cx="64" cy="120" rx="56" ry="10" fill="#000" opacity="0.3"/>
+    <!-- magic circle on ground -->
+    <ellipse cx="64" cy="100" rx="52" ry="16" fill="none" stroke="#aaff88" stroke-width="1.5" opacity="0.55"/>
+    <ellipse cx="64" cy="100" rx="46" ry="14" fill="none" stroke="#aaff88" stroke-width="0.8" opacity="0.4"/>
+    <!-- mushrooms around circle (8 mushrooms) -->
+    <g stroke="#1e1208" stroke-width="1.5">
+      <!-- biggest center-back -->
+      <g transform="translate(64,70)">
+        <rect x="-5" y="0" width="10" height="22" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="20" ry="10" fill="#c84a3a"/>
+        <circle cx="-8" cy="-4" r="2.5" fill="#fff"/>
+        <circle cx="6" cy="-2" r="2" fill="#fff"/>
+        <circle cx="0" cy="-6" r="1.5" fill="#fff"/>
+        <circle cx="10" cy="3" r="2" fill="#fff"/>
+      </g>
+      <!-- left large -->
+      <g transform="translate(24,92)">
+        <rect x="-4" y="0" width="8" height="14" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="13" ry="7" fill="#c84a3a"/>
+        <circle cx="-4" cy="-2" r="1.8" fill="#fff"/><circle cx="5" cy="-1" r="1.5" fill="#fff"/>
+      </g>
+      <!-- right large -->
+      <g transform="translate(104,92)">
+        <rect x="-4" y="0" width="8" height="14" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="13" ry="7" fill="#c84a3a"/>
+        <circle cx="-3" cy="-2" r="1.5" fill="#fff"/><circle cx="4" cy="-1" r="1.8" fill="#fff"/>
+      </g>
+      <!-- front-left small -->
+      <g transform="translate(40,108)">
+        <rect x="-3" y="0" width="6" height="10" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="8" ry="4" fill="#c84a3a"/>
+        <circle cx="0" cy="-1" r="1.2" fill="#fff"/>
+      </g>
+      <!-- front-right small -->
+      <g transform="translate(88,108)">
+        <rect x="-3" y="0" width="6" height="10" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="8" ry="4" fill="#c84a3a"/>
+        <circle cx="-1" cy="-1" r="1.2" fill="#fff"/>
+      </g>
+      <!-- back-small pair -->
+      <g transform="translate(40,82)">
+        <rect x="-2" y="0" width="5" height="8" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="7" ry="3.5" fill="#c84a3a"/>
+      </g>
+      <g transform="translate(88,82)">
+        <rect x="-2" y="0" width="5" height="8" fill="#f0e0c0"/>
+        <ellipse cx="0" cy="0" rx="7" ry="3.5" fill="#c84a3a"/>
+      </g>
+    </g>
+    <!-- firefly sparkles -->
+    <g fill="#fffbd0">
+      <circle cx="48" cy="50" r="1.4"/><circle cx="78" cy="44" r="1.2"/>
+      <circle cx="30" cy="62" r="1.2"/><circle cx="100" cy="58" r="1.3"/>
+    </g>
+  </g>
+</svg>

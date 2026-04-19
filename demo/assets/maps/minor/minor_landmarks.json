@@ -1,0 +1,39 @@
+{
+  "spriteW": 128,
+  "spriteH": 128,
+  "anchor": { "x": 64, "y": 124 },
+  "files": [
+    {
+      "image": "swamp_minor.svg",
+      "biome": "swamp",
+      "sprites": [
+        { "name": "witch_hut",    "col": 0, "row": 0, "walkable": false, "tags": ["hut", "magical"] },
+        { "name": "mushroom_ring","col": 1, "row": 0, "walkable": true,  "tags": ["magical", "buff_zone_candidate"] }
+      ]
+    },
+    {
+      "image": "desert_minor.svg",
+      "biome": "desert",
+      "sprites": [
+        { "name": "pyramid",       "col": 0, "row": 0, "walkable": false, "tags": ["ancient", "large"] },
+        { "name": "dino_skeleton", "col": 1, "row": 0, "walkable": true,  "tags": ["decor"] }
+      ]
+    },
+    {
+      "image": "ruins_minor.svg",
+      "biome": "ruins",
+      "sprites": [
+        { "name": "broken_bridge", "col": 0, "row": 0, "walkable": false, "tags": ["barrier"] },
+        { "name": "stone_head",    "col": 1, "row": 0, "walkable": false, "tags": ["ancient", "large"] }
+      ]
+    },
+    {
+      "image": "snow_minor.svg",
+      "biome": "snow",
+      "sprites": [
+        { "name": "frozen_dragon", "col": 0, "row": 0, "walkable": false, "tags": ["epic", "mystery"] },
+        { "name": "bear_den",      "col": 1, "row": 0, "walkable": false, "tags": ["cave", "spawn_candidate"] }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128">
+  <!-- Ruins minor. col 0 = broken bridge, col 1 = giant stone head. -->
+  <defs>
+    <linearGradient id="brg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a8a08c"/><stop offset="100%" stop-color="#4a4436"/>
+    </linearGradient>
+  </defs>
+
+  <!-- === Broken bridge === -->
+  <g>
+    <ellipse cx="64" cy="122" rx="58" ry="6" fill="#000" opacity="0.35"/>
+    <!-- chasm background -->
+    <rect x="0" y="78" width="128" height="46" fill="#1e1a14"/>
+    <!-- misty depth -->
+    <g fill="#6a6050" opacity="0.4">
+      <ellipse cx="64" cy="100" rx="60" ry="8"/>
+      <ellipse cx="40" cy="114" rx="30" ry="4"/>
+    </g>
+    <!-- left bridge stump -->
+    <g stroke="#1e1208" stroke-width="2">
+      <path d="M0 78 L42 78 L48 70 L40 62 L30 68 L18 60 L10 66 L0 58 Z" fill="url(#brg)"/>
+      <!-- arch remnant -->
+      <path d="M0 78 Q20 92 42 78" fill="none" stroke="#3a3428" stroke-width="2"/>
+      <!-- cracks -->
+      <line x1="14" y1="78" x2="12" y2="70" stroke="#2a2418"/>
+      <line x1="30" y1="78" x2="34" y2="68" stroke="#2a2418"/>
+    </g>
+    <!-- right bridge stump -->
+    <g stroke="#1e1208" stroke-width="2">
+      <path d="M128 78 L86 78 L80 68 L88 58 L98 66 L110 56 L120 62 L128 54 Z" fill="url(#brg)"/>
+      <path d="M86 78 Q106 92 128 78" fill="none" stroke="#3a3428" stroke-width="2"/>
+      <line x1="112" y1="78" x2="114" y2="68" stroke="#2a2418"/>
+      <line x1="96" y1="78" x2="92" y2="66" stroke="#2a2418"/>
+    </g>
+    <!-- falling rubble mid-air -->
+    <g stroke="#1e1208" stroke-width="1.2">
+      <polygon points="58,84 66,82 64,90 56,90" fill="#7a7262"/>
+      <polygon points="70,96 76,94 78,100 72,102" fill="#8a8272"/>
+      <circle cx="50" cy="100" r="3" fill="#5a5442"/>
+    </g>
+    <!-- rope hanging (from right stump) -->
+    <g stroke="#5a3a1a" stroke-width="1.4" fill="none">
+      <path d="M82 68 Q76 82 72 100 Q68 116 60 124"/>
+    </g>
+    <!-- top grass -->
+    <g fill="#5a7236" opacity="0.85" stroke="#2a3818" stroke-width="0.6">
+      <ellipse cx="12" cy="76" rx="10" ry="2"/>
+      <ellipse cx="116" cy="76" rx="10" ry="2"/>
+    </g>
+  </g>
+
+  <!-- === Giant stone head (Moai style) === -->
+  <g transform="translate(128,0)">
+    <ellipse cx="64" cy="122" rx="52" ry="8" fill="#000" opacity="0.4"/>
+    <!-- head body (elongated) -->
+    <g stroke="#2a2418" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M32 120 L32 58 Q32 22 64 12 Q96 22 96 58 L96 120 Z" fill="#b0a898"/>
+      <!-- shadow right -->
+      <path d="M64 12 Q96 22 96 58 L96 120 L64 120 Z" fill="#000" opacity="0.28"/>
+    </g>
+    <!-- eyebrow ridge -->
+    <path d="M40 50 Q64 44 88 50" stroke="#3a3428" stroke-width="3" fill="none"/>
+    <!-- eyes (sunken, dark) -->
+    <g>
+      <ellipse cx="50" cy="58" rx="5" ry="4" fill="#1e1a14" stroke="#3a3428" stroke-width="1.5"/>
+      <ellipse cx="78" cy="58" rx="5" ry="4" fill="#1e1a14" stroke="#3a3428" stroke-width="1.5"/>
+      <circle cx="50" cy="58" r="1.5" fill="#f0e8c8"/>
+      <circle cx="78" cy="58" r="1.5" fill="#f0e8c8"/>
+    </g>
+    <!-- nose -->
+    <polygon points="64,62 58,82 70,82" fill="#8a8272" stroke="#2a2418" stroke-width="1.5"/>
+    <!-- mouth -->
+    <path d="M50 94 Q64 90 78 94" fill="none" stroke="#2a2418" stroke-width="2.5"/>
+    <!-- cracks / weathering -->
+    <g stroke="#2a2418" stroke-width="1" fill="none">
+      <path d="M36 70 L40 80 L38 94"/>
+      <path d="M92 72 L90 86 L94 100"/>
+      <path d="M64 14 L64 24"/>
+    </g>
+    <!-- moss patches -->
+    <g fill="#5a7236" opacity="0.75" stroke="#2a3818" stroke-width="0.6">
+      <ellipse cx="40" cy="30" rx="6" ry="3"/>
+      <ellipse cx="88" cy="104" rx="7" ry="3"/>
+      <ellipse cx="56" cy="112" rx="8" ry="3"/>
+    </g>
+    <!-- base vegetation -->
+    <g fill="#5a7236" stroke="#2a3818" stroke-width="0.8">
+      <ellipse cx="28" cy="122" rx="6" ry="2"/>
+      <ellipse cx="100" cy="122" rx="6" ry="2"/>
+    </g>
+  </g>
+</svg>
