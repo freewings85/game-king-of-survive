@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
 <title>Map Editor · King of Survive</title>
 <style>
   * { box-sizing: border-box; }
@@ -33,9 +34,16 @@
   .ok { color: #7fce8a; }
   .warn { color: #f4c86a; }
   #fileInput { display: none; }
+  #mobileWarn { display: none; position: fixed; inset: 0; background: rgba(10,12,18,0.95); color: #ffd58a; z-index: 9999; padding: 30px; text-align: center; font-size: 14px; line-height: 1.7; }
+  @media (hover: none) and (pointer: coarse) { #mobileWarn { display: flex; align-items: center; justify-content: center; flex-direction: column; } }
 </style>
 </head>
 <body>
+<div id="mobileWarn">
+  <div style="font-size:36px;margin-bottom:10px;">🖥</div>
+  <div>地图编辑器是桌面工具</div>
+  <div style="color:#8a92ae;font-size:12px;margin-top:6px;">请在桌面浏览器打开<br/>以获得完整的 tile 画笔和结构放置体验</div>
+</div>
 <div id="app">
   <div id="topbar">
     <h1>🗺 地图编辑器</h1>

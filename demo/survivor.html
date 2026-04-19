@@ -227,24 +227,38 @@ function doLogin() {
   var WORLD_W = W * 2, WORLD_H = H * 2;
   var cameraX = 0, cameraY = 0; // camera offset
 
-  // Static handcrafted map (Leo 2026-04-20). Loaded from demo/maps/default.json
-  // and consumed by startOfflineDemo when ready. If fetch fails the game falls
-  // back to the original procedural generation so local file:// still boots.
+  // Static handcrafted map (Leo 2026-04-20). Synchronous fetch at page load so
+  // startOfflineDemo never races the network — the async path caused WORLD_W
+  // to stick at W*2 when the game started before the json resolved.
   var MAP_DATA = null;
-  (function _loadStaticMap() {
+  function _loadStaticMapSync() {
+    if (MAP_DATA) return MAP_DATA;
     try {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'maps/default.json', true);
-      xhr.onload = function() {
-        if (xhr.status < 400) {
-          try { MAP_DATA = JSON.parse(xhr.responseText); }
-          catch (e) { console.warn('[map] default.json parse failed', e); }
-        }
-      };
-      xhr.onerror = function() { console.warn('[map] default.json load failed'); };
+      xhr.open('GET', 'maps/default.json', false);
       xhr.send();
-    } catch (e) {}
-  })();
+      if (xhr.status < 400 && xhr.responseText) {
+        MAP_DATA = JSON.parse(xhr.responseText);
+      }
+    } catch (e) {
+      console.warn('[map] sync load failed, falling back to async', e && e.message);
+    }
+    if (!MAP_DATA) {
+      try {
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open('GET', 'maps/default.json', true);
+        xhr2.onload = function() {
+          if (xhr2.status < 400) {
+            try { MAP_DATA = JSON.parse(xhr2.responseText); }
+            catch (e) { console.warn('[map] async parse failed', e); }
+          }
+        };
+        xhr2.send();
+      } catch (e) {}
+    }
+    return MAP_DATA;
+  }
+  _loadStaticMapSync();
 
   // === NETWORK (server-authoritative) ===
   var serverUrl = window.location.origin; // same origin as page
@@ -2689,8 +2703,13 @@ function doLogin() {
     _apiRequest('GET', '/api/editor/maps/' + _mapId, null, function(err, fullMapData) {
       if (!err && fullMapData) {
         loadMapZonesAndTerrain(fullMapData);
-        if (fullMapData.width) WORLD_W = fullMapData.width;
-        if (fullMapData.height) WORLD_H = fullMapData.height;
+        // Skip WORLD_W/H override when a handcrafted static map drives the world —
+        // the legacy server map (e.g. green_plains 1200x1200) otherwise clobbers
+        // the 2560x2560 world set by startOfflineDemo.
+        if (!MAP_DATA) {
+          if (fullMapData.width) WORLD_W = fullMapData.width;
+          if (fullMapData.height) WORLD_H = fullMapData.height;
+        }
       }
     });
     networkInputTimer = 0;
@@ -3186,8 +3205,9 @@ function doLogin() {
     var _pbar = document.getElementById('player-bar');
     if (_pbar) _pbar.style.display = 'none';
 
-    // World = screen * 2 (0.5 screen padding on each side). Recompute here in case
-    // the viewport changed between page load and game start.
+    // World = MAP_DATA.width/height if static map loaded, else screen * 2.
+    // Safety: re-attempt sync fetch in case the async load is still in flight.
+    if (!MAP_DATA && typeof _loadStaticMapSync === 'function') _loadStaticMapSync();
     if (MAP_DATA && MAP_DATA.width && MAP_DATA.height) {
       WORLD_W = MAP_DATA.width;
       WORLD_H = MAP_DATA.height;
