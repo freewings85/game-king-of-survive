@@ -1,0 +1,19 @@
+{
+  "image": "biome_snow.svg",
+  "tileW": 64,
+  "tileH": 64,
+  "cols": 4,
+  "rows": 2,
+  "biome": "snow",
+  "palette": ["#f4f8fc", "#b8c8d8", "#c0e0f0", "#1e4a2a", "#8aa0b8"],
+  "tiles": [
+    { "name": "snow_fresh",        "col": 0, "row": 0, "walkable": true },
+    { "name": "snow_footprints",   "col": 1, "row": 0, "walkable": true },
+    { "name": "snow_packed",       "col": 2, "row": 0, "walkable": true },
+    { "name": "snow_ice",          "col": 3, "row": 0, "walkable": true, "speedMult": 1.15 },
+    { "name": "snow_pine",         "col": 0, "row": 1, "walkable": false },
+    { "name": "snow_frozen_pond",  "col": 1, "row": 1, "walkable": false },
+    { "name": "snow_drift",        "col": 2, "row": 1, "walkable": true, "speedMult": 0.7 },
+    { "name": "snow_pine_cluster", "col": 3, "row": 1, "walkable": false }
+  ]
+}

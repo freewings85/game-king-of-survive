@@ -1,0 +1,19 @@
+{
+  "image": "biome_swamp.svg",
+  "tileW": 64,
+  "tileH": 64,
+  "cols": 4,
+  "rows": 2,
+  "biome": "swamp",
+  "palette": ["#3a4a22", "#5a7236", "#2a3818", "#5c806a", "#4a331a"],
+  "tiles": [
+    { "name": "swamp_ground_a",    "col": 0, "row": 0, "walkable": true },
+    { "name": "swamp_ground_b",    "col": 1, "row": 0, "walkable": true },
+    { "name": "swamp_mud",         "col": 2, "row": 0, "walkable": true, "speedMult": 0.7 },
+    { "name": "swamp_water_pool",  "col": 3, "row": 0, "walkable": false },
+    { "name": "swamp_log",         "col": 0, "row": 1, "walkable": false },
+    { "name": "swamp_mushroom",    "col": 1, "row": 1, "walkable": true },
+    { "name": "swamp_reeds",       "col": 2, "row": 1, "walkable": true },
+    { "name": "swamp_water_deep",  "col": 3, "row": 1, "walkable": false }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "image": "biome_ruins.svg",
+  "tileW": 64,
+  "tileH": 64,
+  "cols": 4,
+  "rows": 2,
+  "biome": "ruins",
+  "palette": ["#9e988a", "#5e5848", "#b0a898", "#5a7236", "#c84a3a"],
+  "tiles": [
+    { "name": "ruins_pavement",    "col": 0, "row": 0, "walkable": true },
+    { "name": "ruins_cobblestone", "col": 1, "row": 0, "walkable": true },
+    { "name": "ruins_rubble",      "col": 2, "row": 0, "walkable": true, "speedMult": 0.85 },
+    { "name": "ruins_mossy",       "col": 3, "row": 0, "walkable": true },
+    { "name": "ruins_column",      "col": 0, "row": 1, "walkable": false },
+    { "name": "ruins_wall",        "col": 1, "row": 1, "walkable": false },
+    { "name": "ruins_idol",        "col": 2, "row": 1, "walkable": false },
+    { "name": "ruins_bramble",     "col": 3, "row": 1, "walkable": true, "speedMult": 0.8 }
+  ]
+}
