@@ -298,17 +298,12 @@ function doLogin() {
     if (!relPath) return null;
     var hit = MAP_ART.landmarkSprites[relPath];
     if (hit) return hit;
+    // Use the <img> directly and skip offscreen rasterisation — SVGs with
+    // <animate> / gradients sometimes clip when drawn through a canvas raster
+    // in Chromium headless. drawImage(svgImg, ...) always renders the static
+    // current frame at the requested size and is plenty fast for 1 sprite/frame.
     var entry = { img: new Image(), canvas: null, ready: false };
-    entry.img.onload = function() {
-      try {
-        var c = document.createElement('canvas');
-        c.width = entry.img.naturalWidth || 384;
-        c.height = entry.img.naturalHeight || 512;
-        c.getContext('2d').drawImage(entry.img, 0, 0);
-        entry.canvas = c;
-      } catch (e) {}
-      entry.ready = true;
-    };
+    entry.img.onload = function() { entry.ready = true; };
     entry.img.src = relPath;
     MAP_ART.landmarkSprites[relPath] = entry;
     return entry;
@@ -3028,12 +3023,17 @@ function doLogin() {
         var mcx = ms.x + ms.w / 2, mcy = ms.y + ms.h / 2;
         var _dx = mcx - _anchorX, _dy = mcy - _anchorY;
         if (!_keepKinds[kind] && _dx * _dx + _dy * _dy < _ringR2) continue;
-        // Normalise: editor uses `kind`, renderer still checks `type`.
+        // Normalise: editor uses `kind`, renderer still checks `type`. Keep
+        // optional sprite / anchor fields so drawBRStructures can pull the
+        // ArtDesigner SVG for landmarks (Testor round-3 fix: these were lost).
         var st = {
           type: kind,
           x: ms.x, y: ms.y, w: ms.w, h: ms.h,
           color: ms.color || '#555565',
-          label: ms.label || null
+          label: ms.label || null,
+          sprite: ms.sprite || null,
+          anchorX: ms.anchorX != null ? ms.anchorX : null,
+          anchorY: ms.anchorY != null ? ms.anchorY : null
         };
         _brStructures.push(st);
       }
@@ -3125,28 +3125,30 @@ function doLogin() {
     if (!MAP_DATA) return;
     var acx = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.x) || WORLD_W / 2;
     var acy = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.y) || WORLD_H / 2;
-    var sx = acx - camX2, sy = acy - camY2;
-    // World-space golden halo — only draw if within viewport + padding.
+    // Screen-space coords for culling only; canvas is already camera-translated.
+    var _sx = acx - camX2, _sy = acy - camY2;
     var HALO_R = 420;
-    if (sx + HALO_R > 0 && sx - HALO_R < W && sy + HALO_R > 0 && sy - HALO_R < H) {
+    if (_sx + HALO_R > 0 && _sx - HALO_R < W && _sy + HALO_R > 0 && _sy - HALO_R < H) {
       var pulse = 0.85 + 0.15 * Math.sin((gameTime || 0) * 1.2);
-      var grad = ctx2.createRadialGradient(sx, sy, 24, sx, sy, HALO_R);
+      var grad = ctx2.createRadialGradient(acx, acy, 24, acx, acy, HALO_R);
       grad.addColorStop(0,   'rgba(255,220,140,' + (0.55 * pulse) + ')');
       grad.addColorStop(0.35, 'rgba(255,200,120,' + (0.28 * pulse) + ')');
       grad.addColorStop(1,   'rgba(255,200,120,0)');
       ctx2.save();
       ctx2.globalCompositeOperation = 'lighter';
       ctx2.fillStyle = grad;
-      ctx2.beginPath(); ctx2.arc(sx, sy, HALO_R, 0, Math.PI * 2); ctx2.fill();
+      ctx2.beginPath(); ctx2.arc(acx, acy, HALO_R, 0, Math.PI * 2); ctx2.fill();
       ctx2.restore();
     }
-    // Proximity brightness boost — fires when player is within 500px.
+    // Proximity brightness boost — fires when player is within 500px. Draw in
+    // screen space by temporarily resetting the camera translate.
     if (typeof player !== 'undefined' && player && player.alive) {
       var dx = player.x - acx, dy = player.y - acy;
       var d2 = dx * dx + dy * dy;
       if (d2 < 500 * 500) {
         var t = 1 - Math.sqrt(d2) / 500;
         ctx2.save();
+        ctx2.setTransform(1, 0, 0, 1, 0, 0);
         ctx2.globalCompositeOperation = 'lighter';
         ctx2.fillStyle = 'rgba(255,240,200,' + (0.22 * t) + ')';
         ctx2.fillRect(0, 0, W, H);
@@ -3157,10 +3159,14 @@ function doLogin() {
 
   // Draw BR structures (called from drawTerrain area)
   function drawBRStructures(ctx2, camX2, camY2) {
+    // The canvas is already translated by (-cameraX, -cameraY) in drawGame,
+    // so draw ALL shapes in world coords (s.x/s.y). sx/sy here are screen-space
+    // only for viewport culling — do NOT use them as draw coordinates.
     for (var i = 0; i < _brStructures.length; i++) {
       var s = _brStructures[i];
-      var sx = s.x - camX2, sy = s.y - camY2;
-      if (sx + s.w < -10 || sx > W + 10 || sy + s.h < -10 || sy > H + 10) continue;
+      var _sxCull = s.x - camX2, _syCull = s.y - camY2;
+      if (_sxCull + s.w < -10 || _sxCull > W + 10 || _syCull + s.h < -10 || _syCull > H + 10) continue;
+      var sx = s.x, sy = s.y;
       if (s.type === 'building') {
         // Building — base + roof + shadow
         ctx2.fillStyle = 'rgba(0,0,0,0.3)';
@@ -3263,12 +3269,13 @@ function doLogin() {
         var spr = s.sprite ? _getLandmarkSprite(s.sprite) : null;
         var _sprSrc = spr && spr.canvas ? spr.canvas : (spr && spr.ready ? spr.img : null);
         if (_sprSrc) {
-          // ArtDesigner SVG path — drawImage with base shadow ellipse.
+          // ArtDesigner SVG path — drawImage in WORLD coords (canvas is already
+          // translated by camera). Shadow ellipse at base centre.
           ctx2.fillStyle = 'rgba(0,0,0,0.35)';
           ctx2.beginPath();
-          ctx2.ellipse(sx + s.w / 2, sy + s.h - 14, s.w * 0.4, 14, 0, 0, Math.PI * 2);
+          ctx2.ellipse(s.x + s.w / 2, s.y + s.h - 14, s.w * 0.4, 14, 0, 0, Math.PI * 2);
           ctx2.fill();
-          ctx2.drawImage(_sprSrc, sx, sy, s.w, s.h);
+          ctx2.drawImage(_sprSrc, s.x, s.y, s.w, s.h);
         } else {
           // Fallback — painted rect while sprite is still loading / absent.
           ctx2.fillStyle = 'rgba(0,0,0,0.45)';

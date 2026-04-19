@@ -4,9 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=1280" />
 <title>Map Editor · King of Survive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" />
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; font-family: "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Heiti SC", "Apple Color Emoji", "Segoe UI Emoji", system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; background: #161922; color: #e6e7ee; overflow: hidden; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: "Noto Sans SC", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Heiti SC", "Apple Color Emoji", "Segoe UI Emoji", system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; background: #161922; color: #e6e7ee; overflow: hidden; }
   #app { display: grid; grid-template-rows: 44px 1fr; grid-template-columns: 220px 1fr 240px; height: 100vh; }
   #topbar { grid-column: 1 / span 3; background: #1f2433; border-bottom: 1px solid #0d0f17; display: flex; align-items: center; padding: 0 10px; gap: 8px; }
   #topbar h1 { font-size: 14px; margin: 0 12px 0 4px; letter-spacing: 1px; color: #ffd58a; }
@@ -78,7 +81,7 @@
 
 // === Configuration ===
 const TS = 64;
-const CJK_FONT = '"PingFang SC","Noto Sans CJK SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Micro Hei","Heiti SC",sans-serif';
+const CJK_FONT = '"Noto Sans SC","PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Micro Hei","Heiti SC",sans-serif';
 const TILE_TYPES = [
   { id: 0, name: '草地',  color: '#4d8a44', desc: 'grass' },
   { id: 1, name: '泥土',  color: '#8a6a3a', desc: 'dirt' },
