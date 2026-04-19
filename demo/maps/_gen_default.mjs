@@ -74,8 +74,21 @@ const tpx = (tx) => tx * TS + TS / 2;
 const structures = [];
 const push = (s) => structures.push(s);
 
-// Central landmark — huge altar, 320x320, centered
-push({ kind: 'landmark', x: cx - 160, y: cy - 160, w: 320, h: 320, color: '#b8a060', label: '中央祭坛' });
+// Central landmark — Crystal Sanctum 384x512 (ArtDesigner v2).
+// SVG anchor is bottom-centre (192,498), so placing the rect with its own
+// center at the world center lets the 128×128 marble plaza sit squarely on
+// (1280,1280) while the tower body rises above. Adjusted so visual centroid
+// (bulk of tower body + plaza) is near map center.
+push({
+  kind: 'landmark',
+  x: cx - 192,
+  y: cy - 256,
+  w: 384, h: 512,
+  color: '#b8a060',
+  label: '水晶圣殿',
+  sprite: 'assets/maps/landmarks/crystal_sanctum.svg',
+  anchorX: 192, anchorY: 498
+});
 
 // Bridges over rivers (passable, rendered as planks)
 push({ kind: 'bridge', x: tpx(WEST_BRIDGE[0]) - TS, y: RIVER_ROW_A * TS, w: TS * 2, h: TS * 2, color: '#8a6a3a', label: '西桥' });

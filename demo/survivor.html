@@ -260,6 +260,60 @@ function doLogin() {
   }
   _loadStaticMapSync();
 
+  // Map art assets (ArtDesigner 2026-04-21): Crystal Sanctum landmark +
+  // 4 biome atlases for desert/swamp/snow/ruins. Sprites are optional — the
+  // renderer falls back to flat colours if images haven't loaded yet.
+  var MAP_ART = {
+    landmarkSprites: {},        // key: relative path -> { img, ready }
+    biomeAtlases: {},           // key: biome id (2/4/5/6) -> { img, ready, cols, rows, tileW, tileH }
+    _pendingLoad: false
+  };
+  (function _preloadMapArt() {
+    // Rasterise SVG atlas to an offscreen bitmap canvas so every per-tile
+    // drawImage hits a cached raster instead of re-rasterising the SVG each
+    // call. ~5-10x faster than drawing SVG directly.
+    function _rasterise(svgImg, w, h) {
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var cx = c.getContext('2d');
+      cx.imageSmoothingEnabled = false;
+      cx.drawImage(svgImg, 0, 0, w, h);
+      return c;
+    }
+    var biomeMap = { 2: 'biome_ruins.svg', 4: 'biome_desert.svg', 5: 'biome_swamp.svg', 6: 'biome_snow.svg' };
+    Object.keys(biomeMap).forEach(function(bid) {
+      var path = 'assets/maps/biomes/' + biomeMap[bid];
+      var entry = { img: null, canvas: null, ready: false, cols: 4, rows: 2, tileW: 64, tileH: 64, w: 256, h: 128 };
+      entry.img = new Image();
+      entry.img.onload = function() {
+        try { entry.canvas = _rasterise(entry.img, entry.w, entry.h); entry.ready = true; }
+        catch (e) { console.warn('[map-art] rasterise failed', path, e); entry.ready = true; }
+      };
+      entry.img.src = path;
+      MAP_ART.biomeAtlases[bid] = entry;
+    });
+    // Landmark sprites loaded lazily; rasterised on ready for faster per-frame draw.
+  })();
+  function _getLandmarkSprite(relPath) {
+    if (!relPath) return null;
+    var hit = MAP_ART.landmarkSprites[relPath];
+    if (hit) return hit;
+    var entry = { img: new Image(), canvas: null, ready: false };
+    entry.img.onload = function() {
+      try {
+        var c = document.createElement('canvas');
+        c.width = entry.img.naturalWidth || 384;
+        c.height = entry.img.naturalHeight || 512;
+        c.getContext('2d').drawImage(entry.img, 0, 0);
+        entry.canvas = c;
+      } catch (e) {}
+      entry.ready = true;
+    };
+    entry.img.src = relPath;
+    MAP_ART.landmarkSprites[relPath] = entry;
+    return entry;
+  }
+
   // === NETWORK (server-authoritative) ===
   var serverUrl = window.location.origin; // same origin as page
   var networkInputTimer = 0;
@@ -2961,11 +3015,22 @@ function doLogin() {
     _brStructures = [];
     // Handcrafted map path: take structures verbatim from MAP_DATA.
     if (MAP_DATA && MAP_DATA.structures && MAP_DATA.structures.length) {
+      // No-obstacle ring around central landmark (Leo 2026-04-21): any
+      // mountain/wall/building/crate whose center falls within 300px of the
+      // map center is filtered out so the altar stays visible from afar.
+      var _anchorX = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.x) || (MAP_DATA.width / 2);
+      var _anchorY = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.y) || (MAP_DATA.height / 2);
+      var _ringR2 = 300 * 300;
+      var _keepKinds = { landmark: 1, bridge: 1 };
       for (var msi = 0; msi < MAP_DATA.structures.length; msi++) {
         var ms = MAP_DATA.structures[msi];
+        var kind = ms.kind || ms.type || 'building';
+        var mcx = ms.x + ms.w / 2, mcy = ms.y + ms.h / 2;
+        var _dx = mcx - _anchorX, _dy = mcy - _anchorY;
+        if (!_keepKinds[kind] && _dx * _dx + _dy * _dy < _ringR2) continue;
         // Normalise: editor uses `kind`, renderer still checks `type`.
         var st = {
-          type: ms.kind || ms.type || 'building',
+          type: kind,
           x: ms.x, y: ms.y, w: ms.w, h: ms.h,
           color: ms.color || '#555565',
           label: ms.label || null
@@ -3052,6 +3117,44 @@ function doLogin() {
       });
     }
   }
+  // Landmark aura (Leo 2026-04-21): two-layer halo around the map center so
+  // the central altar reads as the world's focal point. A large golden radial
+  // gradient paints in world space, then a proximity-based screen-space white
+  // vignette amps brightness as the player closes in (within 500px).
+  function drawLandmarkAura(ctx2, camX2, camY2) {
+    if (!MAP_DATA) return;
+    var acx = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.x) || WORLD_W / 2;
+    var acy = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.y) || WORLD_H / 2;
+    var sx = acx - camX2, sy = acy - camY2;
+    // World-space golden halo — only draw if within viewport + padding.
+    var HALO_R = 420;
+    if (sx + HALO_R > 0 && sx - HALO_R < W && sy + HALO_R > 0 && sy - HALO_R < H) {
+      var pulse = 0.85 + 0.15 * Math.sin((gameTime || 0) * 1.2);
+      var grad = ctx2.createRadialGradient(sx, sy, 24, sx, sy, HALO_R);
+      grad.addColorStop(0,   'rgba(255,220,140,' + (0.55 * pulse) + ')');
+      grad.addColorStop(0.35, 'rgba(255,200,120,' + (0.28 * pulse) + ')');
+      grad.addColorStop(1,   'rgba(255,200,120,0)');
+      ctx2.save();
+      ctx2.globalCompositeOperation = 'lighter';
+      ctx2.fillStyle = grad;
+      ctx2.beginPath(); ctx2.arc(sx, sy, HALO_R, 0, Math.PI * 2); ctx2.fill();
+      ctx2.restore();
+    }
+    // Proximity brightness boost — fires when player is within 500px.
+    if (typeof player !== 'undefined' && player && player.alive) {
+      var dx = player.x - acx, dy = player.y - acy;
+      var d2 = dx * dx + dy * dy;
+      if (d2 < 500 * 500) {
+        var t = 1 - Math.sqrt(d2) / 500;
+        ctx2.save();
+        ctx2.globalCompositeOperation = 'lighter';
+        ctx2.fillStyle = 'rgba(255,240,200,' + (0.22 * t) + ')';
+        ctx2.fillRect(0, 0, W, H);
+        ctx2.restore();
+      }
+    }
+  }
+
   // Draw BR structures (called from drawTerrain area)
   function drawBRStructures(ctx2, camX2, camY2) {
     for (var i = 0; i < _brStructures.length; i++) {
@@ -3157,38 +3260,48 @@ function doLogin() {
         ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 1.5;
         ctx2.stroke();
       } else if (s.type === 'landmark') {
-        // Big memorable structure — base + roof + optional label
-        ctx2.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx2.fillRect(sx + 6, sy + 10, s.w, s.h);
-        var lgrad = ctx2.createLinearGradient(sx, sy, sx, sy + s.h);
-        var lbase = s.color || '#b8a060';
-        lgrad.addColorStop(0, '#ffffff');
-        lgrad.addColorStop(0.2, lbase);
-        lgrad.addColorStop(1, '#1c1c24');
-        ctx2.fillStyle = lgrad;
-        ctx2.fillRect(sx, sy, s.w, s.h);
-        // Roof-like top triangle
-        ctx2.fillStyle = 'rgba(255,215,140,0.9)';
-        ctx2.beginPath();
-        ctx2.moveTo(sx, sy);
-        ctx2.lineTo(sx + s.w / 2, sy - s.h * 0.18);
-        ctx2.lineTo(sx + s.w, sy);
-        ctx2.closePath(); ctx2.fill();
-        ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 2;
-        ctx2.strokeRect(sx, sy, s.w, s.h);
-        // Windows
-        ctx2.fillStyle = 'rgba(255,240,180,0.9)';
-        for (var lw = 0; lw < 3; lw++) {
-          ctx2.fillRect(sx + s.w * (0.2 + lw * 0.25), sy + s.h * 0.35, s.w * 0.12, s.h * 0.14);
+        var spr = s.sprite ? _getLandmarkSprite(s.sprite) : null;
+        var _sprSrc = spr && spr.canvas ? spr.canvas : (spr && spr.ready ? spr.img : null);
+        if (_sprSrc) {
+          // ArtDesigner SVG path — drawImage with base shadow ellipse.
+          ctx2.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx2.beginPath();
+          ctx2.ellipse(sx + s.w / 2, sy + s.h - 14, s.w * 0.4, 14, 0, 0, Math.PI * 2);
+          ctx2.fill();
+          ctx2.drawImage(_sprSrc, sx, sy, s.w, s.h);
+        } else {
+          // Fallback — painted rect while sprite is still loading / absent.
+          ctx2.fillStyle = 'rgba(0,0,0,0.45)';
+          ctx2.fillRect(sx + 6, sy + 10, s.w, s.h);
+          var lgrad = ctx2.createLinearGradient(sx, sy, sx, sy + s.h);
+          var lbase = s.color || '#b8a060';
+          lgrad.addColorStop(0, '#ffffff');
+          lgrad.addColorStop(0.2, lbase);
+          lgrad.addColorStop(1, '#1c1c24');
+          ctx2.fillStyle = lgrad;
+          ctx2.fillRect(sx, sy, s.w, s.h);
+          ctx2.fillStyle = 'rgba(255,215,140,0.9)';
+          ctx2.beginPath();
+          ctx2.moveTo(sx, sy);
+          ctx2.lineTo(sx + s.w / 2, sy - s.h * 0.18);
+          ctx2.lineTo(sx + s.w, sy);
+          ctx2.closePath(); ctx2.fill();
+          ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 2;
+          ctx2.strokeRect(sx, sy, s.w, s.h);
+          ctx2.fillStyle = 'rgba(255,240,180,0.9)';
+          for (var lw = 0; lw < 3; lw++) {
+            ctx2.fillRect(sx + s.w * (0.2 + lw * 0.25), sy + s.h * 0.35, s.w * 0.12, s.h * 0.14);
+          }
         }
         if (s.label) {
-          ctx2.font = 'bold 14px sans-serif';
+          ctx2.font = 'bold 14px "PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
           ctx2.textAlign = 'center';
           ctx2.lineWidth = 3;
           ctx2.strokeStyle = 'rgba(0,0,0,0.85)';
           ctx2.fillStyle = '#ffe8a0';
-          ctx2.strokeText(s.label, sx + s.w / 2, sy - s.h * 0.22);
-          ctx2.fillText(s.label, sx + s.w / 2, sy - s.h * 0.22);
+          var _labelY = sy - 6;
+          ctx2.strokeText(s.label, sx + s.w / 2, _labelY);
+          ctx2.fillText(s.label, sx + s.w / 2, _labelY);
           ctx2.textAlign = 'left';
         }
       }
@@ -5851,12 +5964,13 @@ function doLogin() {
     if (hasSeams) {
       var vgrass = meta.variants.grass, vdirt = meta.variants.dirt, vstone = meta.variants.stone;
       var seamsGD = meta.seams.grass_dirt, seamsGS = meta.seams.grass_stone;
-      // Flat fallback colours for biomes without sprite art (Leo map 2026-04-20).
+      // Flat biome palette (Leo spec 2026-04-21). Each biome uses a base + a
+      // primary accent + a secondary accent so quadrants read distinctly from afar.
       var FLAT_FILL = {
-        3: { base: '#3a74c4', edge: '#1e4c90' }, // water
-        4: { base: '#e0c077', edge: '#b09040' }, // sand
-        5: { base: '#4a5a2c', edge: '#2a3a18' }, // swamp
-        6: { base: '#eef2f8', edge: '#b8c4d4' }  // snow
+        3: { base: '#2e5aa8', edge: '#1e4c90', accent: '#7fb8e8', accent2: '#ffffff' }, // water
+        4: { base: '#d4a24a', edge: '#a06c2a', accent: '#f0d088', accent2: '#8a4a1a' }, // desert sand+bone+rock
+        5: { base: '#2d5a3d', edge: '#1a3a2a', accent: '#4a7a5a', accent2: '#6b8ea0' }, // swamp deep-green+moss+water
+        6: { base: '#e8f0f5', edge: '#c8dce8', accent: '#b8d4e0', accent2: '#2d4a3a' }  // snow+ice+evergreen
       };
       for (var ty = y0; ty < y1; ty++) {
         for (var tx = x0; tx < x1; tx++) {
@@ -5866,26 +5980,68 @@ function doLogin() {
           if (self >= 3) {
             var ff = FLAT_FILL[self];
             if (ff) {
+              var tsx = tx * tsz, tsy = ty * tsz;
+              // Prefer ArtDesigner biome atlas tile when ready (desert/swamp/snow).
+              var _atlas = MAP_ART.biomeAtlases[self];
+              var _src = _atlas && _atlas.canvas ? _atlas.canvas : (_atlas && _atlas.ready ? _atlas.img : null);
+              if (_src) {
+                var _col = h % _atlas.cols;
+                var _row = ((h >> 4) & 7) === 0 ? 1 : 0;
+                ctx.drawImage(_src, _col * _atlas.tileW, _row * _atlas.tileH, _atlas.tileW, _atlas.tileH, tsx, tsy, tsz, tsz);
+                continue;
+              }
               ctx.fillStyle = ff.base;
-              ctx.fillRect(tx * tsz, ty * tsz, tsz, tsz);
+              ctx.fillRect(tsx, tsy, tsz, tsz);
               // Subtle hatch so biome reads more solid at distance
               ctx.fillStyle = ((h & 1) === 0) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-              ctx.fillRect(tx * tsz, ty * tsz, tsz, tsz);
+              ctx.fillRect(tsx, tsy, tsz, tsz);
               if (self === 3) {
-                // Water ripple dashes
-                ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+                // Water — 2 horizontal ripple dashes
+                ctx.strokeStyle = 'rgba(255,255,255,0.22)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(tx * tsz + 10 + (h & 7), ty * tsz + 20);
-                ctx.lineTo(tx * tsz + 26 + (h & 7), ty * tsz + 20);
-                ctx.moveTo(tx * tsz + 36 - (h & 5), ty * tsz + 44);
-                ctx.lineTo(tx * tsz + 54 - (h & 5), ty * tsz + 44);
+                ctx.moveTo(tsx + 8 + (h & 7), tsy + 20);
+                ctx.lineTo(tsx + 26 + (h & 7), tsy + 20);
+                ctx.moveTo(tsx + 34 - (h & 5), tsy + 44);
+                ctx.lineTo(tsx + 54 - (h & 5), tsy + 44);
                 ctx.stroke();
+              } else if (self === 4) {
+                // Desert — light sand streak; occasional dark rock fleck
+                if ((h & 1) === 0) {
+                  ctx.fillStyle = ff.accent;
+                  ctx.fillRect(tsx + 16 + (h & 15), tsy + 22 + ((h >> 3) & 15), 22, 3);
+                } else if ((h & 7) === 0) {
+                  ctx.fillStyle = ff.accent2;
+                  ctx.fillRect(tsx + 40 - (h & 7), tsy + 44 - ((h >> 2) & 7), 5, 4);
+                }
+              } else if (self === 5) {
+                // Swamp — moss patch OR muck puddle (one accent per tile)
+                if ((h & 1) === 0) {
+                  ctx.fillStyle = ff.accent;
+                  ctx.fillRect(tsx + 12 + (h & 11), tsy + 18 + ((h >> 4) & 11), 20, 10);
+                } else if ((h & 3) === 0) {
+                  ctx.fillStyle = ff.accent2;
+                  ctx.fillRect(tsx + 30 - (h & 5), tsy + 40 - ((h >> 3) & 5), 18, 8);
+                } else {
+                  ctx.fillStyle = ff.edge;
+                  ctx.fillRect(tsx + 6 + (h & 3), tsy + 50 - ((h >> 1) & 7), 6, 3);
+                }
               } else if (self === 6) {
-                // Snow sparkle
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.fillRect(tx * tsz + 8 + (h & 15), ty * tsz + 10 + (h & 11), 2, 2);
-                ctx.fillRect(tx * tsz + 40 - (h & 9), ty * tsz + 48 - (h & 7), 2, 2);
+                // Snow — sparkles + occasional evergreen silhouette
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.fillRect(tsx + 8 + (h & 15), tsy + 10 + ((h >> 2) & 11), 2, 2);
+                ctx.fillRect(tsx + 40 - (h & 9), tsy + 48 - ((h >> 3) & 7), 2, 2);
+                if ((h & 31) === 0) {
+                  ctx.fillStyle = ff.accent2;
+                  ctx.beginPath();
+                  ctx.moveTo(tsx + 32, tsy + 16);
+                  ctx.lineTo(tsx + 24, tsy + 46);
+                  ctx.lineTo(tsx + 40, tsy + 46);
+                  ctx.closePath(); ctx.fill();
+                } else if ((h & 3) === 0) {
+                  ctx.fillStyle = ff.accent;
+                  ctx.fillRect(tsx + 12 + (h & 7), tsy + 30 + (h & 5), 18, 2);
+                }
               }
             }
             continue;
@@ -8426,6 +8582,9 @@ function doLogin() {
     drawZoneOverlays(ctx, cameraX, cameraY);
     // Terrain obstacles — rocks, bushes, water, lava, etc.
     drawTerrain(ctx, cameraX, cameraY);
+    // Central landmark aura (Leo 2026-04-21) — world-space halo drawn under
+    // structures so the altar "glows" visible from afar.
+    drawLandmarkAura(ctx, cameraX, cameraY);
     // BR structures — buildings, walls, crates (world-space)
     drawBRStructures(ctx, cameraX, cameraY);
     // homm3_bright scattered decor (trees, rocks, houses, fences, crates)

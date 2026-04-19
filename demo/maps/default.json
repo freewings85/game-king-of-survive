@@ -1653,12 +1653,15 @@
   "structures": [
     {
       "kind": "landmark",
-      "x": 1120,
-      "y": 1120,
-      "w": 320,
-      "h": 320,
+      "x": 1088,
+      "y": 1024,
+      "w": 384,
+      "h": 512,
       "color": "#b8a060",
-      "label": "中央祭坛"
+      "label": "水晶圣殿",
+      "sprite": "assets/maps/landmarks/crystal_sanctum.svg",
+      "anchorX": 192,
+      "anchorY": 498
     },
     {
       "kind": "bridge",

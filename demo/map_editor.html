@@ -6,7 +6,7 @@
 <title>Map Editor · King of Survive</title>
 <style>
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; background: #161922; color: #e6e7ee; overflow: hidden; }
+  html, body { margin: 0; padding: 0; height: 100%; font-family: "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", "Heiti SC", "Apple Color Emoji", "Segoe UI Emoji", system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; background: #161922; color: #e6e7ee; overflow: hidden; }
   #app { display: grid; grid-template-rows: 44px 1fr; grid-template-columns: 220px 1fr 240px; height: 100vh; }
   #topbar { grid-column: 1 / span 3; background: #1f2433; border-bottom: 1px solid #0d0f17; display: flex; align-items: center; padding: 0 10px; gap: 8px; }
   #topbar h1 { font-size: 14px; margin: 0 12px 0 4px; letter-spacing: 1px; color: #ffd58a; }
@@ -78,14 +78,15 @@
 
 // === Configuration ===
 const TS = 64;
+const CJK_FONT = '"PingFang SC","Noto Sans CJK SC","Noto Sans SC","Hiragino Sans GB","Microsoft YaHei","WenQuanYi Micro Hei","Heiti SC",sans-serif';
 const TILE_TYPES = [
   { id: 0, name: '草地',  color: '#4d8a44', desc: 'grass' },
   { id: 1, name: '泥土',  color: '#8a6a3a', desc: 'dirt' },
-  { id: 2, name: '石地',  color: '#8a8a90', desc: 'stone' },
-  { id: 3, name: '水',    color: '#3a74c4', desc: 'water' },
-  { id: 4, name: '沙漠',  color: '#e0c077', desc: 'sand' },
-  { id: 5, name: '沼泽',  color: '#4a5a2c', desc: 'swamp' },
-  { id: 6, name: '雪原',  color: '#eef2f8', desc: 'snow' }
+  { id: 2, name: '石地',  color: '#6a6a5a', desc: 'stone/ruins' },
+  { id: 3, name: '水',    color: '#2e5aa8', desc: 'water' },
+  { id: 4, name: '沙漠',  color: '#d4a24a', desc: 'sand' },
+  { id: 5, name: '沼泽',  color: '#2d5a3d', desc: 'swamp' },
+  { id: 6, name: '雪原',  color: '#e8f0f5', desc: 'snow' }
 ];
 const STRUCT_KINDS = [
   { kind: 'building',  name: '小屋',    w: 88,  h: 72,  color: '#55555f' },
@@ -393,7 +394,7 @@ function draw() {
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1;
     ctx.strokeRect(p.x, p.y, w, h);
     if (s.kind === 'landmark' && s.label && z > 0.25) {
-      ctx.fillStyle = '#ffe8a0'; ctx.font = 'bold ' + Math.max(10, Math.round(14 * z)) + 'px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffe8a0'; ctx.font = 'bold ' + Math.max(10, Math.round(14 * z)) + 'px ' + CJK_FONT; ctx.textAlign = 'center';
       ctx.fillText(s.label, p.x + w / 2, p.y - 4);
       ctx.textAlign = 'left';
     }
@@ -410,7 +411,7 @@ function draw() {
     ctx.fillStyle = color;
     ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = sel ? '#ffd58a' : '#fff'; ctx.lineWidth = sel ? 3 : 1.5; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px ' + CJK_FONT; ctx.textAlign = 'center';
     ctx.fillText(label, s.x, s.y + 4);
     ctx.textAlign = 'left';
   };
