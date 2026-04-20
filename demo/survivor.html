@@ -3515,10 +3515,14 @@ function doLogin() {
       _altar.speed = 0;
       _altar._isAltar = true;
       _altar._noKnockback = true;
+      // Round 5d F2 — altar invulnerable for the first 90s, then "unlocks"
+      // with a global banner so the late-game raid has a clear cue.
+      _altar._lockedUntil = 90;
+      _altar._unlockedAnnounced = false;
       _activeBossRef = _altar;
       bossDropBanner.active = true;
       bossDropBanner.timer = 3.5;
-      bossDropBanner.text = '★ 中央祭坛已矗立 — 击破获得传说 ★';
+      bossDropBanner.text = '★ 中央祭坛矗立中(90秒后开放)★';
       bossDropBanner.zoneName = '中央祭坛';
     }
     for (var _seedI = 0; _seedI < 15; _seedI++) {
@@ -4305,6 +4309,10 @@ function doLogin() {
           var _nemMul = (rivalState.nemesisId === b.factionId && b._nemesisStreak)
             ? Math.min(1.5, 1 + 0.15 * b._nemesisStreak) : 1;
           var _aDmg = Math.floor((b.attackDamage + Math.floor(Math.random() * 4)) * _rageMul * _nemMul);
+          // Round 5d F3 — first 20s the player has 50% damage reduction
+          if ((b._aiTarget === player || b._aiTarget.isLocal) && gameTime < 20) {
+            _aDmg = Math.max(1, Math.floor(_aDmg * 0.5));
+          }
           b._aiTarget.hp -= _aDmg;
           // Visual feedback
           var _projAngle = Math.atan2(_edy, _edx);
@@ -4402,25 +4410,38 @@ function doLogin() {
     if (stormZone.active && gameTime > (stormZone._shrinkDelay || 45)) {
       stormZone.radius = Math.max(stormZone._minRadius || 80, stormZone.radius - stormZone.shrinkRate * dt);
     }
-    // Round 5c F3 — last 60s of a 4-min match the safe zone snaps to a 200px
-    // bubble around the altar so all surviving players are forced into the
-    // raid. Linear pull toward 200 over the final minute.
+    // Round 5d F2 — altar unlock banner when invulnerability lifts
+    if (_activeBossRef && _activeBossRef._isAltar && _activeBossRef._lockedUntil
+        && !_activeBossRef._unlockedAnnounced && gameTime >= _activeBossRef._lockedUntil) {
+      _activeBossRef._unlockedAnnounced = true;
+      bossDropBanner.active = true;
+      bossDropBanner.timer = 4.0;
+      bossDropBanner.text = '⚡ 中央祭坛已开放 — 击破获 +300 XP + 3 传说技能 ⚡';
+      bossDropBanner.zoneName = '中央祭坛';
+      killFeed.push({ text: '⚡ 中央祭坛已开放! ⚡', color: '#ffd060', time: 6 });
+      if (typeof screenShake === 'function') screenShake(12, 500);
+      if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.45; }
+      if (typeof playSound === 'function') playSound('boss_warn');
+    }
+    // Round 5c→5d F2 — last 60s safe zone target raised 200 → 400 so the
+    // raid has room to maneuver instead of a death-pile.
     if (stormZone.active && _activeBossRef && _activeBossRef._isAltar && _activeBossRef.alive) {
       var _matchEnd = 240; // 4-min target match length
       if (gameTime > _matchEnd - 60) {
         var _pullT = Math.min(1, (gameTime - (_matchEnd - 60)) / 60);
-        var _targetR = 200;
+        var _targetR = 400;
         if (stormZone.radius > _targetR) {
           stormZone.radius = stormZone.radius * (1 - _pullT * 0.05) + _targetR * (_pullT * 0.05);
         }
       }
     }
     if (stormZone.active && !(stormZone.radius > 1)) stormZone.radius = 1;
-    // Player storm damage
+    // Player storm damage (reduced 50% during 20s spawn shield — Round 5d F3)
     if (stormZone.active && player.alive) {
       var _psd = Math.sqrt((player.x - stormZone.centerX) * (player.x - stormZone.centerX) + (player.y - stormZone.centerY) * (player.y - stormZone.centerY));
       if (_psd > stormZone.radius) {
-        player.hp -= 8 * dt;
+        var _stormDmg = (gameTime < 20) ? 4 : 8;
+        player.hp -= _stormDmg * dt;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
         // One alert sound on edge-transition, then throttle to every 3s
@@ -4801,9 +4822,17 @@ function doLogin() {
         if (player._comboAtkUntil && gameTime < player._comboAtkUntil) _rawDmg *= 1.5;
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
+        // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
+        if (closest._isAltar && closest._lockedUntil && gameTime < closest._lockedUntil) {
+          if (typeof floatText === 'function') {
+            var _lk = Math.ceil(closest._lockedUntil - gameTime);
+            floatText(closest.x, closest.y - 60, '未解锁 ' + _lk + 's', { color: '#88aaff', size: 14 });
+          }
+          _dmgValue = 0;
+        }
         closest.hp -= _dmgValue;
         // Round 5b T2: altar struck — spawn ArtDesigner debris particles
-        if (closest._isAltar) {
+        if (closest._isAltar && _dmgValue > 0) {
           var _dn = 3 + Math.floor(Math.random() * 3);
           for (var _di = 0; _di < _dn; _di++) {
             var _da = Math.random() * Math.PI * 2;
@@ -6790,6 +6819,19 @@ function doLogin() {
   }
   // Circle (cx,cy,r) vs decor AABBs — O(neighbors) via spatial hash.
   function isBlockedByDecor(cx, cy, r) {
+    // Round 5d F1 — deep_water rivers must actually block bodies. Without
+    // this, lane_b players walked straight through water, skipping bridges
+    // entirely (Testor: lane_b 2/10 "跨河没解决"). Bridges are still passable
+    // because they intentionally avoid the water tiles in the layout JSON.
+    for (var wi = 0; wi < terrainObstacles.length; wi++) {
+      var tw = terrainObstacles[wi];
+      if (tw.type !== 'deep_water' || !tw._rect) continue;
+      var rb = tw._rect;
+      var qwx = Math.max(rb.x, Math.min(cx, rb.x + rb.width));
+      var qwy = Math.max(rb.y, Math.min(cy, rb.y + rb.height));
+      var dwx = cx - qwx, dwy = cy - qwy;
+      if (dwx * dwx + dwy * dwy < r * r) return true;
+    }
     if (!_decorBlockGrid) return false;
     var gx0 = Math.floor((cx - r) / _DECOR_CELL);
     var gy0 = Math.floor((cy - r) / _DECOR_CELL);
@@ -6807,6 +6849,32 @@ function doLogin() {
       }
     }
     return false;
+  }
+  // Closest deep_water tile centre to a given point, or null if no rivers.
+  function _nearestRiver(x, y) {
+    var best = null, bestD = 1e12;
+    for (var i = 0; i < terrainObstacles.length; i++) {
+      var t = terrainObstacles[i];
+      if (t.type !== 'deep_water' || !t._rect) continue;
+      var qx = Math.max(t._rect.x, Math.min(x, t._rect.x + t._rect.width));
+      var qy = Math.max(t._rect.y, Math.min(y, t._rect.y + t._rect.height));
+      var dx = x - qx, dy = y - qy;
+      var d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = { x: qx, y: qy, d: Math.sqrt(d) }; }
+    }
+    return best;
+  }
+  function _nearestBridge(x, y) {
+    var best = null, bestD = 1e12;
+    for (var i = 0; i < _brStructures.length; i++) {
+      var s = _brStructures[i];
+      if (s.type !== 'bridge') continue;
+      var bx = s.x + s.w / 2, by = s.y + s.h / 2;
+      var dx = bx - x, dy = by - y;
+      var d = dx * dx + dy * dy;
+      if (d < bestD) { bestD = d; best = { x: bx, y: by, d: Math.sqrt(d), label: s.label || '桥' }; }
+    }
+    return best;
   }
   // Axis-separated move: try full, then X-only, then Y-only, else stay put.
   // Returns the new (x, y) — callers assign directly.
@@ -9960,6 +10028,25 @@ function doLogin() {
     var _pAnimFacing = _pMoving ? Math.atan2(_pdy, _pdx)
                      : (_pAnimState === 'attack' && player._attackFacing != null) ? player._attackFacing
                      : localFacing;
+    // Round 5d F3 — spawn-shield golden halo (first 20s, 50% damage reduction)
+    if (gameTime < 20) {
+      var _shieldT = 1 - gameTime / 20;
+      var _shieldPulse = 0.7 + 0.3 * Math.sin(gameTime * 6);
+      ctx.save();
+      ctx.globalAlpha = 0.45 * _shieldT * _shieldPulse;
+      var _shGrad = ctx.createRadialGradient(player.x, player.y, player.radius * 0.4, player.x, player.y, player.radius * 1.6);
+      _shGrad.addColorStop(0, 'rgba(255,220,140,0.0)');
+      _shGrad.addColorStop(0.6, 'rgba(255,215,120,0.55)');
+      _shGrad.addColorStop(1, 'rgba(255,200,100,0)');
+      ctx.fillStyle = _shGrad;
+      ctx.beginPath(); ctx.arc(player.x, player.y, player.radius * 1.6, 0, Math.PI * 2); ctx.fill();
+      // Outer ring
+      ctx.strokeStyle = '#ffd060';
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.7 * _shieldT * _shieldPulse;
+      ctx.beginPath(); ctx.arc(player.x, player.y, player.radius * 1.4, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
     drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, _pAnimFacing, {
       fury: isFury, shield: player.shieldActive, skinId: equippedSkin,
       animState: _pAnimState, animTime: _pAnimTime,
@@ -10543,6 +10630,28 @@ function doLogin() {
     }
 
     drawEdgeBeacons();
+    drawBridgeBanner();
+    // Round 5d F3 — spawn-shield countdown chip (top-center, fades after 20s)
+    if (state === 'playing' && tutorialDone && gameTime < 20 && player && player.alive) {
+      var _ssLeft = Math.max(0, 20 - gameTime);
+      var _ssA = Math.min(1, _ssLeft / 4); // fade out last 4s
+      var _ssFs = Math.max(13, Math.round(Math.min(W, H) * 0.022));
+      var _ssMsg = '🛡 新生庇护 -50% 伤害  ' + _ssLeft.toFixed(1) + 's';
+      ctx.save();
+      ctx.font = 'bold ' + _ssFs + 'px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.textAlign = 'center';
+      var _ssTw = ctx.measureText(_ssMsg).width + 24;
+      var _ssY = Math.round(H * 0.105) + 8;
+      ctx.globalAlpha = 0.85 * _ssA;
+      ctx.fillStyle = 'rgba(0,0,0,0.78)';
+      ctx.fillRect(W / 2 - _ssTw / 2, _ssY, _ssTw, _ssFs + 12);
+      ctx.strokeStyle = '#ffd060'; ctx.lineWidth = 2;
+      ctx.strokeRect(W / 2 - _ssTw / 2 + 0.5, _ssY + 0.5, _ssTw - 1, _ssFs + 11);
+      ctx.fillStyle = '#ffd060';
+      ctx.globalAlpha = _ssA;
+      ctx.fillText(_ssMsg, W / 2, _ssY + _ssFs + 4);
+      ctx.restore();
+    }
     drawMinimap();
     // PvP immunity countdown
     if (gameTime < 90) {
@@ -11187,6 +11296,63 @@ function doLogin() {
   ALTAR_FX.debris.img.src  = 'assets/maps/landmarks/altar_debris.svg';
   ALTAR_FX.shatter.img.src = 'assets/maps/landmarks/altar_shatter.svg';
 
+  // Round 5d F1 — bottom-of-screen pulse banner when player edge-on to water,
+  // and a one-shot tutorial blurb the first time they enter a lane-3 map.
+  var _bridgeTutShownFor = null;
+  function drawBridgeBanner() {
+    if (!player || !player.alive || state !== 'playing' || !tutorialDone) return;
+    if (!MAP_DATA || MAP_DATA.layout !== 'lane-3') return;
+    // First-time lane_b tutorial — 5s
+    if (_bridgeTutShownFor !== MAP_DATA.name) {
+      _bridgeTutShownFor = MAP_DATA.name;
+      player._bridgeTutTimer = 5;
+    }
+    if (player._bridgeTutTimer && player._bridgeTutTimer > 0) {
+      player._bridgeTutTimer -= 0.016;
+      var fs = Math.max(16, Math.round(Math.min(W, H) * 0.025));
+      var msg = '跨河需走桥 — 顺金色 ↑ 走';
+      ctx.save();
+      ctx.font = 'bold ' + fs + 'px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.textAlign = 'center';
+      var tw = ctx.measureText(msg).width + 28;
+      var ty = H * 0.18;
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillRect(W / 2 - tw / 2, ty, tw, fs + 14);
+      ctx.strokeStyle = '#ffd060'; ctx.lineWidth = 2;
+      ctx.strokeRect(W / 2 - tw / 2 + 0.5, ty + 0.5, tw - 1, fs + 13);
+      ctx.fillStyle = '#ffd060';
+      ctx.fillText(msg, W / 2, ty + fs + 4);
+      ctx.restore();
+    }
+    // Edge-on water pulse — show "找桥 →" at bottom when within 60px of river
+    var nr = _nearestRiver(player.x, player.y);
+    if (nr && nr.d < 60) {
+      var nb = _nearestBridge(player.x, player.y);
+      if (!nb) return;
+      var dx = nb.x - player.x, dy = nb.y - player.y;
+      var ang = Math.atan2(dy, dx);
+      var pulse2 = 0.7 + 0.3 * Math.sin((gameTime || 0) * 6);
+      var fs2 = Math.max(15, Math.round(Math.min(W, H) * 0.024));
+      var arrow = (ang > -Math.PI / 4 && ang < Math.PI / 4) ? '→' :
+                  (ang >= Math.PI / 4 && ang < 3 * Math.PI / 4) ? '↓' :
+                  (ang >= 3 * Math.PI / 4 || ang < -3 * Math.PI / 4) ? '←' : '↑';
+      var msg2 = '找桥 ' + arrow + '  (' + Math.round(nb.d) + 'px)';
+      ctx.save();
+      ctx.globalAlpha = pulse2;
+      ctx.font = 'bold ' + fs2 + 'px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.textAlign = 'center';
+      var tw2 = ctx.measureText(msg2).width + 32;
+      var by2 = H * 0.78;
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      ctx.fillRect(W / 2 - tw2 / 2, by2, tw2, fs2 + 16);
+      ctx.strokeStyle = '#ffd060'; ctx.lineWidth = 3;
+      ctx.strokeRect(W / 2 - tw2 / 2 + 0.5, by2 + 0.5, tw2 - 1, fs2 + 15);
+      ctx.fillStyle = '#ffd060';
+      ctx.fillText(msg2, W / 2, by2 + fs2 + 5);
+      ctx.restore();
+    }
+  }
+
   function drawEdgeBeacons() {
     if (!player || !player.alive || state !== 'playing') return;
     if (!tutorialDone) return;
@@ -11213,6 +11379,15 @@ function doLogin() {
       var sdx = player.x - stormZone.centerX, sdy = player.y - stormZone.centerY;
       if (sdx * sdx + sdy * sdy > stormZone.radius * stormZone.radius * 0.85) {
         pois.push({ x: stormZone.centerX, y: stormZone.centerY, kind: 'danger', label: '安全区' });
+      }
+    }
+    // Round 5d F1 — when river is within 200px, show nearest bridge as a
+    // priority "holy" POI so the player has a clear visual to follow.
+    if (MAP_DATA && MAP_DATA.layout === 'lane-3') {
+      var _nr = _nearestRiver(player.x, player.y);
+      if (_nr && _nr.d < 280) {
+        var _nb = _nearestBridge(player.x, player.y);
+        if (_nb) pois.unshift({ x: _nb.x, y: _nb.y, kind: 'holy', label: _nb.label });
       }
     }
     // Priority: danger > holy > neutral, cap to 2 on screen at once
