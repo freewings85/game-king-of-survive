@@ -3536,16 +3536,34 @@ function doLogin() {
         _nextDecision: 0.5 + Math.random() * 2
       });
     }
-    // Experiment G: pick a random bot as the player's RIVAL (solo mode only)
+    // Experiment G + R5k F3 — pick rival whose spawn distance to player is
+    // in the 400-600px sweet spot. Too close = instant 1v1 before cooldowns
+    // settle; too far = rival never reaches player before dying to other bots.
+    // Fall back to a random pick if no bot lands in the band.
     if (gameMode !== 'team' && offlineBots.length > 0) {
-      var _rivIdx = Math.floor(Math.random() * offlineBots.length);
+      var _rivIdx = -1;
+      var _bestBandD = Infinity;
+      for (var _rvi = 0; _rvi < offlineBots.length; _rvi++) {
+        var _rb = offlineBots[_rvi];
+        var _rdx = _rb.x - player.x, _rdy = _rb.y - player.y;
+        var _rd = Math.sqrt(_rdx * _rdx + _rdy * _rdy);
+        // Prefer bots within 400-600. Score = distance from band centre 500.
+        if (_rd >= 400 && _rd <= 600) {
+          var _bandScore = Math.abs(_rd - 500);
+          if (_bandScore < _bestBandD) { _bestBandD = _bandScore; _rivIdx = _rvi; }
+        }
+      }
+      if (_rivIdx < 0) _rivIdx = Math.floor(Math.random() * offlineBots.length);
       var _rivalBot = offlineBots[_rivIdx];
+      var _initRD = Math.round(Math.hypot(_rivalBot.x - player.x, _rivalBot.y - player.y));
+      console.log('[rival] picked bot#' + _rivIdx + ' (' + _rivalBot.archetype + ') dist=' + _initRD + 'px band=' + (_bestBandD < Infinity ? 'yes' : 'fallback'));
       rivalState.botId = _rivalBot.factionId;
       rivalState.killedBy = 0;
       rivalState.nemesisId = -1;
       rivalState._pendingAnnounce = 3.0; // defer 3s so tutorial/HUD settle
       rivalState._announceName = _rivalBot.name || 'RIVAL';
       rivalState._announceArch = _rivalBot.archetypeName || '';
+      rivalState._initDist = _initRD;
     } else {
       rivalState.botId = -1; rivalState.killedBy = 0; rivalState.nemesisId = -1;
       rivalState._pendingAnnounce = 0;
@@ -4824,13 +4842,18 @@ function doLogin() {
     // Auto attack nearby enemies + hostile bot players
     player._timer = (player._timer || 0) - dt;
     if (player._timer <= 0) {
-      // Round 5f F3 / R5g F2 — class atk-cd multipliers
+      // Round 5f F3 / R5g F2 / R5k F2 — class atk-cd multipliers
       // warrior 首战狂怒: -25% cd first 60s
+      // warrior on lane-3 maps: extra -10% cd always (lane_b μ=1.2 kills buff)
       // scout 速射:        -20% cd always (matches new HP 165 buff)
       var _cls = player.playerClass;
       var _atkCdMul = 1.0;
-      if (_cls === 'warrior' && gameTime < 60) _atkCdMul = 0.75;
-      else if (_cls === 'scout') _atkCdMul = 0.80;
+      if (_cls === 'warrior') {
+        if (gameTime < 60) _atkCdMul = 0.75;
+        if (MAP_DATA && MAP_DATA.layout === 'lane-3') _atkCdMul *= 0.9;
+      } else if (_cls === 'scout') {
+        _atkCdMul = 0.80;
+      }
       player._timer = player.attackCooldown * _atkCdMul;
       // R5j F2 — scout has a longer auto-attack scan radius (520 vs 400) so
       // they can pick off bots across mid lane chokepoints on lane_b without
@@ -4945,6 +4968,9 @@ function doLogin() {
             if (_prevHpFrac > th && _curHpFrac <= th) _crossedThresh = true;
           });
           var _bigBurst = (closest._hitCount % 3 === 0) || _crossedThresh;
+          // R5k F1 — cap active flashes at 6 so spam-hit altar can't pile up
+          // 20+ overlapping scale-1.5 SVGs in drawLandmarkAura.
+          if (R5H_FX.activeFlashes.length >= 6) R5H_FX.activeFlashes.shift();
           R5H_FX.activeFlashes.push({ x: closest.x, y: closest.y, t: 0, dur: _bigBurst ? 0.5 : 0.35, big: _bigBurst });
           if (_bigBurst && typeof screenShake === 'function') screenShake('light');
           var _dn = 3 + Math.floor(Math.random() * 3);
