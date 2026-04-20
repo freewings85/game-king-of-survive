@@ -3226,9 +3226,10 @@ function doLogin() {
         ctx2.restore();
       }
     }
-    // R5h+R5i: per-hit golden flash. Normal: 350ms / 0.7→1.3 scale.
-    //          Big (every 3rd hit + HP threshold): 500ms / 0.5→1.5 scale.
-    if (R5H_FX.activeFlashes.length) {
+    // R5h+R5i+R5j: per-hit golden flash. Early-return when queue is empty
+    // (the common case once altar is dead). Normal: 350ms / 0.7→1.3 scale.
+    // Big (every 3rd hit + HP threshold): 500ms / 0.5→1.5 scale.
+    if (R5H_FX.activeFlashes.length > 0) {
       for (var _fi = R5H_FX.activeFlashes.length - 1; _fi >= 0; _fi--) {
         var _fx = R5H_FX.activeFlashes[_fi];
         _fx.t += 0.016;
@@ -4831,7 +4832,12 @@ function doLogin() {
       if (_cls === 'warrior' && gameTime < 60) _atkCdMul = 0.75;
       else if (_cls === 'scout') _atkCdMul = 0.80;
       player._timer = player.attackCooldown * _atkCdMul;
-      var closest = null, closestDist = 400;
+      // R5j F2 — scout has a longer auto-attack scan radius (520 vs 400) so
+      // they can pick off bots across mid lane chokepoints on lane_b without
+      // needing to bridge-rush. Sharpshooter identity, matching the scout
+      // sprite (arrow/bow).
+      var _scanR = (player.playerClass === 'scout') ? 520 : 400;
+      var closest = null, closestDist = _scanR;
       // Round 5g F1 — altar priority: when an unlocked altar is in attack
       // range, lock onto it even if a normal mob is closer. The altar surface
       // (radius 80) gets a 100px proximity boost so player attacks land on
@@ -4911,6 +4917,13 @@ function doLogin() {
         if (player._comboAtkUntil && gameTime < player._comboAtkUntil) _rawDmg *= 1.5;
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
+        // R5j F2 — scout 伏击: first hit on a fresh bot target +50% damage.
+        // Track _scoutAmbushHits per bot so subsequent hits are normal.
+        if (player.playerClass === 'scout' && closest && closest.isBot && !closest._scoutHitOnce) {
+          closest._scoutHitOnce = true;
+          _dmgValue = Math.floor(_dmgValue * 1.5);
+          if (typeof floatText === 'function') floatText(closest.x, closest.y - 30, '伏击!', { color: '#aaffaa', size: 14 });
+        }
         // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
         if (closest._isAltar && closest._lockedUntil && gameTime < closest._lockedUntil) {
           if (typeof floatText === 'function') {
@@ -9190,8 +9203,16 @@ function doLogin() {
   }
 
   // === DRAW ===
+  // R5j F1 — frame-cached flags that downstream entity loops read once instead
+  // of recomputing the slow-active condition per entity.
+  var _slowActiveFrame = false;
+  var _slowSrcFrame = null;
   function drawGame() {
     if (!player) return;
+    _slowActiveFrame = !!(window._altarSlowUntil && gameTime < window._altarSlowUntil);
+    _slowSrcFrame = _slowActiveFrame
+      ? (R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null))
+      : null;
 
     // 3-zone HUD layout: top 15% / middle 75% game / bottom 10%
     var _gameZoneTop = Math.round(H * 0.105);
@@ -9786,19 +9807,16 @@ function doLogin() {
           ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + hitImpactRing, 0, Math.PI * 2); ctx.stroke();
           ctx.restore(); ctx.globalAlpha = spawnAlpha;
         }
-        // R5h F3: slow debuff aura under enemy. R5i: cull to viewport so off-screen
-        // entities don't pay the drawImage tax (mid-game can have 20+ mobs).
-        if (window._altarSlowUntil && gameTime < window._altarSlowUntil) {
+        // R5h F3 + R5i + R5j: slow aura. Skip entirely via cached flag when
+        // altar slow inactive (most of any match before kill). Viewport cull.
+        if (_slowActiveFrame && _slowSrcFrame) {
           var _esx = e.x - cameraX, _esy = e.y - cameraY;
           if (_esx > -80 && _esx < W + 80 && _esy > -80 && _esy < H + 80) {
-            var _slowSrc = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
-            if (_slowSrc) {
-              var _slowSz = R5H_FX.slowAura.size * Math.max(1, e.radius / 24);
-              ctx.save();
-              ctx.globalAlpha = 0.75;
-              ctx.drawImage(_slowSrc, e.x - _slowSz / 2, e.y - _slowSz / 2 + 8, _slowSz, _slowSz);
-              ctx.restore();
-            }
+            var _slowSz = R5H_FX.slowAura.size * Math.max(1, e.radius / 24);
+            ctx.save();
+            ctx.globalAlpha = 0.75;
+            ctx.drawImage(_slowSrcFrame, e.x - _slowSz / 2, e.y - _slowSz / 2 + 8, _slowSz, _slowSz);
+            ctx.restore();
           }
         }
         // Body — enemySprite: render enemies as Canvas-drawn sprites
@@ -10351,19 +10369,15 @@ function doLogin() {
       var _bMoving = (_bdx * _bdx + _bdy * _bdy) > 0.04;
       bp._prevX = bp.x; bp._prevY = bp.y;
       if (_bMoving) bpAngle = Math.atan2(_bdy, _bdx);
-      // R5h F3 + R5i: slow debuff aura under hostile bots, viewport-culled
-      if (window._altarSlowUntil && gameTime < window._altarSlowUntil
-          && bp.factionId !== player.factionId) {
+      // R5h F3 + R5i + R5j: slow aura under hostile bots. Cached frame flag.
+      if (_slowActiveFrame && _slowSrcFrame && bp.factionId !== player.factionId) {
         var _bsx = bp.x - cameraX, _bsy = bp.y - cameraY;
         if (_bsx > -80 && _bsx < W + 80 && _bsy > -80 && _bsy < H + 80) {
-          var _slowB = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
-          if (_slowB) {
-            var _slowBSz = R5H_FX.slowAura.size * Math.max(1, bp.radius / 24);
-            ctx.save();
-            ctx.globalAlpha = 0.7;
-            ctx.drawImage(_slowB, bp.x - _slowBSz / 2, bp.y - _slowBSz / 2 + 12, _slowBSz, _slowBSz);
-            ctx.restore();
-          }
+          var _slowBSz = R5H_FX.slowAura.size * Math.max(1, bp.radius / 24);
+          ctx.save();
+          ctx.globalAlpha = 0.7;
+          ctx.drawImage(_slowSrcFrame, bp.x - _slowBSz / 2, bp.y - _slowBSz / 2 + 12, _slowBSz, _slowBSz);
+          ctx.restore();
         }
       }
       // Round 5 N: nemesis burning aura — drawn UNDER the character sprite.
