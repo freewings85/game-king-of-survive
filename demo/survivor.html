@@ -292,9 +292,10 @@ function doLogin() {
   // All rasterised to offscreen canvas at load → cheap drawImage per frame.
   var R5H_FX = {
     impactFlash:    { img: new Image(), canvas: null, ready: false, size: 128 },
+    impactFlashBig: { img: new Image(), canvas: null, ready: false, size: 192 },
     crownSpotlight: { img: new Image(), canvas: null, ready: false, w: 512, h: 384 },
     slowAura:       { img: new Image(), canvas: null, ready: false, size: 80 },
-    activeFlashes:  [],   // per-hit { x, y, t, dur }
+    activeFlashes:  [],   // per-hit { x, y, t, dur, big }
     crownPlay:      null  // { until, t, dur }
   };
   function _rasteriseR5h(entry, w, h) {
@@ -307,6 +308,10 @@ function doLogin() {
       try { _rasteriseR5h(R5H_FX.impactFlash, 128, 128); R5H_FX.impactFlash.ready = true; } catch (e) { R5H_FX.impactFlash.ready = true; }
     };
     R5H_FX.impactFlash.img.src = 'assets/maps/landmarks/altar_impact_flash.svg';
+    R5H_FX.impactFlashBig.img.onload = function() {
+      try { _rasteriseR5h(R5H_FX.impactFlashBig, 192, 192); R5H_FX.impactFlashBig.ready = true; } catch (e) { R5H_FX.impactFlashBig.ready = true; }
+    };
+    R5H_FX.impactFlashBig.img.src = 'assets/maps/landmarks/altar_impact_flash_big.svg';
     R5H_FX.crownSpotlight.img.onload = function() {
       // Spotlight is drawn at canvas size, so rasterise at native 512x384
       try { _rasteriseR5h(R5H_FX.crownSpotlight, 512, 384); R5H_FX.crownSpotlight.ready = true; } catch (e) { R5H_FX.crownSpotlight.ready = true; }
@@ -3221,16 +3226,19 @@ function doLogin() {
         ctx2.restore();
       }
     }
-    // R5h: per-hit golden impact flashes — alpha 1→0, scale 0.7→1.3 over 0.2s
+    // R5h+R5i: per-hit golden flash. Normal: 350ms / 0.7→1.3 scale.
+    //          Big (every 3rd hit + HP threshold): 500ms / 0.5→1.5 scale.
     if (R5H_FX.activeFlashes.length) {
-      var _flashSrc = R5H_FX.impactFlash.canvas || (R5H_FX.impactFlash.ready ? R5H_FX.impactFlash.img : null);
       for (var _fi = R5H_FX.activeFlashes.length - 1; _fi >= 0; _fi--) {
         var _fx = R5H_FX.activeFlashes[_fi];
         _fx.t += 0.016;
         var _fp = _fx.t / _fx.dur;
         if (_fp >= 1) { R5H_FX.activeFlashes.splice(_fi, 1); continue; }
+        var _fEntry = _fx.big ? R5H_FX.impactFlashBig : R5H_FX.impactFlash;
+        var _flashSrc = _fEntry.canvas || (_fEntry.ready ? _fEntry.img : null);
         if (!_flashSrc) continue;
-        var _fSz = R5H_FX.impactFlash.size * (0.7 + 0.6 * _fp);
+        var _fScale = _fx.big ? (0.5 + 1.0 * _fp) : (0.7 + 0.6 * _fp);
+        var _fSz = _fEntry.size * _fScale;
         ctx2.save();
         ctx2.globalAlpha = 1 - _fp;
         ctx2.globalCompositeOperation = 'lighter';
@@ -4912,9 +4920,20 @@ function doLogin() {
           _dmgValue = 0;
         }
         closest.hp -= _dmgValue;
-        // Round 5b T2 + R5h: altar struck — spawn debris particles + golden impact flash
+        // R5b T2 + R5h+R5i: altar struck — debris + 350ms golden flash; every
+        // 3rd hit OR crossing 75/50/25% HP thresholds upgrades to BIG burst.
         if (closest._isAltar && _dmgValue > 0) {
-          R5H_FX.activeFlashes.push({ x: closest.x, y: closest.y, t: 0, dur: 0.2 });
+          closest._hitCount = (closest._hitCount || 0) + 1;
+          var _maxHp = closest.maxHp || 800;
+          var _prevHpFrac = ((closest.hp + _dmgValue) / _maxHp);
+          var _curHpFrac = (closest.hp / _maxHp);
+          var _crossedThresh = false;
+          [0.75, 0.50, 0.25].forEach(function(th) {
+            if (_prevHpFrac > th && _curHpFrac <= th) _crossedThresh = true;
+          });
+          var _bigBurst = (closest._hitCount % 3 === 0) || _crossedThresh;
+          R5H_FX.activeFlashes.push({ x: closest.x, y: closest.y, t: 0, dur: _bigBurst ? 0.5 : 0.35, big: _bigBurst });
+          if (_bigBurst && typeof screenShake === 'function') screenShake('light');
           var _dn = 3 + Math.floor(Math.random() * 3);
           for (var _di = 0; _di < _dn; _di++) {
             var _da = Math.random() * Math.PI * 2;
@@ -6955,11 +6974,13 @@ function doLogin() {
     if (t < 15) return 1;
     return 1 - (t - 15) / 10; // linear fade 15→25s
   }
-  // Round 5e F3 — global "altar slain" slow. Returns multiplier to apply to
-  // enemy + bot movement for 3 min after the altar dies.
+  // Round 5e F3 — global "altar slain" slow. R5i diag: 0.7 was too harsh,
+  // lane_b combat fully stalled (avg 0/0 player+bot kills across 3 runs).
+  // Lowered to 0.85 (15% slow) — still readable visually via slow_aura sprite,
+  // but doesn't gate cross-river engagements through bridge chokepoints.
   function _altarSlowMul() {
     if (window._altarSlowUntil && (typeof gameTime !== 'undefined') && gameTime < window._altarSlowUntil) {
-      return 0.7;
+      return 0.85;
     }
     return 1;
   }
@@ -9765,15 +9786,19 @@ function doLogin() {
           ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + hitImpactRing, 0, Math.PI * 2); ctx.stroke();
           ctx.restore(); ctx.globalAlpha = spawnAlpha;
         }
-        // R5h F3: slow debuff aura — drawn UNDER the enemy sprite while altar slow active
+        // R5h F3: slow debuff aura under enemy. R5i: cull to viewport so off-screen
+        // entities don't pay the drawImage tax (mid-game can have 20+ mobs).
         if (window._altarSlowUntil && gameTime < window._altarSlowUntil) {
-          var _slowSrc = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
-          if (_slowSrc) {
-            var _slowSz = R5H_FX.slowAura.size * Math.max(1, e.radius / 24);
-            ctx.save();
-            ctx.globalAlpha = 0.75;
-            ctx.drawImage(_slowSrc, e.x - _slowSz / 2, e.y - _slowSz / 2 + 8, _slowSz, _slowSz);
-            ctx.restore();
+          var _esx = e.x - cameraX, _esy = e.y - cameraY;
+          if (_esx > -80 && _esx < W + 80 && _esy > -80 && _esy < H + 80) {
+            var _slowSrc = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
+            if (_slowSrc) {
+              var _slowSz = R5H_FX.slowAura.size * Math.max(1, e.radius / 24);
+              ctx.save();
+              ctx.globalAlpha = 0.75;
+              ctx.drawImage(_slowSrc, e.x - _slowSz / 2, e.y - _slowSz / 2 + 8, _slowSz, _slowSz);
+              ctx.restore();
+            }
           }
         }
         // Body — enemySprite: render enemies as Canvas-drawn sprites
@@ -10326,16 +10351,19 @@ function doLogin() {
       var _bMoving = (_bdx * _bdx + _bdy * _bdy) > 0.04;
       bp._prevX = bp.x; bp._prevY = bp.y;
       if (_bMoving) bpAngle = Math.atan2(_bdy, _bdx);
-      // R5h F3: slow debuff aura under hostile bots (purple mist)
+      // R5h F3 + R5i: slow debuff aura under hostile bots, viewport-culled
       if (window._altarSlowUntil && gameTime < window._altarSlowUntil
           && bp.factionId !== player.factionId) {
-        var _slowB = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
-        if (_slowB) {
-          var _slowBSz = R5H_FX.slowAura.size * Math.max(1, bp.radius / 24);
-          ctx.save();
-          ctx.globalAlpha = 0.7;
-          ctx.drawImage(_slowB, bp.x - _slowBSz / 2, bp.y - _slowBSz / 2 + 12, _slowBSz, _slowBSz);
-          ctx.restore();
+        var _bsx = bp.x - cameraX, _bsy = bp.y - cameraY;
+        if (_bsx > -80 && _bsx < W + 80 && _bsy > -80 && _bsy < H + 80) {
+          var _slowB = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
+          if (_slowB) {
+            var _slowBSz = R5H_FX.slowAura.size * Math.max(1, bp.radius / 24);
+            ctx.save();
+            ctx.globalAlpha = 0.7;
+            ctx.drawImage(_slowB, bp.x - _slowBSz / 2, bp.y - _slowBSz / 2 + 12, _slowBSz, _slowBSz);
+            ctx.restore();
+          }
         }
       }
       // Round 5 N: nemesis burning aura — drawn UNDER the character sprite.
