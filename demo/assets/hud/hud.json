@@ -1,0 +1,19 @@
+{
+  "directionArrow": {
+    "image": "direction_arrow.svg",
+    "size": 48,
+    "cols": 3,
+    "variants": [
+      { "idx": 0, "name": "holy",    "color": "#ffd700", "description": "金色 — 指向祭坛 altar / 目标任务", "pulseHz": 0.63 },
+      { "idx": 1, "name": "danger",  "color": "#ff4a28", "description": "红色 — 指向风暴中心 / rival / nemesis / boss", "pulseHz": 1.25 },
+      { "idx": 2, "name": "neutral", "color": "#5aa5d8", "description": "蓝色 — 指向最近 strat point（含 flag 图标）", "pulseHz": 0 }
+    ],
+    "anchor": { "x": 24, "y": 24 },
+    "defaultRotation": "up (pointing north)",
+    "usage": [
+      "绘制方向：ctx.save(); ctx.translate(screenX, screenY); ctx.rotate(angle - Math.PI/2); drawImage(arr, variant*48, 0, 48, 48, -24, -24, 48, 48); ctx.restore();",
+      "屏幕边缘放置：将目标世界坐标转屏幕坐标，clamp 到屏内留 48px margin；若目标在屏外则 clamp 到最近边缘 + 旋转朝向目标。",
+      "多箭头叠加：holy 优先级最低（只在无紧急时显示），danger 最高（永远最上层），neutral 中间；同时最多显示 2 个。"
+    ]
+  }
+}

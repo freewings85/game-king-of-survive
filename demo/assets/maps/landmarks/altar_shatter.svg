@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Altar shatter explosion — single sprite 256×256, drawn at altar center at death moment.
+       Developer scales 0.5 → 1.6 over 450ms with alpha 1 → 0. Rotate 0.
+       Gold concentric shockwaves + 12 radial gold shards + central flash.
+  -->
+  <defs>
+    <radialGradient id="coreFlash" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#fff6a8" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#ffd966" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#c89028" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ring1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#ffd966" stop-opacity="0"/>
+      <stop offset="85%"  stop-color="#ffea80" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shardG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff4c8"/>
+      <stop offset="50%" stop-color="#ffd966"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer shockwave ring (largest) -->
+  <circle cx="128" cy="128" r="118" fill="none" stroke="#ffea80" stroke-width="4" opacity="0.85"/>
+  <!-- Mid ring -->
+  <circle cx="128" cy="128" r="92"  fill="url(#ring1)"/>
+  <!-- Inner bright ring -->
+  <circle cx="128" cy="128" r="60"  fill="none" stroke="#fff6a8" stroke-width="6" opacity="0.95"/>
+
+  <!-- 12 radial gold shards (star-burst) -->
+  <g stroke="#3a2208" stroke-width="1.8" stroke-linejoin="round">
+    <g transform="rotate(0 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(30 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(60 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(90 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(120 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(150 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(180 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(210 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(240 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(270 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(300 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+    <g transform="rotate(330 128 128)"><polygon points="128,28 122,112 134,112" fill="url(#shardG)"/></g>
+  </g>
+
+  <!-- Secondary smaller shards between majors (x-shaped offsets) -->
+  <g stroke="#3a2208" stroke-width="1.2" stroke-linejoin="round" opacity="0.85">
+    <g transform="rotate(15 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(45 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(75 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(105 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(135 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(165 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(195 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(225 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(255 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(285 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(315 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+    <g transform="rotate(345 128 128)"><polygon points="128,60 124,100 132,100" fill="#ffea80"/></g>
+  </g>
+
+  <!-- Central flash (drawn last = on top) -->
+  <circle cx="128" cy="128" r="60" fill="url(#coreFlash)"/>
+  <circle cx="128" cy="128" r="24" fill="#ffffff" opacity="0.95"/>
+
+  <!-- 8 flying stone fragments (gray, scattered outward) -->
+  <g stroke="#2a1a08" stroke-width="1.4" stroke-linejoin="round">
+    <polygon points="46,82 56,74 64,82 58,92"   fill="#b8a890"/>
+    <polygon points="200,70 210,62 220,74 210,82" fill="#a89878"/>
+    <polygon points="40,178 52,172 58,184 46,190" fill="#b8a890"/>
+    <polygon points="200,186 212,180 218,192 204,198" fill="#a89878"/>
+    <polygon points="122,34 132,28 140,38 130,46"  fill="#b8a890"/>
+    <polygon points="116,216 126,208 134,220 122,226" fill="#a89878"/>
+    <polygon points="32,126 42,120 48,132 36,138"  fill="#b8a890"/>
+    <polygon points="208,126 220,120 226,134 214,138" fill="#a89878"/>
+  </g>
+</svg>

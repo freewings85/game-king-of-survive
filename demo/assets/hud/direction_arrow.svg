@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="48" viewBox="0 0 144 48">
+  <!-- Screen-edge direction arrow atlas. 3 states × 48×48.
+       Arrow points UP by default — Developer rotates with ctx.rotate(angleToTarget).
+       col 0 = holy (gold)    — points to altar
+       col 1 = danger (red)   — points to storm center / rival / nemesis
+       col 2 = neutral (blue) — points to nearest strategic point
+
+       Drop shadow is pre-baked. Pulse animation is built-in (SVG animate).
+       Place at screen edge: x = clamp(0..W) + offset toward target.
+  -->
+  <defs>
+    <linearGradient id="arGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff4c8"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+    <linearGradient id="arRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#ffb0a0"/>
+      <stop offset="50%" stop-color="#ff4a28"/>
+      <stop offset="100%" stop-color="#8a0a02"/>
+    </linearGradient>
+    <linearGradient id="arBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#c0e4ff"/>
+      <stop offset="50%" stop-color="#5aa5d8"/>
+      <stop offset="100%" stop-color="#1a4a7a"/>
+    </linearGradient>
+    <radialGradient id="glowGold" cx="50%" cy="55%" r="55%">
+      <stop offset="0%"  stop-color="#ffd700" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRed" cx="50%" cy="55%" r="55%">
+      <stop offset="0%"  stop-color="#ff4a28" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff4a28" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBlue" cx="50%" cy="55%" r="55%">
+      <stop offset="0%"  stop-color="#5aa5d8" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#5aa5d8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- col 0 : HOLY (gold, points to altar) -->
+  <g transform="translate(0,0)">
+    <!-- glow halo -->
+    <circle cx="24" cy="26" r="22" fill="url(#glowGold)">
+      <animate attributeName="r" values="20;25;20" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+    <!-- arrow body (pointing up) -->
+    <g stroke="#2a1a08" stroke-width="2" stroke-linejoin="round">
+      <!-- triangle head -->
+      <polygon points="24,6 40,26 32,26 32,40 16,40 16,26 8,26" fill="url(#arGold)"/>
+      <!-- inner highlight -->
+      <polygon points="24,10 34,24 28,24 28,36 20,36 20,24 14,24" fill="#fff4c8" opacity="0.45"/>
+      <!-- center dot -->
+      <circle cx="24" cy="22" r="2.5" fill="#fff"/>
+    </g>
+    <!-- 4-point star flare at tip -->
+    <g fill="#fff" opacity="0.85">
+      <polygon points="24,2 26,7 31,9 26,11 24,16 22,11 17,9 22,7"/>
+    </g>
+  </g>
+
+  <!-- col 1 : DANGER (red, storm / rival / nemesis) -->
+  <g transform="translate(48,0)">
+    <circle cx="24" cy="26" r="22" fill="url(#glowRed)">
+      <animate attributeName="r" values="18;26;18" dur="0.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="0.8s" repeatCount="indefinite"/>
+    </circle>
+    <g stroke="#2a0a04" stroke-width="2" stroke-linejoin="round">
+      <polygon points="24,6 40,26 32,26 32,40 16,40 16,26 8,26" fill="url(#arRed)"/>
+      <polygon points="24,10 34,24 28,24 28,36 20,36 20,24 14,24" fill="#ff8a6a" opacity="0.45"/>
+      <!-- warning exclamation -->
+      <rect x="22.5" y="18" width="3" height="10" fill="#fff" rx="0.5"/>
+      <circle cx="24" cy="32" r="1.6" fill="#fff"/>
+    </g>
+  </g>
+
+  <!-- col 2 : NEUTRAL (blue, nearest strat point) -->
+  <g transform="translate(96,0)">
+    <circle cx="24" cy="26" r="22" fill="url(#glowBlue)"/>
+    <g stroke="#0a2a4a" stroke-width="2" stroke-linejoin="round">
+      <polygon points="24,6 40,26 32,26 32,40 16,40 16,26 8,26" fill="url(#arBlue)"/>
+      <polygon points="24,10 34,24 28,24 28,36 20,36 20,24 14,24" fill="#c0e4ff" opacity="0.45"/>
+      <!-- flag icon inside shaft -->
+      <g transform="translate(19,22)">
+        <line x1="2.5" y1="0" x2="2.5" y2="12" stroke="#fff" stroke-width="1.4"/>
+        <polygon points="2.5,1 8,3 2.5,5" fill="#fff"/>
+      </g>
+    </g>
+  </g>
+</svg>
