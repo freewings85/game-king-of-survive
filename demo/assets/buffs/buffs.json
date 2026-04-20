@@ -1,0 +1,18 @@
+{
+  "newbornShield": {
+    "image": "newborn_shield.svg",
+    "size": 80,
+    "anchor": { "x": 40, "y": 40 },
+    "description": "arena_a 开局 20s 玩家 50% 减伤 buff 视觉 — 金色保护光环",
+    "usage": "drawImage(shieldImg, player.x - 40, player.y - 40, 80, 80) — 内建 animate（halo 脉动 + 双环旋转 + 6 盾牌符文环 + 漂浮光粒），无需代码驱动。z 序：角色脚下、地面之上（同 r3/synergy_aura_*.png 层级）。",
+    "colors": {
+      "primary": "#ffd700",
+      "accent":  "#fff6c8",
+      "outline": "#3a2208"
+    },
+    "fadeOut": {
+      "lastMs": 3000,
+      "description": "最后 3 秒 alpha 1→0 提示即将失效；闪烁频率 2Hz（80/120/80/... ms）"
+    }
+  }
+}
