@@ -5012,13 +5012,12 @@ function doLogin() {
         });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
-        // R5l F1 / R5m F1 / R5q F1 / R5r F1 — muzzle particle count.
+        // R5l F1 / R5m F1 / R5q F1 — muzzle particle count.
         //   warrior 3 (0.27s cd, +48% attack rate vs mage)
-        //   scout   4 (0.32s cd, fast-attack class)
-        //   assassin 4 (0.34s cd, same bucket as scout, was 6 in R5q)
-        //   mage    6 (baseline)
-        var _muzCount = (selectedClass === 'warrior') ? 3 :
-                        ((selectedClass === 'scout' || selectedClass === 'assassin') ? 4 : 6);
+        //   scout   4 (R5q: R5p revert to 6 dropped FPS pass-rate 25%→10%,
+        //              re-reverted per Leo P0 instruction, no discussion)
+        //   mage/assassin 6 (baseline)
+        var _muzCount = (selectedClass === 'warrior') ? 3 : (selectedClass === 'scout' ? 4 : 6);
         for (var _muz = 0; _muz < _muzCount; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
           var _muzS = 100 + Math.random() * 80;
@@ -5057,10 +5056,6 @@ function doLogin() {
           if (Math.abs(_delta) < Math.PI / 3) {
             _dmgValue = Math.floor(_dmgValue * 2);
             _wasBackstab = true;
-            // R5r F2 — light-weight 背刺 indicator: 12px text, 0.4s life
-            // (was 16px/0.8s). Half the text-rendering budget vs R5n; still
-            // gives the player a rhythm cue the R5q strip-out lost.
-            if (typeof floatText === 'function') floatText(closest.x, closest.y - 36, '背刺', { color: '#c48cff', size: 12, life: 0.4 });
           }
         }
         // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
@@ -8101,12 +8096,11 @@ function doLogin() {
     var sz    = opts.size  || (preset && preset.size)  || 14;
     var isCrit = opts.crit || (preset && preset.crit) || false;
     var jitterX = (Math.random() - 0.5) * 30;
-    var _life = opts.life || 0.8;
     var f = {
       x: x + jitterX, y: y, text: text, color: color, size: sz,
-      life: _life, maxLife: _life,
+      life: 0.8, maxLife: 0.8,
       vy: -80 - Math.random() * 20,
-      vy0: -80 - Math.random() * 20,
+      vy0: -80 - Math.random() * 20, // store initial for parabola
       age: 0,
       crit: isCrit
     };
