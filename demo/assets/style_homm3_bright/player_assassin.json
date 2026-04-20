@@ -1,0 +1,69 @@
+{
+  "image": "player_assassin.svg",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 4,
+  "sheetRows": 6,
+  "directionOrder": ["up", "left", "down", "right"],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 10,
+      "skipFrame0": false
+    },
+    "attack": {
+      "rowBase": 4,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 14,
+      "skipFrame0": false
+    },
+    "death": {
+      "rowBase": 5,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 8,
+      "skipFrame0": false,
+      "loop": false
+    }
+  },
+  "previewFrame": { "row": 2, "col": 0 },
+  "style": "homm3_bright",
+  "class": "assassin",
+  "classTraits": {
+    "passives": ["dual_dagger", "shadow_affinity"],
+    "startingSkills": {
+      "teleport": {
+        "name": "瞬影 Blink",
+        "range": 220,
+        "cooldown": 3.0,
+        "description": "Short-range teleport in facing direction. 220px / 3s CD."
+      },
+      "backstab": {
+        "name": "背刺 Backstab",
+        "multiplier": 2.0,
+        "windowDeg": 90,
+        "description": "Hits dealt within 90° of target's back arc deal 2× damage."
+      },
+      "shroud": {
+        "name": "隐匿 Shroud",
+        "duration": 3.0,
+        "onSpawn": true,
+        "description": "Invisible for first 3s after spawn (break on attack)."
+      }
+    }
+  },
+  "suggestedHP": 140,
+  "suggestedMoveSpeed": 1.12,
+  "archetype": "assassin",
+  "notes": [
+    "SVG sprite sheet — 等同 style_homm3_bright/player_scout.png 规格，Developer 用同样 drawImage(img, col*64, row*64, 64, 64, ...) 切帧",
+    "配色：黑斗篷 #1a0a22 + 暗紫 #4a1a4a + 银刀 + 金柄 + 红眼 #ff3a1a，面罩遮眼，双刀",
+    "row 2 (walk down) 最详细，玩家大多时间看到的角度",
+    "row 4 attack 第 3 帧含紫雾残留，强化 'vanished' 刺客感",
+    "row 5 death 最后一帧是紫雾消散（刺客死亡化烟）",
+    "Developer 接入后可对着 _qa_chars.html 预览，若 SVG 光栅化失败可用 node puppeteer 烘焙成 PNG"
+  ]
+}

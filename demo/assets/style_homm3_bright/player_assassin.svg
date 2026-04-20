@@ -1,0 +1,340 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="384" viewBox="0 0 256 384" shape-rendering="geometricPrecision">
+  <!-- player_assassin — HoMM3 4x6 sprite sheet. 64px frame, 256×384.
+       row 0 walk up / 1 walk left / 2 walk down / 3 walk right / 4 attack / 5 death
+       Palette: 黑斗篷 #1a0a22 / 暗紫内衬 #4a1a4a / 银刀 #c8ccd8 + 金柄 #ffd700 /
+                 皮肤 #e8cba0 / 眼 #ff3a1a 红 / 紫线 #7a2aa8
+       SVG drawn directly; Developer drawImage(svgImg, col*64, row*64, 64, 64, ...) works
+       as long as browser has rasterised the SVG once (same as r3/buffs sprites). -->
+  <defs>
+    <linearGradient id="aCloak" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a1434"/>
+      <stop offset="100%" stop-color="#0a0212"/>
+    </linearGradient>
+    <linearGradient id="aBlade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0f2f8"/>
+      <stop offset="100%" stop-color="#6a6e7e"/>
+    </linearGradient>
+    <linearGradient id="aHilt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd966"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    .shadow { fill: #000; opacity: 0.45; }
+    .cloak  { fill: url(#aCloak); stroke: #000; stroke-width: 1.2; stroke-linejoin: round; }
+    .inner  { fill: #4a1a4a; stroke: #000; stroke-width: 1; }
+    .skin   { fill: #e8cba0; stroke: #3a1a08; stroke-width: 1; }
+    .boot   { fill: #1a0a12; stroke: #000; stroke-width: 1; }
+    .blade  { fill: url(#aBlade); stroke: #2a2a34; stroke-width: 1; stroke-linejoin: round; }
+    .hilt   { fill: url(#aHilt); stroke: #3a2208; stroke-width: 1; }
+    .eye    { fill: #ff3a1a; }
+    .purple { stroke: #7a2aa8; stroke-width: 1.4; fill: none; stroke-linecap: round; }
+    .smoke  { fill: #7a2aa8; opacity: 0.3; }
+  </style>
+
+  <!-- ============ ROW 0 : WALK UP (背朝镜头，看到兜帽+斗篷背) ============ -->
+  <!-- frame 0 -->
+  <g transform="translate(0,0)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="cloak"/>
+    <path d="M24 10 Q32 4 40 10 L40 20 L24 20 Z" class="cloak"/>
+  </g>
+  <!-- frame 1 (right foot forward) -->
+  <g transform="translate(64,0)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="46" width="8" height="14" class="boot"/>
+    <rect x="34" y="42" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="cloak"/>
+    <path d="M24 10 Q32 4 40 10 L40 20 L24 20 Z" class="cloak"/>
+  </g>
+  <!-- frame 2 -->
+  <g transform="translate(128,0)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="cloak"/>
+    <path d="M24 10 Q32 4 40 10 L40 20 L24 20 Z" class="cloak"/>
+  </g>
+  <!-- frame 3 (left foot forward) -->
+  <g transform="translate(192,0)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="42" width="8" height="14" class="boot"/>
+    <rect x="34" y="46" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="cloak"/>
+    <path d="M24 10 Q32 4 40 10 L40 20 L24 20 Z" class="cloak"/>
+  </g>
+
+  <!-- ============ ROW 1 : WALK LEFT (侧面向左) ============ -->
+  <g transform="translate(0,64)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="26" y="46" width="7" height="12" class="boot"/>
+    <rect x="32" y="44" width="7" height="14" class="boot"/>
+    <path d="M22 22 Q18 48 24 56 L40 56 Q44 48 44 22 Q40 14 32 14 Q24 14 22 22 Z" class="cloak"/>
+    <circle cx="28" cy="14" r="10" class="cloak"/>
+    <path d="M20 10 Q28 2 36 10 L38 20 L22 20 Z" class="cloak"/>
+    <!-- blade pointing backward (right in screen) -->
+    <rect x="40" y="30" width="14" height="3" class="blade" transform="rotate(20 40 30)"/>
+    <rect x="38" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="26" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(64,64)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="24" y="44" width="7" height="14" class="boot"/>
+    <rect x="34" y="46" width="7" height="12" class="boot"/>
+    <path d="M22 22 Q18 48 24 56 L40 56 Q44 48 44 22 Q40 14 32 14 Q24 14 22 22 Z" class="cloak"/>
+    <circle cx="28" cy="14" r="10" class="cloak"/>
+    <path d="M20 10 Q28 2 36 10 L38 20 L22 20 Z" class="cloak"/>
+    <rect x="40" y="30" width="14" height="3" class="blade" transform="rotate(20 40 30)"/>
+    <rect x="38" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="26" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(128,64)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="26" y="46" width="7" height="12" class="boot"/>
+    <rect x="32" y="44" width="7" height="14" class="boot"/>
+    <path d="M22 22 Q18 48 24 56 L40 56 Q44 48 44 22 Q40 14 32 14 Q24 14 22 22 Z" class="cloak"/>
+    <circle cx="28" cy="14" r="10" class="cloak"/>
+    <path d="M20 10 Q28 2 36 10 L38 20 L22 20 Z" class="cloak"/>
+    <rect x="40" y="30" width="14" height="3" class="blade" transform="rotate(20 40 30)"/>
+    <rect x="38" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="26" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(192,64)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="24" y="44" width="7" height="14" class="boot"/>
+    <rect x="34" y="46" width="7" height="12" class="boot"/>
+    <path d="M22 22 Q18 48 24 56 L40 56 Q44 48 44 22 Q40 14 32 14 Q24 14 22 22 Z" class="cloak"/>
+    <circle cx="28" cy="14" r="10" class="cloak"/>
+    <path d="M20 10 Q28 2 36 10 L38 20 L22 20 Z" class="cloak"/>
+    <rect x="40" y="30" width="14" height="3" class="blade" transform="rotate(20 40 30)"/>
+    <rect x="38" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="26" cy="15" r="1.2" class="eye"/>
+  </g>
+
+  <!-- ============ ROW 2 : WALK DOWN (面朝镜头，主观最重要) ============ -->
+  <g transform="translate(0,128)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <!-- body/cloak -->
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <!-- chest inner -->
+    <path d="M26 26 L38 26 L38 40 L32 44 L26 40 Z" class="inner"/>
+    <!-- head + hood -->
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <!-- mask band across eyes -->
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <!-- red eyes -->
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <!-- dual daggers (one per hand) -->
+    <g transform="translate(10,32) rotate(-20)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(50,32) rotate(20)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="10" y="-1" width="3" height="5" class="hilt"/></g>
+    <!-- purple trim -->
+    <path d="M20 22 L44 22" class="purple"/>
+  </g>
+  <g transform="translate(64,128)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="46" width="8" height="14" class="boot"/>
+    <rect x="34" y="42" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <path d="M26 26 L38 26 L38 40 L32 44 L26 40 Z" class="inner"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <g transform="translate(10,30) rotate(-25)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(50,34) rotate(15)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="10" y="-1" width="3" height="5" class="hilt"/></g>
+    <path d="M20 22 L44 22" class="purple"/>
+  </g>
+  <g transform="translate(128,128)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <path d="M26 26 L38 26 L38 40 L32 44 L26 40 Z" class="inner"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <g transform="translate(10,32) rotate(-20)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(50,32) rotate(20)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="10" y="-1" width="3" height="5" class="hilt"/></g>
+    <path d="M20 22 L44 22" class="purple"/>
+  </g>
+  <g transform="translate(192,128)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="42" width="8" height="14" class="boot"/>
+    <rect x="34" y="46" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <path d="M26 26 L38 26 L38 40 L32 44 L26 40 Z" class="inner"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <g transform="translate(10,34) rotate(-15)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(50,30) rotate(25)"><rect x="0" y="0" width="10" height="3" class="blade"/><rect x="10" y="-1" width="3" height="5" class="hilt"/></g>
+    <path d="M20 22 L44 22" class="purple"/>
+  </g>
+
+  <!-- ============ ROW 3 : WALK RIGHT (镜像 row 1) ============ -->
+  <g transform="translate(0,192)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="31" y="46" width="7" height="12" class="boot"/>
+    <rect x="25" y="44" width="7" height="14" class="boot"/>
+    <path d="M42 22 Q46 48 40 56 L24 56 Q20 48 20 22 Q24 14 32 14 Q40 14 42 22 Z" class="cloak"/>
+    <circle cx="36" cy="14" r="10" class="cloak"/>
+    <path d="M44 10 Q36 2 28 10 L26 20 L42 20 Z" class="cloak"/>
+    <rect x="10" y="30" width="14" height="3" class="blade" transform="rotate(-20 10 30)"/>
+    <rect x="23" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="38" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(64,192)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="33" y="44" width="7" height="14" class="boot"/>
+    <rect x="23" y="46" width="7" height="12" class="boot"/>
+    <path d="M42 22 Q46 48 40 56 L24 56 Q20 48 20 22 Q24 14 32 14 Q40 14 42 22 Z" class="cloak"/>
+    <circle cx="36" cy="14" r="10" class="cloak"/>
+    <path d="M44 10 Q36 2 28 10 L26 20 L42 20 Z" class="cloak"/>
+    <rect x="10" y="30" width="14" height="3" class="blade" transform="rotate(-20 10 30)"/>
+    <rect x="23" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="38" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(128,192)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="31" y="46" width="7" height="12" class="boot"/>
+    <rect x="25" y="44" width="7" height="14" class="boot"/>
+    <path d="M42 22 Q46 48 40 56 L24 56 Q20 48 20 22 Q24 14 32 14 Q40 14 42 22 Z" class="cloak"/>
+    <circle cx="36" cy="14" r="10" class="cloak"/>
+    <path d="M44 10 Q36 2 28 10 L26 20 L42 20 Z" class="cloak"/>
+    <rect x="10" y="30" width="14" height="3" class="blade" transform="rotate(-20 10 30)"/>
+    <rect x="23" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="38" cy="15" r="1.2" class="eye"/>
+  </g>
+  <g transform="translate(192,192)">
+    <ellipse cx="32" cy="58" rx="13" ry="3" class="shadow"/>
+    <rect x="33" y="44" width="7" height="14" class="boot"/>
+    <rect x="23" y="46" width="7" height="12" class="boot"/>
+    <path d="M42 22 Q46 48 40 56 L24 56 Q20 48 20 22 Q24 14 32 14 Q40 14 42 22 Z" class="cloak"/>
+    <circle cx="36" cy="14" r="10" class="cloak"/>
+    <path d="M44 10 Q36 2 28 10 L26 20 L42 20 Z" class="cloak"/>
+    <rect x="10" y="30" width="14" height="3" class="blade" transform="rotate(-20 10 30)"/>
+    <rect x="23" y="28" width="3" height="5" class="hilt"/>
+    <circle cx="38" cy="15" r="1.2" class="eye"/>
+  </g>
+
+  <!-- ============ ROW 4 : ATTACK (3 frames + empty) ============ -->
+  <!-- atk 0 : wind up (daggers crossed at chest) -->
+  <g transform="translate(0,256)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <!-- daggers crossed X at chest -->
+    <g transform="translate(32,32) rotate(-30)"><rect x="-8" y="-1.5" width="16" height="3" class="blade"/><rect x="-10" y="-2.5" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(32,32) rotate(30)"><rect x="-8" y="-1.5" width="16" height="3" class="blade"/><rect x="-10" y="-2.5" width="3" height="5" class="hilt"/></g>
+  </g>
+  <!-- atk 1 : strike (daggers outward, slash motion lines) -->
+  <g transform="translate(64,256)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <!-- daggers thrust outward -->
+    <g transform="translate(8,30) rotate(10)"><rect x="0" y="0" width="18" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(38,30) rotate(-10)"><rect x="0" y="0" width="18" height="3" class="blade"/><rect x="18" y="-1" width="3" height="5" class="hilt"/></g>
+    <!-- slash motion arcs -->
+    <path d="M2 28 Q8 22 14 24" stroke="#ff3a1a" stroke-width="2" fill="none" opacity="0.7"/>
+    <path d="M50 24 Q56 22 62 28" stroke="#ff3a1a" stroke-width="2" fill="none" opacity="0.7"/>
+  </g>
+  <!-- atk 2 : recovery (blood/purple flash) -->
+  <g transform="translate(128,256)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+    <circle cx="32" cy="16" r="10" class="skin"/>
+    <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+    <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    <circle cx="28" cy="17" r="1.5" class="eye"/>
+    <circle cx="36" cy="17" r="1.5" class="eye"/>
+    <!-- daggers extended outward with purple smoke trail -->
+    <g transform="translate(6,32) rotate(15)"><rect x="0" y="0" width="16" height="3" class="blade"/><rect x="-3" y="-1" width="3" height="5" class="hilt"/></g>
+    <g transform="translate(42,32) rotate(-15)"><rect x="0" y="0" width="16" height="3" class="blade"/><rect x="16" y="-1" width="3" height="5" class="hilt"/></g>
+    <circle cx="4" cy="28" r="4" class="smoke"/>
+    <circle cx="60" cy="28" r="4" class="smoke"/>
+  </g>
+  <!-- empty frame 3 -->
+  <g transform="translate(192,256)"></g>
+
+  <!-- ============ ROW 5 : DEATH (3 frames + empty) ============ -->
+  <!-- death 0 : hit reaction (tilt back) -->
+  <g transform="translate(0,320)">
+    <ellipse cx="32" cy="58" rx="14" ry="3" class="shadow"/>
+    <rect x="22" y="44" width="8" height="14" class="boot"/>
+    <rect x="34" y="44" width="8" height="14" class="boot"/>
+    <g transform="rotate(-15 32 44)">
+      <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+      <circle cx="32" cy="16" r="10" class="skin"/>
+      <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+      <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    </g>
+    <!-- daggers dropping -->
+    <rect x="8" y="44" width="10" height="3" class="blade" transform="rotate(-30 8 44)"/>
+    <rect x="46" y="44" width="10" height="3" class="blade" transform="rotate(30 46 44)"/>
+    <!-- impact star -->
+    <polygon points="36,22 40,14 44,22 50,22 42,26 46,34 36,28 30,34 34,26 26,22" fill="#ff3a1a" opacity="0.85"/>
+  </g>
+  <!-- death 1 : collapsing -->
+  <g transform="translate(64,320)">
+    <ellipse cx="32" cy="58" rx="18" ry="4" class="shadow"/>
+    <g transform="translate(0,6) rotate(-45 32 44)">
+      <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+      <circle cx="32" cy="16" r="10" class="skin"/>
+      <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+      <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    </g>
+    <!-- dropped daggers -->
+    <rect x="6" y="52" width="12" height="3" class="blade" transform="rotate(-60 6 52)"/>
+    <rect x="46" y="52" width="12" height="3" class="blade" transform="rotate(60 46 52)"/>
+    <circle cx="16" cy="50" r="5" class="smoke"/>
+    <circle cx="48" cy="50" r="5" class="smoke"/>
+  </g>
+  <!-- death 2 : fallen flat with smoke -->
+  <g transform="translate(128,320)">
+    <ellipse cx="32" cy="58" rx="22" ry="5" class="shadow"/>
+    <g transform="translate(-2,14) rotate(-85 32 44)">
+      <path d="M14 22 Q14 48 20 56 L44 56 Q50 48 50 22 L42 18 L22 18 Z" class="cloak"/>
+      <circle cx="32" cy="16" r="10" class="skin"/>
+      <path d="M22 10 Q32 -2 42 10 L44 22 Q32 18 20 22 Z" class="cloak"/>
+      <rect x="22" y="15" width="20" height="4" fill="#1a0a12" stroke="#000" stroke-width="0.8"/>
+    </g>
+    <!-- fading purple smoke cloud (vanishing assassin motif) -->
+    <circle cx="20" cy="50" r="8" class="smoke"/>
+    <circle cx="32" cy="46" r="10" class="smoke"/>
+    <circle cx="46" cy="52" r="7" class="smoke"/>
+    <circle cx="40" cy="40" r="6" fill="#b078e8" opacity="0.4"/>
+  </g>
+  <!-- empty frame 3 -->
+  <g transform="translate(192,320)"></g>
+</svg>
