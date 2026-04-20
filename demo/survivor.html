@@ -2694,7 +2694,12 @@ function doLogin() {
     return {
       warrior: { name: '战士', icon: '🛡', hp: 220, maxHp: 220, baseHP: 220, baseATK: 22, baseSpeed: 170, attackDamage: 22, speed: 170, passive: '荆棘护甲 + 首战狂怒: 前 60s 攻速+25%', thornsDamage: 4, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
       mage:    { name: '法师', icon: '🔮', hp: 100, maxHp: 100, baseHP: 100, baseATK: 35, baseSpeed: 190, attackDamage: 35, speed: 190, passive: '奥术延伸: 射程+50%', rangeBonus: 0.5, color: '#a4f', initialAttributes: {INT:10,STR:2,AGI:4,STA:4}, availableSkills: [] },
-      scout:   { name: '斥候', icon: '🏹', hp: 165, maxHp: 165, baseHP: 165, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避 15% + 速射: 攻速 -20% 冷却', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
+      scout:   { name: '斥候', icon: '🏹', hp: 165, maxHp: 165, baseHP: 165, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避 15% + 速射: 攻速 -20% 冷却', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] },
+      // R5n F2 — 新职业 刺客 Assassin
+      //   瞬移: 闪避键改为 260px 短距 teleport, 3s cd
+      //   背刺: 攻击目标面向相反方向(夹角 > 120°)时 ×2 伤害
+      //   开局隐身 3s: bots 无法锁定玩家 (_invisibleUntil)
+      assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移 + 背刺 ×2 + 开局隐身 3s', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [] }
     };
   })();
 
@@ -3474,6 +3479,10 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
+    // R5n F2 — assassin opening 3s 隐身: bot target scan skips while true.
+    if (selectedClass === 'assassin') {
+      player._invisibleUntil = 3.0; // game-time seconds
+    }
     // Hide the DOM "player-bar" (nickname/gold/rank/level) — canvas HUD
     // already shows those and the DOM bar was overlapping the "剩余 X 人"
     // capsule at top-center.
@@ -4179,7 +4188,8 @@ function doLogin() {
       // get a farming window before the stalker bot starts hunting (Testor:
       // scout died at 38s under combined rival+archetype pressure).
       var _forcePlayer = false;
-      if (player && player.alive && gameTime > 60) {
+      var _playerInvis = !!(player && player._invisibleUntil && gameTime < player._invisibleUntil);
+      if (player && player.alive && gameTime > 60 && !_playerInvis) {
         if (rivalState.nemesisId === b.factionId) {
           _forcePlayer = true;
         } else if (rivalState.botId === b.factionId) {
@@ -4241,6 +4251,8 @@ function doLogin() {
             var _tgt = _allBR[pi];
             if (_tgt === b || !_tgt.alive) continue;
             if (gameMode === 'team' && _tgt.factionId === b.factionId) continue;
+            // R5n F2 — skip the player target while their 隐身 is active (assassin opening 3s)
+            if (_tgt === player && _playerInvis) continue;
             var _tdx = _tgt.x - b.x, _tdy = _tgt.y - b.y;
             var _td = Math.sqrt(_tdx * _tdx + _tdy * _tdy);
             if (_td < bestDist) { bestDist = _td; bestTarget = _tgt; }
@@ -4918,6 +4930,8 @@ function doLogin() {
         if (MAP_DATA && MAP_DATA.layout === 'lane-3') _atkCdMul *= 0.9;
       } else if (_cls === 'scout') {
         _atkCdMul = 0.80;
+      } else if (_cls === 'assassin') {
+        _atkCdMul = 0.85; // snappy knives
       }
       player._timer = player.attackCooldown * _atkCdMul;
       // R5j F2 — scout has a longer auto-attack scan radius (520 vs 400) so
@@ -5012,11 +5026,20 @@ function doLogin() {
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
         // R5j F2 — scout 伏击: first hit on a fresh bot target +50% damage.
-        // Track _scoutAmbushHits per bot so subsequent hits are normal.
         if (player.playerClass === 'scout' && closest && closest.isBot && !closest._scoutHitOnce) {
           closest._scoutHitOnce = true;
           _dmgValue = Math.floor(_dmgValue * 1.5);
           if (typeof floatText === 'function') floatText(closest.x, closest.y - 30, '伏击!', { color: '#aaffaa', size: 14 });
+        }
+        // R5n F2 — assassin 背刺: 2x damage when hitting a target whose facing
+        // is within ±60° of "away from attacker" (i.e. player is behind them).
+        if (player.playerClass === 'assassin' && closest && closest.facingAngle != null) {
+          var _attackAng = Math.atan2(closest.y - player.y, closest.x - player.x);
+          var _delta = Math.atan2(Math.sin(closest.facingAngle - _attackAng), Math.cos(closest.facingAngle - _attackAng));
+          if (Math.abs(_delta) < Math.PI / 3) {
+            _dmgValue = Math.floor(_dmgValue * 2);
+            if (typeof floatText === 'function') floatText(closest.x, closest.y - 30, '背刺 ×2!', { color: '#c48cff', size: 16 });
+          }
         }
         // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
         if (closest._isAltar && closest._lockedUntil && gameTime < closest._lockedUntil) {
@@ -5948,7 +5971,9 @@ function doLogin() {
     var defaults = {
       warrior: { body: '#b44', accent: '#d93', highlight: '#ddd', eye: '#fff', hood: null, cape: null, orb: null },
       mage: { body: '#728', accent: '#5a3d7a', highlight: '#c6f', eye: '#f0f', hood: '#5a3d7a', cape: null, orb: '#c6f' },
-      scout: { body: '#3a6', accent: '#2a5030', highlight: '#a86', eye: '#8f8', hood: '#2a5030', cape: '#1a3520', orb: null }
+      scout: { body: '#3a6', accent: '#2a5030', highlight: '#a86', eye: '#8f8', hood: '#2a5030', cape: '#1a3520', orb: null },
+      // R5n F2 — 黑斗篷 + 银刃 palette for assassin (uses scout sprite sheet)
+      assassin: { body: '#2a2230', accent: '#1a1020', highlight: '#9a7acc', eye: '#c4a0ff', hood: '#151020', cape: '#0a0815', orb: null }
     };
     var base = defaults[classType] || defaults.warrior;
     var colors = { body: base.body, accent: base.accent, highlight: base.highlight, eye: base.eye, hood: base.hood, cape: base.cape, orb: base.orb };
@@ -6393,7 +6418,10 @@ function doLogin() {
     classes: {
       warrior: { sheet: HOMM3_ART_BASE + 'player_warrior.png', anims: _homm3PlayerAnims },
       mage:    { sheet: HOMM3_ART_BASE + 'player_mage.png',    anims: _homm3PlayerAnims },
-      scout:   { sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims }
+      scout:   { sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims },
+      // R5n F2 — Assassin reuses scout sheet until ArtDesigner ships a dedicated
+      // black-cloak sprite. Tint from CLASS_DEFS.assassin.color differentiates.
+      assassin:{ sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims }
     }
   };
   var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
@@ -8183,6 +8211,34 @@ function doLogin() {
   var dodgeCooldown = 3; // 3 second cooldown
   function useDodge() {
     if (player._dodgeCooldown > 0 || player._isDodging) return;
+    // R5n F2 — assassin's "dodge" is a short-range teleport (260px forward
+    // along facing). Skips normal dash, sets cooldown, and emits a purple
+    // puff at both source and destination for readability.
+    if (player.playerClass === 'assassin') {
+      var _teleD = 260;
+      var _teleAng = player.facingAngle || 0;
+      var _tx = player.x + Math.cos(_teleAng) * _teleD;
+      var _ty = player.y + Math.sin(_teleAng) * _teleD;
+      // Clamp + collision — step back until unblocked
+      _tx = Math.max(player.radius, Math.min(WORLD_W - player.radius, _tx));
+      _ty = Math.max(player.radius, Math.min(WORLD_H - player.radius, _ty));
+      if (typeof isBlockedByDecor === 'function') {
+        var _tries = 0;
+        while (isBlockedByDecor(_tx, _ty, player.radius * 0.55) && _tries < 8) {
+          _tele = Math.max(40, _teleD - 40);
+          _tx = player.x + Math.cos(_teleAng) * (_teleD - _tries * 30);
+          _ty = player.y + Math.sin(_teleAng) * (_teleD - _tries * 30);
+          _tries++;
+        }
+      }
+      if (typeof emit === 'function') emit(player.x, player.y, '#c48cff', 14, 120);
+      player.x = _tx; player.y = _ty;
+      if (typeof emit === 'function') emit(player.x, player.y, '#c48cff', 18, 140);
+      player._dodgeCooldown = dodgeCooldown;
+      screenShake(4, 120);
+      if (typeof playSound === 'function') playSound('dodge');
+      return;
+    }
     player._isDodging = true;
     player._dodgeTimer = 0.15; // 150ms dash
     player._dodgeCooldown = dodgeCooldown;
@@ -10354,11 +10410,18 @@ function doLogin() {
       ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.restore();
     }
+    // R5n F2 — assassin 开局隐身: render player sprite semi-transparent.
+    var _invisActive = !!(player._invisibleUntil && gameTime < player._invisibleUntil);
+    if (_invisActive) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+    }
     drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, _pAnimFacing, {
       fury: isFury, shield: player.shieldActive, skinId: equippedSkin,
       animState: _pAnimState, animTime: _pAnimTime,
       _debugOut: player._spriteDebugFrame
     });
+    if (_invisActive) ctx.restore();
     player._spriteAnimState = _pAnimState; // exposed for __spriteDebug
 
     // HERO CROWN — floating golden chevron above player head (clear friendly marker)
@@ -11741,6 +11804,9 @@ function doLogin() {
   // Round 5g F3 — short CJK font string used by all per-frame HUD overlays so
   // ctx.font assignment doesn't re-shape a 200-char fallback list every call.
   var _HUD_CJK = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+  // R5n F1 — memoised measureText widths for edge-beacon labels (label text
+  // snaps to 20px buckets so cache hit rate is high)
+  var _edgeLabelCache = {};
   function drawEdgeBeacons() {
     if (!player || !player.alive || state !== 'playing') return;
     if (!tutorialDone) return;
@@ -11840,13 +11906,20 @@ function doLogin() {
         ctx.drawImage(HUD_ARROW.img, -sz / 2, -sz / 2, sz, sz);
         ctx.restore();
       }
-      // Distance + label pill
-      var distPx = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y));
-      var labelTxt = poi.label + ' ' + distPx + 'px';
+      // R5n F1 — distance update cadence 0.25s + memoised measureText per label.
+      // poi objects are freshly built each frame so cache by label key on the
+      // module-level _edgeLabelCache.
+      var _distRounded = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y) / 20) * 20;
+      var labelTxt = poi.label + ' ' + _distRounded + 'px';
       ctx.save();
       var fs = Math.max(14, Math.round(sz * 0.22));
       ctx.font = 'bold ' + fs + 'px ' + _HUD_CJK;
-      var tw = ctx.measureText(labelTxt).width + 16;
+      var _twCached = _edgeLabelCache[labelTxt];
+      if (_twCached == null) {
+        _twCached = ctx.measureText(labelTxt).width + 16;
+        _edgeLabelCache[labelTxt] = _twCached;
+      }
+      var tw = _twCached;
       var lx = Math.max(6, Math.min(W - tw - 6, ax - tw / 2));
       var ly = Math.max(6, Math.min(H - fs - 12, ay + sz * 0.35));
       ctx.fillStyle = 'rgba(0,0,0,0.78)';
@@ -12268,32 +12341,30 @@ function doLogin() {
     ctx.fillStyle = '#fff'; ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('选择角色', DW / 2, 40);
 
-    var classKeys = ['warrior', 'mage', 'scout'];
-    for (var i = 0; i < 3; i++) {
+    // R5n F2 — added assassin as 4th selectable class. Card pitch tightened
+    // from 90 → 68 so 4 cards still fit above attribute panel at y=350.
+    var classKeys = ['warrior', 'mage', 'scout', 'assassin'];
+    for (var i = 0; i < classKeys.length; i++) {
       var cls = CLASS_DEFS[classKeys[i]];
-      var by = 70 + i * 90;
+      var by = 50 + i * 68;
       var isSelected = selectedClass === classKeys[i];
       // Card
       ctx.fillStyle = isSelected ? '#1a1a3e' : '#111118';
-      ctx.fillRect(DW / 2 - 190, by, 380, 80);
+      ctx.fillRect(DW / 2 - 190, by, 380, 60);
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
-      ctx.strokeRect(DW / 2 - 190, by, 380, 80);
-      // Character sprite preview + emoji icon
-      drawCharacterSprite(DW / 2 - 155, by + 40, 18, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
-      ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
+      ctx.strokeRect(DW / 2 - 190, by, 380, 60);
+      drawCharacterSprite(DW / 2 - 155, by + 30, 16, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
+      ctx.font = '16px "Noto Sans SC","PingFang SC",sans-serif'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
-      ctx.fillText(cls.icon, DW / 2 - 175, by + 20);
-      ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText(cls.name, DW / 2 - 135, by + 30);
-      // Stats
-      ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
-      ctx.fillText('HP:' + cls.hp + '  攻击:' + cls.attackDamage + '  移速:' + cls.speed, DW / 2 - 135, by + 48);
-      // Passive
-      ctx.fillStyle = '#888'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.fillText(cls.passive, DW / 2 - 135, by + 65);
-      // Click hint
-      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.fillText('▶', DW / 2 + 170, by + 45);
+      ctx.fillText(cls.icon, DW / 2 - 175, by + 18);
+      ctx.font = 'bold 16px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(cls.name, DW / 2 - 135, by + 20);
+      ctx.font = '10px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#aaa';
+      ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 36);
+      ctx.fillStyle = '#888'; ctx.font = '9px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.fillText(cls.passive, DW / 2 - 135, by + 50);
+      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.fillText('▶', DW / 2 + 170, by + 35);
     }
 
     // === Attribute Panel (US-009) ===
@@ -13507,10 +13578,11 @@ function doLogin() {
     } else if (state === 'charSelect') {
       // Convert screen coords to design space (400x700)
       var _dc2 = _toDesignCoords(cx, cy); var dcx2 = _dc2.x, dcy2 = _dc2.y;
-      var classKeys = ['warrior', 'mage', 'scout'];
-      for (var ci = 0; ci < 3; ci++) {
-        var cby = 70 + ci * 90;
-        if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 80) {
+      // R5n F2 — 4 classes, compact 68px pitch, 60px card height
+      var classKeys = ['warrior', 'mage', 'scout', 'assassin'];
+      for (var ci = 0; ci < classKeys.length; ci++) {
+        var cby = 50 + ci * 68;
+        if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 60) {
           selectedClass = classKeys[ci];
           state = 'mapSelect';
         }
