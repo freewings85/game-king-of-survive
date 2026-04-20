@@ -2609,7 +2609,7 @@ function doLogin() {
     return {
       warrior: { name: '战士', icon: '🛡', hp: 220, maxHp: 220, baseHP: 220, baseATK: 22, baseSpeed: 170, attackDamage: 22, speed: 170, passive: '荆棘护甲 + 首战狂怒: 前 60s 攻速+25%', thornsDamage: 4, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
       mage:    { name: '法师', icon: '🔮', hp: 100, maxHp: 100, baseHP: 100, baseATK: 35, baseSpeed: 190, attackDamage: 35, speed: 190, passive: '奥术延伸: 射程+50%', rangeBonus: 0.5, color: '#a4f', initialAttributes: {INT:10,STR:2,AGI:4,STA:4}, availableSkills: [] },
-      scout:   { name: '斥候', icon: '🏹', hp: 130, maxHp: 130, baseHP: 130, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避本能: 15%闪避', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
+      scout:   { name: '斥候', icon: '🏹', hp: 165, maxHp: 165, baseHP: 165, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避 15% + 速射: 攻速 -20% 冷却', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
     };
   })();
 
@@ -4761,13 +4761,30 @@ function doLogin() {
     // Auto attack nearby enemies + hostile bot players
     player._timer = (player._timer || 0) - dt;
     if (player._timer <= 0) {
-      // Round 5f F3 — warrior 首战狂怒 passive: -25% cooldown for first 60s,
-      // closes the warrior 0-kill gap on lane_b without breaking late-game scaling.
-      var _atkCdMul = (player.playerClass === 'warrior' && gameTime < 60) ? 0.75 : 1.0;
+      // Round 5f F3 / R5g F2 — class atk-cd multipliers
+      // warrior 首战狂怒: -25% cd first 60s
+      // scout 速射:        -20% cd always (matches new HP 165 buff)
+      var _cls = player.playerClass;
+      var _atkCdMul = 1.0;
+      if (_cls === 'warrior' && gameTime < 60) _atkCdMul = 0.75;
+      else if (_cls === 'scout') _atkCdMul = 0.80;
       player._timer = player.attackCooldown * _atkCdMul;
       var closest = null, closestDist = 400;
-      // Scan wave-spawned enemies
-      for (var i = 0; i < offlineEnemies.length; i++) {
+      // Round 5g F1 — altar priority: when an unlocked altar is in attack
+      // range, lock onto it even if a normal mob is closer. The altar surface
+      // (radius 80) gets a 100px proximity boost so player attacks land on
+      // the prize, not the swarm next to it.
+      var _altarTarget = null, _altarSurfaceDist = Infinity;
+      for (var _ai = 0; _ai < offlineEnemies.length; _ai++) {
+        var _ae = offlineEnemies[_ai];
+        if (!_ae.alive || !_ae._isAltar) continue;
+        var _aex = _ae.x - player.x, _aey = _ae.y - player.y;
+        var _aed = Math.sqrt(_aex*_aex + _aey*_aey) - (_ae.radius || 0);
+        var _aLocked = _ae._lockedUntil && gameTime < _ae._lockedUntil;
+        if (!_aLocked && _aed < 280) { _altarTarget = _ae; _altarSurfaceDist = _aed; }
+      }
+      if (_altarTarget) { closest = _altarTarget; closestDist = _altarSurfaceDist; }
+      else for (var i = 0; i < offlineEnemies.length; i++) {
         var e = offlineEnemies[i];
         if (!e.alive) continue;
         var edx = e.x - player.x, edy = e.y - player.y;
@@ -11407,7 +11424,7 @@ function doLogin() {
       var fs = Math.max(16, Math.round(Math.min(W, H) * 0.025));
       var msg = '跨河需走桥 — 顺金色 ↑ 走';
       ctx.save();
-      ctx.font = 'bold ' + fs + 'px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.font = 'bold ' + fs + 'px ' + _HUD_CJK;
       ctx.textAlign = 'center';
       var tw = ctx.measureText(msg).width + 28;
       var ty = H * 0.18;
@@ -11434,7 +11451,7 @@ function doLogin() {
       var msg2 = '找桥 ' + arrow + '  (' + Math.round(nb.d) + 'px)';
       ctx.save();
       ctx.globalAlpha = pulse2;
-      ctx.font = 'bold ' + fs2 + 'px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.font = 'bold ' + fs2 + 'px ' + _HUD_CJK;
       ctx.textAlign = 'center';
       var tw2 = ctx.measureText(msg2).width + 32;
       var by2 = H * 0.78;
@@ -11448,6 +11465,9 @@ function doLogin() {
     }
   }
 
+  // Round 5g F3 — short CJK font string used by all per-frame HUD overlays so
+  // ctx.font assignment doesn't re-shape a 200-char fallback list every call.
+  var _HUD_CJK = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
   function drawEdgeBeacons() {
     if (!player || !player.alive || state !== 'playing') return;
     if (!tutorialDone) return;
@@ -11552,7 +11572,7 @@ function doLogin() {
       var labelTxt = poi.label + ' ' + distPx + 'px';
       ctx.save();
       var fs = Math.max(14, Math.round(sz * 0.22));
-      ctx.font = 'bold ' + fs + 'px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.font = 'bold ' + fs + 'px ' + _HUD_CJK;
       var tw = ctx.measureText(labelTxt).width + 16;
       var lx = Math.max(6, Math.min(W - tw - 6, ax - tw / 2));
       var ly = Math.max(6, Math.min(H - fs - 12, ay + sz * 0.35));
