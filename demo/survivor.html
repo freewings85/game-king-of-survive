@@ -3507,7 +3507,7 @@ function doLogin() {
     if (MAP_DATA && MAP_DATA.stormCenter) {
       spawnOfflineEnemy('boss', MAP_DATA.stormCenter.x, MAP_DATA.stormCenter.y);
       var _altar = offlineEnemies[offlineEnemies.length - 1];
-      _altar.hp = _altar.maxHp = 2400;
+      _altar.hp = _altar.maxHp = 800;
       _altar.bossTypeId = 'altar';
       _altar.bossTypeName = '中央祭坛';
       _altar.color = '#ffd060';
@@ -3998,6 +3998,50 @@ function doLogin() {
         }
       }
 
+      // --- Round 5c F2: lane_b 强制过桥 ---
+      // First 30s on lane-3 layouts, each bot is hard-routed to a bridge so
+      // both sides actually meet at mid (without this, bots farm own jungle
+      // and the river never gets crossed → 0 PvP).
+      if (MAP_DATA && MAP_DATA.layout === 'lane-3' && gameTime < 30 && !b._crossedBridge) {
+        if (!b._bridgeWaypoint) {
+          // Pick the bridge closest to the bot's current position
+          var bestB = null, bestBD = 1e12;
+          for (var _bri = 0; _bri < _brStructures.length; _bri++) {
+            var _br = _brStructures[_bri];
+            if (_br.type !== 'bridge') continue;
+            var _brcx = _br.x + _br.w / 2, _brcy = _br.y + _br.h / 2;
+            var _brdx = _brcx - b.x, _brdy = _brcy - b.y;
+            var _brd2 = _brdx * _brdx + _brdy * _brdy;
+            if (_brd2 < bestBD) { bestBD = _brd2; bestB = { x: _brcx, y: _brcy, w: _br.w, h: _br.h }; }
+          }
+          if (bestB) b._bridgeWaypoint = bestB;
+        }
+        if (b._bridgeWaypoint) {
+          var _bwx = b._bridgeWaypoint.x, _bwy = b._bridgeWaypoint.y;
+          var _bwdx = _bwx - b.x, _bwdy = _bwy - b.y;
+          var _bwd = Math.sqrt(_bwdx * _bwdx + _bwdy * _bwdy);
+          if (_bwd < 80) {
+            // Reached the bridge; cross it (push toward opposite side ~120px)
+            // by marking crossed then letting normal AI take over from the
+            // far edge.
+            b._crossedBridge = true;
+          } else {
+            // Walk to the bridge — apply movement directly here so the rest of
+            // the decision/movement block can be skipped this frame.
+            var _bws = (b.speed || 100) * 1.1;
+            b.x += (_bwdx / _bwd) * _bws * dt;
+            b.y += (_bwdy / _bwd) * _bws * dt;
+            b.facingAngle = Math.atan2(_bwdy, _bwdx);
+            // collision slide so bots can't tunnel through buildings
+            var _bwMove = moveWithCollision(_bPreX, _bPreY, b.x, b.y, (b.radius || 32) * 0.55);
+            b.x = _bwMove.x; b.y = _bwMove.y;
+            b.x = Math.max(b.radius + 5, Math.min(WORLD_W - b.radius - 5, b.x));
+            b.y = Math.max(b.radius + 5, Math.min(WORLD_H - b.radius - 5, b.y));
+            continue; // skip rest of AI/movement this frame
+          }
+        }
+      }
+
       // --- Round 5 N: rival / nemesis target override ---
       // Round 5b: rival aggression delayed to gameTime > 60 so new players
       // get a farming window before the stalker bot starts hunting (Testor:
@@ -4357,6 +4401,19 @@ function doLogin() {
     // === Storm zone shrink ===
     if (stormZone.active && gameTime > (stormZone._shrinkDelay || 45)) {
       stormZone.radius = Math.max(stormZone._minRadius || 80, stormZone.radius - stormZone.shrinkRate * dt);
+    }
+    // Round 5c F3 — last 60s of a 4-min match the safe zone snaps to a 200px
+    // bubble around the altar so all surviving players are forced into the
+    // raid. Linear pull toward 200 over the final minute.
+    if (stormZone.active && _activeBossRef && _activeBossRef._isAltar && _activeBossRef.alive) {
+      var _matchEnd = 240; // 4-min target match length
+      if (gameTime > _matchEnd - 60) {
+        var _pullT = Math.min(1, (gameTime - (_matchEnd - 60)) / 60);
+        var _targetR = 200;
+        if (stormZone.radius > _targetR) {
+          stormZone.radius = stormZone.radius * (1 - _pullT * 0.05) + _targetR * (_pullT * 0.05);
+        }
+      }
     }
     if (stormZone.active && !(stormZone.radius > 1)) stormZone.radius = 1;
     // Player storm damage
@@ -4822,7 +4879,7 @@ function doLogin() {
             // Round 5b T2: altar shatter trigger + global broadcast
             if (closest._isAltar) {
               ALTAR_FX.activeShatter = { x: _bx, y: _by, t: 0, dur: 1.4 };
-              _bossXP = 250;
+              _bossXP = 300;
               killFeed.push({ text: '★ ' + (player.name || '你') + ' 击破中央祭坛 — 传说降临 ★', color: '#ffd060', time: 8 });
               if (typeof screenShake === 'function') screenShake(18, 600);
               if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.55; }
@@ -11132,7 +11189,7 @@ function doLogin() {
 
   function drawEdgeBeacons() {
     if (!player || !player.alive || state !== 'playing') return;
-    if (!tutorialDone) return; // hold beacons during tutorial
+    if (!tutorialDone) return;
     // Build POI list: { x, y, kind: 'holy'|'danger'|'neutral', label }
     var pois = [];
     // Altar — alive central boss is the holy POI
@@ -11163,65 +11220,79 @@ function doLogin() {
     pois.sort(function(a, b) { return rank[a.kind] - rank[b.kind]; });
     pois = pois.slice(0, 2);
 
-    var sz = HUD_ARROW.size;
-    var pad = sz * 0.6 + 8;
+    // Round 5c F1 fix — DPI-aware sizing. Canvas is 3× CSS px on iPhone, so a
+    // 48px arrow renders as 16 CSS px (invisible). Scale by min viewport so it
+    // reads at ~30 CSS px on phone, ~48 on desktop.
+    var sz = Math.max(72, Math.round(Math.min(W, H) * 0.10));
+    var pad = sz * 0.55 + 12;
     var pulse = 0.85 + 0.15 * Math.sin((gameTime || 0) * 5);
     for (var pi = 0; pi < pois.length; pi++) {
       var poi = pois[pi];
       // Project POI to screen
       var spx = poi.x - cameraX, spy = poi.y - cameraY;
       // If on-screen, no edge arrow needed
-      var margin = 80;
+      var margin = sz;
       if (spx > margin && spx < W - margin && spy > margin && spy < H - margin) continue;
       // Compute angle from screen center to POI screen-position
       var ccx = W / 2, ccy = H / 2;
       var ang = Math.atan2(spy - ccy, spx - ccx);
-      // Project to edge with padding
+      // Project to edge with padding so arrow stays fully on canvas
       var maxX = W - pad, minX = pad;
       var maxY = H - pad, minY = pad;
       var ex = ccx + Math.cos(ang) * 1e6;
       var ey = ccy + Math.sin(ang) * 1e6;
-      // Clip ray to viewport rect
       var tX = ex > maxX ? (maxX - ccx) / (ex - ccx) : (ex < minX ? (minX - ccx) / (ex - ccx) : 1);
       var tY = ey > maxY ? (maxY - ccy) / (ey - ccy) : (ey < minY ? (minY - ccy) / (ey - ccy) : 1);
       var t = Math.min(tX, tY, 1);
       var ax = ccx + (ex - ccx) * t;
       var ay = ccy + (ey - ccy) * t;
-      // Color tint by kind
-      var tintColor = poi.kind === 'danger' ? '#ff5050' : (poi.kind === 'holy' ? '#ffd060' : '#7ac4f0');
+      var tintColor = poi.kind === 'danger' ? '#ff4040' : (poi.kind === 'holy' ? '#ffd060' : '#7ac4f0');
       ctx.save();
+      // Drop-shadow halo so arrow reads on any tile — black ring + colour ring
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath(); ctx.arc(ax, ay, sz * 0.55, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = tintColor;
+      ctx.globalAlpha = 0.30 + 0.20 * Math.sin((gameTime || 0) * 5);
+      ctx.beginPath(); ctx.arc(ax, ay, sz * 0.50, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+      // Always paint a bold colored chevron — readable even before SVG loads
       ctx.translate(ax, ay);
       ctx.rotate(ang + Math.PI / 2);
-      ctx.globalAlpha = pulse;
-      if (HUD_ARROW.ready) {
-        ctx.drawImage(HUD_ARROW.img, -sz / 2, -sz / 2, sz, sz);
-        // Tint overlay using source-atop
-        ctx.globalCompositeOperation = 'source-atop';
-        ctx.fillStyle = tintColor;
-        ctx.globalAlpha = 0.45 * pulse;
-        ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
-      } else {
-        // Fallback — coloured triangle
-        ctx.fillStyle = tintColor;
-        ctx.beginPath();
-        ctx.moveTo(0, -sz / 2);
-        ctx.lineTo(-sz / 3, sz / 3);
-        ctx.lineTo(sz / 3, sz / 3);
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-      }
-      ctx.restore();
-      // Distance label below the arrow
-      var distPx = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y));
-      ctx.save();
-      ctx.font = 'bold 11px "Noto Sans SC","PingFang SC",sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#000';
-      ctx.globalAlpha = 0.6;
-      ctx.fillRect(ax - 36, ay + sz * 0.35, 72, 14);
-      ctx.globalAlpha = 1;
       ctx.fillStyle = tintColor;
-      ctx.fillText(poi.label + ' ' + distPx + 'px', ax, ay + sz * 0.35 + 11);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = Math.max(3, sz * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(0, -sz * 0.42);
+      ctx.lineTo(-sz * 0.28, sz * 0.20);
+      ctx.lineTo(0, sz * 0.05);
+      ctx.lineTo(sz * 0.28, sz * 0.20);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+      // Optional decorative SVG underlay if loaded (sub-pixel shimmer behind chevron)
+      if (HUD_ARROW.ready) {
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.rotate(ang + Math.PI / 2);
+        ctx.globalAlpha = 0.35 * pulse;
+        ctx.drawImage(HUD_ARROW.img, -sz / 2, -sz / 2, sz, sz);
+        ctx.restore();
+      }
+      // Distance + label pill
+      var distPx = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y));
+      var labelTxt = poi.label + ' ' + distPx + 'px';
+      ctx.save();
+      var fs = Math.max(14, Math.round(sz * 0.22));
+      ctx.font = 'bold ' + fs + 'px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+      var tw = ctx.measureText(labelTxt).width + 16;
+      var lx = Math.max(6, Math.min(W - tw - 6, ax - tw / 2));
+      var ly = Math.max(6, Math.min(H - fs - 12, ay + sz * 0.35));
+      ctx.fillStyle = 'rgba(0,0,0,0.78)';
+      ctx.fillRect(lx, ly, tw, fs + 8);
+      ctx.strokeStyle = tintColor; ctx.lineWidth = 2;
+      ctx.strokeRect(lx + 0.5, ly + 0.5, tw - 1, fs + 7);
+      ctx.fillStyle = tintColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(labelTxt, lx + tw / 2, ly + fs + 1);
       ctx.restore();
     }
   }
