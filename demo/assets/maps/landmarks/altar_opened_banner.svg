@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="96" viewBox="0 0 512 96">
+  <!-- "祭坛已开放！" 全屏横幅。512×96，跟 r3/*_slain_banner.png 同规格。
+       Developer 用 r3.bannerUsage: center horizontally, y=120,
+       flow: scale 0.6→1.0 (140ms ease-out) + hold 520ms + fade 140ms.
+       Static SVG (no animate) — 光栅化一次即可。 -->
+  <defs>
+    <linearGradient id="bgGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff6a8"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+    <linearGradient id="bgDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#3a2208"/>
+      <stop offset="50%" stop-color="#1a0e02"/>
+      <stop offset="100%" stop-color="#3a2208"/>
+    </linearGradient>
+    <radialGradient id="glowCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#fff6a8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- behind-banner wide glow -->
+  <ellipse cx="256" cy="48" rx="250" ry="40" fill="url(#glowCore)"/>
+
+  <!-- main banner body (tapered ribbon shape) -->
+  <g stroke="#1a0e02" stroke-width="3" stroke-linejoin="round">
+    <!-- dark backing -->
+    <path d="M0 32 L24 16 L488 16 L512 32 L488 80 L24 80 Z" fill="url(#bgDark)"/>
+    <!-- gold main panel -->
+    <path d="M12 36 L32 24 L480 24 L500 36 L500 60 L480 72 L32 72 L12 60 Z" fill="url(#bgGlow)"/>
+    <!-- inner dark text area -->
+    <path d="M24 40 L40 30 L472 30 L488 40 L488 56 L472 66 L40 66 L24 56 Z" fill="#2a1a04"/>
+  </g>
+
+  <!-- left lightning bolt -->
+  <g transform="translate(70,48)">
+    <g stroke="#3a2208" stroke-width="2" stroke-linejoin="round">
+      <polygon points="6,-22 -6,0 0,0 -4,22 12,-4 4,-4 10,-22" fill="#ffea80"/>
+      <polygon points="4,-18 -4,-2 2,-2 0,16 8,-2 2,-2 6,-18" fill="#fff6a8"/>
+    </g>
+  </g>
+
+  <!-- right lightning bolt (mirrored) -->
+  <g transform="translate(442,48) scale(-1,1)">
+    <g stroke="#3a2208" stroke-width="2" stroke-linejoin="round">
+      <polygon points="6,-22 -6,0 0,0 -4,22 12,-4 4,-4 10,-22" fill="#ffea80"/>
+      <polygon points="4,-18 -4,-2 2,-2 0,16 8,-2 2,-2 6,-18" fill="#fff6a8"/>
+    </g>
+  </g>
+
+  <!-- 4 gold star decorations -->
+  <g fill="#fff6a8" stroke="#3a2208" stroke-width="1">
+    <polygon points="108,18 110,23 115,24 111,27 112,32 108,29 104,32 105,27 101,24 106,23"/>
+    <polygon points="108,78 110,73 115,72 111,69 112,64 108,67 104,64 105,69 101,72 106,73"/>
+    <polygon points="404,18 406,23 411,24 407,27 408,32 404,29 400,32 401,27 397,24 402,23"/>
+    <polygon points="404,78 406,73 411,72 407,69 408,64 404,67 400,64 401,69 397,72 402,73"/>
+  </g>
+
+  <!-- main text — "祭坛已开放！" with paint-order stroke for crisp read on any bg -->
+  <text x="256" y="62"
+        font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
+        font-size="36"
+        font-weight="900"
+        fill="#fff6a8"
+        text-anchor="middle"
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:5px; stroke-linejoin:round; letter-spacing:4px;">祭坛已开放！</text>
+
+  <!-- subtitle -->
+  <text x="256" y="82"
+        font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
+        font-size="11"
+        font-weight="bold"
+        fill="#ffd700"
+        text-anchor="middle"
+        opacity="0.9"
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:2px; letter-spacing:2px;">ALTAR UNLOCKED — 击破获传说技能 × 3</text>
+
+  <!-- top highlight line -->
+  <line x1="24" y1="30" x2="488" y2="30" stroke="#fffbe0" stroke-width="1" opacity="0.6"/>
+</svg>

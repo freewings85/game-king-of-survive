@@ -12,6 +12,7 @@
 | `altar_debris.svg` | 192×32 | 击打粒子 atlas 6 帧（石屑 + 金火花 + 尘雾），每帧 32×32 内嵌 24×24 sprite |
 | `altar_shatter.svg` | 256×256 | 击破瞬间爆炸 — 3 圈冲击波 + 24 径向金碎 + 8 飞石 + 中央闪白；Developer scale 0.5→1.6 alpha 1→0 over 450ms |
 | `legendary_pickup.svg` | 64×96 | 传说技能掉落光柱 — 地面金圈 + 上升光束 + 悬浮 icon 槽位 + 金色符文环自转；Developer 在 (16,20,32,32) 槽位贴具体技能 icon；锚点底部 (32, 92)；捡起半径建议 40px |
+| `altar_opened_banner.svg` | 512×96 | 祭坛解锁横幅 "祭坛已开放！" — 跟 `r3/*_slain_banner.png` 同规格，**静态** SVG。Developer 复用 `r3.bannerUsage`：中心水平，y=120，flow = scale 0.6→1.0 (140ms ease-out) + hold 520ms + fade 140ms |
 
 ## 技术细节
 
