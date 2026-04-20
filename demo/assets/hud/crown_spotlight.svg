@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="384" viewBox="0 0 512 384">
+  <!-- Crown spotlight overlay. 512×384 drawn over the whole screen (stretch to viewport).
+       Played ONCE for 2s after the levelUp modal closes and the altar master earns their crown.
+       Developer: cover entire canvas (ctx.drawImage(img, 0, 0, W, H)) with alpha 0→1→1→0 arc:
+         0  → 0.3s  fade-in     (alpha 0 → 1)
+         0.3 → 1.7s hold        (alpha 1)
+         1.7 → 2.0s fade-out    (alpha 1 → 0)
+       Static SVG — rasterise once.
+  -->
+  <defs>
+    <radialGradient id="csVignette" cx="50%" cy="48%" r="60%">
+      <stop offset="0%"   stop-color="#ffd700" stop-opacity="0"/>
+      <stop offset="35%"  stop-color="#4a1a7a" stop-opacity="0.3"/>
+      <stop offset="75%"  stop-color="#1a0a2a" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#0a0410" stop-opacity="0.95"/>
+    </radialGradient>
+    <radialGradient id="csCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#fff6a8" stop-opacity="0.95"/>
+      <stop offset="40%"  stop-color="#ffd700" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="csGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff6c8"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+    <linearGradient id="csPillar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"  stop-color="#ffd700" stop-opacity="0.75"/>
+      <stop offset="60%" stop-color="#fff4c8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- full-screen dark vignette -->
+  <rect width="512" height="384" fill="url(#csVignette)"/>
+
+  <!-- diagonal light rays (God rays) -->
+  <g opacity="0.45">
+    <polygon points="256,192 40,0   70,-20 286,172" fill="#ffd966"/>
+    <polygon points="256,192 472,0  442,-20 226,172" fill="#ffd966"/>
+    <polygon points="256,192 150,-10 180,-30 286,170" fill="#fff4c8"/>
+    <polygon points="256,192 362,-10 332,-30 226,170" fill="#fff4c8"/>
+  </g>
+
+  <!-- central light pillar going up from bottom -->
+  <rect x="220" y="120" width="72" height="264" fill="url(#csPillar)" opacity="0.8"/>
+
+  <!-- central core glow -->
+  <circle cx="256" cy="184" r="140" fill="url(#csCore)"/>
+
+  <!-- === CROWN (centered, large) === -->
+  <g transform="translate(256,184)" stroke="#3a2208" stroke-width="3" stroke-linejoin="round">
+    <!-- crown base band -->
+    <rect x="-70" y="12" width="140" height="24" fill="url(#csGold)"/>
+    <!-- 5 spikes -->
+    <polygon points="-70,12 -56,-32 -42,0 -28,-40 -14,-4 0,-48 14,-4 28,-40 42,0 56,-32 70,12" fill="url(#csGold)"/>
+    <!-- gems on top of spikes -->
+    <circle cx="-56" cy="-28" r="5" fill="#b078e8" stroke="#2a0a3a"/>
+    <circle cx="-28" cy="-36" r="5" fill="#5aa5d8" stroke="#0a2a4a"/>
+    <circle cx="0"   cy="-44" r="7" fill="#c84a3a" stroke="#3a0a02"/>
+    <circle cx="28"  cy="-36" r="5" fill="#5aa5d8" stroke="#0a2a4a"/>
+    <circle cx="56"  cy="-28" r="5" fill="#b078e8" stroke="#2a0a3a"/>
+    <!-- band details -->
+    <line x1="-60" y1="22" x2="60" y2="22" stroke="#8a5e18" stroke-width="1.5"/>
+    <!-- center band gem -->
+    <circle cx="0" cy="24" r="5" fill="#fff" stroke="#8a5e18" stroke-width="1.5"/>
+    <circle cx="0" cy="24" r="2.5" fill="#c84a3a"/>
+    <!-- pearl row along band -->
+    <g fill="#fff6a8" stroke="#8a5e18" stroke-width="0.8">
+      <circle cx="-48" cy="24" r="2"/>
+      <circle cx="-24" cy="24" r="2"/>
+      <circle cx="24"  cy="24" r="2"/>
+      <circle cx="48"  cy="24" r="2"/>
+    </g>
+    <!-- highlight on band -->
+    <line x1="-65" y1="16" x2="65" y2="16" stroke="#fffbe0" stroke-width="1.2" opacity="0.8"/>
+  </g>
+
+  <!-- "圣堂之主" big text under crown -->
+  <text x="256" y="260"
+        font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
+        font-size="44"
+        font-weight="900"
+        fill="#fff6a8"
+        text-anchor="middle"
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:7px; stroke-linejoin:round; letter-spacing:8px;">圣堂之主</text>
+
+  <!-- subtitle -->
+  <text x="256" y="292"
+        font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
+        font-size="14"
+        font-weight="bold"
+        fill="#ffd700"
+        text-anchor="middle"
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:3px; letter-spacing:3px;">ALTAR MASTER — 全场敌人减速 30%（3 分钟）</text>
+
+  <!-- floating sparkles -->
+  <g fill="#fffbd0">
+    <circle cx="120" cy="120" r="2.5"/>
+    <circle cx="392" cy="140" r="2.5"/>
+    <circle cx="80"  cy="220" r="2"/>
+    <circle cx="432" cy="200" r="2"/>
+    <circle cx="160" cy="300" r="2.5"/>
+    <circle cx="352" cy="310" r="2.5"/>
+    <circle cx="100" cy="60"  r="1.8"/>
+    <circle cx="412" cy="70"  r="1.8"/>
+    <circle cx="200" cy="340" r="1.5"/>
+    <circle cx="312" cy="340" r="1.5"/>
+  </g>
+  <g fill="#b078e8" opacity="0.85">
+    <circle cx="60"  cy="150" r="1.5"/>
+    <circle cx="452" cy="170" r="1.5"/>
+    <circle cx="140" cy="340" r="1.5"/>
+    <circle cx="372" cy="340" r="1.5"/>
+  </g>
+</svg>

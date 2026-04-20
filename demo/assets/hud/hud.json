@@ -15,5 +15,17 @@
       "屏幕边缘放置：将目标世界坐标转屏幕坐标，clamp 到屏内留 48px margin；若目标在屏外则 clamp 到最近边缘 + 旋转朝向目标。",
       "多箭头叠加：holy 优先级最低（只在无紧急时显示），danger 最高（永远最上层），neutral 中间；同时最多显示 2 个。"
     ]
+  },
+  "crownSpotlight": {
+    "image": "crown_spotlight.svg",
+    "size": { "w": 512, "h": 384 },
+    "description": "圣堂之主加冕全屏聚焦 overlay — levelUp modal 关闭后单独播放 2s，解决 R5g 'modal 遮 crown' 体验割裂",
+    "usage": [
+      "触发时机：altar 击破 → pickups 捡完 → levelUp modal 关闭 → 立刻播 2s crown spotlight。",
+      "绘制：ctx.drawImage(spotlightImg, 0, 0, canvas.width, canvas.height)；拉伸到全屏",
+      "alpha 曲线：0-0.3s fade in (0→1) / 0.3-1.7s hold (1) / 1.7-2.0s fade out (1→0)",
+      "播放期间游戏继续跑，但敌人不会真正打到玩家（建议 1s 无敌），避免玩家看庆祝被偷袭。"
+    ],
+    "perfNote": "一次性全屏播放，2s 后彻底消失。静态 SVG 光栅化一次即可。"
   }
 }

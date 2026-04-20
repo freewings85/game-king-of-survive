@@ -44,5 +44,13 @@
     "duration": 300,
     "usage": "drawImage(altarMasterImg, player.x-40, player.y-40, 80, 80)；建议代码加缓脉冲：ctx.globalAlpha = 0.85 + 0.15 * Math.sin(now * 0.003)",
     "perfNote": "静态 SVG，光栅化一次即可永久复用。代码驱动的 alpha pulse 比 SVG animate 省 FPS 显著。"
+  },
+  "slowDebuff": {
+    "image": "slow_debuff_aura.svg",
+    "size": 80,
+    "anchor": { "x": 40, "y": 40 },
+    "description": "敌人减速 debuff 光环 — 圣堂之主激活期间所有敌人脚下 3min。紫雾 + 锁链环 + 慢时钟 + 下沉粒子",
+    "usage": "for each enemy while _altarSlowUntil > now: drawImage(slowImg, enemy.x-40, enemy.y-40, 80, 80)；建议 alpha 0.75 保留敌人本体可辨",
+    "perfNote": "静态；全场敌人都贴，数量可能多（4-8 个），务必一次性 rasterise 缓存。"
   }
 }
