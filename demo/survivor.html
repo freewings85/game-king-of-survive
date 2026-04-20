@@ -3188,6 +3188,22 @@ function doLogin() {
         ctx2.restore();
       }
     }
+    // Round 5b T2: altar shatter SVG plays out over its dur
+    if (ALTAR_FX.activeShatter) {
+      var ash = ALTAR_FX.activeShatter;
+      ash.t += (typeof gameTime !== 'undefined') ? 0.016 : 0.016;
+      var p = Math.min(1, ash.t / ash.dur);
+      var scale = 0.4 + 1.6 * p;
+      var alpha = 1 - p * 0.7;
+      var sz = ALTAR_FX.shatter.size * scale;
+      if (ALTAR_FX.shatter.ready) {
+        ctx2.save();
+        ctx2.globalAlpha = alpha;
+        ctx2.drawImage(ALTAR_FX.shatter.img, ash.x - sz / 2, ash.y - sz / 2, sz, sz);
+        ctx2.restore();
+      }
+      if (p >= 1) ALTAR_FX.activeShatter = null;
+    }
   }
 
   // Draw BR structures (called from drawTerrain area)
@@ -3368,6 +3384,11 @@ function doLogin() {
       WORLD_W = W * 2;
       WORLD_H = H * 2;
     }
+    // Round 5b — lane layouts force team mode so 4v4 lanes don't degenerate
+    // into mass FFA slaughter (Testor: lane_b had 4/7 bots dead by 12s).
+    if (MAP_DATA && MAP_DATA.layout === 'lane-3') {
+      gameMode = 'team';
+    }
     // Re-center player in freshly-sized world (startGame placed them at old center).
     if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length) {
       var _psp = MAP_DATA.spawnPoints[0];
@@ -3479,6 +3500,27 @@ function doLogin() {
     _brMobState.respawnPending = false;
     _brMobState.lastBossCamp = -1;
     _activeBossRef = null;
+    // Round 5b T2: spawn the central altar as a destructible BOSS so the
+    // landmark has gameplay weight, not just visual weight. High HP, immobile,
+    // drops legendary skill + big XP on death; storm convergence forces the
+    // 末期 fight to happen here.
+    if (MAP_DATA && MAP_DATA.stormCenter) {
+      spawnOfflineEnemy('boss', MAP_DATA.stormCenter.x, MAP_DATA.stormCenter.y);
+      var _altar = offlineEnemies[offlineEnemies.length - 1];
+      _altar.hp = _altar.maxHp = 2400;
+      _altar.bossTypeId = 'altar';
+      _altar.bossTypeName = '中央祭坛';
+      _altar.color = '#ffd060';
+      _altar.radius = 80;
+      _altar.speed = 0;
+      _altar._isAltar = true;
+      _altar._noKnockback = true;
+      _activeBossRef = _altar;
+      bossDropBanner.active = true;
+      bossDropBanner.timer = 3.5;
+      bossDropBanner.text = '★ 中央祭坛已矗立 — 击破获得传说 ★';
+      bossDropBanner.zoneName = '中央祭坛';
+    }
     for (var _seedI = 0; _seedI < 15; _seedI++) {
       var _seedA = Math.random() * Math.PI * 2;
       var _seedR = 300 + Math.random() * (Math.min(WORLD_W, WORLD_H) * 0.35);
@@ -3957,11 +3999,11 @@ function doLogin() {
       }
 
       // --- Round 5 N: rival / nemesis target override ---
-      // Nemesis hunts the player regardless of distance; rival engages the
-      // player inside a 1200px aggression radius. These override normal target
-      // selection below so labelled bots *feel* personal, not cosmetic.
+      // Round 5b: rival aggression delayed to gameTime > 60 so new players
+      // get a farming window before the stalker bot starts hunting (Testor:
+      // scout died at 38s under combined rival+archetype pressure).
       var _forcePlayer = false;
-      if (player && player.alive) {
+      if (player && player.alive && gameTime > 60) {
         if (rivalState.nemesisId === b.factionId) {
           _forcePlayer = true;
         } else if (rivalState.botId === b.factionId) {
@@ -4703,6 +4745,23 @@ function doLogin() {
         var _isCrit = Math.random() < (player.critChance || 0);
         var _dmgValue = _isCrit ? Math.floor(_rawDmg * 1.75) : Math.floor(_rawDmg);
         closest.hp -= _dmgValue;
+        // Round 5b T2: altar struck — spawn ArtDesigner debris particles
+        if (closest._isAltar) {
+          var _dn = 3 + Math.floor(Math.random() * 3);
+          for (var _di = 0; _di < _dn; _di++) {
+            var _da = Math.random() * Math.PI * 2;
+            var _ds = 80 + Math.random() * 120;
+            particles.push({
+              x: closest.x + Math.cos(_da) * closest.radius * 0.7,
+              y: closest.y + Math.sin(_da) * closest.radius * 0.7,
+              vx: Math.cos(_da) * _ds, vy: Math.sin(_da) * _ds - 40,
+              life: 0.7, maxLife: 0.7,
+              color: (_di & 1) ? '#ffd060' : '#a89070',
+              size: 6 + Math.random() * 4, particleType: 'circle'
+            });
+          }
+          if (typeof screenShake === 'function') screenShake('light');
+        }
         // Round 5 N: rival hatred — each player hit on rival adds +1; >= 5 triggers 15s rage
         if (closest.isBot && rivalState.botId === closest.factionId) {
           closest._rivalHatred = (closest._rivalHatred || 0) + 1;
@@ -4760,6 +4819,21 @@ function doLogin() {
           if (closest.bossTypeId) {
             var _bossXP = 120;
             var _bx = closest.x, _by = closest.y;
+            // Round 5b T2: altar shatter trigger + global broadcast
+            if (closest._isAltar) {
+              ALTAR_FX.activeShatter = { x: _bx, y: _by, t: 0, dur: 1.4 };
+              _bossXP = 250;
+              killFeed.push({ text: '★ ' + (player.name || '你') + ' 击破中央祭坛 — 传说降临 ★', color: '#ffd060', time: 8 });
+              if (typeof screenShake === 'function') screenShake(18, 600);
+              if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.55; }
+              // Drop 3 legendary skill pickups around altar
+              for (var _lp = 0; _lp < 3; _lp++) {
+                var _la = Math.PI * 2 * _lp / 3;
+                if (typeof dropSkillPickup === 'function') {
+                  dropSkillPickup(_bx + Math.cos(_la) * 60, _by + Math.sin(_la) * 60, '#ffd060');
+                }
+              }
+            }
             playerXP += _bossXP;
             // Extra gems immediately (pickup goes through magnet anyway)
             for (var _bsi = 0; _bsi < 8; _bsi++) {
@@ -10411,6 +10485,7 @@ function doLogin() {
       }
     }
 
+    drawEdgeBeacons();
     drawMinimap();
     // PvP immunity countdown
     if (gameTime < 90) {
@@ -11035,6 +11110,120 @@ function doLogin() {
       }
     }
     ctx.restore();
+  }
+
+  // Round 5b T3: edge beacons — direction arrows pinned to viewport edges
+  // pointing toward POIs the player needs to know about (altar, nearest strat,
+  // storm center if outside safe zone). Uses ArtDesigner's hud/direction_arrow.svg
+  // 3-state sprite (gold=holy, red=danger, blue=neutral) with pulse animate.
+  var HUD_ARROW = { img: new Image(), ready: false, size: 48 };
+  HUD_ARROW.img.onload = function() { HUD_ARROW.ready = true; };
+  HUD_ARROW.img.src = 'assets/hud/direction_arrow.svg';
+  // Round 5b T2: altar combat FX
+  var ALTAR_FX = {
+    debris:  { img: new Image(), ready: false, size: 48 },
+    shatter: { img: new Image(), ready: false, size: 256 },
+    activeShatter: null // { x, y, t, dur }
+  };
+  ALTAR_FX.debris.img.onload  = function() { ALTAR_FX.debris.ready  = true; };
+  ALTAR_FX.shatter.img.onload = function() { ALTAR_FX.shatter.ready = true; };
+  ALTAR_FX.debris.img.src  = 'assets/maps/landmarks/altar_debris.svg';
+  ALTAR_FX.shatter.img.src = 'assets/maps/landmarks/altar_shatter.svg';
+
+  function drawEdgeBeacons() {
+    if (!player || !player.alive || state !== 'playing') return;
+    if (!tutorialDone) return; // hold beacons during tutorial
+    // Build POI list: { x, y, kind: 'holy'|'danger'|'neutral', label }
+    var pois = [];
+    // Altar — alive central boss is the holy POI
+    if (_activeBossRef && _activeBossRef.alive && _activeBossRef._isAltar) {
+      pois.push({ x: _activeBossRef.x, y: _activeBossRef.y, kind: 'holy', label: '祭坛' });
+    }
+    // Nearest unowned/non-self strat point — neutral POI
+    var bestPt = null, bestPtD = 1e12;
+    if (STRAT_POINTS && STRAT_POINTS.pointsInWorld) {
+      for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
+        var pt = STRAT_POINTS.pointsInWorld[i];
+        if (pt.owner === player.factionId && gameTime < pt.buffUntil) continue;
+        var dx = pt.x - player.x, dy = pt.y - player.y;
+        var d2 = dx * dx + dy * dy;
+        if (d2 < bestPtD) { bestPtD = d2; bestPt = pt; }
+      }
+    }
+    if (bestPt) pois.push({ x: bestPt.x, y: bestPt.y, kind: 'neutral', label: bestPt.name || '据点' });
+    // Storm center — danger POI when player is outside the safe ring
+    if (stormZone && stormZone.active) {
+      var sdx = player.x - stormZone.centerX, sdy = player.y - stormZone.centerY;
+      if (sdx * sdx + sdy * sdy > stormZone.radius * stormZone.radius * 0.85) {
+        pois.push({ x: stormZone.centerX, y: stormZone.centerY, kind: 'danger', label: '安全区' });
+      }
+    }
+    // Priority: danger > holy > neutral, cap to 2 on screen at once
+    var rank = { danger: 0, holy: 1, neutral: 2 };
+    pois.sort(function(a, b) { return rank[a.kind] - rank[b.kind]; });
+    pois = pois.slice(0, 2);
+
+    var sz = HUD_ARROW.size;
+    var pad = sz * 0.6 + 8;
+    var pulse = 0.85 + 0.15 * Math.sin((gameTime || 0) * 5);
+    for (var pi = 0; pi < pois.length; pi++) {
+      var poi = pois[pi];
+      // Project POI to screen
+      var spx = poi.x - cameraX, spy = poi.y - cameraY;
+      // If on-screen, no edge arrow needed
+      var margin = 80;
+      if (spx > margin && spx < W - margin && spy > margin && spy < H - margin) continue;
+      // Compute angle from screen center to POI screen-position
+      var ccx = W / 2, ccy = H / 2;
+      var ang = Math.atan2(spy - ccy, spx - ccx);
+      // Project to edge with padding
+      var maxX = W - pad, minX = pad;
+      var maxY = H - pad, minY = pad;
+      var ex = ccx + Math.cos(ang) * 1e6;
+      var ey = ccy + Math.sin(ang) * 1e6;
+      // Clip ray to viewport rect
+      var tX = ex > maxX ? (maxX - ccx) / (ex - ccx) : (ex < minX ? (minX - ccx) / (ex - ccx) : 1);
+      var tY = ey > maxY ? (maxY - ccy) / (ey - ccy) : (ey < minY ? (minY - ccy) / (ey - ccy) : 1);
+      var t = Math.min(tX, tY, 1);
+      var ax = ccx + (ex - ccx) * t;
+      var ay = ccy + (ey - ccy) * t;
+      // Color tint by kind
+      var tintColor = poi.kind === 'danger' ? '#ff5050' : (poi.kind === 'holy' ? '#ffd060' : '#7ac4f0');
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(ang + Math.PI / 2);
+      ctx.globalAlpha = pulse;
+      if (HUD_ARROW.ready) {
+        ctx.drawImage(HUD_ARROW.img, -sz / 2, -sz / 2, sz, sz);
+        // Tint overlay using source-atop
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = tintColor;
+        ctx.globalAlpha = 0.45 * pulse;
+        ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+      } else {
+        // Fallback — coloured triangle
+        ctx.fillStyle = tintColor;
+        ctx.beginPath();
+        ctx.moveTo(0, -sz / 2);
+        ctx.lineTo(-sz / 3, sz / 3);
+        ctx.lineTo(sz / 3, sz / 3);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+      }
+      ctx.restore();
+      // Distance label below the arrow
+      var distPx = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y));
+      ctx.save();
+      ctx.font = 'bold 11px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#000';
+      ctx.globalAlpha = 0.6;
+      ctx.fillRect(ax - 36, ay + sz * 0.35, 72, 14);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = tintColor;
+      ctx.fillText(poi.label + ' ' + distPx + 'px', ax, ay + sz * 0.35 + 11);
+      ctx.restore();
+    }
   }
 
   // Minimap (US-204) — shows full world with all players
