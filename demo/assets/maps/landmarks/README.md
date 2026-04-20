@@ -13,7 +13,8 @@
 | `altar_shatter.svg` | 256×256 | 击破瞬间爆炸 — 3 圈冲击波 + 24 径向金碎 + 8 飞石 + 中央闪白；Developer scale 0.5→1.6 alpha 1→0 over 450ms |
 | `legendary_pickup.svg` | 64×96 | 传说技能掉落光柱 — 地面金圈 + 上升光束 + 悬浮 icon 槽位 + 金色符文环自转；Developer 在 (16,20,32,32) 槽位贴具体技能 icon；锚点底部 (32, 92)；捡起半径建议 40px |
 | `altar_opened_banner.svg` | 512×96 | 祭坛解锁横幅 "祭坛已开放！" — 跟 `r3/*_slain_banner.png` 同规格，**静态** SVG。Developer 复用 `r3.bannerUsage`：中心水平，y=120，flow = scale 0.6→1.0 (140ms ease-out) + hold 520ms + fade 140ms |
-| `altar_impact_flash.svg` | 128×128 | 祭坛受击瞬间金光爆 — 8 长射线 + 8 短射线 + 3 圈冲击波 + 中央闪白；Developer 每次命中祭坛时 spawn，alpha 1→0 over 200ms, scale 0.7→1.3 |
+| `altar_impact_flash.svg` | 128×128 | 祭坛受击瞬间金光爆（普通击）— 8 长射线 + 8 短射线 + 3 圈冲击波 + 中央闪白。**建议改 350ms** alpha 1→0 + scale 0.7→1.4 (Testor 反馈 200ms 太短) |
+| `altar_impact_flash_big.svg` | 192×192 | **累积爆版**：每 3 击 / HP 跌到 75%/50%/25%/0% 关键节点用。16 主射线 + 8 紫副射线 + 12 飞散紫水晶碎片 + 3 圈冲击波。Developer alpha 1→0 over 500ms, scale 0.5→1.5, composite 'lighter' |
 
 ## 技术细节
 

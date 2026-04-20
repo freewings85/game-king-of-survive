@@ -85,14 +85,22 @@
         text-anchor="middle"
         style="paint-order:stroke; stroke:#1a0e02; stroke-width:7px; stroke-linejoin:round; letter-spacing:8px;">圣堂之主</text>
 
-  <!-- subtitle -->
+  <!-- subtitle (ASCII-only for Playwright/headless compatibility; main 圣堂之主 keeps CJK) -->
   <text x="256" y="292"
         font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
-        font-size="14"
+        font-size="15"
         font-weight="bold"
         fill="#ffd700"
         text-anchor="middle"
-        style="paint-order:stroke; stroke:#1a0e02; stroke-width:3px; letter-spacing:3px;">ALTAR MASTER — 全场敌人减速 30%（3 分钟）</text>
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:3px; letter-spacing:4px;">ALTAR MASTER &#x00B7; SLOW -30% &#x00B7; 3 MIN</text>
+  <text x="256" y="312"
+        font-family='"PingFang SC","Noto Sans CJK SC","Hiragino Sans GB","Microsoft YaHei",Arial,system-ui,sans-serif'
+        font-size="12"
+        font-weight="bold"
+        fill="#e4c8f8"
+        text-anchor="middle"
+        opacity="0.85"
+        style="paint-order:stroke; stroke:#1a0e02; stroke-width:2.5px; letter-spacing:2px;">全场敌人减速 3 分钟</text>
 
   <!-- floating sparkles -->
   <g fill="#fffbd0">
