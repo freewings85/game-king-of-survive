@@ -285,6 +285,39 @@ function doLogin() {
     biomeAtlases: {},           // key: biome id (2/4/5/6) -> { img, ready, cols, rows, tileW, tileH }
     _pendingLoad: false
   };
+  // R5h sprite pack (ArtDesigner 2026-04-21). Three visual polish hooks:
+  //  - altar_impact_flash (128x128) per-hit golden burst on altar
+  //  - crown_spotlight (512x384) full-screen 2s 加冕 overlay after altar kill
+  //  - slow_debuff_aura (80x80) under every enemy while altar slow is active
+  // All rasterised to offscreen canvas at load → cheap drawImage per frame.
+  var R5H_FX = {
+    impactFlash:    { img: new Image(), canvas: null, ready: false, size: 128 },
+    crownSpotlight: { img: new Image(), canvas: null, ready: false, w: 512, h: 384 },
+    slowAura:       { img: new Image(), canvas: null, ready: false, size: 80 },
+    activeFlashes:  [],   // per-hit { x, y, t, dur }
+    crownPlay:      null  // { until, t, dur }
+  };
+  function _rasteriseR5h(entry, w, h) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(entry.img, 0, 0, w, h);
+    entry.canvas = c;
+  }
+  (function _preloadR5H() {
+    R5H_FX.impactFlash.img.onload = function() {
+      try { _rasteriseR5h(R5H_FX.impactFlash, 128, 128); R5H_FX.impactFlash.ready = true; } catch (e) { R5H_FX.impactFlash.ready = true; }
+    };
+    R5H_FX.impactFlash.img.src = 'assets/maps/landmarks/altar_impact_flash.svg';
+    R5H_FX.crownSpotlight.img.onload = function() {
+      // Spotlight is drawn at canvas size, so rasterise at native 512x384
+      try { _rasteriseR5h(R5H_FX.crownSpotlight, 512, 384); R5H_FX.crownSpotlight.ready = true; } catch (e) { R5H_FX.crownSpotlight.ready = true; }
+    };
+    R5H_FX.crownSpotlight.img.src = 'assets/hud/crown_spotlight.svg';
+    R5H_FX.slowAura.img.onload = function() {
+      try { _rasteriseR5h(R5H_FX.slowAura, 80, 80); R5H_FX.slowAura.ready = true; } catch (e) { R5H_FX.slowAura.ready = true; }
+    };
+    R5H_FX.slowAura.img.src = 'assets/buffs/slow_debuff_aura.svg';
+  })();
+
   // Round 5 combat FX pack (ArtDesigner 2026-04-21). captureBar rows 0-3,
   // rivalTrail frames 0-3, nemesisAura (animated SVG), stateFloats ribbons 0-5.
   var COMBAT_FX = {
@@ -3188,6 +3221,23 @@ function doLogin() {
         ctx2.restore();
       }
     }
+    // R5h: per-hit golden impact flashes — alpha 1→0, scale 0.7→1.3 over 0.2s
+    if (R5H_FX.activeFlashes.length) {
+      var _flashSrc = R5H_FX.impactFlash.canvas || (R5H_FX.impactFlash.ready ? R5H_FX.impactFlash.img : null);
+      for (var _fi = R5H_FX.activeFlashes.length - 1; _fi >= 0; _fi--) {
+        var _fx = R5H_FX.activeFlashes[_fi];
+        _fx.t += 0.016;
+        var _fp = _fx.t / _fx.dur;
+        if (_fp >= 1) { R5H_FX.activeFlashes.splice(_fi, 1); continue; }
+        if (!_flashSrc) continue;
+        var _fSz = R5H_FX.impactFlash.size * (0.7 + 0.6 * _fp);
+        ctx2.save();
+        ctx2.globalAlpha = 1 - _fp;
+        ctx2.globalCompositeOperation = 'lighter';
+        ctx2.drawImage(_flashSrc, _fx.x - _fSz / 2, _fx.y - _fSz / 2, _fSz, _fSz);
+        ctx2.restore();
+      }
+    }
     // Round 5b T2: altar shatter SVG plays out over its dur
     if (ALTAR_FX.activeShatter) {
       var ash = ALTAR_FX.activeShatter;
@@ -4311,10 +4361,14 @@ function doLogin() {
           var _nemMul = (rivalState.nemesisId === b.factionId && b._nemesisStreak)
             ? Math.min(1.5, 1 + 0.15 * b._nemesisStreak) : 1;
           var _aDmg = Math.floor((b.attackDamage + Math.floor(Math.random() * 4)) * _rageMul * _nemMul);
-          // Round 5e F2 — graduated spawn shield: 0-15s 50%, 15-20s 30%, 20-25s 15%, 25+ none
+          // Round 5e F2 + R5h: graduated spawn shield + 加冕 1s invulnerability
           if ((b._aiTarget === player || b._aiTarget.isLocal)) {
-            var _ssMul = _spawnShieldMul(gameTime);
-            if (_ssMul < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _ssMul));
+            if (player._invulnerableUntil && gameTime < player._invulnerableUntil) {
+              _aDmg = 0;
+            } else {
+              var _ssMul = _spawnShieldMul(gameTime);
+              if (_ssMul < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _ssMul));
+            }
           }
           b._aiTarget.hp -= _aDmg;
           // Visual feedback
@@ -4858,8 +4912,9 @@ function doLogin() {
           _dmgValue = 0;
         }
         closest.hp -= _dmgValue;
-        // Round 5b T2: altar struck — spawn ArtDesigner debris particles
+        // Round 5b T2 + R5h: altar struck — spawn debris particles + golden impact flash
         if (closest._isAltar && _dmgValue > 0) {
+          R5H_FX.activeFlashes.push({ x: closest.x, y: closest.y, t: 0, dur: 0.2 });
           var _dn = 3 + Math.floor(Math.random() * 3);
           for (var _di = 0; _di < _dn; _di++) {
             var _da = Math.random() * Math.PI * 2;
@@ -4951,6 +5006,9 @@ function doLogin() {
               player._templeMasterUntil = gameTime + 300;
               killFeed.push({ text: '⏳ 全场敌人减速 30% 持续 3 分钟', color: '#88ddff', time: 8 });
               killFeed.push({ text: '👑 你成为圣堂之主 — 5 分钟特权光环', color: '#ffd060', time: 8 });
+              // R5h F2: queue 2s 加冕 spotlight (waits for any open levelUp modal to clear)
+              R5H_FX.crownPlay = { armed: true, t: 0, dur: 2.0, invulnUntil: gameTime + 1.0 };
+              player._invulnerableUntil = gameTime + 1.0;
             }
             playerXP += _bossXP;
             // Extra gems immediately (pickup goes through magnet anyway)
@@ -9707,6 +9765,17 @@ function doLogin() {
           ctx.beginPath(); ctx.arc(e.x, e.y, e.radius + hitImpactRing, 0, Math.PI * 2); ctx.stroke();
           ctx.restore(); ctx.globalAlpha = spawnAlpha;
         }
+        // R5h F3: slow debuff aura — drawn UNDER the enemy sprite while altar slow active
+        if (window._altarSlowUntil && gameTime < window._altarSlowUntil) {
+          var _slowSrc = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
+          if (_slowSrc) {
+            var _slowSz = R5H_FX.slowAura.size * Math.max(1, e.radius / 24);
+            ctx.save();
+            ctx.globalAlpha = 0.75;
+            ctx.drawImage(_slowSrc, e.x - _slowSz / 2, e.y - _slowSz / 2 + 8, _slowSz, _slowSz);
+            ctx.restore();
+          }
+        }
         // Body — enemySprite: render enemies as Canvas-drawn sprites
         drawEnemySprite(ctx, e.x, e.y, e.radius, e.enemyType || 'normal', strongHitFlash ? '#fff' : themeColor, gameTime, e);
         // HP bar
@@ -10257,6 +10326,18 @@ function doLogin() {
       var _bMoving = (_bdx * _bdx + _bdy * _bdy) > 0.04;
       bp._prevX = bp.x; bp._prevY = bp.y;
       if (_bMoving) bpAngle = Math.atan2(_bdy, _bdx);
+      // R5h F3: slow debuff aura under hostile bots (purple mist)
+      if (window._altarSlowUntil && gameTime < window._altarSlowUntil
+          && bp.factionId !== player.factionId) {
+        var _slowB = R5H_FX.slowAura.canvas || (R5H_FX.slowAura.ready ? R5H_FX.slowAura.img : null);
+        if (_slowB) {
+          var _slowBSz = R5H_FX.slowAura.size * Math.max(1, bp.radius / 24);
+          ctx.save();
+          ctx.globalAlpha = 0.7;
+          ctx.drawImage(_slowB, bp.x - _slowBSz / 2, bp.y - _slowBSz / 2 + 12, _slowBSz, _slowBSz);
+          ctx.restore();
+        }
+      }
       // Round 5 N: nemesis burning aura — drawn UNDER the character sprite.
       // SVG has built-in pulse/rotate animations; we just blit.
       if (rivalState.nemesisId === bp.factionId && COMBAT_FX.nemesisAura.ready) {
@@ -10723,6 +10804,40 @@ function doLogin() {
 
     drawEdgeBeacons();
     drawBridgeBanner();
+    // R5h F2: crown spotlight — gated until any open levelUp modal closes,
+    // then plays once for 2s with fade-in/hold/fade-out alpha curve.
+    if (R5H_FX.crownPlay && R5H_FX.crownPlay.armed && state === 'playing') {
+      // Wait for levelUp modal to close before starting playback
+      R5H_FX.crownPlay.t += 0.016;
+      if (R5H_FX.crownPlay.t > 0 && R5H_FX.crownPlay.t < R5H_FX.crownPlay.dur) {
+        var _cp = R5H_FX.crownPlay;
+        var _cpA;
+        if (_cp.t < 0.3) _cpA = _cp.t / 0.3;
+        else if (_cp.t < _cp.dur - 0.3) _cpA = 1;
+        else _cpA = (_cp.dur - _cp.t) / 0.3;
+        var _cpSrc = R5H_FX.crownSpotlight.canvas || (R5H_FX.crownSpotlight.ready ? R5H_FX.crownSpotlight.img : null);
+        if (_cpSrc) {
+          ctx.save();
+          ctx.globalAlpha = _cpA;
+          ctx.drawImage(_cpSrc, 0, 0, W, H);
+          ctx.restore();
+        } else {
+          // Fallback — gold tint + center "圣堂之主" text
+          ctx.save();
+          ctx.fillStyle = 'rgba(120,80,40,' + (0.5 * _cpA) + ')';
+          ctx.fillRect(0, 0, W, H);
+          ctx.font = 'bold ' + Math.round(Math.min(W, H) * 0.08) + 'px ' + _HUD_CJK;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffd060';
+          ctx.globalAlpha = _cpA;
+          ctx.fillText('👑 圣堂之主 👑', W / 2, H / 2);
+          ctx.restore();
+        }
+      }
+      if (R5H_FX.crownPlay.t >= R5H_FX.crownPlay.dur) {
+        R5H_FX.crownPlay = null;
+      }
+    }
     // Round 5f F2 — 5s big-text banner when altar unlocks (overlays everything)
     if (window._altarBigBanner && state === 'playing' && gameTime < window._altarBigBanner.until) {
       var _abLeft = window._altarBigBanner.until - gameTime;
