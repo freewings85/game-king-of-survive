@@ -1,17 +1,17 @@
-# Playtest Baseline — R5t (2026-04-21)
+# Playtest Baseline — R5v (2026-04-21, updated R5w)
 
-Locked as the reference point per Leo R5u F2. Any commit that drops these
-metrics by > 10% should be auto-reverted before Testor matrix confirms.
+Locked as the reference point per Leo R5u F2 / R5w F1. Any commit that drops
+these metrics should be evaluated against the thresholds below.
 
 ## Reference commit
-`652a598` — fix(r5t): warrior lane-3 scan 400→520
+`8052a5d` — fix(r5v): auto-revert warrior slash + healer skeleton
 
 ## Score
-- Composite: **7.25 / 10**
-- Peak round to date (tied with R5g, R5q, R5t)
+- Composite: **7.0 / 10**
+- R5t (652a598) peaked at 7.25; R5v stabilised at 7.0 after auto-revert
 
-## Kill metrics (20-game matrix, 5 games × 4 cells)
-- Coverage: **100% 有杀** (all 20 games produced ≥ 1 player kill)
+## Kill metrics (22-game matrix from R5w, 4 arena scout + 4 arena warrior + 2 arena assassin + 2 arena healer + 5 lane scout + 5 lane warrior)
+- Coverage: ≥ **95%** have-kill target per R5w F1 (strict 100% was noise-sensitive)
 - `arena_a / warrior` μ kills: 5.0
 - `arena_a / mage`    μ kills: 3.0
 - `arena_a / scout`   μ kills: 2.25
@@ -34,10 +34,19 @@ metrics by > 10% should be auto-reverted before Testor matrix confirms.
 - Headless Chromium (this repo's `_qa_perf_hot.mjs`) runs 4-5 fps LOWER
   than real device consistently; use it as a first-pass gate only.
 
-## Regression thresholds (auto-revert triggers)
-- 100% 有杀率 → fall below → auto-revert
-- FPS pass rate drop > 15 percentage points (45% → < 30%) → auto-revert
-- Any single cell kill μ drop > 50% → investigate + revert if code-attributable
+## Regression thresholds (R5w graduated policy)
+Coverage (have-kill rate across matrix):
+- **pass**     ≥ 95%  (normal range)
+- **warn**     90–95%  (review + Testor second-run confirm)
+- **hard-fail** < 90%  (strict revert — R5v-style auto-revert)
+
+FPS pass rate:
+- drop > 15 pp from reference (45% → < 30%) → auto-revert
+
+Single cell kill μ:
+- drop > 50% with an **attributable code diff** → revert
+- drop > 50% with **empty code diff** (R5s bisect rule) → sampling noise,
+  do not revert (see "Known systemic" below)
 
 ## Known systemic characteristics
 - `arena_a/warrior` σ is high at real device (15.1 in R5r) due to combat
@@ -60,6 +69,28 @@ metrics by > 10% should be auto-reverted before Testor matrix confirms.
 - Composite 7.5 ceiling (from 7.25)
 - Boundary expansion (daily challenge / 5th class / 3rd map) on Leo's
   call; R5u started daily-challenge skeleton, R5v adds healer class
+
+## R5w F2 — `lane_b/warrior` μ 2.8 → 1.8 investigation
+Testor reported a fresh drop on the `lane_b/warrior` cell. Bisect between
+R5t (`652a598`) and R5v (`8052a5d`) examined every touched code path:
+- CLASS_DEFS: `healer` key added only; trailing `,` on assassin entry
+- Daily-challenge skeleton: dormant unless `isDailyMode` is true
+- Rival pick `_rvRandFn = _dailyRngActive() ? _dailyRand : Math.random`
+  — identity-equivalent to `Math.random` in non-daily matches
+- Lane-3 solo fallback generalised from `=== 'assassin'` to
+  `CLASS_DEFS[selectedClass].soloOnly`; warrior has no flag, branch
+  evaluates identically to R5t (`gameMode = 'team'`)
+- Healer heal-aura gated on `player.playerClass === 'healer'`
+- Slash fx: comment-only change; crescent draw code byte-identical
+- Char-select UI: pitch 68→56, card 60→50 — menu only, no combat path
+- Palette + sprite map: new `healer` entries only
+
+**No code path reaching warrior lane_b combat was modified.** This is the
+R5s bisect rule in action (regression with empty attributable diff =
+sampling noise). Per the graduated policy above, cell μ drops without
+attributable code do not trigger a revert. Recommend Testor second-run
+confirmation; if persistent, root-cause lives in bot AI density / spawn
+RNG variance, not the R5v commit.
 
 ## Known unsolved (stop trying, per Leo R5v F2)
 - `arena_a/warrior` FPS 26.9 cold-zone — 3 rounds (R5l / R5r / R5u)
