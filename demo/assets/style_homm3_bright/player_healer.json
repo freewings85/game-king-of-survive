@@ -36,6 +36,15 @@
   "class": "healer",
   "classTraits": {
     "passives": ["holy_aura"],
+    "holyAura": {
+      "name": "圣光环 Holy Aura",
+      "radius": 120,
+      "regenPerSec": 5,
+      "appliesTo": ["self", "ally"],
+      "soloBehavior": "仅回自己 5 HP/s（team 前占位）",
+      "teamBehavior": "队伍模式下，120px 圈内所有队友（含自己）每秒回 5 HP",
+      "description": "Passive 光环，永续生效，无需手动触发"
+    },
     "startingSkills": {
       "heal": {
         "name": "圣光 Mend",
@@ -50,7 +59,7 @@
         "regenPerSec": 8,
         "duration": 6.0,
         "cooldown": 10.0,
-        "description": "脚下 80px 圈内 6 秒持续回血 8 HP/s（自己 + 未来队友共享）"
+        "description": "脚下 80px 圈内 6 秒持续回血 8 HP/s（叠加 holy_aura）"
       },
       "purify": {
         "name": "净化 Purify",
@@ -58,10 +67,13 @@
         "description": "移除自身所有 debuff（减速、灼烧、流血），即时触发"
       }
     },
-    "attackNotes": "healer auto-attack 仍发射 staff beam（攻击力较弱：基础 8-10），主要靠 heal/blessing 续航拖局"
+    "attackNotes": "healer auto-attack 发射 staff beam，基础 atk 10 偏弱，主靠 holy_aura + heal + blessing 续航拖局。HP 200 坦克级，生存能力第一"
   },
-  "suggestedHP": 150,
+  "suggestedHP": 200,
+  "suggestedATK": 10,
   "suggestedMoveSpeed": 0.95,
+  "soloOnly": true,
+  "soloOnlyReason": "跟 assassin 同策略 — 新 class 先 arena solo 验证，team/lane 稳定后再开放（见 R5v Fix 3）",
   "archetype": "healer",
   "notes": [
     "SVG sprite sheet — 跟 player_assassin/scout 同规格，同 drawImage 框架切帧",
