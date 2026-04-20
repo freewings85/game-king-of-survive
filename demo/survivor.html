@@ -227,38 +227,55 @@ function doLogin() {
   var WORLD_W = W * 2, WORLD_H = H * 2;
   var cameraX = 0, cameraY = 0; // camera offset
 
-  // Static handcrafted map (Leo 2026-04-20). Synchronous fetch at page load so
-  // startOfflineDemo never races the network — the async path caused WORLD_W
-  // to stick at W*2 when the game started before the json resolved.
+  // Static handcrafted map (Leo 2026-04-20 + 2026-04-21).
+  // Three layouts shipped today: default (王冠之岛), arena_a (FFA 圆形竞技场),
+  // lane_b (4v4 三线峡谷). Pick via ?map=<id>; falls back to default.
   var MAP_DATA = null;
-  function _loadStaticMapSync() {
-    if (MAP_DATA) return MAP_DATA;
+  function _resolveMapPath() {
+    var requested = 'default';
+    try {
+      var p = new URLSearchParams(window.location.search).get('map');
+      if (p && /^[a-z0-9_]+$/i.test(p)) requested = p;
+    } catch (e) {}
+    return 'maps/' + requested + '.json';
+  }
+  function loadMapLayout(jsonPath) {
+    // Synchronous primary fetch so startOfflineDemo never races the network.
+    // Async fallback retained for environments that block sync XHR.
+    MAP_DATA = null;
+    var url = jsonPath || _resolveMapPath();
     try {
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'maps/default.json', false);
+      xhr.open('GET', url, false);
       xhr.send();
       if (xhr.status < 400 && xhr.responseText) {
         MAP_DATA = JSON.parse(xhr.responseText);
       }
     } catch (e) {
-      console.warn('[map] sync load failed, falling back to async', e && e.message);
+      console.warn('[map] sync load failed for', url, '— async retry', e && e.message);
     }
     if (!MAP_DATA) {
       try {
         var xhr2 = new XMLHttpRequest();
-        xhr2.open('GET', 'maps/default.json', true);
+        xhr2.open('GET', url, true);
         xhr2.onload = function() {
           if (xhr2.status < 400) {
-            try { MAP_DATA = JSON.parse(xhr2.responseText); }
+            try { MAP_DATA = JSON.parse(xhr2.responseText); console.log('[map] loaded', MAP_DATA.name); }
             catch (e) { console.warn('[map] async parse failed', e); }
           }
         };
         xhr2.send();
       } catch (e) {}
     }
+    if (MAP_DATA) console.log('[map] active:', MAP_DATA.name, '(' + url + ')');
     return MAP_DATA;
   }
-  _loadStaticMapSync();
+  // Backwards-compat alias used by startOfflineDemo's safety re-fetch.
+  function _loadStaticMapSync() { return loadMapLayout(); }
+  // Exposed for QA / future map-picker UI.
+  window.loadMapLayout = loadMapLayout;
+  window.__MAP_DATA = function() { return MAP_DATA; };
+  loadMapLayout();
 
   // Map art assets (ArtDesigner 2026-04-21): Crystal Sanctum landmark +
   // 4 biome atlases for desert/swamp/snow/ruins. Sprites are optional — the
