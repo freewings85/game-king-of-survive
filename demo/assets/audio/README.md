@@ -1,6 +1,6 @@
 # Battle SFX — homm3_bright style pack
 
-9 SFX for BR gameplay feedback. **Procedurally synthesized in pure Node** (no ffmpeg / no third-party samples), so license is unambiguous.
+**14 SFX** for BR gameplay feedback. **Procedurally synthesized in pure Node** (no ffmpeg / no third-party samples), so license is unambiguous.
 
 ## Files
 | File | Purpose | Duration | Size |
@@ -13,7 +13,21 @@
 | `explosion.wav` | Explosion / AoE skill (rumble + burst + sparkle) | 0.65s | ~28 KB |
 | `storm_alert.wav` | Storm-ring warning (two 760 Hz beeps) | 0.32s | ~14 KB |
 | `kill_confirmed.wav` | Kill confirmation (ascending C-E-G triad) | 0.27s | ~12 KB |
+| `level_up.wav` | Level-up arpeggio (C-G-C-E + octave shimmer) | 0.39s | ~17 KB |
 | `victory.wav` | #1 victory fanfare (C-major arpeggio + held chord) | 0.95s | ~41 KB |
+| **`altar_break.wav`** | **祭坛击破 — sub-rumble + 3-layer glass crack + debris burst + crystal shimmer tail** | **0.95s** | **~41 KB** |
+| **`crown_hymn.wav`** | **戴冠神圣合唱 — C major triad pad + octave shimmer + choir "ahh" + G6 bell peak** | **0.55s** | **~24 KB** |
+| **`kill_headshot.wav`** | **爆头清脆 — high crack + 4.2 kHz ping + descending chirp + micro thud** | **0.20s** | **~9 KB** |
+| **`boss_slain.wav`** | **Boss 击杀恢弘号角 — low brass chord (C3-E3-G3) + ascending fanfare melody + kettle thump + sub rumble** | **1.25s** | **~54 KB** |
+
+## R5m 4 关键爽点触发表（Developer 接入参考）
+
+| 事件 | 文件 | 触发点 |
+|------|------|--------|
+| 祭坛 HP→0 | `altar_break.wav` | 祭坛击破事件（比 `altar_opened_banner` 播报**之后**立刻播）|
+| 拾取 crown / spotlight 播放 | `crown_hymn.wav` | `crown_spotlight.svg` fade-in 开头 0.05s |
+| 玩家击杀（replace or supplement `kill_confirmed`）| `kill_headshot.wav` | 短促、适合高频触发，可与 kill_confirmed 叠播制造"丰满"感 |
+| Boss 被击杀 | `boss_slain.wav` | boss HP→0，与 `boss_slain_banner.png` 同步 |
 
 Format: 22050 Hz, 16-bit PCM, mono WAV. Directly playable via HTML5 `<audio>` or Web Audio API decodeAudioData.
 

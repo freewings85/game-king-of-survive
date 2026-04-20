@@ -344,6 +344,155 @@ function sfxVictory() {
   return out;
 }
 
+// ── R5m: altar / crown / headshot / boss_slain ──────────────
+function sfxAltarBreak() {
+  // Altar shatters: sub-rumble + metallic glass shatter + sparkle tail
+  const dur = 0.95;
+  const out = make(dur);
+  // deep sub rumble
+  const rumble = chirp(110, 38, 0.6, 'sine');
+  expDecay(rumble, 0.22);
+  gain(rumble, 1.0);
+  add(out, rumble);
+  // glass-like metallic crack (multi-layer high tri)
+  const crack1 = tone(1800, 0.25, 'tri');
+  expDecay(crack1, 0.06);
+  gain(crack1, 0.55);
+  add(out, crack1);
+  const crack2 = tone(2600, 0.22, 'tri');
+  expDecay(crack2, 0.045);
+  gain(crack2, 0.4);
+  add(out, crack2);
+  const crack3 = tone(3400, 0.18, 'sine');
+  expDecay(crack3, 0.035);
+  gain(crack3, 0.3);
+  add(out, crack3);
+  // noise burst (debris)
+  const burst = noise(0.4, 919);
+  lowpass(burst, 3200);
+  expDecay(burst, 0.09);
+  gain(burst, 0.75);
+  add(out, burst);
+  // high-end sparkle tail (crystal shimmer)
+  const spark = noise(0.5, 337);
+  highpass(spark, 5000);
+  expDecay(spark, 0.16);
+  gain(spark, 0.35);
+  add(out, spark, 1, Math.round(0.15 * SR));
+  softClip(out);
+  return out;
+}
+
+function sfxCrownHymn() {
+  // Divine 0.5s choral chord — C major triad (C4 E4 G4 C5) + octave shimmer + airy pad
+  const dur = 0.55;
+  const out = make(dur);
+  const notes = [261.63, 329.63, 392.00, 523.25];  // C4 E4 G4 C5
+  for (const f of notes) {
+    // sine pad (choral)
+    const pad = tone(f, dur, 'sine');
+    adsr(pad, 0.08, 0.1, 0.85, 0.18, 0.85);
+    gain(pad, 0.28);
+    add(out, pad);
+    // tri upper octave (bright choir harmonic)
+    const up = tone(f * 2, dur, 'tri');
+    adsr(up, 0.06, 0.08, 0.6, 0.16, 0.6);
+    gain(up, 0.15);
+    add(out, up);
+  }
+  // airy breath (choir "ahh" — hp-filtered noise with slow attack)
+  const airy = noise(dur, 77);
+  highpass(airy, 2000);
+  lowpass(airy, 6000);
+  adsr(airy, 0.12, 0.15, 0.7, 0.2, 0.7);
+  gain(airy, 0.15);
+  add(out, airy);
+  // top shimmer bell at peak
+  const bell = tone(1567.98, 0.25, 'sine');  // G6
+  expDecay(bell, 0.1);
+  gain(bell, 0.25);
+  add(out, bell, 1, Math.round(0.1 * SR));
+  softClip(out);
+  return out;
+}
+
+function sfxKillHeadshot() {
+  // Sharp high crack + crisp metal ping + tiny spark — <200ms
+  const dur = 0.2;
+  const out = make(dur);
+  // attack: short high-frequency crack
+  const crack = noise(0.04, 11);
+  highpass(crack, 4500);
+  expDecay(crack, 0.012);
+  gain(crack, 0.85);
+  add(out, crack);
+  // crisp metal ping (bright tri)
+  const ping = tone(4200, 0.16, 'tri');
+  expDecay(ping, 0.05);
+  gain(ping, 0.5);
+  add(out, ping, 1, Math.round(0.01 * SR));
+  // secondary descending chirp (bullet flyby feel)
+  const chrp = chirp(3800, 1800, 0.08, 'sine');
+  expDecay(chrp, 0.03);
+  gain(chrp, 0.4);
+  add(out, chrp, 1, Math.round(0.02 * SR));
+  // very short body thud underneath for weight
+  const thud = tone(180, 0.05, 'sine');
+  expDecay(thud, 0.02);
+  gain(thud, 0.35);
+  add(out, thud);
+  softClip(out);
+  return out;
+}
+
+function sfxBossSlain() {
+  // Grand horn fanfare — low brass C3-E3-G3 stacked + high C5 call on top + deep rumble tail
+  const dur = 1.25;
+  const out = make(dur);
+  // low-brass chord (C3 E3 G3) held 1.2s, saw + tri blend
+  const lows = [130.81, 164.81, 196.00];
+  for (const f of lows) {
+    const saw = tone(f, 1.15, 'saw');
+    adsr(saw, 0.03, 0.1, 0.75, 0.3, 0.75);
+    gain(saw, 0.2);
+    add(out, saw);
+    const tri = tone(f, 1.15, 'tri');
+    adsr(tri, 0.03, 0.1, 0.7, 0.3, 0.7);
+    gain(tri, 0.18);
+    add(out, tri);
+  }
+  // high horn call on top: C4 ↑ G4 → C5 (ascending fanfare) starting at t=0.1s
+  const melody = [
+    { f: 261.63, t: 0.10, d: 0.18 },
+    { f: 392.00, t: 0.26, d: 0.18 },
+    { f: 523.25, t: 0.42, d: 0.60 },
+  ];
+  for (const n of melody) {
+    const tri = tone(n.f, n.d, 'tri');
+    adsr(tri, 0.015, 0.04, 0.7, 0.1, 0.7);
+    gain(tri, 0.45);
+    add(out, tri, 1, Math.round(n.t * SR));
+    // octave shimmer
+    const sh = tone(n.f * 2, n.d, 'sine');
+    adsr(sh, 0.015, 0.04, 0.6, 0.1, 0.6);
+    gain(sh, 0.22);
+    add(out, sh, 1, Math.round(n.t * SR));
+  }
+  // opening kettle-drum hit (low noise thump)
+  const thump = noise(0.12, 31);
+  lowpass(thump, 400);
+  expDecay(thump, 0.06);
+  gain(thump, 0.9);
+  add(out, thump);
+  // deep sub-bass rumble tail for gravitas
+  const rumble = chirp(70, 50, 0.9, 'sine');
+  expDecay(rumble, 0.35);
+  gain(rumble, 0.6);
+  add(out, rumble, 1, Math.round(0.15 * SR));
+  softClip(out);
+  return out;
+}
+
 // ── run ──────────────────────────────────────────────────────
 const jobs = [
   ['shoot.wav',          sfxShoot],
@@ -356,6 +505,10 @@ const jobs = [
   ['kill_confirmed.wav', sfxKillConfirmed],
   ['level_up.wav',       sfxLevelUp],
   ['victory.wav',        sfxVictory],
+  ['altar_break.wav',    sfxAltarBreak],
+  ['crown_hymn.wav',     sfxCrownHymn],
+  ['kill_headshot.wav',  sfxKillHeadshot],
+  ['boss_slain.wav',     sfxBossSlain],
 ];
 
 console.log('[sfx] generating …');

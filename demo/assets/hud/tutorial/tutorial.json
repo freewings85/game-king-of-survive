@@ -1,0 +1,36 @@
+{
+  "overview": "3-step first-run tutorial. Full-screen 640×360 overlay (stretches to viewport). Each step auto-advances after 3s OR on tap. Dismissible.",
+  "slides": [
+    {
+      "idx": 0,
+      "file": "tutorial_1_joystick.svg",
+      "title": "MOVE WITH JOYSTICK / 拖动左下摇杆移动",
+      "focus": "bottom-left joystick (spotlight + pulsing ring + drag hint arrow)",
+      "autoAdvanceMs": 3000
+    },
+    {
+      "idx": 1,
+      "file": "tutorial_2_autoattack.svg",
+      "title": "AUTO-ATTACK / 靠近敌人自动攻击",
+      "focus": "hero + enemy + attack ray inside gold attack-range ring",
+      "autoAdvanceMs": 3000
+    },
+    {
+      "idx": 2,
+      "file": "tutorial_3_altar.svg",
+      "title": "BREAK THE ALTAR / 击破中央祭坛",
+      "focus": "altar + beam + 3 legendary skill pickups + reward list",
+      "autoAdvanceMs": 3000,
+      "closeCTA": "Tap to start · 点击开始"
+    }
+  ],
+  "usage": [
+    "First-run gate: show only if localStorage['tutorial_seen'] !== '1'.",
+    "Render: fullscreen div OR ctx.drawImage(img, 0, 0, canvas.width, canvas.height).",
+    "Game logic continues paused during tutorial (game already has pauseGame() hook).",
+    "On slide 3 close → localStorage.setItem('tutorial_seen', '1') + resume.",
+    "Skip button (top-right): tiny 'X · 跳过' for returning players who opened by accident."
+  ],
+  "reset": "Developer 调试用：localStorage.removeItem('tutorial_seen') 后刷新重现。",
+  "fallbackOnReturn": "若玩家已见过教程但进入新地图（arena_a ↔ lane_b），slide 3 可独立再播（'击破祭坛'是核心玩法，值得重提）。"
+}
