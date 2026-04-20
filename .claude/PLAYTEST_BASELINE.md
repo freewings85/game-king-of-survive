@@ -57,7 +57,18 @@ metrics by > 10% should be auto-reverted before Testor matrix confirms.
   change it, re-profile, compare. If profile isn't actionable, don't touch.
 
 ## Open targets (R5u+)
-- `arena_a/warrior` FPS ≥ 30 (closest sub-30 cell)
 - Composite 7.5 ceiling (from 7.25)
 - Boundary expansion (daily challenge / 5th class / 3rd map) on Leo's
-  call; R5u starts daily-challenge skeleton
+  call; R5u started daily-challenge skeleton, R5v adds healer class
+
+## Known unsolved (stop trying, per Leo R5v F2)
+- `arena_a/warrior` FPS 26.9 cold-zone — 3 rounds (R5l / R5r / R5u)
+  attempted targeted fixes, all regressed or neutral:
+  - R5l: added lane-3 CD buff — did not touch FPS
+  - R5r: assassin muzzle branch — unrelated regression on scout
+  - R5u: slash simplification (removed outer glow + cyan halo) — auto-
+    reverted after 3 cells dropped > 50%.
+  Concluded: hardware/browser ceiling for warrior's 3.7 atk/s rate on
+  iPhone 14 viewport, not a code cold-zone. All caps already in place
+  (MAX_PARTICLES 300 / MAX_FLOATS 60 / activeFlashes 6 / hitStop non-
+  accumulating). Do not attempt another speculative optimisation.

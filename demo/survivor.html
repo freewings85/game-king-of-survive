@@ -2699,7 +2699,11 @@ function doLogin() {
       //   瞬移: 闪避键改为 260px 短距 teleport, 3s cd
       //   背刺: 攻击目标面向相反方向(夹角 > 120°)时 ×2 伤害
       //   开局隐身 3s: bots 无法锁定玩家 (_invisibleUntil)
-      assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移+背刺×2+隐身3s · 仅单排', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [], soloOnly: true }
+      assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移+背刺×2+隐身3s · 仅单排', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [], soloOnly: true },
+      // R5v F3 — 新职业 治疗者 Healer (skeleton, solo-only like assassin)
+      //   heal-aura passive: 每 s 自疗 1.5 HP + 半径 200 内盟友 +0.8 HP/s(team 模式)
+      //   低攻 10,但 HP 200 续航型。ArtDesigner player_healer.svg 已到位
+      healer:  { name: '治疗者', icon: '✚', hp: 200, maxHp: 200, baseHP: 200, baseATK: 10, baseSpeed: 195, attackDamage: 10, speed: 195, passive: '治疗光环 + 自疗 · 仅单排', color: '#dfeacc', initialAttributes: {INT:7,STR:2,AGI:3,STA:8}, availableSkills: [], soloOnly: true }
     };
   })();
 
@@ -3556,9 +3560,13 @@ function doLogin() {
     // player picks assassin on a lane map, fall back to solo FFA which at
     // least gives them kill opportunities (see R5p F1 gate).
     if (MAP_DATA && MAP_DATA.layout === 'lane-3') {
-      if (selectedClass === 'assassin') {
+      // R5v F3 — healer added to solo-only list alongside assassin. Both use
+      // the CLASS_DEFS.soloOnly flag so future classes opt in without editing
+      // this branch.
+      var _clsDef = CLASS_DEFS[selectedClass];
+      if (_clsDef && _clsDef.soloOnly) {
         gameMode = 'solo';
-        killFeed.push({ text: '⚠ 刺客仅支持单排 — 已切换 FFA', color: '#ffaa40', time: 6 });
+        killFeed.push({ text: '⚠ ' + _clsDef.name + '仅支持单排 — 已切换 FFA', color: '#ffaa40', time: 6 });
       } else {
         gameMode = 'team';
       }
@@ -4921,6 +4929,23 @@ function doLogin() {
 
   function offlinePlayerUpdate(dt) {
     if (!player || !player.alive) return;
+    // R5v F3 — healer heal aura passive: self +1.5 HP/s always; in team mode
+    // ally allies within 200px also +0.8 HP/s. Since healer is soloOnly for
+    // now, the team branch is dormant.
+    if (player.playerClass === 'healer') {
+      player.hp = Math.min(player.maxHp, player.hp + 1.5 * dt);
+      if (gameMode === 'team' && offlineBots) {
+        var _healR2 = 200 * 200;
+        for (var _hi = 0; _hi < offlineBots.length; _hi++) {
+          var _hb = offlineBots[_hi];
+          if (!_hb.alive || _hb.factionId !== player.factionId) continue;
+          var _hdx = _hb.x - player.x, _hdy = _hb.y - player.y;
+          if (_hdx * _hdx + _hdy * _hdy < _healR2) {
+            _hb.hp = Math.min(_hb.maxHp, _hb.hp + 0.8 * dt);
+          }
+        }
+      }
+    }
     // Emergency unstick (Leo 2026-04-21 hotfix): if the player's collider is
     // overlapping a decor blocker (e.g. spawn placed inside a fence), search
     // outward in 8 directions for a clear cell and teleport. Runs at most
@@ -6042,7 +6067,10 @@ function doLogin() {
       mage: { body: '#728', accent: '#5a3d7a', highlight: '#c6f', eye: '#f0f', hood: '#5a3d7a', cape: null, orb: '#c6f' },
       scout: { body: '#3a6', accent: '#2a5030', highlight: '#a86', eye: '#8f8', hood: '#2a5030', cape: '#1a3520', orb: null },
       // R5n F2 — 黑斗篷 + 银刃 palette for assassin (uses scout sprite sheet)
-      assassin: { body: '#2a2230', accent: '#1a1020', highlight: '#9a7acc', eye: '#c4a0ff', hood: '#151020', cape: '#0a0815', orb: null }
+      assassin: { body: '#2a2230', accent: '#1a1020', highlight: '#9a7acc', eye: '#c4a0ff', hood: '#151020', cape: '#0a0815', orb: null },
+      // R5v F3 — 白袍 + 金边 palette for healer (dedicated sprite exists but
+      // drawCharacterSprite fallback palette still queried via this map)
+      healer:   { body: '#f4efe2', accent: '#ffd966', highlight: '#e9f4b4', eye: '#4a9a3a', hood: '#ffd966', cape: '#f4efe2', orb: '#4a9edd' }
     };
     var base = defaults[classType] || defaults.warrior;
     var colors = { body: base.body, accent: base.accent, highlight: base.highlight, eye: base.eye, hood: base.hood, cape: base.cape, orb: base.orb };
@@ -6490,7 +6518,9 @@ function doLogin() {
       scout:   { sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims },
       // R5n F2 — Assassin reuses scout sheet until ArtDesigner ships a dedicated
       // black-cloak sprite. Tint from CLASS_DEFS.assassin.color differentiates.
-      assassin:{ sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims }
+      assassin:{ sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims },
+      // R5v F3 — Healer dedicated sprite (ArtDesigner 3e9f1d8 player_healer.svg)
+      healer:  { sheet: HOMM3_ART_BASE + 'player_healer.svg',  anims: _homm3PlayerAnims }
     }
   };
   var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
@@ -9864,14 +9894,22 @@ function doLogin() {
         ctx.fill();
         ctx.restore();
       } else if (_frfx.kind === 'slash') {
-        // R5u F1 — warrior slash simplified: removed outer glow arc +
-        // cyan halo stroke (2 draw ops per projectile per frame). Slash
-        // keeps the crescent fill + outline, which is the readable shape.
-        // Warrior 0.27s cd → up to 3 active slashes × 2 saved ops = ~6
-        // canvas ops/frame reclaimed on warrior combat path.
+        // Warrior energy slash — crescent blade (R5v F1: R5u simplification
+        // auto-reverted per baseline rule; profile was neutral but real-device
+        // 20-game matrix dropped 3 cell metrics > 50%).
         ctx.save();
         ctx.translate(_frfx.x, _frfx.y);
         ctx.rotate(_frfx.angle);
+        // Outer glow
+        ctx.globalAlpha = 0.3 * _frAlpha;
+        ctx.fillStyle = '#ffaa40';
+        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+        // Friendly cyan halo (marks player projectile)
+        ctx.globalAlpha = 0.45 * _frAlpha;
+        ctx.strokeStyle = '#aef6ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
+        // Crescent blade
         ctx.globalAlpha = _frAlpha;
         ctx.fillStyle = '#ffdd60';
         ctx.beginPath();
@@ -12399,30 +12437,30 @@ function doLogin() {
     ctx.fillStyle = '#fff'; ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('选择角色', DW / 2, 40);
 
-    // R5n F2 — added assassin as 4th selectable class. Card pitch tightened
-    // from 90 → 68 so 4 cards still fit above attribute panel at y=350.
-    var classKeys = ['warrior', 'mage', 'scout', 'assassin'];
+    // R5n F2 / R5v F3 — 5 selectable classes. Further tightened pitch 68 → 56
+    // and card height 60 → 50 to fit 5 cards above attribute panel (y=350).
+    var classKeys = ['warrior', 'mage', 'scout', 'assassin', 'healer'];
     for (var i = 0; i < classKeys.length; i++) {
       var cls = CLASS_DEFS[classKeys[i]];
-      var by = 50 + i * 68;
+      var by = 50 + i * 56;
       var isSelected = selectedClass === classKeys[i];
       // Card
       ctx.fillStyle = isSelected ? '#1a1a3e' : '#111118';
-      ctx.fillRect(DW / 2 - 190, by, 380, 60);
+      ctx.fillRect(DW / 2 - 190, by, 380, 50);
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
-      ctx.strokeRect(DW / 2 - 190, by, 380, 60);
-      drawCharacterSprite(DW / 2 - 155, by + 30, 16, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
-      ctx.font = '16px "Noto Sans SC","PingFang SC",sans-serif'; ctx.textAlign = 'left';
+      ctx.strokeRect(DW / 2 - 190, by, 380, 50);
+      drawCharacterSprite(DW / 2 - 155, by + 25, 14, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
+      ctx.font = '14px "Noto Sans SC","PingFang SC",sans-serif'; ctx.textAlign = 'left';
       ctx.fillStyle = cls.color;
-      ctx.fillText(cls.icon, DW / 2 - 175, by + 18);
-      ctx.font = 'bold 16px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText(cls.name, DW / 2 - 135, by + 20);
-      ctx.font = '10px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#aaa';
-      ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 36);
-      ctx.fillStyle = '#888'; ctx.font = '9px "Noto Sans SC","PingFang SC",sans-serif';
-      ctx.fillText(cls.passive, DW / 2 - 135, by + 50);
-      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC","PingFang SC",sans-serif';
-      ctx.fillText('▶', DW / 2 + 170, by + 35);
+      ctx.fillText(cls.icon, DW / 2 - 175, by + 14);
+      ctx.font = 'bold 14px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText(cls.name, DW / 2 - 135, by + 16);
+      ctx.font = '9px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#aaa';
+      ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 30);
+      ctx.fillStyle = '#888'; ctx.font = '8px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.fillText(cls.passive, DW / 2 - 135, by + 42);
+      ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 13px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.fillText('▶', DW / 2 + 170, by + 28);
     }
 
     // === Attribute Panel (US-009) ===
@@ -13636,11 +13674,11 @@ function doLogin() {
     } else if (state === 'charSelect') {
       // Convert screen coords to design space (400x700)
       var _dc2 = _toDesignCoords(cx, cy); var dcx2 = _dc2.x, dcy2 = _dc2.y;
-      // R5n F2 — 4 classes, compact 68px pitch, 60px card height
-      var classKeys = ['warrior', 'mage', 'scout', 'assassin'];
+      // R5n F2 / R5v F3 — 5 classes, compact 56px pitch, 50px card height
+      var classKeys = ['warrior', 'mage', 'scout', 'assassin', 'healer'];
       for (var ci = 0; ci < classKeys.length; ci++) {
-        var cby = 50 + ci * 68;
-        if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 60) {
+        var cby = 50 + ci * 56;
+        if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 50) {
           selectedClass = classKeys[ci];
           state = 'mapSelect';
         }
