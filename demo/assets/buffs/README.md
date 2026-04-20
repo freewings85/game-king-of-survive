@@ -5,40 +5,76 @@
 
 ## 当前清单
 
-| File | Trigger | Description |
-|------|---------|-------------|
-| `newborn_shield.svg` | arena_a 开局 ≤ 20s | 金色保护光环（50% 减伤）— 双旋环 + 6 盾牌符文 + 漂浮光粒 |
+| File | Trigger | Frames | Description |
+|------|---------|--------|-------------|
+| `newborn_shield.svg` | arena_a 开局 ≤ 20s | 1 (with SVG animate) | v1 — 推荐用 fade atlas 代替 |
+| `newborn_shield_fade.svg` | 同上 | **5 (400×80 atlas)** | **静态** 5 帧渐弱 — FPS 友好 |
+| `altar_master.svg` | 击破祭坛后 5min | 1 (static) | "圣堂之主" 金+紫皇家光环（中心王冠）|
 
-## 接入（Developer）
+## ⚡ 性能要点（R5e Fix 1 配合）
+
+**SVG `<animate>` 标签每帧会触发浏览器重新渲染 SVG DOM**，Developer 每次 `drawImage(svgImg, ...)` 都要付出**重光栅化的代价** — 是 FPS 杀手。
+
+解决方案：
+1. ✅ 所有**长时间显示的 buff 光环**改为静态 SVG（本目录的 fade atlas + altar_master）
+2. ✅ Developer 在 `_preloadBuffs()` 里把 SVG 一次性 rasterise 到 offscreen canvas
+3. ✅ 后续每帧只画 canvas（零 SVG 开销），代码驱动 alpha / rotation 做动画
+4. ⚠️ 仅允许 SVG animate 的：一次性爆炸（altar_shatter）、瞬间效果（debris）— 这些持续时间短，总成本可忽略
+
+## 接入（Developer — 推荐流程）
 
 ```js
-const buffCfg = await fetch('assets/buffs/buffs.json').then(r=>r.json());
-const shieldImg = new Image();
-shieldImg.src = 'assets/buffs/newborn_shield.svg';
+// Preload：光栅化一次
+const buffAtlas = {};
+(function() {
+  const cfg = ... // 从 buffs.json 加载
+  ['newborn_shield_fade.svg', 'altar_master.svg'].forEach(file => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      buffAtlas[file] = c;  // cached bitmap
+    };
+    img.src = 'assets/buffs/' + file;
+  });
+})();
 
-// 在玩家渲染循环里，如果 player.newbornShieldT > 0：
-const t = player.newbornShieldT;
-let alpha = 1;
-if (t < 3) {  // 最后 3 秒闪烁
-  alpha = 0.5 + 0.5 * Math.sin(t * 12);
+// Render 循环：
+function drawPlayerBuffs(ctx, player) {
+  // 新生庇护 fade
+  if (player.newbornShieldT > 0) {
+    const t = player.newbornShieldT;
+    const f = t >= 15 ? 0 : t >= 10 ? 1 : t >= 5 ? 2 : t >= 2 ? 3 : 4;
+    const atlas = buffAtlas['newborn_shield_fade.svg'];
+    if (atlas) ctx.drawImage(atlas, f*80, 0, 80, 80, player.x-40, player.y-40, 80, 80);
+  }
+  // 圣堂之主
+  if (player.altarMasterT > 0) {
+    const atlas = buffAtlas['altar_master.svg'];
+    if (atlas) {
+      ctx.save();
+      ctx.globalAlpha = 0.85 + 0.15 * Math.sin(performance.now() * 0.003);
+      ctx.drawImage(atlas, player.x-40, player.y-40, 80, 80);
+      ctx.restore();
+    }
+  }
 }
-ctx.save();
-ctx.globalAlpha = alpha;
-ctx.drawImage(shieldImg, player.x - 40, player.y - 40, 80, 80);
-ctx.restore();
 ```
 
-渲染 z-order：tile < buff_aura < entity_sprite < floating_text（和 r3 synergy aura 相同）。
+## 减伤时间表（newbornShieldFade）
 
-## 扩展规划（未来其他 buff）
+| t 剩余 | 帧 | 减伤 | 视觉 |
+|--------|-----|------|------|
+| 20 → 15s | 0 | **50%** | 满环 + 盾牌 + 粒子 |
+| 15 → 10s | 1 | 30% | 满环 + 盾牌（无粒子）|
+| 10 → 5s  | 2 | 15% | 小环 + 4 盾牌 |
+| 5  → 2s  | 3 | 0%  | 微弱 + 2 盾牌 |
+| 2  → 0s  | 4 | 0%  | 闪烁 + 孤盾牌 |
 
-本目录保留给其他 buff aura：
-- `rage_aura.svg` — rival frenzy（红色）
-- `regen_aura.svg` — 据点 temple 回血（绿色）
-- `vision_aura.svg` — watchtower 视野（蓝色）
-- `rampage_aura.svg` — kill streak（紫色）
+## 扩展规划
 
-添加新 aura 时 → 同目录加 svg + 追加 `buffs.json`，统一 80×80 规格。
+保留位：`rage_aura` / `regen_aura` / `vision_aura` / `rampage_aura` —— 新增时走同规格 80×80 静态 SVG + atlas（如有渐变）。
 
 ## LICENSE
 

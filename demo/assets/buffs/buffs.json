@@ -1,18 +1,48 @@
 {
+  "_perfNote": "All sprites in this pack are STATIC (no <animate>). Developer rasterises once at load into an offscreen canvas, then every frame is a cheap drawImage. Any animation (alpha pulse, rotation) should be done in code via ctx.rotate / globalAlpha.",
   "newbornShield": {
     "image": "newborn_shield.svg",
     "size": 80,
     "anchor": { "x": 40, "y": 40 },
-    "description": "arena_a 开局 20s 玩家 50% 减伤 buff 视觉 — 金色保护光环",
-    "usage": "drawImage(shieldImg, player.x - 40, player.y - 40, 80, 80) — 内建 animate（halo 脉动 + 双环旋转 + 6 盾牌符文环 + 漂浮光粒），无需代码驱动。z 序：角色脚下、地面之上（同 r3/synergy_aura_*.png 层级）。",
-    "colors": {
-      "primary": "#ffd700",
-      "accent":  "#fff6c8",
-      "outline": "#3a2208"
-    },
-    "fadeOut": {
-      "lastMs": 3000,
-      "description": "最后 3 秒 alpha 1→0 提示即将失效；闪烁频率 2Hz（80/120/80/... ms）"
-    }
+    "description": "arena_a 开局 20s 减伤光环（单帧 v1，含 SVG animate — 已由 fade atlas 取代）",
+    "usage": "drawImage(shieldImg, player.x - 40, player.y - 40, 80, 80)",
+    "deprecated": "Prefer newborn_shield_fade.svg atlas — static frames, no SVG animate, much better FPS."
+  },
+  "newbornShieldFade": {
+    "image": "newborn_shield_fade.svg",
+    "frameSize": 80,
+    "frameCount": 5,
+    "atlasW": 400,
+    "atlasH": 80,
+    "anchor": { "x": 40, "y": 40 },
+    "description": "5-frame fade atlas (静态，无 SVG animate) — 按剩余 buff 时长选帧",
+    "frames": [
+      { "idx": 0, "tMin": 15, "name": "full",    "description": "100% 视觉：halo + 双环 + 6 盾牌 + 粒子" },
+      { "idx": 1, "tMin": 10, "name": "strong",  "description": "80%：halo + 双环 + 6 盾牌（无粒子）" },
+      { "idx": 2, "tMin": 5,  "name": "half",    "description": "50%：小 halo + 单环 + 4 盾牌" },
+      { "idx": 3, "tMin": 2,  "name": "fading",  "description": "30%：微弱 halo + 2 盾牌" },
+      { "idx": 4, "tMin": 0,  "name": "flicker", "description": "5%：最后几秒孤独盾牌" }
+    ],
+    "damageReduction": [
+      { "tFrom": 15, "tTo": 20,  "reduction": 0.50 },
+      { "tFrom": 10, "tTo": 15,  "reduction": 0.30 },
+      { "tFrom": 5,  "tTo": 10,  "reduction": 0.15 },
+      { "tFrom": 0,  "tTo": 5,   "reduction": 0.00 }
+    ],
+    "usage": [
+      "预加载：_preloadBuffs() 里 rasterise newborn_shield_fade.svg 到 400×80 offscreen canvas 一次。",
+      "渲染：const f = remainingT >= 15 ? 0 : remainingT >= 10 ? 1 : remainingT >= 5 ? 2 : remainingT >= 2 ? 3 : 4;",
+      "        ctx.drawImage(fadeCanvas, f*80, 0, 80, 80, player.x-40, player.y-40, 80, 80);",
+      "最后 2 秒 Developer 可叠 alpha flicker：ctx.globalAlpha = 0.5 + 0.5 * Math.sin(now * 0.012);"
+    ]
+  },
+  "altarMaster": {
+    "image": "altar_master.svg",
+    "size": 80,
+    "anchor": { "x": 40, "y": 40 },
+    "description": "圣堂之主光环 — 击破祭坛后 5min。金+紫皇家风，中央金王冠 + 12 射线 + 4 角紫宝石",
+    "duration": 300,
+    "usage": "drawImage(altarMasterImg, player.x-40, player.y-40, 80, 80)；建议代码加缓脉冲：ctx.globalAlpha = 0.85 + 0.15 * Math.sin(now * 0.003)",
+    "perfNote": "静态 SVG，光栅化一次即可永久复用。代码驱动的 alpha pulse 比 SVG animate 省 FPS 显著。"
   }
 }
