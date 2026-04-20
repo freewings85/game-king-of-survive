@@ -2699,7 +2699,7 @@ function doLogin() {
       //   瞬移: 闪避键改为 260px 短距 teleport, 3s cd
       //   背刺: 攻击目标面向相反方向(夹角 > 120°)时 ×2 伤害
       //   开局隐身 3s: bots 无法锁定玩家 (_invisibleUntil)
-      assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移 + 背刺 ×2 + 开局隐身 3s', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [] }
+      assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移+背刺×2+隐身3s · 仅单排', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [], soloOnly: true }
     };
   })();
 
@@ -3479,8 +3479,11 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
-    // R5n F2 + R5o F2 — assassin opening 隐身. lane-3 layout shortens to 1.5s
-    // (Testor: 3s + lane chokepoints = 2/2 dead-0-kill matches). Default 3s.
+    // R5n F2 + R5o F2 + R5p F2 — assassin opening 隐身.
+    // arena/default: 3.0s (full identity — NOT shortened).
+    // lane-3 only: 1.5s (lane chokes broke 3s flow).
+    // R5p gates assassin out of team mode (R5p F1) so lane branch rarely hit,
+    // but kept as defence-in-depth.
     if (selectedClass === 'assassin') {
       player._invisibleUntil = (MAP_DATA && MAP_DATA.layout === 'lane-3') ? 1.5 : 3.0;
     }
@@ -3500,10 +3503,18 @@ function doLogin() {
       WORLD_W = W * 2;
       WORLD_H = H * 2;
     }
-    // Round 5b — lane layouts force team mode so 4v4 lanes don't degenerate
-    // into mass FFA slaughter (Testor: lane_b had 4/7 bots dead by 12s).
+    // Round 5b + R5p — lane layouts normally force team mode (4v4) so bots
+    // don't mass-slaughter in FFA. EXCEPTION: assassin is solo-only (its
+    // 开局隐身 + teleport break lane bot AI, R5n-R5o never fixed). When the
+    // player picks assassin on a lane map, fall back to solo FFA which at
+    // least gives them kill opportunities (see R5p F1 gate).
     if (MAP_DATA && MAP_DATA.layout === 'lane-3') {
-      gameMode = 'team';
+      if (selectedClass === 'assassin') {
+        gameMode = 'solo';
+        killFeed.push({ text: '⚠ 刺客仅支持单排 — 已切换 FFA', color: '#ffaa40', time: 6 });
+      } else {
+        gameMode = 'team';
+      }
     }
     // Re-center player in freshly-sized world (startGame placed them at old center).
     if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length) {
@@ -5001,12 +5012,11 @@ function doLogin() {
         });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
-        // R5l F1 + R5m F1 — muzzle particle count scales with attack speed
-        // to keep per-second particle output roughly equal across classes.
-        //   warrior 0.27s cd → 3   (48% more attacks than mage, −50% particles)
-        //   scout   0.32s cd → 4   (20% more attacks than mage, −33% particles)
-        //   mage    0.40s cd → 6   (baseline)
-        var _muzCount = (selectedClass === 'warrior') ? 3 : (selectedClass === 'scout' ? 4 : 6);
+        // R5l F1 / R5p F3 — muzzle particle count. warrior stays at 3 (0.27s
+        // cd → +48% vs mage means 6 would cost too much). scout reverted to
+        // 6 (R5m 4 was speculative and Testor couldn't attribute any FPS win).
+        //   warrior 3 / scout 6 / mage 6 / assassin 6
+        var _muzCount = (selectedClass === 'warrior') ? 3 : 6;
         for (var _muz = 0; _muz < _muzCount; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
           var _muzS = 100 + Math.random() * 80;
