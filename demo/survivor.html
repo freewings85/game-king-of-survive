@@ -3536,20 +3536,23 @@ function doLogin() {
         _nextDecision: 0.5 + Math.random() * 2
       });
     }
-    // Experiment G + R5k F3 — pick rival whose spawn distance to player is
-    // in the 400-600px sweet spot. Too close = instant 1v1 before cooldowns
-    // settle; too far = rival never reaches player before dying to other bots.
-    // Fall back to a random pick if no bot lands in the band.
+    // Experiment G + R5k F3 + R5l F2 — pick rival whose spawn distance lands
+    // in a class-specific sweet band:
+    //   scout:   600-900 (ranged gets breathing room, not out-traded at 400)
+    //   default: 400-600 (melee/mage want rival in visual range early)
+    // Fall back to random if no bot lands in the band.
     if (gameMode !== 'team' && offlineBots.length > 0) {
+      var _rivBandMin = (selectedClass === 'scout') ? 600 : 400;
+      var _rivBandMax = (selectedClass === 'scout') ? 900 : 600;
+      var _rivBandMid = (_rivBandMin + _rivBandMax) / 2;
       var _rivIdx = -1;
       var _bestBandD = Infinity;
       for (var _rvi = 0; _rvi < offlineBots.length; _rvi++) {
         var _rb = offlineBots[_rvi];
         var _rdx = _rb.x - player.x, _rdy = _rb.y - player.y;
         var _rd = Math.sqrt(_rdx * _rdx + _rdy * _rdy);
-        // Prefer bots within 400-600. Score = distance from band centre 500.
-        if (_rd >= 400 && _rd <= 600) {
-          var _bandScore = Math.abs(_rd - 500);
+        if (_rd >= _rivBandMin && _rd <= _rivBandMax) {
+          var _bandScore = Math.abs(_rd - _rivBandMid);
           if (_bandScore < _bestBandD) { _bestBandD = _bandScore; _rivIdx = _rvi; }
         }
       }
@@ -4268,9 +4271,24 @@ function doLogin() {
           }
         }
       } else if (b._aiState === 'push') {
-        // Drift toward storm center with small random jitter. Keeps bots
-        // converging so "不到对手" never happens.
-        var _pcx = stormZone.centerX - b.x, _pcy = stormZone.centerY - b.y;
+        // Drift toward storm center with small random jitter. R5l F3: on
+        // lane-3 maps, bias Y toward the bot's starting lane centre (top/mid/
+        // bot) so after bridge cross they patrol the LANE instead of wandering
+        // off toward storm — which was producing 120s 1-kill matches.
+        var _pgoalX = stormZone.centerX, _pgoalY = stormZone.centerY;
+        if (MAP_DATA && MAP_DATA.layout === 'lane-3') {
+          // Snap to nearest lane centre (world y: top=416, mid=1296, bot=2128)
+          if (!b._laneY) {
+            b._laneY = b.y < 880 ? 416 : (b.y < 1680 ? 1296 : 2128);
+          }
+          _pgoalY = b._laneY;
+          // Pull X toward opposite half of map (assume spawn side by initial x)
+          if (!b._laneTargetX) {
+            b._laneTargetX = b.x < WORLD_W / 2 ? WORLD_W - 400 : 400;
+          }
+          _pgoalX = b._laneTargetX;
+        }
+        var _pcx = _pgoalX - b.x, _pcy = _pgoalY - b.y;
         var _pd = Math.sqrt(_pcx * _pcx + _pcy * _pcy);
         b._patrolAngle = (b._patrolAngle || 0) + (Math.random() - 0.5) * 0.8 * dt;
         var jitter = 0.25;
@@ -4921,7 +4939,11 @@ function doLogin() {
         });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
-        for (var _muz = 0; _muz < 6; _muz++) {
+        // R5l F1 — muzzle flash particle count: warrior attacks ~48% more
+        // than other classes (−25% first-60s + −10% lane-3 CD). Halving the
+        // per-attack particle count keeps equal particle budget.
+        var _muzCount = (selectedClass === 'warrior') ? 3 : 6;
+        for (var _muz = 0; _muz < _muzCount; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
           var _muzS = 100 + Math.random() * 80;
           particles.push({
