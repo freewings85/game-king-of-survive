@@ -2607,7 +2607,7 @@ function doLogin() {
     }
     // Fallback if RPGEngine not available or data not loaded
     return {
-      warrior: { name: '战士', icon: '🛡', hp: 200, maxHp: 200, baseHP: 200, baseATK: 15, baseSpeed: 170, attackDamage: 15, speed: 170, passive: '荆棘护甲: 反弹3伤害', thornsDamage: 3, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
+      warrior: { name: '战士', icon: '🛡', hp: 220, maxHp: 220, baseHP: 220, baseATK: 22, baseSpeed: 170, attackDamage: 22, speed: 170, passive: '荆棘护甲 + 首战狂怒: 前 60s 攻速+25%', thornsDamage: 4, color: '#f44', initialAttributes: {INT:2,STR:8,AGI:4,STA:6}, availableSkills: [] },
       mage:    { name: '法师', icon: '🔮', hp: 100, maxHp: 100, baseHP: 100, baseATK: 35, baseSpeed: 190, attackDamage: 35, speed: 190, passive: '奥术延伸: 射程+50%', rangeBonus: 0.5, color: '#a4f', initialAttributes: {INT:10,STR:2,AGI:4,STA:4}, availableSkills: [] },
       scout:   { name: '斥候', icon: '🏹', hp: 130, maxHp: 130, baseHP: 130, baseATK: 20, baseSpeed: 260, attackDamage: 20, speed: 260, passive: '闪避本能: 15%闪避', dodgeChance: 0.15, color: '#4f4', initialAttributes: {INT:3,STR:3,AGI:9,STA:5}, availableSkills: [] }
     };
@@ -3517,7 +3517,7 @@ function doLogin() {
       _altar._noKnockback = true;
       // Round 5d F2 — altar invulnerable for the first 90s, then "unlocks"
       // with a global banner so the late-game raid has a clear cue.
-      _altar._lockedUntil = 90;
+      _altar._lockedUntil = 60;
       _altar._unlockedAnnounced = false;
       _activeBossRef = _altar;
       bossDropBanner.active = true;
@@ -3580,7 +3580,7 @@ function doLogin() {
     }
     // BR + MOBA: early minutes are farming, final minute is forced engagement.
     stormZone.shrinkRate = 18; // px/s
-    stormZone._shrinkDelay = 30; // farm window before pressure begins
+    stormZone._shrinkDelay = 75; // R5f F2 — extended farm window so player lives to altar unlock at 60s
     stormZone._minRadius = 180;
   }
 
@@ -4422,9 +4422,11 @@ function doLogin() {
       bossDropBanner.text = '⚡ 中央祭坛已开放 — 击破获 +300 XP + 3 传说技能 ⚡';
       bossDropBanner.zoneName = '中央祭坛';
       killFeed.push({ text: '⚡ 中央祭坛已开放! ⚡', color: '#ffd060', time: 6 });
-      if (typeof screenShake === 'function') screenShake(12, 500);
-      if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.45; }
+      // Round 5f F2 — beefier unlock cue: heavy shake + strong gold flash + 5s big banner
+      if (typeof screenShake === 'function') screenShake(22, 900);
+      if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.7; }
       if (typeof playSound === 'function') playSound('boss_warn');
+      window._altarBigBanner = { until: gameTime + 5, text: '⚡ 祭坛已开放！⚡' };
     }
     // Round 5c→5d F2 — last 60s safe zone target raised 200 → 400 so the
     // raid has room to maneuver instead of a death-pile.
@@ -4759,7 +4761,10 @@ function doLogin() {
     // Auto attack nearby enemies + hostile bot players
     player._timer = (player._timer || 0) - dt;
     if (player._timer <= 0) {
-      player._timer = player.attackCooldown;
+      // Round 5f F3 — warrior 首战狂怒 passive: -25% cooldown for first 60s,
+      // closes the warrior 0-kill gap on lane_b without breaking late-game scaling.
+      var _atkCdMul = (player.playerClass === 'warrior' && gameTime < 60) ? 0.75 : 1.0;
+      player._timer = player.attackCooldown * _atkCdMul;
       var closest = null, closestDist = 400;
       // Scan wave-spawned enemies
       for (var i = 0; i < offlineEnemies.length; i++) {
@@ -8698,6 +8703,11 @@ function doLogin() {
       ctx.translate(-cameraX, -cameraY);
     }
     var fLen = floats.length;
+    // Round 5f F1 — font string parse is ~0.05ms × 60 floats × 2 calls = 6ms/frame
+    // budget killer. Hold a single shaped CJK family string and reuse.
+    var _floatFont = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    var _lastFontPx = -1;
     for (var i = fLen - 1; i >= 0; i--) {
       var f = floats[i];
       f.age = (f.age || 0) + dt;
@@ -8709,14 +8719,17 @@ function doLogin() {
       var lifeRatio = f.life / f.maxLife;
       ctx.globalAlpha = lifeRatio;
       var dmgFontSize = f.size;
-      // Crit pop: first 0.1s grow to 1.3x then shrink back over next 0.1s
       if (f.crit) {
         if (f.age < 0.1) dmgFontSize = f.size * (1 + (f.age / 0.1) * 0.3);
         else if (f.age < 0.2) dmgFontSize = f.size * (1.3 - ((f.age - 0.1) / 0.1) * 0.3);
       } else if (lifeRatio > 0.7) {
         dmgFontSize = f.size * (1 + (lifeRatio - 0.7) * 1.5);
       }
-      ctx.font = 'bold ' + Math.round(dmgFontSize) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
+      var _px = Math.round(dmgFontSize);
+      if (_px !== _lastFontPx) {
+        ctx.font = 'bold ' + _px + 'px ' + _floatFont;
+        _lastFontPx = _px;
+      }
       ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 3;
       ctx.strokeText(f.text, f.x, f.y);
       ctx.fillStyle = f.color;
@@ -10693,6 +10706,25 @@ function doLogin() {
 
     drawEdgeBeacons();
     drawBridgeBanner();
+    // Round 5f F2 — 5s big-text banner when altar unlocks (overlays everything)
+    if (window._altarBigBanner && state === 'playing' && gameTime < window._altarBigBanner.until) {
+      var _abLeft = window._altarBigBanner.until - gameTime;
+      var _abFadeIn = Math.min(1, (5 - _abLeft) / 0.3);
+      var _abFadeOut = Math.min(1, _abLeft / 0.6);
+      var _abAlpha = Math.min(_abFadeIn, _abFadeOut);
+      var _abPulse = 1 + 0.08 * Math.sin((gameTime || 0) * 9);
+      var _abFs = Math.max(28, Math.round(Math.min(W, H) * 0.06)) * _abPulse;
+      ctx.save();
+      ctx.font = 'bold ' + Math.round(_abFs) + 'px "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = _abAlpha;
+      ctx.lineWidth = Math.max(4, _abFs * 0.08);
+      ctx.strokeStyle = '#000';
+      ctx.fillStyle = '#ffd060';
+      ctx.strokeText(window._altarBigBanner.text, W / 2, H * 0.42);
+      ctx.fillText(window._altarBigBanner.text, W / 2, H * 0.42);
+      ctx.restore();
+    }
     // Round 5d F3 + R5e F2 — spawn-shield countdown chip with graduated text
     if (state === 'playing' && tutorialDone && gameTime < 25 && player && player.alive) {
       var _ssLeft = Math.max(0, 25 - gameTime);
