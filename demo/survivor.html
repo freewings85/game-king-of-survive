@@ -906,6 +906,20 @@ function doLogin() {
   var tutorialDone = false;
   var tutorialTimer = 0;
   var tutorialRealTime = 0; // real-time progression (uses dt, not logicDt) so tutorial animates while game is paused
+  // R5m F3 — new 3-slide tutorial. Current slide index + per-slide timer.
+  var _tutSlide = 0;
+  var _tutSlideTimer = 3.0;
+  var _tutSlides = [
+    { src: 'assets/hud/tutorial/tutorial_1_joystick.svg',  img: new Image(), ready: false },
+    { src: 'assets/hud/tutorial/tutorial_2_autoattack.svg', img: new Image(), ready: false },
+    { src: 'assets/hud/tutorial/tutorial_3_altar.svg',      img: new Image(), ready: false }
+  ];
+  _tutSlides.forEach(function(s) { s.img.onload = function() { s.ready = true; }; s.img.src = s.src; });
+  try {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('tutorial_seen') === '1') {
+      tutorialDone = true;
+    }
+  } catch (e) {}
   var _tutorialSkipRect = null; // {x,y,w,h} for skip button hit detection
   var _hudBtnRects = { dodge: null, ult: null }; // bottom-bar button rects for click detection
   var TUTORIAL_STEPS = [
@@ -1047,7 +1061,12 @@ function doLogin() {
     explosion: 'explosion.wav',
     storm_alert: 'storm_alert.wav',
     kill: 'kill_confirmed.wav',
-    victory: 'victory.wav'
+    victory: 'victory.wav',
+    // R5m F2 — ArtDesigner R5m SFX pack (commit 1976482)
+    altar_boom: 'altar_break.wav',
+    crown_don:  'crown_hymn.wav',
+    pvp_kill:   'kill_headshot.wav',
+    boss_slain: 'boss_slain.wav'
   };
   function _preloadSfx() {
     if (!audioCtx) return;
@@ -1132,6 +1151,34 @@ function doLogin() {
           _playTone(523, 0.08, 'triangle', 0.12);
           setTimeout(function() { _playTone(659, 0.08, 'triangle', 0.12); }, 40);
           setTimeout(function() { _playTone(784, 0.1, 'triangle', 0.14); }, 80);
+          break;
+        // R5m F2 — 4 key event SFX (synth fallback; replaced by WAV when
+        // ArtDesigner drops assets/sfx/*.wav and they populate _sfxBuffers).
+        case 'altar_boom':
+          // Metallic crack + boom — altar shattered
+          _playNoise(0.25, 0.35, 900);
+          _playTone(80, 0.45, 'sawtooth', 0.28);
+          setTimeout(function() { _playTone(55, 0.55, 'sawtooth', 0.22); _playNoise(0.3, 0.2, 600); }, 40);
+          break;
+        case 'crown_don':
+          // Short sacred choir — ascending 3-note chord
+          _playTone(392, 0.18, 'sine', 0.16); // G4
+          _playTone(494, 0.18, 'sine', 0.14); // B4
+          _playTone(587, 0.22, 'sine', 0.14); // D5
+          setTimeout(function() { _playTone(784, 0.3, 'sine', 0.18); }, 140); // G5
+          break;
+        case 'pvp_kill':
+          // Sharp clean kill — head-shot crispness
+          _playTone(1400, 0.06, 'square', 0.16);
+          _playNoise(0.06, 0.12, 3000);
+          setTimeout(function() { _playTone(2200, 0.08, 'sine', 0.1); }, 30);
+          break;
+        case 'boss_slain':
+          // Grand horn fanfare
+          _playTone(262, 0.22, 'sawtooth', 0.22); // C4
+          _playTone(131, 0.3, 'sawtooth', 0.14);  // C3
+          setTimeout(function() { _playTone(330, 0.22, 'sawtooth', 0.22); _playTone(165, 0.3, 'sawtooth', 0.14); }, 180); // E4 / E3
+          setTimeout(function() { _playTone(392, 0.35, 'sawtooth', 0.25); _playTone(196, 0.4, 'sawtooth', 0.16); _playNoise(0.4, 0.1, 500); }, 360); // G4 / G3
           break;
         default:
           _playTone(440, 0.1, 'sine', 0.1);
@@ -4939,10 +4986,12 @@ function doLogin() {
         });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
-        // R5l F1 — muzzle flash particle count: warrior attacks ~48% more
-        // than other classes (−25% first-60s + −10% lane-3 CD). Halving the
-        // per-attack particle count keeps equal particle budget.
-        var _muzCount = (selectedClass === 'warrior') ? 3 : 6;
+        // R5l F1 + R5m F1 — muzzle particle count scales with attack speed
+        // to keep per-second particle output roughly equal across classes.
+        //   warrior 0.27s cd → 3   (48% more attacks than mage, −50% particles)
+        //   scout   0.32s cd → 4   (20% more attacks than mage, −33% particles)
+        //   mage    0.40s cd → 6   (baseline)
+        var _muzCount = (selectedClass === 'warrior') ? 3 : (selectedClass === 'scout' ? 4 : 6);
         for (var _muz = 0; _muz < _muzCount; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
           var _muzS = 100 + Math.random() * 80;
@@ -5035,6 +5084,8 @@ function doLogin() {
           // Only player-vs-player kills count as "kills"; mob kills roll into farmKills.
           if (closest.isBot) {
             kills++; player.kills++;
+            // R5m F2 — PvP kill distinct SFX (boss kill handled below)
+            if (!closest.bossTypeId && typeof playSound === 'function') playSound('pvp_kill');
             // Experiment B: PVP kill restores 30% of maxHp + kill-cinema shake
             var _heal = Math.round(player.maxHp * 0.30);
             player.hp = Math.min(player.maxHp, player.hp + _heal);
@@ -5070,6 +5121,7 @@ function doLogin() {
             // Round 5b T2: altar shatter trigger + global broadcast
             if (closest._isAltar) {
               ALTAR_FX.activeShatter = { x: _bx, y: _by, t: 0, dur: 1.4 };
+              if (typeof playSound === 'function') playSound('altar_boom');
               _bossXP = 300;
               killFeed.push({ text: '★ ' + (player.name || '你') + ' 击破中央祭坛 — 传说降临 ★', color: '#ffd060', time: 8 });
               if (typeof screenShake === 'function') screenShake(18, 600);
@@ -5089,6 +5141,7 @@ function doLogin() {
               // R5h F2: queue 2s 加冕 spotlight (waits for any open levelUp modal to clear)
               R5H_FX.crownPlay = { armed: true, t: 0, dur: 2.0, invulnUntil: gameTime + 1.0 };
               player._invulnerableUntil = gameTime + 1.0;
+              if (typeof playSound === 'function') playSound('crown_don');
             }
             playerXP += _bossXP;
             // Extra gems immediately (pickup goes through magnet anyway)
@@ -5111,6 +5164,8 @@ function doLogin() {
             bossSlainBanner.timer = 0;
             bossSlainBanner.name = closest.bossTypeName || 'BOSS';
             openBossBuffChoice();
+            // R5m F2 — boss slain horn
+            if (typeof playSound === 'function') playSound('boss_slain');
           }
           // Kill burst — bigger particles + hit-stop kill level + heavier shake
           emit(closest.x, closest.y, 'kill', { color: closest.color });
@@ -11034,52 +11089,65 @@ function doLogin() {
     ctx.fillStyle = vig;
     ctx.fillRect(0, 0, W, H);
 
-    // Tutorial overlay — game is paused while showing; player must click "跳过" to start
+    // R5m F3 — 3-slide tutorial. Each slide auto-advances 3s OR on tap of the
+    // slide body. Skip-all X in top-right. Completion → localStorage flag.
     if (!tutorialDone) {
-      var _trt = tutorialRealTime;
-      var visibleSteps = Math.min(TUTORIAL_STEPS.length, Math.floor(_trt / 0.4) + 1);
-      var fadeAlpha = 0.92;
-      // Use design-space scaling (400x700) so text is readable on high-DPR screens
-      var _tutS = Math.min(W / 400, H / 700);
-      var _tutOx = (W - 400 * _tutS) / 2;
-      var _tutOy = (H - 700 * _tutS) / 2;
-      ctx.save();
-      ctx.translate(_tutOx, _tutOy);
-      ctx.scale(_tutS, _tutS);
-      ctx.globalAlpha = fadeAlpha;
-      ctx.fillStyle = 'rgba(0,0,0,0.92)';
-      var panelH = 60 + visibleSteps * 42;
-      var panelW = 380;
-      ctx.fillRect(200 - panelW / 2, 350 - panelH / 2 - 14, panelW, panelH + 70);
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
-      ctx.strokeRect(200 - panelW / 2, 350 - panelH / 2 - 14, panelW, panelH + 70);
-      ctx.globalAlpha = fadeAlpha + 0.12;
-      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 26px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('新手指南', 200, 350 - panelH / 2 + 22);
-      ctx.fillStyle = '#fff'; ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      for (var ti = 0; ti < visibleSteps; ti++) {
-        var step = TUTORIAL_STEPS[ti];
-        var stepAlpha = Math.min(1, (_trt - ti * 0.4) * 3);
-        ctx.globalAlpha = fadeAlpha * stepAlpha;
-        ctx.fillText(step.icon + ' ' + step.text, 200, 350 - panelH / 2 + 55 + ti * 40);
+      _tutSlideTimer -= 0.016;
+      if (_tutSlideTimer <= 0) {
+        _tutSlide++;
+        _tutSlideTimer = 3.0;
+        if (_tutSlide >= _tutSlides.length) {
+          tutorialDone = true;
+          try { if (typeof localStorage !== 'undefined') localStorage.setItem('tutorial_seen', '1'); } catch (e) {}
+        }
       }
-      // Skip button
-      var skipBtnY = 350 + panelH / 2 + 10;
-      var skipBtnW = 160, skipBtnH = 44;
-      ctx.globalAlpha = fadeAlpha * 0.9;
-      ctx.fillStyle = '#444'; ctx.fillRect(200 - skipBtnW / 2, skipBtnY, skipBtnW, skipBtnH);
-      ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5;
-      ctx.strokeRect(200 - skipBtnW / 2, skipBtnY, skipBtnW, skipBtnH);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.fillText('跳过 ▶', 200, skipBtnY + 30);
-      // Store skip button rect in SCREEN coords for click detection
-      _tutorialSkipRect = {
-        x: (200 - skipBtnW / 2) * _tutS + _tutOx,
-        y: skipBtnY * _tutS + _tutOy,
-        w: skipBtnW * _tutS,
-        h: skipBtnH * _tutS
-      };
-      ctx.restore();
+      if (!tutorialDone) {
+        var _tutS = _tutSlides[_tutSlide];
+        ctx.save();
+        // Dark backdrop
+        ctx.fillStyle = 'rgba(0,0,0,0.78)';
+        ctx.fillRect(0, 0, W, H);
+        // Slide image fills full viewport (SVG is 640×360 — stretch)
+        if (_tutS && _tutS.ready) {
+          ctx.drawImage(_tutS.img, 0, 0, W, H);
+        } else {
+          // Fallback text if svg not yet loaded
+          ctx.font = 'bold ' + Math.round(Math.min(W, H) * 0.05) + 'px ' + _HUD_CJK;
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#ffd060';
+          var _fbLabels = ['摇杆移动', '自动攻击', '击破祭坛'];
+          ctx.fillText(_fbLabels[_tutSlide] || '', W / 2, H / 2);
+        }
+        // Slide dots (progress)
+        var _dotY = H - Math.max(30, Math.round(H * 0.05));
+        var _dotR = Math.max(5, Math.round(Math.min(W, H) * 0.008));
+        var _dotGap = _dotR * 3.5;
+        var _dotStartX = W / 2 - _dotGap * (_tutSlides.length - 1) / 2;
+        for (var _dti = 0; _dti < _tutSlides.length; _dti++) {
+          ctx.beginPath();
+          ctx.arc(_dotStartX + _dti * _dotGap, _dotY, _dotR, 0, Math.PI * 2);
+          ctx.fillStyle = (_dti === _tutSlide) ? '#ffd060' : 'rgba(255,255,255,0.35)';
+          ctx.fill();
+        }
+        // Top-right X skip button
+        var _skX = W - Math.max(40, Math.round(W * 0.08));
+        var _skY = Math.max(40, Math.round(H * 0.04));
+        var _skR = Math.max(18, Math.round(Math.min(W, H) * 0.03));
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.beginPath(); ctx.arc(_skX, _skY, _skR, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ffd060'; ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(_skX - _skR * 0.45, _skY - _skR * 0.45);
+        ctx.lineTo(_skX + _skR * 0.45, _skY + _skR * 0.45);
+        ctx.moveTo(_skX + _skR * 0.45, _skY - _skR * 0.45);
+        ctx.lineTo(_skX - _skR * 0.45, _skY + _skR * 0.45);
+        ctx.stroke();
+        // Expose skip rect for touch handling (skip entire tutorial when tapped)
+        _tutorialSkipRect = { x: _skX - _skR, y: _skY - _skR, w: _skR * 2, h: _skR * 2, _allSkip: true };
+        ctx.restore();
+      }
     }
 
     // Boss health bar UI at top of screen
@@ -13573,12 +13641,21 @@ function doLogin() {
     }
     // touchSkillButtons (US-343): handle button clicks during gameplay
     if (state === 'playing') {
-      // Tutorial skip button
-      if (!tutorialDone && _tutorialSkipRect) {
+      // Tutorial: X in top-right skips all; tap anywhere else advances one slide.
+      if (!tutorialDone) {
         var _tsr = _tutorialSkipRect;
-        if (cx > _tsr.x && cx < _tsr.x + _tsr.w && cy > _tsr.y && cy < _tsr.y + _tsr.h) {
+        if (_tsr && cx > _tsr.x && cx < _tsr.x + _tsr.w && cy > _tsr.y && cy < _tsr.y + _tsr.h) {
           tutorialDone = true;
           _tutorialSkipRect = null;
+          try { if (typeof localStorage !== 'undefined') localStorage.setItem('tutorial_seen', '1'); } catch (e) {}
+        } else {
+          // Advance slide on tap anywhere else (R5m F3)
+          _tutSlide++;
+          _tutSlideTimer = 3.0;
+          if (_tutSlide >= _tutSlides.length) {
+            tutorialDone = true;
+            try { if (typeof localStorage !== 'undefined') localStorage.setItem('tutorial_seen', '1'); } catch (e) {}
+          }
         }
       }
       // Skill bar upgrade clicks (MOBA-style)
