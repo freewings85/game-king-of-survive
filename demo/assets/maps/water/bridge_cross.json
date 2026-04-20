@@ -1,0 +1,10 @@
+{
+  "image": "bridge_cross.svg",
+  "w": 64,
+  "h": 128,
+  "orientation": "vertical",
+  "walkable": true,
+  "anchor": { "x": 32, "y": 0 },
+  "description": "竖向石桥，跨过横向 64px 河流。放置在河流 tile 上方，sprite 顶在北 tile 起点，向南延伸 128px 覆盖 2 tile（北岸半/河中/南岸半）。",
+  "usage": "drawImage(bridgeImg, worldX - 32, riverNorthY, 64, 128)；北 32px 为北岸引道，中 64px 为桥面（水面），南 32px 为南岸引道。"
+}

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Central Altar (simplified, 128×128). Anchor = bottom center (64, 124).
+       HoMM3 warm cartoon: stone ring + gold pillar + light beam. -->
+  <defs>
+    <radialGradient id="altarGlow" cx="50%" cy="60%" r="55%">
+      <stop offset="0%"  stop-color="#fff4a0" stop-opacity="0.9"/>
+      <stop offset="55%" stop-color="#ffd966" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffd966" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stoneRing" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0c8b0"/><stop offset="100%" stop-color="#6a604a"/>
+    </linearGradient>
+    <linearGradient id="pillar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff4c8"/>
+      <stop offset="50%" stop-color="#ffd966"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"  stop-color="#ffd966" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#fff4c8" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="64" cy="120" rx="48" ry="8" fill="#000" opacity="0.4"/>
+
+  <!-- outer halo -->
+  <circle cx="64" cy="86" r="56" fill="url(#altarGlow)">
+    <animate attributeName="r" values="52;62;52" dur="2.4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.75;1;0.75" dur="2.4s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- light beam rising from center -->
+  <rect x="56" y="0" width="16" height="100" fill="url(#beam)" opacity="0.75">
+    <animate attributeName="opacity" values="0.55;0.95;0.55" dur="1.8s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- stone ring base (3 layers) -->
+  <g stroke="#2a1a08" stroke-width="2" stroke-linejoin="round">
+    <ellipse cx="64" cy="114" rx="52" ry="14" fill="url(#stoneRing)"/>
+    <ellipse cx="64" cy="108" rx="44" ry="11" fill="url(#stoneRing)"/>
+    <ellipse cx="64" cy="102" rx="36" ry="9" fill="#e8dcb8"/>
+  </g>
+
+  <!-- 4 corner runes on the top step -->
+  <g fill="#c84a3a" stroke="#3a1a0e" stroke-width="1.2">
+    <circle cx="34" cy="110" r="3.2"/>
+    <circle cx="94" cy="110" r="3.2"/>
+    <circle cx="64" cy="96"  r="3"/>
+    <circle cx="64" cy="118" r="3"/>
+  </g>
+
+  <!-- central gold pillar -->
+  <g stroke="#3a2208" stroke-width="2" stroke-linejoin="round">
+    <rect x="52" y="52" width="24" height="50" fill="url(#pillar)"/>
+    <!-- pillar cap -->
+    <rect x="48" y="48" width="32" height="8" fill="#ffd966"/>
+    <rect x="50" y="100" width="28" height="6" fill="#8a5e18"/>
+    <!-- center facet highlight -->
+    <rect x="58" y="56" width="4" height="40" fill="#fff4c8" opacity="0.7"/>
+  </g>
+
+  <!-- top star on pillar -->
+  <polygon fill="#fffbd0" stroke="#ffd700" stroke-width="1.5"
+           points="64,30 68,46 84,50 68,54 64,70 60,54 44,50 60,46"/>
+  <circle cx="64" cy="50" r="6" fill="#fff4a0" opacity="0.85">
+    <animate attributeName="r" values="4;9;4" dur="1.6s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- floating sparkles -->
+  <g fill="#fffbd0">
+    <circle cx="32" cy="64" r="1.8">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="96" cy="72" r="1.8">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.9s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="44" cy="40" r="1.4">
+      <animate attributeName="opacity" values="0.2;0.9;0.2" dur="1.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="86" cy="36" r="1.4">
+      <animate attributeName="opacity" values="0.2;0.9;0.2" dur="1.7s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

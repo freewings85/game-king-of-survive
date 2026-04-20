@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="64" viewBox="0 0 256 64" shape-rendering="geometricPrecision">
+  <!-- Horizontal river autotile, 4 tiles × 64×64 = 256×64.
+       Water flows E-W across the full tile height band (y=18..46).
+       col 0 = west_cap  (water starts from the east side, west half is grass shore)
+       col 1 = mid_a     (straight E-W water)
+       col 2 = mid_b     (straight E-W, different ripple pattern)
+       col 3 = east_cap  (water ends on the east side, east half is grass shore)
+       Developer tiles col 1/2 for interior stretches, caps at ends. -->
+  <defs>
+    <linearGradient id="rivW" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ac2e8"/>
+      <stop offset="100%" stop-color="#2a6a8a"/>
+    </linearGradient>
+    <linearGradient id="rivG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5e9a3a"/>
+      <stop offset="100%" stop-color="#3a6a22"/>
+    </linearGradient>
+    <linearGradient id="bank" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b8884a"/>
+      <stop offset="100%" stop-color="#6a4a1e"/>
+    </linearGradient>
+  </defs>
+
+  <style>
+    .grass { fill: url(#rivG); }
+    .water { fill: url(#rivW); }
+    .bankLine { stroke: #4a331a; stroke-width: 1.4; fill: none; }
+    .bankFill { fill: url(#bank); }
+    .wave  { stroke: #c4e8f4; stroke-width: 1; fill: none; stroke-linecap: round; opacity: 0.75; }
+  </style>
+
+  <!-- col 0 : west_cap. water enters from the east edge, curves to end mid-tile. -->
+  <g>
+    <rect width="64" height="64" class="grass"/>
+    <!-- water pool shape -->
+    <path d="M64 18 L64 46 L34 46 Q18 46 18 32 Q18 18 34 18 Z" class="water"/>
+    <!-- bank rim -->
+    <path d="M64 18 L34 18 Q18 18 18 32 Q18 46 34 46 L64 46" class="bankLine"/>
+    <!-- waves -->
+    <path d="M60 24 Q48 22 38 24" class="wave"/>
+    <path d="M60 40 Q48 42 38 40" class="wave"/>
+    <!-- sparkle end -->
+    <circle cx="24" cy="32" r="2" fill="#c4e8f4" opacity="0.8"/>
+  </g>
+
+  <!-- col 1 : mid_a (straight) -->
+  <g transform="translate(64,0)">
+    <rect width="64" height="64" class="grass"/>
+    <rect x="0" y="18" width="64" height="28" class="water"/>
+    <!-- banks -->
+    <line x1="0" y1="18" x2="64" y2="18" stroke="#4a331a" stroke-width="1.6"/>
+    <line x1="0" y1="46" x2="64" y2="46" stroke="#4a331a" stroke-width="1.6"/>
+    <!-- bank sand strip -->
+    <rect x="0" y="16" width="64" height="3" fill="#b8884a"/>
+    <rect x="0" y="46" width="64" height="3" fill="#b8884a"/>
+    <!-- current ripples -->
+    <path d="M4  24 Q20 22 36 24 T60 22" class="wave"/>
+    <path d="M4  40 Q20 42 36 40 T60 42" class="wave"/>
+    <path d="M4  32 Q20 34 36 32 T60 34" class="wave" opacity="0.55"/>
+  </g>
+
+  <!-- col 2 : mid_b (straight, different ripple) -->
+  <g transform="translate(128,0)">
+    <rect width="64" height="64" class="grass"/>
+    <rect x="0" y="18" width="64" height="28" class="water"/>
+    <line x1="0" y1="18" x2="64" y2="18" stroke="#4a331a" stroke-width="1.6"/>
+    <line x1="0" y1="46" x2="64" y2="46" stroke="#4a331a" stroke-width="1.6"/>
+    <rect x="0" y="16" width="64" height="3" fill="#b8884a"/>
+    <rect x="0" y="46" width="64" height="3" fill="#b8884a"/>
+    <!-- foam crests -->
+    <path d="M8 26 Q14 22 20 26 Q26 30 32 26 Q38 22 44 26 Q50 30 56 26" class="wave"/>
+    <path d="M8 38 Q14 42 20 38 Q26 34 32 38 Q38 42 44 38 Q50 34 56 38" class="wave"/>
+    <!-- extra sparkle -->
+    <circle cx="16" cy="32" r="1.5" fill="#ffffff" opacity="0.7"/>
+    <circle cx="48" cy="32" r="1.5" fill="#ffffff" opacity="0.7"/>
+  </g>
+
+  <!-- col 3 : east_cap. water ends on west side, east half is grass shore. -->
+  <g transform="translate(192,0)">
+    <rect width="64" height="64" class="grass"/>
+    <path d="M0 18 L0 46 L30 46 Q46 46 46 32 Q46 18 30 18 Z" class="water"/>
+    <path d="M0 18 L30 18 Q46 18 46 32 Q46 46 30 46 L0 46" class="bankLine"/>
+    <path d="M4 24 Q16 22 26 24" class="wave"/>
+    <path d="M4 40 Q16 42 26 40" class="wave"/>
+    <circle cx="40" cy="32" r="2" fill="#c4e8f4" opacity="0.8"/>
+  </g>
+</svg>

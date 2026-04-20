@@ -1,0 +1,16 @@
+{
+  "image": "river_horizontal.svg",
+  "tileW": 64,
+  "tileH": 64,
+  "cols": 4,
+  "rows": 1,
+  "flow": "east-west",
+  "walkable": false,
+  "tiles": [
+    { "col": 0, "name": "west_cap",  "description": "河流西端，水从东向延伸到此结束（西半为岸）" },
+    { "col": 1, "name": "mid_a",     "description": "直行水道（水波变体 A）" },
+    { "col": 2, "name": "mid_b",     "description": "直行水道（水波变体 B，交替使用防视觉重复）" },
+    { "col": 3, "name": "east_cap",  "description": "河流东端（东半为岸）" }
+  ],
+  "usage": "横向铺设：[west_cap][mid_a][mid_b][mid_a]...[east_cap]，交替 mid_a/mid_b 避免条纹重复。水带在 tile 内 y=18..46，岸带 y=16..19 / 46..49。"
+}
