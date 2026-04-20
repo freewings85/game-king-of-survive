@@ -2742,6 +2742,47 @@ function doLogin() {
   var dailyBest = 0;
   var dailyRewardClaimed = false;
   var isDailyMode = false;
+  // R5u F3 — Daily challenge skeleton (bones only, Leo: "不求好玩")
+  //   - todayKey()           : YYYY-MM-DD local-date string, the daily seed
+  //   - _dailyLoad/_dailySave: localStorage-backed record of past attempts
+  //   - _recordDailyResult   : called on game-over when isDailyMode is true
+  function _dailyTodayKey() {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth()+1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+  function _dailyLoad() {
+    try {
+      var raw = localStorage.getItem('daily_records');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function _dailySave(rec) {
+    try { localStorage.setItem('daily_records', JSON.stringify(rec)); } catch (e) {}
+  }
+  function _recordDailyResult() {
+    if (!isDailyMode) return;
+    var rec = _dailyLoad();
+    var key = _dailyTodayKey();
+    var existing = rec[key] || { attempts: 0, bestKills: 0 };
+    existing.attempts++;
+    if (kills > existing.bestKills) existing.bestKills = kills;
+    existing.lastClass = selectedClass;
+    existing.lastMap = (MAP_DATA && MAP_DATA.name) || 'unknown';
+    rec[key] = existing;
+    _dailySave(rec);
+  }
+  // Seeded RNG for daily matches — deterministic bot/rival roll per date
+  var _dailyRngState = 0;
+  function _dailySeedFromDate(key) {
+    var h = 0;
+    for (var i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+    return h >>> 0;
+  }
+  function _dailyRand() {
+    _dailyRngState = (_dailyRngState * 1103515245 + 12345) & 0x7fffffff;
+    return (_dailyRngState & 0xffff) / 0xffff;
+  }
+  function _dailyRngActive() { return isDailyMode && _dailyRngState !== 0; }
 
   // Achievements
   var unlockedAchievements = {};
@@ -3479,6 +3520,12 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
+    // R5u F3 — reset daily RNG state at match start when daily mode is on
+    if (isDailyMode) {
+      _dailyRngState = _dailySeedFromDate(_dailyTodayKey());
+    } else {
+      _dailyRngState = 0;
+    }
     // R5n F2 + R5o F2 + R5p F2 — assassin opening 隐身.
     // arena/default: 3.0s (full identity — NOT shortened).
     // lane-3 only: 1.5s (lane chokes broke 3s flow).
@@ -3624,7 +3671,10 @@ function doLogin() {
           if (_bandScore < _bestBandD) { _bestBandD = _bandScore; _rivIdx = _rvi; }
         }
       }
-      if (_rivIdx < 0) _rivIdx = Math.floor(Math.random() * offlineBots.length);
+      if (_rivIdx < 0) {
+        var _rvRandFn = _dailyRngActive() ? _dailyRand : Math.random;
+        _rivIdx = Math.floor(_rvRandFn() * offlineBots.length);
+      }
       var _rivalBot = offlineBots[_rivIdx];
       var _initRD = Math.round(Math.hypot(_rivalBot.x - player.x, _rivalBot.y - player.y));
       console.log('[rival] picked bot#' + _rivIdx + ' (' + _rivalBot.archetype + ') dist=' + _initRD + 'px band=' + (_bestBandD < Infinity ? 'yes' : 'fallback'));
@@ -9814,20 +9864,14 @@ function doLogin() {
         ctx.fill();
         ctx.restore();
       } else if (_frfx.kind === 'slash') {
-        // Warrior energy slash — crescent blade
+        // R5u F1 — warrior slash simplified: removed outer glow arc +
+        // cyan halo stroke (2 draw ops per projectile per frame). Slash
+        // keeps the crescent fill + outline, which is the readable shape.
+        // Warrior 0.27s cd → up to 3 active slashes × 2 saved ops = ~6
+        // canvas ops/frame reclaimed on warrior combat path.
         ctx.save();
         ctx.translate(_frfx.x, _frfx.y);
         ctx.rotate(_frfx.angle);
-        // Outer glow
-        ctx.globalAlpha = 0.3 * _frAlpha;
-        ctx.fillStyle = '#ffaa40';
-        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
-        // Friendly cyan halo (marks player projectile)
-        ctx.globalAlpha = 0.45 * _frAlpha;
-        ctx.strokeStyle = '#aef6ff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
-        // Crescent blade
         ctx.globalAlpha = _frAlpha;
         ctx.fillStyle = '#ffdd60';
         ctx.beginPath();
@@ -13651,7 +13695,11 @@ function doLogin() {
         }
       }
       // Back
-      if (dcx2 > 200 - 50 && dcx2 < 200 + 50 && dcy2 > 700 - 50 && dcy2 < 700 - 14) { state = 'menu'; isDailyMode = false; }
+      if (dcx2 > 200 - 50 && dcx2 < 200 + 50 && dcy2 > 700 - 50 && dcy2 < 700 - 14) {
+        // R5u F3 — record daily result if this was a daily match, then return
+        if (isDailyMode) _recordDailyResult();
+        state = 'menu'; isDailyMode = false;
+      }
     } else if (state === 'buildSelect') {
       // Convert screen coords to design space (400x700)
       var _dc3 = _toDesignCoords(cx, cy); var dcx3 = _dc3.x, dcy3 = _dc3.y;
