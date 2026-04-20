@@ -3917,11 +3917,15 @@ function doLogin() {
     if (!offlineMode) return;
     offlineSpawnTimer += dt;
 
-    // Move enemies (wander + chase if close)
+    // Move enemies (wander + chase if close). Round 5e F3: global slow factor.
+    var _enemySlow = _altarSlowMul();
     for (var i = 0; i < offlineEnemies.length; i++) {
       var e = offlineEnemies[i];
       if (!e.alive) continue;
       e._moveTimer += dt;
+      // Round 5e F3 — collapse global slow into a per-enemy effective dt for
+      // movement only (not knockback). Cheaper than rewriting every speed term.
+      var _eMoveDt = dt * _enemySlow;
       // Wave 1: consume knockback velocity first (overrides movement this frame)
       if (e._knockbackVx || e._knockbackVy) {
         e.x += (e._knockbackVx || 0) * dt;
@@ -3935,24 +3939,21 @@ function doLogin() {
       var dx = player.x - e.x, dy = player.y - e.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (e.type === 'treasure') {
-        // Flee from player
         if (dist < 200) {
-          e.x -= (dx / dist) * e.speed * dt;
-          e.y -= (dy / dist) * e.speed * dt;
+          e.x -= (dx / dist) * e.speed * _eMoveDt;
+          e.y -= (dy / dist) * e.speed * _eMoveDt;
         } else {
           e._angle += (Math.random() - 0.5) * 2 * dt;
-          e.x += Math.cos(e._angle) * e.speed * 0.3 * dt;
-          e.y += Math.sin(e._angle) * e.speed * 0.3 * dt;
+          e.x += Math.cos(e._angle) * e.speed * 0.3 * _eMoveDt;
+          e.y += Math.sin(e._angle) * e.speed * 0.3 * _eMoveDt;
         }
       } else if (dist < 300 && e.hostile) {
-        // Chase player
-        e.x += (dx / dist) * e.speed * dt;
-        e.y += (dy / dist) * e.speed * dt;
+        e.x += (dx / dist) * e.speed * _eMoveDt;
+        e.y += (dy / dist) * e.speed * _eMoveDt;
       } else {
-        // Wander
         e._angle += (Math.random() - 0.5) * dt;
-        e.x += Math.cos(e._angle) * e.speed * 0.5 * dt;
-        e.y += Math.sin(e._angle) * e.speed * 0.5 * dt;
+        e.x += Math.cos(e._angle) * e.speed * 0.5 * _eMoveDt;
+        e.y += Math.sin(e._angle) * e.speed * 0.5 * _eMoveDt;
       }
       // Keep in bounds
       e.x = Math.max(e.radius, Math.min(WORLD_W - e.radius, e.x));
@@ -4153,8 +4154,9 @@ function doLogin() {
 
       // --- Movement ---
       // Round 5 N: rival rage buff (+20% speed/attack) for 15s after hatred ≥ 5
+      // Round 5e F3: global enemy slow when altar slain (3 min, ×0.7)
       var _rageMul = (b._rageUntil && gameTime < b._rageUntil) ? 1.2 : 1.0;
-      var bSpeed = (b.speed || 100) * _rageMul;
+      var bSpeed = (b.speed || 100) * _rageMul * _altarSlowMul();
       if (b._aiState === 'flee') {
         // Move toward storm center (storm is damaging)
         var _fcx = stormZone.centerX - b.x, _fcy = stormZone.centerY - b.y;
@@ -4309,9 +4311,10 @@ function doLogin() {
           var _nemMul = (rivalState.nemesisId === b.factionId && b._nemesisStreak)
             ? Math.min(1.5, 1 + 0.15 * b._nemesisStreak) : 1;
           var _aDmg = Math.floor((b.attackDamage + Math.floor(Math.random() * 4)) * _rageMul * _nemMul);
-          // Round 5d F3 — first 20s the player has 50% damage reduction
-          if ((b._aiTarget === player || b._aiTarget.isLocal) && gameTime < 20) {
-            _aDmg = Math.max(1, Math.floor(_aDmg * 0.5));
+          // Round 5e F2 — graduated spawn shield: 0-15s 50%, 15-20s 30%, 20-25s 15%, 25+ none
+          if ((b._aiTarget === player || b._aiTarget.isLocal)) {
+            var _ssMul = _spawnShieldMul(gameTime);
+            if (_ssMul < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _ssMul));
           }
           b._aiTarget.hp -= _aDmg;
           // Visual feedback
@@ -4440,7 +4443,9 @@ function doLogin() {
     if (stormZone.active && player.alive) {
       var _psd = Math.sqrt((player.x - stormZone.centerX) * (player.x - stormZone.centerX) + (player.y - stormZone.centerY) * (player.y - stormZone.centerY));
       if (_psd > stormZone.radius) {
-        var _stormDmg = (gameTime < 20) ? 4 : 8;
+        // Round 5e F2 — graduated spawn shield applies to storm tick too
+        var _ssM = _spawnShieldMul(gameTime);
+        var _stormDmg = 8 * _ssM;
         player.hp -= _stormDmg * dt;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
@@ -4912,13 +4917,18 @@ function doLogin() {
               killFeed.push({ text: '★ ' + (player.name || '你') + ' 击破中央祭坛 — 传说降临 ★', color: '#ffd060', time: 8 });
               if (typeof screenShake === 'function') screenShake(18, 600);
               if (typeof screenFlash !== 'undefined') { screenFlash.color = '#ffd060'; screenFlash.alpha = 0.55; }
-              // Drop 3 legendary skill pickups around altar
               for (var _lp = 0; _lp < 3; _lp++) {
                 var _la = Math.PI * 2 * _lp / 3;
                 if (typeof dropSkillPickup === 'function') {
                   dropSkillPickup(_bx + Math.cos(_la) * 60, _by + Math.sin(_la) * 60, '#ffd060');
                 }
               }
+              // Round 5e F3 — global enemy slow 30% for 3 min + 圣堂之主 crown 5 min on player
+              window._altarSlainAt = gameTime;
+              window._altarSlowUntil = gameTime + 180;
+              player._templeMasterUntil = gameTime + 300;
+              killFeed.push({ text: '⏳ 全场敌人减速 30% 持续 3 分钟', color: '#88ddff', time: 8 });
+              killFeed.push({ text: '👑 你成为圣堂之主 — 5 分钟特权光环', color: '#ffd060', time: 8 });
             }
             playerXP += _bossXP;
             // Extra gems immediately (pickup goes through magnet anyway)
@@ -6851,6 +6861,28 @@ function doLogin() {
     return false;
   }
   // Closest deep_water tile centre to a given point, or null if no rivers.
+  // Round 5e F2 — graduated spawn shield. Returns the damage multiplier the
+  // player should take at gameTime t. 0-15s 50%, 15-20s 30%, 20-25s 15%, 25s+ 100%.
+  // Easing: linear interp between bands so the wear-off is smooth, not stepped.
+  function _spawnShieldMul(t) {
+    if (t >= 25) return 1;
+    if (t < 15)  return 0.5;
+    if (t < 20)  return 0.5 + (t - 15) / 5 * (0.7 - 0.5); // 0.5 → 0.7
+    return 0.7 + (t - 20) / 5 * (0.85 - 0.7);             // 0.7 → 0.85
+  }
+  function _spawnShieldAlpha(t) {
+    if (t >= 25) return 0;
+    if (t < 15) return 1;
+    return 1 - (t - 15) / 10; // linear fade 15→25s
+  }
+  // Round 5e F3 — global "altar slain" slow. Returns multiplier to apply to
+  // enemy + bot movement for 3 min after the altar dies.
+  function _altarSlowMul() {
+    if (window._altarSlowUntil && (typeof gameTime !== 'undefined') && gameTime < window._altarSlowUntil) {
+      return 0.7;
+    }
+    return 1;
+  }
   function _nearestRiver(x, y) {
     var best = null, bestD = 1e12;
     for (var i = 0; i < terrainObstacles.length; i++) {
@@ -8596,8 +8628,11 @@ function doLogin() {
     bgGrad.addColorStop(0, bCol1); bgGrad.addColorStop(1, bCol2);
     ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
 
-    // Draw background with parallax grid and stars
-    drawBackground();
+    // Round 5e F1 — skip drawBackground when a handcrafted map is loaded:
+    // drawTilesetFloor below renders the entire visible area from MAP_DATA.tiles
+    // and biome atlases, so the legacy parallax-grid + sampled-color fill is
+    // pure overdraw (Profiler: 162 hits/3s, the single biggest cost).
+    if (!MAP_DATA) drawBackground();
 
     // victoryCondition: countdown runs in main loop (works during levelUp too)
     if (victoryState.active && victoryState.timer > 0) {
@@ -10028,12 +10063,12 @@ function doLogin() {
     var _pAnimFacing = _pMoving ? Math.atan2(_pdy, _pdx)
                      : (_pAnimState === 'attack' && player._attackFacing != null) ? player._attackFacing
                      : localFacing;
-    // Round 5d F3 — spawn-shield golden halo (first 20s, 50% damage reduction)
-    if (gameTime < 20) {
-      var _shieldT = 1 - gameTime / 20;
+    // Round 5d F3 + R5e F2 — spawn-shield halo, alpha tracks graduated decay
+    var _ssAlpha = _spawnShieldAlpha(gameTime);
+    if (_ssAlpha > 0.02) {
       var _shieldPulse = 0.7 + 0.3 * Math.sin(gameTime * 6);
       ctx.save();
-      ctx.globalAlpha = 0.45 * _shieldT * _shieldPulse;
+      ctx.globalAlpha = 0.45 * _ssAlpha * _shieldPulse;
       var _shGrad = ctx.createRadialGradient(player.x, player.y, player.radius * 0.4, player.x, player.y, player.radius * 1.6);
       _shGrad.addColorStop(0, 'rgba(255,220,140,0.0)');
       _shGrad.addColorStop(0.6, 'rgba(255,215,120,0.55)');
@@ -10043,8 +10078,35 @@ function doLogin() {
       // Outer ring
       ctx.strokeStyle = '#ffd060';
       ctx.lineWidth = 3;
-      ctx.globalAlpha = 0.7 * _shieldT * _shieldPulse;
+      ctx.globalAlpha = 0.7 * _ssAlpha * _shieldPulse;
       ctx.beginPath(); ctx.arc(player.x, player.y, player.radius * 1.4, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    // Round 5e F3 — 圣堂之主 crown halo for the player who slew the altar
+    if (player._templeMasterUntil && gameTime < player._templeMasterUntil) {
+      var _tmPulse = 0.65 + 0.35 * Math.sin((gameTime || 0) * 4);
+      ctx.save();
+      ctx.globalAlpha = 0.55 * _tmPulse;
+      var _tmGrad = ctx.createRadialGradient(player.x, player.y - player.radius * 0.8, 4, player.x, player.y - player.radius * 0.8, player.radius * 0.9);
+      _tmGrad.addColorStop(0, 'rgba(255,255,200,0.95)');
+      _tmGrad.addColorStop(0.6, 'rgba(255,200,80,0.4)');
+      _tmGrad.addColorStop(1, 'rgba(255,200,80,0)');
+      ctx.fillStyle = _tmGrad;
+      ctx.beginPath(); ctx.arc(player.x, player.y - player.radius * 0.8, player.radius * 0.9, 0, Math.PI * 2); ctx.fill();
+      // Tiny crown above the halo
+      ctx.fillStyle = '#ffd060';
+      ctx.globalAlpha = 0.85 * _tmPulse;
+      var _crX = player.x, _crY = player.y - player.radius * 1.6;
+      ctx.beginPath();
+      ctx.moveTo(_crX - 14, _crY + 10);
+      ctx.lineTo(_crX - 10, _crY);
+      ctx.lineTo(_crX - 5,  _crY + 6);
+      ctx.lineTo(_crX,      _crY - 4);
+      ctx.lineTo(_crX + 5,  _crY + 6);
+      ctx.lineTo(_crX + 10, _crY);
+      ctx.lineTo(_crX + 14, _crY + 10);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.restore();
     }
     drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, _pAnimFacing, {
@@ -10631,12 +10693,13 @@ function doLogin() {
 
     drawEdgeBeacons();
     drawBridgeBanner();
-    // Round 5d F3 — spawn-shield countdown chip (top-center, fades after 20s)
-    if (state === 'playing' && tutorialDone && gameTime < 20 && player && player.alive) {
-      var _ssLeft = Math.max(0, 20 - gameTime);
-      var _ssA = Math.min(1, _ssLeft / 4); // fade out last 4s
+    // Round 5d F3 + R5e F2 — spawn-shield countdown chip with graduated text
+    if (state === 'playing' && tutorialDone && gameTime < 25 && player && player.alive) {
+      var _ssLeft = Math.max(0, 25 - gameTime);
+      var _ssA = _spawnShieldAlpha(gameTime);
+      var _ssPct = Math.round((1 - _spawnShieldMul(gameTime)) * 100);
       var _ssFs = Math.max(13, Math.round(Math.min(W, H) * 0.022));
-      var _ssMsg = '🛡 新生庇护 -50% 伤害  ' + _ssLeft.toFixed(1) + 's';
+      var _ssMsg = '🛡 新生庇护 -' + _ssPct + '% 伤害  ' + _ssLeft.toFixed(1) + 's';
       ctx.save();
       ctx.font = 'bold ' + _ssFs + 'px "Noto Sans SC","PingFang SC",sans-serif';
       ctx.textAlign = 'center';
