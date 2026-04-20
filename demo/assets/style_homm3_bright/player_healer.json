@@ -1,0 +1,74 @@
+{
+  "image": "player_healer.svg",
+  "frameW": 64,
+  "frameH": 64,
+  "sheetCols": 4,
+  "sheetRows": 6,
+  "directionOrder": ["up", "left", "down", "right"],
+  "anims": {
+    "walk": {
+      "rowBase": 0,
+      "rowFromDir": true,
+      "frames": 4,
+      "fps": 10,
+      "skipFrame0": false
+    },
+    "attack": {
+      "rowBase": 4,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 11,
+      "skipFrame0": false,
+      "notes": "attack row here is 'cast heal' — raise staff → beam flash → recovery with +HP float"
+    },
+    "death": {
+      "rowBase": 5,
+      "rowFromDir": false,
+      "frames": 3,
+      "fps": 8,
+      "skipFrame0": false,
+      "loop": false,
+      "notes": "healer death = ascension pillar of light (神圣化光)"
+    }
+  },
+  "previewFrame": { "row": 2, "col": 0 },
+  "style": "homm3_bright",
+  "class": "healer",
+  "classTraits": {
+    "passives": ["holy_aura"],
+    "startingSkills": {
+      "heal": {
+        "name": "圣光 Mend",
+        "amount": 60,
+        "range": 0,
+        "cooldown": 3.0,
+        "description": "自疗 60 HP，瞬发。可在战斗中打断受击硬直。"
+      },
+      "blessing": {
+        "name": "祝福 Blessing",
+        "aoeRadius": 80,
+        "regenPerSec": 8,
+        "duration": 6.0,
+        "cooldown": 10.0,
+        "description": "脚下 80px 圈内 6 秒持续回血 8 HP/s（自己 + 未来队友共享）"
+      },
+      "purify": {
+        "name": "净化 Purify",
+        "cooldown": 15.0,
+        "description": "移除自身所有 debuff（减速、灼烧、流血），即时触发"
+      }
+    },
+    "attackNotes": "healer auto-attack 仍发射 staff beam（攻击力较弱：基础 8-10），主要靠 heal/blessing 续航拖局"
+  },
+  "suggestedHP": 150,
+  "suggestedMoveSpeed": 0.95,
+  "archetype": "healer",
+  "notes": [
+    "SVG sprite sheet — 跟 player_assassin/scout 同规格，同 drawImage 框架切帧",
+    "配色：白袍 #f4efe2 + 金边 #ffd966 + 绿十字 #4a9a3a + 金杖 + 蓝宝石顶 + 金头箍",
+    "row 2 walk down 最详：胸前绿十字 + 金头箍 + 右手持金杖（顶蓝宝 r=4 + 8px glow halo）",
+    "row 4 cast heal：举杖蓄能 → 释放神圣光束 + 放射线 → 恢复阶段含 +HP 绿浮字",
+    "row 5 death：healer 死亡做'神圣化光'（光柱上升 + 粒子飞散 + 十字淡入光）与其他职业差异化",
+    "骨架版 — R5u 只做最小可玩；若 Leo 决定保留再打磨 walk 循环 + 专属 heal 音效"
+  ]
+}
