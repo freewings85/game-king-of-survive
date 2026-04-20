@@ -5012,11 +5012,12 @@ function doLogin() {
         });
         particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
         // Muzzle flash on cast
-        // R5l F1 / R5p F3 — muzzle particle count. warrior stays at 3 (0.27s
-        // cd → +48% vs mage means 6 would cost too much). scout reverted to
-        // 6 (R5m 4 was speculative and Testor couldn't attribute any FPS win).
-        //   warrior 3 / scout 6 / mage 6 / assassin 6
-        var _muzCount = (selectedClass === 'warrior') ? 3 : 6;
+        // R5l F1 / R5m F1 / R5q F1 — muzzle particle count.
+        //   warrior 3 (0.27s cd, +48% attack rate vs mage)
+        //   scout   4 (R5q: R5p revert to 6 dropped FPS pass-rate 25%→10%,
+        //              re-reverted per Leo P0 instruction, no discussion)
+        //   mage/assassin 6 (baseline)
+        var _muzCount = (selectedClass === 'warrior') ? 3 : (selectedClass === 'scout' ? 4 : 6);
         for (var _muz = 0; _muz < _muzCount; _muz++) {
           var _muzA = angle + (Math.random() - 0.5) * 0.8;
           var _muzS = 100 + Math.random() * 80;
@@ -5042,14 +5043,19 @@ function doLogin() {
           _dmgValue = Math.floor(_dmgValue * 1.5);
           if (typeof floatText === 'function') floatText(closest.x, closest.y - 30, '伏击!', { color: '#aaffaa', size: 14 });
         }
-        // R5n F2 — assassin 背刺: 2x damage when hitting a target whose facing
-        // is within ±60° of "away from attacker" (i.e. player is behind them).
+        // R5n F2 + R5q F2 — assassin 背刺: 2x damage when hitting a target
+        // whose facing is within ±60° of "away from attacker".
+        // R5q removed the "背刺 ×2!" popup floatText (was 386 strokeText
+        // hits/3s — 3× other classes). The doubled damage number is its own
+        // visual signal; just tint it purple via _backstab flag so the main
+        // floats loop colours it without spawning a second text.
+        var _wasBackstab = false;
         if (player.playerClass === 'assassin' && closest && closest.facingAngle != null) {
           var _attackAng = Math.atan2(closest.y - player.y, closest.x - player.x);
           var _delta = Math.atan2(Math.sin(closest.facingAngle - _attackAng), Math.cos(closest.facingAngle - _attackAng));
           if (Math.abs(_delta) < Math.PI / 3) {
             _dmgValue = Math.floor(_dmgValue * 2);
-            if (typeof floatText === 'function') floatText(closest.x, closest.y - 30, '背刺 ×2!', { color: '#c48cff', size: 16 });
+            _wasBackstab = true;
           }
         }
         // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
@@ -5110,7 +5116,7 @@ function doLogin() {
         var _pType = selectedClass === 'warrior' ? 'melee' : (selectedClass === 'mage' ? 'magic' : 'ranged');
         var _pColor = selectedClass === 'warrior' ? '#dd2020' : (selectedClass === 'mage' ? '#a080ff' : '#ffaa33');
         emit(closest.x, closest.y, _pType, { color: _pColor });
-        floatText(closest.x, closest.y - 20, _dmgValue + (_isCrit ? '!' : ''), { type: _isCrit ? 'crit' : 'normal' });
+        floatText(closest.x, closest.y - 20, _dmgValue + (_isCrit ? '!' : (_wasBackstab ? '✦' : '')), _wasBackstab ? { color: '#c48cff', size: 16, crit: true } : { type: _isCrit ? 'crit' : 'normal' });
         playSound('hit');
         applyKnockback(closest, _dmgValue, player.x, player.y);
         if (closest.hp <= 0) {
@@ -10426,18 +10432,16 @@ function doLogin() {
       ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
       ctx.restore();
     }
-    // R5n F2 — assassin 开局隐身: render player sprite semi-transparent.
+    // R5n F2 + R5q F2 — assassin 开局隐身 semi-transparent. Direct globalAlpha
+    // prop write (cheaper than ctx.save / ctx.restore which saves full state).
     var _invisActive = !!(player._invisibleUntil && gameTime < player._invisibleUntil);
-    if (_invisActive) {
-      ctx.save();
-      ctx.globalAlpha = 0.35;
-    }
+    if (_invisActive) ctx.globalAlpha = 0.35;
     drawCharacterSprite(player.x, player.y, player.radius, player.playerClass || selectedClass, _pAnimFacing, {
       fury: isFury, shield: player.shieldActive, skinId: equippedSkin,
       animState: _pAnimState, animTime: _pAnimTime,
       _debugOut: player._spriteDebugFrame
     });
-    if (_invisActive) ctx.restore();
+    if (_invisActive) ctx.globalAlpha = 1;
     player._spriteAnimState = _pAnimState; // exposed for __spriteDebug
 
     // HERO CROWN — floating golden chevron above player head (clear friendly marker)
