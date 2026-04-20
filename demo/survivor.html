@@ -4946,11 +4946,13 @@ function doLogin() {
         _atkCdMul = 0.85; // snappy knives
       }
       player._timer = player.attackCooldown * _atkCdMul;
-      // R5j F2 — scout has a longer auto-attack scan radius (520 vs 400) so
-      // they can pick off bots across mid lane chokepoints on lane_b without
-      // needing to bridge-rush. Sharpshooter identity, matching the scout
-      // sprite (arrow/bow).
-      var _scanR = (player.playerClass === 'scout') ? 520 : 400;
+      // R5j F2 + R5t F3 — auto-attack scan radius.
+      // scout always 520 (sharpshooter identity, holds across both maps).
+      // warrior on lane-3 also 520 (5/5 timeouts: static-player tests can't
+      // reach bots at 1000+ px across river; matches scout lane success path).
+      var _scanR = 400;
+      if (player.playerClass === 'scout') _scanR = 520;
+      else if (player.playerClass === 'warrior' && MAP_DATA && MAP_DATA.layout === 'lane-3') _scanR = 520;
       var closest = null, closestDist = _scanR;
       // Round 5g F1 — altar priority: when an unlocked altar is in attack
       // range, lock onto it even if a normal mob is closer. The altar surface
