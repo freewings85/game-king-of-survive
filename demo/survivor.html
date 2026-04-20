@@ -3479,9 +3479,10 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
-    // R5n F2 — assassin opening 3s 隐身: bot target scan skips while true.
+    // R5n F2 + R5o F2 — assassin opening 隐身. lane-3 layout shortens to 1.5s
+    // (Testor: 3s + lane chokepoints = 2/2 dead-0-kill matches). Default 3s.
     if (selectedClass === 'assassin') {
-      player._invisibleUntil = 3.0; // game-time seconds
+      player._invisibleUntil = (MAP_DATA && MAP_DATA.layout === 'lane-3') ? 1.5 : 3.0;
     }
     // Hide the DOM "player-bar" (nickname/gold/rank/level) — canvas HUD
     // already shows those and the DOM bar was overlapping the "剩余 X 人"
@@ -8215,21 +8216,26 @@ function doLogin() {
     // along facing). Skips normal dash, sets cooldown, and emits a purple
     // puff at both source and destination for readability.
     if (player.playerClass === 'assassin') {
-      var _teleD = 260;
+      // R5o F2 — step back from max 260 in 20px increments until we find a
+      // clear spot (handles lane_b rivers + structures). If NO clear spot
+      // exists along the ray, abort: refund cooldown, flash red, let player
+      // reorient. Previous version fell through and teleported INTO water.
       var _teleAng = player.facingAngle || 0;
-      var _tx = player.x + Math.cos(_teleAng) * _teleD;
-      var _ty = player.y + Math.sin(_teleAng) * _teleD;
-      // Clamp + collision — step back until unblocked
-      _tx = Math.max(player.radius, Math.min(WORLD_W - player.radius, _tx));
-      _ty = Math.max(player.radius, Math.min(WORLD_H - player.radius, _ty));
-      if (typeof isBlockedByDecor === 'function') {
-        var _tries = 0;
-        while (isBlockedByDecor(_tx, _ty, player.radius * 0.55) && _tries < 8) {
-          _tele = Math.max(40, _teleD - 40);
-          _tx = player.x + Math.cos(_teleAng) * (_teleD - _tries * 30);
-          _ty = player.y + Math.sin(_teleAng) * (_teleD - _tries * 30);
-          _tries++;
+      var _tx = player.x, _ty = player.y, _ok = false;
+      for (var _dist = 260; _dist >= 40; _dist -= 20) {
+        var _cx = player.x + Math.cos(_teleAng) * _dist;
+        var _cy = player.y + Math.sin(_teleAng) * _dist;
+        _cx = Math.max(player.radius, Math.min(WORLD_W - player.radius, _cx));
+        _cy = Math.max(player.radius, Math.min(WORLD_H - player.radius, _cy));
+        if (typeof isBlockedByDecor !== 'function' || !isBlockedByDecor(_cx, _cy, player.radius * 0.55)) {
+          _tx = _cx; _ty = _cy; _ok = true; break;
         }
+      }
+      if (!_ok) {
+        // Abort — no clear spot ahead. Short red flash + no cd spend.
+        if (typeof emit === 'function') emit(player.x, player.y, '#ff4040', 8, 80);
+        if (typeof floatText === 'function') floatText(player.x, player.y - 40, '无法瞬移', { color: '#ff6060', size: 12 });
+        return;
       }
       if (typeof emit === 'function') emit(player.x, player.y, '#c48cff', 14, 120);
       player.x = _tx; player.y = _ty;
@@ -11804,9 +11810,6 @@ function doLogin() {
   // Round 5g F3 — short CJK font string used by all per-frame HUD overlays so
   // ctx.font assignment doesn't re-shape a 200-char fallback list every call.
   var _HUD_CJK = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
-  // R5n F1 — memoised measureText widths for edge-beacon labels (label text
-  // snaps to 20px buckets so cache hit rate is high)
-  var _edgeLabelCache = {};
   function drawEdgeBeacons() {
     if (!player || !player.alive || state !== 'playing') return;
     if (!tutorialDone) return;
@@ -11906,20 +11909,15 @@ function doLogin() {
         ctx.drawImage(HUD_ARROW.img, -sz / 2, -sz / 2, sz, sz);
         ctx.restore();
       }
-      // R5n F1 — distance update cadence 0.25s + memoised measureText per label.
-      // poi objects are freshly built each frame so cache by label key on the
-      // module-level _edgeLabelCache.
-      var _distRounded = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y) / 20) * 20;
-      var labelTxt = poi.label + ' ' + _distRounded + 'px';
+      // R5o F1 — reverted R5n edge-beacon cache: the hypot + bucket-round +
+      // string-concat + Map-lookup chain turned out slower than browser's
+      // native measureText caching by font+string. Revert to simple inline.
+      var distPx = Math.round(Math.hypot(poi.x - player.x, poi.y - player.y));
+      var labelTxt = poi.label + ' ' + distPx + 'px';
       ctx.save();
       var fs = Math.max(14, Math.round(sz * 0.22));
       ctx.font = 'bold ' + fs + 'px ' + _HUD_CJK;
-      var _twCached = _edgeLabelCache[labelTxt];
-      if (_twCached == null) {
-        _twCached = ctx.measureText(labelTxt).width + 16;
-        _edgeLabelCache[labelTxt] = _twCached;
-      }
-      var tw = _twCached;
+      var tw = ctx.measureText(labelTxt).width + 16;
       var lx = Math.max(6, Math.min(W - tw - 6, ax - tw / 2));
       var ly = Math.max(6, Math.min(H - fs - 12, ay + sz * 0.35));
       ctx.fillStyle = 'rgba(0,0,0,0.78)';
