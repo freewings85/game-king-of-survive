@@ -10,6 +10,8 @@
 | `newborn_shield.svg` | arena_a 开局 ≤ 20s | 1 (with SVG animate) | v1 — 推荐用 fade atlas 代替 |
 | `newborn_shield_fade.svg` | 同上 | **5 (400×80 atlas)** | **静态** 5 帧渐弱 — FPS 友好 |
 | `altar_master.svg` | 击破祭坛后 5min | 1 (static) | "圣堂之主" 金+紫皇家光环（中心王冠）|
+| `slow_debuff_aura.svg` | 敌人被减速 | 1 (static) | 紫雾 + 锁链 + 慢时钟，贴敌人脚下 |
+| `divine_shield_flash.svg` | Healer 每次受击 | 1 (static) | **神佑瞬闪** 0.3s 金六角盾 + 12 放射 + 绿十字 |
 
 ## ⚡ 性能要点（R5e Fix 1 配合）
 

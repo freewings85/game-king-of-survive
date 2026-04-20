@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <!-- Divine Shield Flash — healer 受击瞬闪 0.3s。
+       80×80 anchor (40, 40)，同 buffs/ 其他光环规格。
+       Developer 每次 healer takeDamage() 时 spawn 一颗，alpha 1→0 over 300ms + scale 0.85→1.25。
+       Static SVG — 一次性光栅化，高频触发要零 parse 开销。 -->
+  <defs>
+    <radialGradient id="dsfCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="35%" stop-color="#fff6a8" stop-opacity="0.9"/>
+      <stop offset="75%" stop-color="#ffd700" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#c89028" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="dsfShield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fff6c8"/>
+      <stop offset="50%" stop-color="#ffd700"/>
+      <stop offset="100%" stop-color="#8a5e18"/>
+    </linearGradient>
+  </defs>
+
+  <!-- outer halo -->
+  <circle cx="40" cy="40" r="36" fill="url(#dsfCore)"/>
+
+  <!-- 12 radial light rays -->
+  <g stroke="#fff6a8" stroke-width="2" opacity="0.85" stroke-linecap="round">
+    <line x1="40" y1="6"  x2="40" y2="16"/>
+    <line x1="40" y1="64" x2="40" y2="74"/>
+    <line x1="6"  y1="40" x2="16" y2="40"/>
+    <line x1="64" y1="40" x2="74" y2="40"/>
+    <line x1="16" y1="16" x2="22" y2="22"/>
+    <line x1="58" y1="58" x2="64" y2="64"/>
+    <line x1="64" y1="16" x2="58" y2="22"/>
+    <line x1="16" y1="64" x2="22" y2="58"/>
+    <line x1="28" y1="8"  x2="31" y2="16"/>
+    <line x1="52" y1="8"  x2="49" y2="16"/>
+    <line x1="28" y1="72" x2="31" y2="64"/>
+    <line x1="52" y1="72" x2="49" y2="64"/>
+  </g>
+
+  <!-- hexagonal shield outline (divine) -->
+  <g stroke="#3a2208" stroke-width="2.5" stroke-linejoin="round">
+    <polygon points="40,14 62,26 62,54 40,66 18,54 18,26" fill="url(#dsfShield)" opacity="0.9"/>
+    <!-- inner shield face -->
+    <polygon points="40,20 57,29 57,51 40,60 23,51 23,29" fill="#fff6c8" opacity="0.55"/>
+  </g>
+
+  <!-- central green healer cross emblem (identity) -->
+  <g stroke="#1e3a14" stroke-width="1.5">
+    <rect x="36" y="30" width="8" height="20" fill="#4a9a3a"/>
+    <rect x="30" y="36" width="20" height="8" fill="#4a9a3a"/>
+  </g>
+
+  <!-- cross center bright gem -->
+  <circle cx="40" cy="40" r="3" fill="#fff6a8" stroke="#8a5e18" stroke-width="1"/>
+  <circle cx="40" cy="40" r="1.5" fill="#ffffff"/>
+
+  <!-- 4 corner tiny gold sparks -->
+  <g fill="#fff6a8">
+    <polygon points="22,22 24,26 20,26"/>
+    <polygon points="58,22 60,26 56,26"/>
+    <polygon points="22,58 24,54 20,54"/>
+    <polygon points="58,58 60,54 56,54"/>
+  </g>
+</svg>

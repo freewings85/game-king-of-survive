@@ -52,5 +52,25 @@
     "description": "敌人减速 debuff 光环 — 圣堂之主激活期间所有敌人脚下 3min。紫雾 + 锁链环 + 慢时钟 + 下沉粒子",
     "usage": "for each enemy while _altarSlowUntil > now: drawImage(slowImg, enemy.x-40, enemy.y-40, 80, 80)；建议 alpha 0.75 保留敌人本体可辨",
     "perfNote": "静态；全场敌人都贴，数量可能多（4-8 个），务必一次性 rasterise 缓存。"
+  },
+  "divineShieldFlash": {
+    "image": "divine_shield_flash.svg",
+    "size": 80,
+    "anchor": { "x": 40, "y": 40 },
+    "description": "Healer 受击神佑 — 金色六角护盾 + 12 放射 + 中心绿十字 + 4 角金星。每次 healer takeDamage 时瞬闪 0.3s",
+    "duration": 300,
+    "usage": [
+      "触发时机：healer.takeDamage(dmg) → 推一颗 divineFlash 进粒子队列，t=0 记录 born time。",
+      "渲染：const age = now - flash.born;",
+      "        if (age > 300) remove;",
+      "        const t = age / 300;",
+      "        const alpha = 1 - t;",
+      "        const scale = 0.85 + t * 0.4;",
+      "        ctx.save(); ctx.globalAlpha = alpha;",
+      "        ctx.drawImage(flashImg, healer.x - 40*scale, healer.y - 40*scale, 80*scale, 80*scale);",
+      "        ctx.restore();",
+      "节流：同 healer 身上同时最多 1 颗，新 hit 如旧 flash age < 120ms 则跳过（避免连发重绘）"
+    ],
+    "perfNote": "高频触发（healer 每次受击），**必须**一次性光栅化缓存到 offscreen canvas。"
   }
 }
