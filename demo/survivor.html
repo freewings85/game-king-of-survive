@@ -5154,12 +5154,6 @@ function doLogin() {
             _wasBackstab = true;
           }
         }
-        // R5ac F1 — healer 神佑反击: 开局 5s 护盾期击中敌人 +20% dmg, 鼓励主动
-        // 出招而非龟缩（R5ab 护盾让 healer kills 1.5→1.0）。只在护盾窗口内生效，
-        // 不加 class-常驻加成，避免长尾失衡。
-        if (player.playerClass === 'healer' && player._healerShieldUntil && gameTime < player._healerShieldUntil) {
-          _dmgValue = Math.floor(_dmgValue * 1.2);
-        }
         // Round 5d F2 — altar invulnerable until unlock; show "未解锁" hint
         if (closest._isAltar && closest._lockedUntil && gameTime < closest._lockedUntil) {
           if (typeof floatText === 'function') {
