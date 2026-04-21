@@ -1,14 +1,19 @@
-# Playtest Baseline — R5v (2026-04-21, updated R5w)
+# Playtest Baseline — R5v (2026-04-21, updated R5w, R5af 2-run gate)
 
 Locked as the reference point per Leo R5u F2 / R5w F1. Any commit that drops
-these metrics should be evaluated against the thresholds below.
+these metrics should be evaluated against the thresholds below. R5af (2026-
+04-21) promoted the "2-run 44-game" protocol to the official sign-off gate
+(see "R5af — 2-run sign-off gate" section below).
 
 ## Reference commit
 `8052a5d` — fix(r5v): auto-revert warrior slash + healer skeleton
+`94290b3` — R5ad F1 healer稳态 (2-run 44-game verified composite ≈ 7.0)
 
 ## Score
-- Composite: **7.0 / 10**
+- Composite: **7.0 / 10** (stable band, confirmed R5af 2-run = 7.25 / 7.0)
 - R5t (652a598) peaked at 7.25; R5v stabilised at 7.0 after auto-revert
+- R5ae discovered R5ad single-run "6.5" was noise — true stable band is
+  ~7.0, not 7+ as previously assumed. Do not chase "7+ every round" target.
 
 ## Kill metrics (22-game matrix from R5w, 4 arena scout + 4 arena warrior + 2 arena assassin + 2 arena healer + 5 lane scout + 5 lane warrior)
 - Coverage: ≥ **95%** have-kill target per R5w F1 (strict 100% was noise-sensitive)
@@ -147,6 +152,44 @@ sampling noise). Per the graduated policy above, cell μ drops without
 attributable code do not trigger a revert. Recommend Testor second-run
 confirmation; if persistent, root-cause lives in bot AI density / spawn
 RNG variance, not the R5v commit.
+
+## R5af — 2-run sign-off gate (official since 2026-04-21)
+
+R5ae Run1 = 7.25 / Run2 = 7.0 / R5ad original = 6.5. Three identical commits,
+three different composite scores. The 22-game matrix has intrinsic variance
+wide enough that a single run can cross auto-revert thresholds on pure noise.
+R5af therefore promotes the following protocol to the sign-off gate:
+
+### Protocol
+1. Testor runs **2 independent 22-game matrices** (total 44 games) per sign-off.
+2. Each run is scored independently and reported as a pair (Run1, Run2).
+3. Decision matrix on any single-cell trigger (e.g. cell μ -50%, FPS < 40%,
+   coverage < 90%):
+
+   | Run 1    | Run 2    | Verdict                                    |
+   |----------|----------|--------------------------------------------|
+   | pass     | pass     | Sign off. Commit is stable.                |
+   | pass     | hard-fail| Noise — no revert. Log in baseline trend.  |
+   | hard-fail| pass     | Noise — no revert. Log in baseline trend.  |
+   | hard-fail| hard-fail| Real regression — auto-revert per policy.  |
+
+4. Composite score reported as `avg(Run1, Run2)`; stable band is 6.5–7.25
+   per R5ae evidence. Target is the 2-run average ≥ 7.0, not a single run.
+
+### Rationale (R5ae evidence)
+- 22-game cells produce ~0.5 σ on kills μ and ~5 pp on FPS rate.
+- The "R5ad 6.5" finding lasted 1 round, then R5ae's Run2 produced 7.0
+  on the identical commit. This is the same failure mode as R5s (empty-
+  diff drop misread as regression) but at matrix-level — 1-run signal is
+  not strong enough for revert/refactor decisions.
+- Trade-off accepted: sign-off takes 2× Testor time (~90 min), but each
+  green-light is 44-game stable, removing false regressions that burn
+  Developer cycles on unnecessary reverts (R5s, R5ad).
+
+### When 1-run auto-revert still applies
+Catastrophic single-run failure (coverage < 70%, any cell μ = 0 across 3+
+cells, crash / pageerror) remains 1-run actionable — the signal is large
+enough that Run2 confirmation is not required.
 
 ## Known unsolved (stop trying, per Leo R5v F2)
 - `arena_a/warrior` FPS 26.9 cold-zone — 3 rounds (R5l / R5r / R5u)
