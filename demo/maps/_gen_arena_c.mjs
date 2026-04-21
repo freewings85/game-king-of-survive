@@ -1,63 +1,126 @@
-// arena_c.json — 3rd map PROTOTYPE skeleton (Leo R5af F2, "不求好玩").
-// Theme: Frozen Peaks — ArtDesigner concept direction (2026-04-21). This
-// generator is intentionally skeletal: spawn points, one central landmark
-// placeholder, offset storm center, empty grass-id tile grid. Art + tile
-// painting (snow + ice + crevasse) deferred to post-prototype round per
-// Leo's "不做完整实现" directive.
-// Layout 'ffa-arena' reuses arena_a engine paths so no new code branches
-// are needed for Testor's first playtest.
+// arena_c.json — 3rd map (Leo R5af F2 skeleton → R5ah F1 integration).
+// Theme: Frozen Peaks — ArtDesigner concept (2026-04-21, altar_center_frozen.svg
+// at 61e49c9). R5ah promoted from skeleton to first-playable: snow base + stone
+// fight pit + frozen landmark sprite + 2 minor landmarks (snow_minor.svg). Tile
+// id convention (demo/survivor.html:6747): 0=grass 1=dirt 2=stone 6=snow.
+// Still uses layout='ffa-arena' to reuse arena_a engine code paths (no new
+// rendering branch) per prototype cost discipline.
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const COLS = 40, ROWS = 40, TS = 64;
 const W = COLS * TS, H = ROWS * TS;
-const tiles = new Array(COLS * ROWS).fill(0); // all-grass — ArtDesigner to paint snow/ice later
 
-const tpx = (t) => t * TS + TS / 2;
+// Snow base (tile id 6) — ArtDesigner asset biomes/biome_snow.svg maps to id 6.
+const tiles = new Array(COLS * ROWS).fill(6);
+
+const paintCircle = (cx, cy, r, v) => {
+  for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+    const dx = x - cx, dy = y - cy;
+    if (dx*dx + dy*dy <= r*r && x>=0 && y>=0 && x<COLS && y<ROWS) tiles[y*COLS + x] = v;
+  }
+};
+const paintRing = (cx, cy, rOuter, rInner, v) => {
+  for (let y = cy - rOuter; y <= cy + rOuter; y++) for (let x = cx - rOuter; x <= cx + rOuter; x++) {
+    const dx = x - cx, dy = y - cy;
+    const d2 = dx*dx + dy*dy;
+    if (d2 <= rOuter*rOuter && d2 > rInner*rInner && x>=0 && y>=0 && x<COLS && y<ROWS) tiles[y*COLS + x] = v;
+  }
+};
+
 const cx = COLS / 2, cy = ROWS / 2;
+const tpx = (t) => t * TS + TS / 2;
 const wcx = W / 2, wcy = H / 2;
 
-// Central landmark placeholder — a frozen monolith silhouette. Sprite points
-// at crystal_sanctum.svg for now; ArtDesigner will supply a dedicated
-// frozen-peak landmark asset in a follow-up.
-const structures = [
-  {
-    kind: 'landmark',
-    x: wcx - 224, y: wcy - 128,
-    w: 448, h: 256,
-    color: '#a8c0d8',
-    label: '冰封遗迹',
-    sprite: 'assets/maps/landmarks/crystal_sanctum.svg',
-    anchorX: 224, anchorY: 224
-  }
-];
+// Stone fight pit in the centre (id 2) — visual contrast with snow base.
+// Smaller pit than arena_a (r=7 vs 9) so the snow apron reads wider.
+paintCircle(cx, cy, 7, 2);
+// Small grass island at the very centre for the altar (id 0) — differentiates
+// the altar from the pit floor and matches arena_a's inner clearing pattern.
+paintCircle(cx, cy, 3, 0);
 
-// Spawn layout — 4 cardinal clusters × 2 spawns each = 8, differentiated
-// from arena_a's even 8-point ring. Clusters at NE / NW / SE / SW, two
-// spawns per cluster spread slightly outward.
-const spawnPoints = [];
-const clusterAngles = [Math.PI/4, 3*Math.PI/4, -Math.PI/4, -3*Math.PI/4];
-const CLUSTER_R = 13;
-clusterAngles.forEach(a => {
-  const tx = cx + Math.cos(a) * CLUSTER_R;
-  const ty = cy + Math.sin(a) * CLUSTER_R;
-  spawnPoints.push({ x: tpx(tx), y: tpx(ty) });
-  spawnPoints.push({ x: tpx(tx + Math.cos(a) * 1.2), y: tpx(ty + Math.sin(a) * 1.2) });
+const structures = [];
+const push = (s) => structures.push(s);
+
+// Central landmark — ArtDesigner's frozen altar (commit 61e49c9).
+push({
+  kind: 'landmark',
+  x: wcx - 192, y: wcy - 256,
+  w: 384, h: 512,
+  color: '#a8c0d8',
+  label: '冰封祭坛',
+  sprite: 'assets/maps/landmarks/altar_center_frozen.svg',
+  anchorX: 192, anchorY: 498
 });
 
-// Single-capture strategic point + 1 boss spawn — minimum to exercise
-// engine's strat / boss code paths in prototype.
+// Mountain ring — snowy peaks (mountains/mountains.svg col=0). Engine may not
+// wire spriteCol yet; the hint is durable for when it does. Same cadence as
+// arena_a (16 blocks, RING_R_TILES 18) so enclosed-arena silhouette reads
+// identically.
+const RING_R_TILES = 18;
+for (let i = 0; i < 16; i++) {
+  const a = (i / 16) * Math.PI * 2;
+  const tx = cx + Math.cos(a) * RING_R_TILES;
+  const ty = cy + Math.sin(a) * RING_R_TILES;
+  push({
+    kind: 'mountain',
+    x: tx * TS - 48, y: ty * TS - 48, w: 96, h: 96,
+    color: '#c8d4e4',
+    sprite: 'assets/maps/mountains/mountains.svg',
+    spriteCol: 0 // snowy_peak
+  });
+}
+
+// 6 cover crates (stone debris) around the fight pit for line-of-sight breaks.
+for (let i = 0; i < 6; i++) {
+  const a = (i / 6) * Math.PI * 2 + Math.PI / 12;
+  const r = 10;
+  const tx = cx + Math.cos(a) * r, ty = cy + Math.sin(a) * r;
+  push({ kind: 'crate', x: tx * TS - 16, y: ty * TS - 16, w: 32, h: 32, color: '#8a95a3' });
+}
+
+// Two minor landmarks (ArtDesigner snow_minor.svg — 冰龙 + 熊巢 per chat).
+// Placed at N and S apron positions so players pass them on approach routes.
+push({
+  kind: 'minor_landmark',
+  x: wcx - 64, y: tpx(cy - 14) - 64,
+  w: 128, h: 128,
+  color: '#a8bdd4',
+  label: '冰龙穴',
+  sprite: 'assets/maps/minor/snow_minor.svg'
+});
+push({
+  kind: 'minor_landmark',
+  x: wcx - 64, y: tpx(cy + 14) - 64,
+  w: 128, h: 128,
+  color: '#a8bdd4',
+  label: '熊巢',
+  sprite: 'assets/maps/minor/snow_minor.svg'
+});
+
+// Strategic points + boss spawns (minimal — matches arena_a surface area).
+const stratR = 13;
 const stratPoints = [
-  { type: 'temple', x: wcx, y: wcy, name: '冰塔' }
+  { type: 'temple',     x: wcx, y: wcy, name: '冰封祭坛' },
+  { type: 'watchtower', x: tpx(cx),            y: tpx(cy - stratR), name: '北哨' },
+  { type: 'watchtower', x: tpx(cx),            y: tpx(cy + stratR), name: '南哨' },
+  { type: 'camp',       x: tpx(cx - stratR),   y: tpx(cy),          name: '西营' },
+  { type: 'camp',       x: tpx(cx + stratR),   y: tpx(cy),          name: '东营' }
 ];
 const bossPoints = [
-  { name: '北峰残骸', x: tpx(cx), y: tpx(cy - 12) }
+  { name: 'NE 冰巨怪', x: tpx(cx + 10), y: tpx(cy - 10) },
+  { name: 'SW 冰龙穴', x: tpx(cx - 10), y: tpx(cy + 10) }
 ];
 
-// Storm center offset NE from world center to differentiate circulation
-// vs arena_a's dead-center storm. +2-tile shift is within bot-AI tolerance.
-const stormCenter = { x: tpx(cx + 2), y: tpx(cy - 2) };
+// 8 spawn points evenly around the apron — mirror arena_a density so bot AI
+// behaves identically on the ffa-arena layout.
+const spawnPoints = [];
+const spawnR = 15;
+for (let i = 0; i < 8; i++) {
+  const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+  spawnPoints.push({ x: tpx(cx + Math.cos(a) * spawnR), y: tpx(cy + Math.sin(a) * spawnR) });
+}
 
 const data = {
   name: '冰峰遗迹',
@@ -67,15 +130,18 @@ const data = {
   width: W, height: H,
   layout: 'ffa-arena',
   biomes: [
-    { name: '中央冰塔', region: { x: wcx - 6*TS, y: wcy - 6*TS, w: 12*TS, h: 12*TS } },
-    { name: '外环冻原', region: { x: 0, y: 0, w: W, h: H } }
+    { name: '中央冰塔',  region: { x: wcx - 7*TS,  y: wcy - 7*TS,  w: 14*TS, h: 14*TS } },
+    { name: '外环冻原',  region: { x: 0, y: 0, w: W, h: H } }
   ],
-  stormCenter,
+  stormCenter: { x: wcx, y: wcy },
   tiles,
   structures,
   spawnPoints,
   stratPoints,
-  bossPoints
+  bossPoints,
+  // Class whitelist hint (Leo R5ah F1). Engine is permissive; Testor and
+  // menu flow honour this list for now (assassin/healer stay on arena_a).
+  classWhitelist: ['mage', 'warrior', 'scout']
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

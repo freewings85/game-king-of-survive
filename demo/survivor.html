@@ -2796,6 +2796,22 @@ function doLogin() {
   }
   // Expose for QA harness (playwright smoke) — bypass menu click coord fragility.
   window._startDailyMatch = _startDailyMatch;
+  // R5ah F1 — arena_c (Frozen Peaks) entry. Whitelist 3 classes per Leo
+  // directive; assassin/healer stay on arena_a to avoid mixing untested
+  // class × map combos into Testor's expanding matrix. Default class 'mage'
+  // when invoked from the menu button (no class picker in prototype UI);
+  // harness may pass any of warrior/mage/scout explicitly.
+  var _SNOW_CLASSES = ['mage', 'warrior', 'scout'];
+  function _startSnowArenaMatch(cls) {
+    if (!cls || _SNOW_CLASSES.indexOf(cls) < 0) cls = 'mage';
+    isDailyMode = false;
+    selectedClass = cls;
+    gameMode = 'solo';
+    if (typeof loadMapLayout === 'function') loadMapLayout('maps/arena_c.json');
+    if (typeof startGame === 'function') startGame(false);
+    if (typeof startOfflineDemo === 'function') startOfflineDemo();
+  }
+  window._startSnowArenaMatch = _startSnowArenaMatch;
   // Seeded RNG for daily matches — deterministic bot/rival roll per date
   var _dailyRngState = 0;
   function _dailySeedFromDate(key) {
@@ -12298,7 +12314,7 @@ function doLogin() {
   // menuOverhaul: enhanced menu with character preview + best score + particles (US-268)
   var menuParticles = [];
   // Shared button hit-rects — populated by drawMenu, consumed by click handler
-  var _menuBtns = { solo: null, team: null, daily: null, upgrade: null, multi: null, timed: null };
+  var _menuBtns = { solo: null, team: null, daily: null, upgrade: null, multi: null, timed: null, snowArena: null };
   // Generic menu-state scale transform — wraps charSelect/mapSelect/buildSelect/upgrade
   // so their hardcoded 400-wide layouts fill the phone screen.
   // _uiTransform stores the active {scale, ox, oy} for click coordinate inversion.
@@ -12500,6 +12516,10 @@ function doLogin() {
     var bY2 = bY1 + bH + bGap;
     _drawMenuButton(bXl, bY2, bW, bH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
     _drawMenuButton(bXr, bY2, bW, bH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
+    // R5ah F1 — arena_c (Frozen Peaks) solo entry, centered row 4.
+    var bY3 = bY2 + bH + bGap;
+    var bXc = 200 - bW / 2;
+    _drawMenuButton(bXc, bY3, bW, bH, '🏔 雪地竞技场', '#5a7a9a', '#1a2a4a', '#a0c4ff');
 
     // Tutorial hint
     ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
@@ -12513,8 +12533,9 @@ function doLogin() {
     _menuBtns.team    = _scRect(bXr, bY0, bW, bH);
     _menuBtns.daily   = _scRect(bXl, bY1, bW, bH);
     _menuBtns.upgrade = _scRect(bXr, bY1, bW, bH);
-    _menuBtns.multi   = _scRect(bXl, bY2, bW, bH);
-    _menuBtns.timed   = _scRect(bXr, bY2, bW, bH);
+    _menuBtns.multi     = _scRect(bXl, bY2, bW, bH);
+    _menuBtns.timed     = _scRect(bXr, bY2, bW, bH);
+    _menuBtns.snowArena = _scRect(bXc, bY3, bW, bH);
   }
 
   function drawCharSelect() {
@@ -13739,6 +13760,7 @@ function doLogin() {
       if (_hitBtn(_menuBtns.upgrade)) { state = 'upgrade'; }
       if (_hitBtn(_menuBtns.multi))   { localMultiplayer = true; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.timed))   { countdownTimerMode = true; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.snowArena)) { _startSnowArenaMatch(); }
     } else if (state === 'mapSelect') {
       // Convert screen coords to design space (400x700)
       var _dc = _toDesignCoords(cx, cy); var dcx = _dc.x, dcy = _dc.y;
