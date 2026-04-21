@@ -2702,8 +2702,9 @@ function doLogin() {
       assassin:{ name: '刺客', icon: '🗡', hp: 140, maxHp: 140, baseHP: 140, baseATK: 18, baseSpeed: 220, attackDamage: 18, speed: 220, passive: '瞬移+背刺×2+隐身3s · 仅单排', dodgeChance: 0.10, color: '#8c4', initialAttributes: {INT:4,STR:5,AGI:8,STA:4}, availableSkills: [], soloOnly: true },
       // R5v F3 — 新职业 治疗者 Healer (skeleton, solo-only like assassin)
       //   heal-aura passive: 每 s 自疗 1.5 HP + 半径 200 内盟友 +0.8 HP/s(team 模式)
-      //   低攻 10,但 HP 200 续航型。ArtDesigner player_healer.svg 已到位
-      healer:  { name: '治疗者', icon: '✚', hp: 200, maxHp: 200, baseHP: 200, baseATK: 10, baseSpeed: 195, attackDamage: 10, speed: 195, passive: '治疗光环 + 自疗 · 仅单排', color: '#dfeacc', initialAttributes: {INT:7,STR:2,AGI:3,STA:8}, availableSkills: [], soloOnly: true }
+      //   低攻 10,续航型。R5x F2: HP 200→250 (TTL 28s 过短;Leo 二选一
+      //   选坦度,保留低攻 10 维持治疗者-辅助定位)
+      healer:  { name: '治疗者', icon: '✚', hp: 250, maxHp: 250, baseHP: 250, baseATK: 10, baseSpeed: 195, attackDamage: 10, speed: 195, passive: '治疗光环 + 自疗 · 仅单排', color: '#dfeacc', initialAttributes: {INT:7,STR:2,AGI:3,STA:8}, availableSkills: [], soloOnly: true }
     };
   })();
 

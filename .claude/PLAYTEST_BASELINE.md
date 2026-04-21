@@ -16,7 +16,8 @@ these metrics should be evaluated against the thresholds below.
 - `arena_a / mage`    μ kills: 3.0
 - `arena_a / scout`   μ kills: 2.25
 - `arena_a / assassin` μ kills: 2.0
-- `lane_b / warrior`  μ kills: **2.8** (project high, new record this round)
+- `lane_b / warrior`  μ kills: **2.2** band [1.8–2.6] (R5x F1: original 2.8
+  was high-sampling, local reproduce shows 1.8 R5t / 2.6 HEAD)
 - `lane_b / mage`     μ kills: 1.8
 - `lane_b / scout`    μ kills: 1.6
 - `lane_b / assassin` N/A (solo-fallback per R5p, not matrix-sampled)
@@ -45,8 +46,35 @@ FPS pass rate:
 
 Single cell kill μ:
 - drop > 50% with an **attributable code diff** → revert
-- drop > 50% with **empty code diff** (R5s bisect rule) → sampling noise,
-  do not revert (see "Known systemic" below)
+- drop > 50% with **empty code diff** → DO NOT auto-dismiss as noise;
+  escalate via the R5x bisect workflow below. R5w lesson: `lane_b/warrior`
+  fell 3 rounds straight (2.8 → 2.2 → 1.8). The R5v "sampling noise"
+  verdict was wrong — it masked a real trend. Empty-diff-at-latest-commit
+  still requires bisect-back to locate the regression origin.
+
+## Hard-fail handling when the triggering commit has no code change
+(R5x F3 policy)
+
+When a Testor matrix fires hard-fail (<90% coverage) or a cell μ drops
+> 50% but the latest commit is docs/config-only:
+
+1. **Do not revert the docs commit.** Reverting has no gameplay effect.
+2. **Bisect backwards on code commits.** List the last N≥3 survivor.html
+   commits: `git log -n <N> --oneline -- demo/survivor.html`.
+3. **Playwright checkout-reproduce.** For each candidate commit:
+   `git checkout <sha> -- demo/survivor.html && node _qa_r5x_reproduce.mjs
+   <label>` (5 lane_b/warrior games is a quick probe). Restore with
+   `git checkout HEAD -- demo/survivor.html` between runs.
+4. **Bisect the reproduction.** Find the latest commit where μ is still
+   within reference ±10% and the first commit where it drops > 30%.
+   That commit is the regression origin.
+5. **Decision.** If the origin is identifiable and the behaviour change
+   was unintended → revert or fix that commit. If it's intended
+   (e.g., difficulty-tuning by design) → update the baseline reference
+   to the new post-change μ.
+6. **Record finding.** Append the bisect result (from/to commit + μ
+   deltas) to this baseline under a dedicated section, not inline in
+   commit messages, so future rounds can audit the trend.
 
 ## Known systemic characteristics
 - `arena_a/warrior` σ is high at real device (15.1 in R5r) due to combat
@@ -70,7 +98,35 @@ Single cell kill μ:
 - Boundary expansion (daily challenge / 5th class / 3rd map) on Leo's
   call; R5u started daily-challenge skeleton, R5v adds healer class
 
-## R5w F2 — `lane_b/warrior` μ 2.8 → 1.8 investigation
+## R5x F1 — `lane_b/warrior` checkout-reproduce (supersedes R5w F2)
+R5w F2 concluded "empty-diff sampling noise" without proof. Per Leo R5x
+direction, reproduced via `git checkout <sha> -- demo/survivor.html` +
+`_qa_r5x_reproduce.mjs` (5 lane_b/warrior games, WSL Chromium iPhone 14
+viewport headless):
+
+| commit  | μ kills | σ    | have-kill | games dur |
+|---------|---------|------|-----------|-----------|
+| 652a598 (R5t) | **1.80** | 0.40 | 5/5 | 34.6–37.7s |
+| HEAD 8052a5d (R5v) | **2.60** | 0.49 | 5/5 | 36.6–40.9s |
+
+**Verdict.** R5t reproduces at μ=1.80, not Testor's headline 2.8. HEAD
+reproduces ~44% HIGHER than R5t on the same harness. The trend Testor
+sees on real device (2.8 → 2.2 → 1.8) is Leo's second hypothesis
+confirmed: the original R5t 2.8 was a high-sampling red flag, not a
+stable metric. This cell has high intrinsic variance (σ 0.40–0.50 on
+5-game, wider on small-N matrix samples).
+
+**Corrections to take forward:**
+1. Reference μ for `lane_b/warrior` is NOT 2.8. Widen to a band,
+   μ ∈ [1.8, 2.6] headless / expect similar real-device spread. Set
+   R5x headline to 2.2 (midpoint) until a larger-N run confirms.
+2. The "R5s bisect rule = auto-noise" shortcut is retired. Use the
+   R5x checkout-reproduce workflow (Hard-fail handling section above)
+   whenever a cell drops > 50% — even with an empty git diff.
+3. HEAD warrior path is NOT regressed versus R5t on local harness;
+   headless env differs from real device but the direction agrees.
+
+## R5w F2 — `lane_b/warrior` μ 2.8 → 1.8 investigation (INVALID — superseded by R5x F1)
 Testor reported a fresh drop on the `lane_b/warrior` cell. Bisect between
 R5t (`652a598`) and R5v (`8052a5d`) examined every touched code path:
 - CLASS_DEFS: `healer` key added only; trailing `,` on assassin entry
