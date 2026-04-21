@@ -9041,6 +9041,30 @@ function doLogin() {
       if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); }
       else { networkUpdate(logicDt); }
       gameTime += logicDt;
+      // R5aa F2 — one-shot 25s boundary diagnostic. Spawn shield fully wears off
+      // at t>=25; playtest reports "25s 爆死". Capture snapshot ONCE per match.
+      if (!window._r5aaF2_logged && gameTime >= 25 && player) {
+        window._r5aaF2_logged = true;
+        var _nearCnt = 0, _nearR2 = 300 * 300;
+        if (typeof offlineEnemies !== 'undefined' && offlineEnemies) {
+          for (var _ei = 0; _ei < offlineEnemies.length; _ei++) {
+            var _e = offlineEnemies[_ei]; if (!_e || _e.dead) continue;
+            var _edx = _e.x - player.x, _edy = _e.y - player.y;
+            if (_edx*_edx + _edy*_edy < _nearR2) _nearCnt++;
+          }
+        }
+        console.log('[R5aa F2 25s]', JSON.stringify({
+          t: +gameTime.toFixed(2),
+          cls: player.playerClass,
+          hp: Math.round(player.hp), maxHp: Math.round(player.maxHp),
+          hpPct: +(player.hp / player.maxHp).toFixed(2),
+          lvl: player.level || 1,
+          near300: _nearCnt,
+          bossAlive: !!(_activeBossRef && !_activeBossRef.dead),
+          shieldMul: +_spawnShieldMul(gameTime).toFixed(2),
+          map: (typeof currentMap !== 'undefined') ? currentMap : '?'
+        }));
+      }
       checkAchievements(); drawGame();
     }
     else if (state === 'spectating') { networkUpdate(logicDt); spectatorUpdate(); drawGame(); drawSpectatorHUD(); }
