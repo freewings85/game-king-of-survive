@@ -1571,7 +1571,7 @@ function doLogin() {
         _mm.fade = 0.4;
         var _pdx = player.x - _mm.x, _pdy = player.y - _mm.y;
         if (_pdx * _pdx + _pdy * _pdy < _mm.impactRadius * _mm.impactRadius) {
-          player.hp -= _mm.damage;
+          player.hp -= _mm.damage * _healerInitShieldMul(player);
           triggerPlayerHurt && triggerPlayerHurt();
           screenShake(10, 400);
         }
@@ -3540,6 +3540,12 @@ function doLogin() {
     if (selectedClass === 'assassin') {
       player._invisibleUntil = (MAP_DATA && MAP_DATA.layout === 'lane-3') ? 1.5 : 3.0;
     }
+    // R5ab F2 — healer opening "holy shield": damage taken ×0.5 for first 5s
+    // of the match so healer survives spawn scramble long enough for heal-aura
+    // to kick in. Checked by _healerInitShieldMul at all player-damage sites.
+    if (selectedClass === 'healer') {
+      player._healerShieldUntil = 5;
+    }
     // Hide the DOM "player-bar" (nickname/gold/rank/level) — canvas HUD
     // already shows those and the DOM bar was overlapping the "剩余 X 人"
     // capsule at top-center.
@@ -4545,6 +4551,8 @@ function doLogin() {
               var _ssMul = _spawnShieldMul(gameTime);
               if (_ssMul < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _ssMul));
             }
+            var _hsM = _healerInitShieldMul(b._aiTarget);
+            if (_hsM < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _hsM));
           }
           b._aiTarget.hp -= _aDmg;
           // Visual feedback
@@ -4677,7 +4685,7 @@ function doLogin() {
       if (_psd > stormZone.radius) {
         // Round 5e F2 — graduated spawn shield applies to storm tick too
         var _ssM = _spawnShieldMul(gameTime);
-        var _stormDmg = 8 * _ssM;
+        var _stormDmg = 8 * _ssM * _healerInitShieldMul(player);
         player.hp -= _stormDmg * dt;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
@@ -4934,21 +4942,27 @@ function doLogin() {
     // R5v F3 — healer heal aura passive: self +1.5 HP/s always; in team mode
     // ally allies within 200px also +0.8 HP/s. Since healer is soloOnly for
     // now, the team branch is dormant.
-    // R5aa F3 — low-HP emergency self-heal: at < 50% HP, heal rate ×2 (3.0/s)
-    // to cut single-match σ (R5z matrix had σ 34s driven by early deaths).
+    // R5aa F3 — low-HP emergency self-heal: at < 50% HP, heal rate ×2 (3.0/s).
+    // R5ab F1 — throttle heal tick to every 0.5s (accumulate dt) so the per-frame
+    // work at 60 FPS drops 30× (2 Hz vs 60 Hz). Total HP/s preserved by scaling
+    // heal amount by accumulated interval.
     if (player.playerClass === 'healer') {
-      var _healRate = (player.hp < player.maxHp * 0.5) ? 3.0 : 1.5;
-      player.hp = Math.min(player.maxHp, player.hp + _healRate * dt);
-      if (gameMode === 'team' && offlineBots) {
-        var _healR2 = 200 * 200;
-        for (var _hi = 0; _hi < offlineBots.length; _hi++) {
-          var _hb = offlineBots[_hi];
-          if (!_hb.alive || _hb.factionId !== player.factionId) continue;
-          var _hdx = _hb.x - player.x, _hdy = _hb.y - player.y;
-          if (_hdx * _hdx + _hdy * _hdy < _healR2) {
-            _hb.hp = Math.min(_hb.maxHp, _hb.hp + 0.8 * dt);
+      player._healerTickAcc = (player._healerTickAcc || 0) + dt;
+      if (player._healerTickAcc >= 0.5) {
+        var _healRate = (player.hp < player.maxHp * 0.5) ? 3.0 : 1.5;
+        player.hp = Math.min(player.maxHp, player.hp + _healRate * player._healerTickAcc);
+        if (gameMode === 'team' && offlineBots) {
+          var _healR2 = 200 * 200;
+          for (var _hi = 0; _hi < offlineBots.length; _hi++) {
+            var _hb = offlineBots[_hi];
+            if (!_hb.alive || _hb.factionId !== player.factionId) continue;
+            var _hdx = _hb.x - player.x, _hdy = _hb.y - player.y;
+            if (_hdx * _hdx + _hdy * _hdy < _healR2) {
+              _hb.hp = Math.min(_hb.maxHp, _hb.hp + 0.8 * player._healerTickAcc);
+            }
           }
         }
+        player._healerTickAcc = 0;
       }
     }
     // Emergency unstick (Leo 2026-04-21 hotfix): if the player's collider is
@@ -5354,7 +5368,7 @@ function doLogin() {
       var cdx = e.x - player.x, cdy = e.y - player.y;
       var cd = Math.sqrt(cdx*cdx + cdy*cdy);
       if (cd < player.radius + e.radius + 2) {
-        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt;
+        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt * _healerInitShieldMul(player);
         // Fire a discrete hit feedback at most every 0.4s per enemy
         e._nextHitFxAt = e._nextHitFxAt || 0;
         if (gameTime >= e._nextHitFxAt) {
@@ -5925,8 +5939,9 @@ function doLogin() {
       var dx = player.x - boss.x, dy = player.y - boss.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < range) {
-        player.hp -= boss.damage;
-        floatText(player.x, player.y - 20, '-' + Math.round(boss.damage), '#f00', 16);
+        var _bsDmg = boss.damage * _healerInitShieldMul(player);
+        player.hp -= _bsDmg;
+        floatText(player.x, player.y - 20, '-' + Math.round(_bsDmg), '#f00', 16);
       }
     }
     emit(boss.x, boss.y, '#f44', 20, range);
@@ -5949,8 +5964,9 @@ function doLogin() {
         var dx = player.x - mb.x, dy = player.y - mb.y;
         var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < range && !player._invincible) {
-          player.hp -= mb.damage;
-          floatText(player.x, player.y - 20, '-' + Math.round(mb.damage), '#f00', 14);
+          var _mbDmg = mb.damage * _healerInitShieldMul(player);
+          player.hp -= _mbDmg;
+          floatText(player.x, player.y - 20, '-' + Math.round(_mbDmg), '#f00', 14);
         }
         emit(mb.x, mb.y, '#f4a', 12, range);
         screenShake(3, 150);
@@ -7221,6 +7237,15 @@ function doLogin() {
     if (t >= 25) return 0;
     if (t < 15) return 1;
     return 1 - (t - 15) / 10; // linear fade 15→25s
+  }
+  // R5ab F2 — healer opening holy shield multiplier. Returns 0.5 if the player
+  // is healer and still inside the 5s window set at startOfflineDemo, else 1.0.
+  // Stacks multiplicatively with _spawnShieldMul — first 5s healer effectively
+  // takes 0.25× damage (0.5 graduated × 0.5 holy).
+  function _healerInitShieldMul(p) {
+    if (!p || p.playerClass !== 'healer') return 1;
+    if (p._healerShieldUntil && gameTime < p._healerShieldUntil) return 0.5;
+    return 1;
   }
   // Round 5e F3 — global "altar slain" slow. R5i diag: 0.7 was too harsh,
   // lane_b combat fully stalled (avg 0/0 player+bot kills across 3 runs).
