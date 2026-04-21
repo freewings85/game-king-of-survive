@@ -2767,6 +2767,11 @@ function doLogin() {
   }
   function _recordDailyResult() {
     if (!isDailyMode) return;
+    // R5ag F2 — guard against double-record (60s-timeout hook + back-to-menu
+    // hook both called _recordDailyResult; one attempt should bump attempts
+    // by 1, not 2). Flag reset in _startDailyMatch.
+    if (window._r5agDailyRecorded) return;
+    window._r5agDailyRecorded = true;
     var rec = _dailyLoad();
     var key = _dailyTodayKey();
     var existing = rec[key] || { attempts: 0, bestKills: 0 };
@@ -2777,6 +2782,20 @@ function doLogin() {
     rec[key] = existing;
     _dailySave(rec);
   }
+  // R5ag F2 — daily challenge entry: skip charSelect, force mage + arena_a
+  // + 60s time limit. Rule is intentionally fixed (not date-rotated) so the
+  // first activation round stays deterministic for Testor validation.
+  function _startDailyMatch() {
+    window._r5agDailyRecorded = false;
+    isDailyMode = true;
+    selectedClass = 'mage';
+    gameMode = 'solo';
+    if (typeof loadMapLayout === 'function') loadMapLayout('maps/arena_a.json');
+    if (typeof startGame === 'function') startGame(true);
+    if (typeof startOfflineDemo === 'function') startOfflineDemo();
+  }
+  // Expose for QA harness (playwright smoke) — bypass menu click coord fragility.
+  window._startDailyMatch = _startDailyMatch;
   // Seeded RNG for daily matches — deterministic bot/rival roll per date
   var _dailyRngState = 0;
   function _dailySeedFromDate(key) {
@@ -9066,6 +9085,12 @@ function doLogin() {
       if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); }
       else { networkUpdate(logicDt); }
       gameTime += logicDt;
+      // R5ag F2 — daily 60s 内夺冠: 硬截止 gameTime>=60 即结算，记录结果。
+      // _recordDailyResult 内部 guard 防止和 back-to-menu hook 重复计数。
+      if (isDailyMode && gameTime >= 60 && state === 'playing') {
+        _recordDailyResult();
+        state = 'gameOver';
+      }
       // R5aa F2 — one-shot 25s boundary diagnostic. Spawn shield fully wears off
       // at t>=25; playtest reports "25s 爆死". Capture snapshot ONCE per match.
       if (!window._r5aaF2_logged && gameTime >= 25 && player) {
@@ -12462,7 +12487,15 @@ function doLogin() {
     _drawMenuButton(bXr, bY0, bW, bH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
     var bY1 = bY0 + bH + bGap;
     ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    _drawMenuButton(bXl, bY1, bW, bH, '📅 每日挑战', '#3a5a9a', '#1a2a4e', '#7fa6e6');
+    // R5ag F2 — surface today's attempt count on the daily button so players
+    // see '📅 每日 #N' progression from localStorage across sessions.
+    var _dailyLabel = '📅 每日挑战';
+    try {
+      var _dRec = _dailyLoad();
+      var _dToday = (_dRec && _dRec[_dailyTodayKey()]) || null;
+      if (_dToday && _dToday.attempts > 0) _dailyLabel = '📅 每日 #' + _dToday.attempts;
+    } catch (e) {}
+    _drawMenuButton(bXl, bY1, bW, bH, _dailyLabel, '#3a5a9a', '#1a2a4e', '#7fa6e6');
     _drawMenuButton(bXr, bY1, bW, bH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
     var bY2 = bY1 + bH + bGap;
     _drawMenuButton(bXl, bY2, bW, bH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
@@ -13702,7 +13735,7 @@ function doLogin() {
       function _hitBtn(b) { return b && cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h; }
       if (_hitBtn(_menuBtns.solo))    { gameMode = 'solo'; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.team))    { gameMode = 'team'; state = 'charSelect'; }
-      if (_hitBtn(_menuBtns.daily))   { isDailyMode = true; state = 'charSelect'; }
+      if (_hitBtn(_menuBtns.daily))   { _startDailyMatch(); }
       if (_hitBtn(_menuBtns.upgrade)) { state = 'upgrade'; }
       if (_hitBtn(_menuBtns.multi))   { localMultiplayer = true; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.timed))   { countdownTimerMode = true; state = 'charSelect'; }
