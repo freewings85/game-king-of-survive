@@ -4934,8 +4934,11 @@ function doLogin() {
     // R5v F3 — healer heal aura passive: self +1.5 HP/s always; in team mode
     // ally allies within 200px also +0.8 HP/s. Since healer is soloOnly for
     // now, the team branch is dormant.
+    // R5aa F3 — low-HP emergency self-heal: at < 50% HP, heal rate ×2 (3.0/s)
+    // to cut single-match σ (R5z matrix had σ 34s driven by early deaths).
     if (player.playerClass === 'healer') {
-      player.hp = Math.min(player.maxHp, player.hp + 1.5 * dt);
+      var _healRate = (player.hp < player.maxHp * 0.5) ? 3.0 : 1.5;
+      player.hp = Math.min(player.maxHp, player.hp + _healRate * dt);
       if (gameMode === 'team' && offlineBots) {
         var _healR2 = 200 * 200;
         for (var _hi = 0; _hi < offlineBots.length; _hi++) {
