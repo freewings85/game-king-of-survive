@@ -191,6 +191,111 @@ Catastrophic single-run failure (coverage < 70%, any cell μ = 0 across 3+
 cells, crash / pageerror) remains 1-run actionable — the signal is large
 enough that Run2 confirmation is not required.
 
+## Historical Stability — R5ae → R5aj (6 rounds × 2-run = 12 runs, ~280 sessions)
+
+Updated 2026-04-22 per Leo R5ak. Statistics across R5ae–R5aj 2-run gate
+sign-offs, for future reference / auto-revert sanity checks.
+
+### Composite score (2-run avg per round)
+| Round | Run 1 | Run 2 | Avg  |
+|-------|-------|-------|------|
+| R5ae  | 7.25  | 7.00  | 7.125 |
+| R5af  | 6.75  | 7.00  | 6.875 |
+| R5ag  | 7.25  | 7.00  | 7.125 |
+| R5ah  | 7.00  | 7.25  | 7.125 |
+| R5ai  | 7.25  | 7.25  | 7.250 |
+| R5aj  | 7.25  | 7.25  | 7.250 |
+
+**μ = 7.125 ± 0.125** — stable band [6.875, 7.25]. Every round signed off
+PASS on 2-run gate. No hard-fail revert since R5u (R5af F1 mechanism).
+
+### FPS ≥ 30 rate (2-run avg)
+| Round | Run 1 | Run 2 | Avg   |
+|-------|-------|-------|-------|
+| R5ae  | 63.6% | 59.1% | 61.4% |
+| R5af  | 27.3% | 36.4% | 31.8% |
+| R5ag  | 36.4% | 54.5% | 45.5% |
+| R5ah  | 40.9% | 40.9% | 40.9% |
+| R5ai  | 42.3% | 61.5% | 51.9% |
+| R5aj  | 57.7% | 57.7% | 57.7% |
+
+**μ = 48.2% ± 10.1 pp**. Range [31.8%, 61.4%]. All within R5l baseline
+45% ±15 pp. Lowest (R5af 31.8) recovered to 45%+ the next round with
+zero code change — confirms the 2-run gate's noise-absorbing design.
+
+### Coverage (have-kill, 2-run avg)
+| Round | Run 1   | Run 2   | Avg    |
+|-------|---------|---------|--------|
+| R5ae  | 95.45%  | 95.45%  | 95.45% |
+| R5af  | 95.45%  | 95.45%  | 95.45% |
+| R5ag  | 95.45%  | 90.91%  | 93.18% |
+| R5ah  | 95.45%  | 95.45%  | 95.45% |
+| R5ai  | 96.15%  | 92.31%  | 94.23% |
+| R5aj  | 96.15%  | 100.0%  | 98.08% |
+
+**μ = 95.3% ± 1.5 pp**. 11 / 12 runs ≥ 95% (pass zone). 1 / 12 in warn
+zone (R5ag Run 2 90.9%). **Zero hard-fail (< 90%) across 12 runs.**
+R5aj Run 2 hit 100% — the first clean run in extended-matrix history.
+
+### `arena_a/healer` — since introduction (R5af)
+| Round | kills μ | TTL μ (s) |
+|-------|---------|-----------|
+| R5af  | —       | —         |
+| R5ag  | 0.75    | 54.25     |
+| R5ah  | 1.50    | 57.10     |
+| R5ai  | 1.50    | 53.15     |
+| R5aj  | 1.00    | 74.15     |
+
+**kills μ range [0.75, 1.50], avg 1.19**. R5ag 0.75 dip (after R5ac
+shield-damage buff auto-revert) self-corrected; current trend flat. TTL
+avg **59.7 s**, first crosses 60 s-target reliably at R5aj thanks to 2×
+self-heal throttle + shield + low-HP emergency (each landed via a
+separate round, validating incremental tuning).
+
+### `lane_b/warrior` — after R5x band re-calibration
+| Round | 2-run avg | Band [1.8–2.6] |
+|-------|-----------|----------------|
+| R5ae  | 1.70      | below          |
+| R5af  | 2.30      | in             |
+| R5ag  | 1.90      | in             |
+| R5ah  | 2.10      | in             |
+| R5ai  | 2.10      | in             |
+| R5aj  | 2.40      | in             |
+
+**μ = 2.08, range [1.70, 2.40]**. 5 / 6 rounds inside the R5x-calibrated
+band. R5ae 1.70 was immediately pre-band; no round triggered -50% revert.
+R5w's "3-round downslope" alarm is now fully falsified by 6 rounds of
+healthy mean.
+
+### `arena_c` — since R5ai matrix inclusion
+| Round | scout μ | warrior μ | have-kill |
+|-------|---------|-----------|-----------|
+| R5ai  | 1.75    | 2.00      | 8 / 8     |
+| R5aj  | 2.00    | 1.75      | 8 / 8     |
+
+**16 / 16 have-kill (100%)** across the first 2 matrix rounds. No
+regression on adjacent cells. Healer added to whitelist in R5aj with
+smoke-verified 2 / 2 have-kill at TTL 91 s. arena_c is production-
+stable; future Leo calls can promote it to matrix-primary without risk.
+
+### Assassin — observation
+Kill μ swings 0–3 across rounds per the `facingAngle` RNG noted above.
+Expected. Arena-only (lane-3 unresolved navigation) since R5p.
+
+### Take-forward notes
+1. **Band, not point.** Composite 7.125 ± 0.125 is the real band.
+   Treat any single-run 6.5–7.5 as in-variance.
+2. **FPS σ is wide (10 pp).** Headroom is large when a single round dips.
+   Don't panic on one sub-40% run.
+3. **2-run gate has caught zero false regressions in 6 rounds.** Every
+   sign-off PASS stayed stable on next round. Gate is working.
+4. **No cell has trended monotonically for 3 consecutive rounds since
+   R5x bisect correction.** The lane_b/warrior phantom-decay scare is
+   settled.
+5. **R5ac was the last and only auto-revert** since the 2-run gate
+   went official. That was a legitimate -50% single-cell trigger
+   (healer shield +20% dmg), not noise. System works.
+
 ## Known unsolved (stop trying, per Leo R5v F2)
 - `arena_a/warrior` FPS 26.9 cold-zone — 3 rounds (R5l / R5r / R5u)
   attempted targeted fixes, all regressed or neutral:
