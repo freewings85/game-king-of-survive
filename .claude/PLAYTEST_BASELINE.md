@@ -10,10 +10,15 @@ these metrics should be evaluated against the thresholds below. R5af (2026-
 `94290b3` — R5ad F1 healer稳态 (2-run 44-game verified composite ≈ 7.0)
 
 ## Score
-- Composite: **7.0 / 10** (stable band, confirmed R5af 2-run = 7.25 / 7.0)
+- Composite: **7.0 ± 0.25 / 10** — stable band **[6.75, 7.25]** (widened from
+  7.125 ± 0.125 at R5am after R5al edge-noise round of 6.75 on identical
+  HEAD `c731e28`; single-run matrix variance can reach ±0.5).
 - R5t (652a598) peaked at 7.25; R5v stabilised at 7.0 after auto-revert
 - R5ae discovered R5ad single-run "6.5" was noise — true stable band is
   ~7.0, not 7+ as previously assumed. Do not chase "7+ every round" target.
+- **R5am ruling**: do not Run 3 on single-round dips inside the band. Wider
+  band is the honest accounting of matrix variance; chasing Run 3 wastes
+  compute without resolving noise that is structurally inherent.
 
 ## Kill metrics (22-game matrix from R5w, 4 arena scout + 4 arena warrior + 2 arena assassin + 2 arena healer + 5 lane scout + 5 lane warrior)
 - Coverage: ≥ **95%** have-kill target per R5w F1 (strict 100% was noise-sensitive)
@@ -173,8 +178,9 @@ R5af therefore promotes the following protocol to the sign-off gate:
    | hard-fail| pass     | Noise — no revert. Log in baseline trend.  |
    | hard-fail| hard-fail| Real regression — auto-revert per policy.  |
 
-4. Composite score reported as `avg(Run1, Run2)`; stable band is 6.5–7.25
-   per R5ae evidence. Target is the 2-run average ≥ 7.0, not a single run.
+4. Composite score reported as `avg(Run1, Run2)`; stable band widened at
+   R5am to **7.0 ± 0.25 = [6.75, 7.25]** (from initial R5ae 6.5–7.25). Target
+   is the 2-run average inside the band, not any single-run threshold.
 
 ### Rationale (R5ae evidence)
 - 22-game cells produce ~0.5 σ on kills μ and ~5 pp on FPS rate.
@@ -191,23 +197,37 @@ Catastrophic single-run failure (coverage < 70%, any cell μ = 0 across 3+
 cells, crash / pageerror) remains 1-run actionable — the signal is large
 enough that Run2 confirmation is not required.
 
-## Historical Stability — R5ae → R5aj (6 rounds × 2-run = 12 runs, ~280 sessions)
+## Historical Stability — R5ae → R5al (7 rounds × 2-run = 14 runs, ~330 sessions)
 
-Updated 2026-04-22 per Leo R5ak. Statistics across R5ae–R5aj 2-run gate
-sign-offs, for future reference / auto-revert sanity checks.
+Updated 2026-04-22 per Leo R5ak / R5am. Statistics across R5ae–R5al 2-run
+gate sign-offs, for future reference / auto-revert sanity checks.
 
 ### Composite score (2-run avg per round)
-| Round | Run 1 | Run 2 | Avg  |
-|-------|-------|-------|------|
+| Round | Run 1 | Run 2 | Avg   |
+|-------|-------|-------|-------|
 | R5ae  | 7.25  | 7.00  | 7.125 |
 | R5af  | 6.75  | 7.00  | 6.875 |
 | R5ag  | 7.25  | 7.00  | 7.125 |
 | R5ah  | 7.00  | 7.25  | 7.125 |
 | R5ai  | 7.25  | 7.25  | 7.250 |
 | R5aj  | 7.25  | 7.25  | 7.250 |
+| R5al  | —     | —     | 6.75  |  *edge noise, same HEAD as R5aj; sub-runs not reported to Dev*
 
-**μ = 7.125 ± 0.125** — stable band [6.875, 7.25]. Every round signed off
-PASS on 2-run gate. No hard-fail revert since R5u (R5af F1 mechanism).
+**Pre-R5al μ = 7.125 ± 0.125** (6 rounds). **Including R5al: μ ≈ 7.07 ± 0.18**
+— R5am widens the official band to **7.0 ± 0.25 = [6.75, 7.25]** to absorb
+observed single-round matrix variance. 6 / 7 rounds PASS on 2-run gate; R5al
+inside the new band. No hard-fail revert since R5u (R5af F1 mechanism).
+
+### Per-round variance memo (R5am finding)
+Same commit, same harness can swing composite by up to **±0.5** round-to-
+round purely from sampling noise (R5ai 7.25 → R5al 6.75 on HEAD `c731e28`,
+zero code delta). Consequences:
+- Single-round `<6.75` is **not** an auto-diagnosis trigger — needs a
+  second consecutive round also below band before Developer engages.
+- Do not Run 3 on a single low round; compute budget is better spent on
+  the next scheduled 2-run gate.
+- Band widening > Run 3 every time: honest accounting beats chasing a
+  variance we cannot remove without 10× the matrix size.
 
 ### FPS ≥ 30 rate (2-run avg)
 | Round | Run 1 | Run 2 | Avg   |
