@@ -139,9 +139,11 @@ const data = {
   spawnPoints,
   stratPoints,
   bossPoints,
-  // Class whitelist hint (Leo R5ah F1). Engine is permissive; Testor and
-  // menu flow honour this list for now (assassin/healer stay on arena_a).
-  classWhitelist: ['mage', 'warrior', 'scout']
+  // Class whitelist hint (Leo R5ah F1, extended R5aj). Engine is permissive;
+  // menu flow honours this list. R5aj added healer after stable R5ai signoff
+  // (healer kills 1.5 / TTL 53s / σ=0 across runs). assassin still arena-only
+  // pending lane pathfinding fixes.
+  classWhitelist: ['mage', 'warrior', 'scout', 'healer']
 };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

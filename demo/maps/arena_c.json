@@ -1956,6 +1956,7 @@
   "classWhitelist": [
     "mage",
     "warrior",
-    "scout"
+    "scout",
+    "healer"
   ]
 }
