@@ -12,6 +12,7 @@
 | `altar_master.svg` | 击破祭坛后 5min | 1 (static) | "圣堂之主" 金+紫皇家光环（中心王冠）|
 | `slow_debuff_aura.svg` | 敌人被减速 | 1 (static) | 紫雾 + 锁链 + 慢时钟，贴敌人脚下 |
 | `divine_shield_flash.svg` | Healer 每次受击 | 1 (static) | **神佑瞬闪** 0.3s 金六角盾 + 12 放射 + 绿十字 |
+| `holy_wrath.svg` | Healer staff beam 命中敌人 | 1 (static) | **天罚法阵** 0.3s 64×64 六芒星 + 符文环 + 绿十字（R5z 视觉化 atk 14 提升）|
 
 ## ⚡ 性能要点（R5e Fix 1 配合）
 

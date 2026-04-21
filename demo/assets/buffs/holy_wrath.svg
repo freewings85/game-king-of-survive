@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Holy Wrath — healer staff beam 命中敌人时激活的金色法阵。
+       64×64 anchor (32, 32)，贴在敌人身上（命中点）。
+       Developer: alpha 1→0 over 300ms + rotate 0→60deg + scale 0.7→1.1。
+       Static SVG — 高频触发须一次性光栅化。 -->
+  <defs>
+    <radialGradient id="hwCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="30%" stop-color="#fff4c8" stop-opacity="0.95"/>
+      <stop offset="70%" stop-color="#ffd700" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#c89028" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hwCross" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5ac848"/>
+      <stop offset="100%" stop-color="#1e3a14"/>
+    </linearGradient>
+  </defs>
+
+  <!-- outer golden glow halo -->
+  <circle cx="32" cy="32" r="30" fill="url(#hwCore)"/>
+
+  <!-- outer seal ring (decorative) -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.85"/>
+
+  <!-- 6-point golden star sigil (hexagram base) -->
+  <g stroke="#3a2208" stroke-width="1.2" stroke-linejoin="round" opacity="0.95">
+    <polygon fill="#ffd700" points="32,6 38,26 22,26"/>
+    <polygon fill="#ffd700" points="32,58 38,38 22,38"/>
+    <polygon fill="#ffd700" points="6,32 26,28 26,36"/>
+    <polygon fill="#ffd700" points="58,32 38,28 38,36"/>
+    <polygon fill="#ffea80" points="14,14 26,22 22,26"/>
+    <polygon fill="#ffea80" points="50,50 38,42 42,38"/>
+    <polygon fill="#ffea80" points="50,14 38,22 42,26"/>
+    <polygon fill="#ffea80" points="14,50 26,42 22,38"/>
+  </g>
+
+  <!-- inner runic circle -->
+  <circle cx="32" cy="32" r="16" fill="none" stroke="#ffd700" stroke-width="2" opacity="0.9"/>
+  <circle cx="32" cy="32" r="12" fill="none" stroke="#fff4c8" stroke-width="1" stroke-dasharray="2 2" opacity="0.7"/>
+
+  <!-- 4 cardinal rune glyphs around inner ring (simple dots) -->
+  <g fill="#3a2208">
+    <circle cx="32" cy="18" r="1.5"/>
+    <circle cx="32" cy="46" r="1.5"/>
+    <circle cx="18" cy="32" r="1.5"/>
+    <circle cx="46" cy="32" r="1.5"/>
+  </g>
+
+  <!-- central green cross (healer identity mark) -->
+  <g stroke="#1e3a14" stroke-width="1.2">
+    <rect x="29" y="22" width="6" height="20" fill="url(#hwCross)"/>
+    <rect x="22" y="29" width="20" height="6" fill="url(#hwCross)"/>
+  </g>
+
+  <!-- central white-gold flash gem -->
+  <circle cx="32" cy="32" r="3.5" fill="#fff4c8" stroke="#8a5e18" stroke-width="1"/>
+  <circle cx="32" cy="32" r="1.5" fill="#ffffff"/>
+</svg>

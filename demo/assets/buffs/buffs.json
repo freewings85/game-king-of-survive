@@ -53,6 +53,28 @@
     "usage": "for each enemy while _altarSlowUntil > now: drawImage(slowImg, enemy.x-40, enemy.y-40, 80, 80)；建议 alpha 0.75 保留敌人本体可辨",
     "perfNote": "静态；全场敌人都贴，数量可能多（4-8 个），务必一次性 rasterise 缓存。"
   },
+  "holyWrath": {
+    "image": "holy_wrath.svg",
+    "size": 64,
+    "anchor": { "x": 32, "y": 32 },
+    "description": "Healer staff beam 命中敌人时的金色法阵 — 六芒星 + 双环符文 + 中心绿十字。R5z Fix 3 视觉化 atk 提升。",
+    "duration": 300,
+    "usage": [
+      "触发时机：healer auto-attack 投射物命中敌人 / AOE tick 生效 → spawn 一颗 holyWrath 在命中点。",
+      "渲染：const age = now - wrath.born;",
+      "        if (age > 300) remove;",
+      "        const t = age / 300;",
+      "        const alpha = 1 - t;",
+      "        const scale = 0.7 + t * 0.4;",
+      "        const rot = t * 60;  // 旋转 60 度随消散",
+      "        ctx.save(); ctx.globalAlpha = alpha;",
+      "        ctx.translate(hit.x, hit.y); ctx.rotate(rot * Math.PI/180);",
+      "        ctx.drawImage(wrathImg, -32*scale, -32*scale, 64*scale, 64*scale);",
+      "        ctx.restore();",
+      "节流：同一敌人身上 < 100ms 内多次命中合并为 1 颗（避免重叠糊屏）"
+    ],
+    "perfNote": "高频触发（healer 每次命中），必须光栅化缓存。建议与 divine_shield_flash 同批预加载。"
+  },
   "divineShieldFlash": {
     "image": "divine_shield_flash.svg",
     "size": 80,
