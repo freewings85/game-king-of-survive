@@ -1,12 +1,12 @@
 {
-  "_spec": "Sprint 3 Wave 2 upgrade card pool. 18 existing skills (reuse applySkill) + 4 new status imbue skills.",
-  "_locked_by": "GameDesigner v1 doc 2026-04-11, PM approved",
+  "_spec": "R6-respawn F1 — trimmed to 5 simple commons. Synergy/evolution disabled (config still here for rollback).",
+  "_locked_by": "R6-respawn F1 brief 2026-04-25, PM approved",
   "_principle": "Explicit field consumption. Unknown fields silently ignored. Field semantics locked: only add, never modify or rename.",
   "_pmDecisions": {
-    "poolSize": 22,
+    "poolSize": 5,
     "burnDamageMode": "percent",
     "aiUnlockWaves": { "charger": 3, "shooter": 5, "summoner": 7 },
-    "evolutionForceInsert": true
+    "evolutionForceInsert": false
   },
 
   "rarities": {
@@ -22,8 +22,7 @@
       "borderColor": "#5b8dff",
       "nameColor": "#88bbff",
       "tagBgColor": "#1a3a8a",
-      "weightMultiplier": 1.0,
-      "_selfCheck": "Verified distinct from freeze color #66ddff. Rare blue is desaturated indigo, freeze is bright cyan — hue gap ~25 degrees, brightness gap ~30%."
+      "weightMultiplier": 1.0
     },
     "epic": {
       "label": "史诗",
@@ -37,21 +36,11 @@
       "borderColor": "#ff44dd",
       "nameColor": "#ff99ee",
       "tagBgColor": "#8a1a5a",
-      "weightMultiplier": 0.0,
-      "_note": "Never rolled normally. Force-inserted by checkEvolution() when prerequisites met, replacing the lowest-weight card of the 3 rolled."
+      "weightMultiplier": 0.0
     }
   },
 
   "cards": [
-    {
-      "id": "attack_up",
-      "name": "力量增幅",
-      "icon": "⚔",
-      "desc": "攻击伤害 ×1.25 / 层",
-      "rarity": "common",
-      "stackCap": 5,
-      "weight": 100
-    },
     {
       "id": "attack_speed",
       "name": "疾速攻击",
@@ -71,10 +60,40 @@
       "weight": 100
     },
     {
+      "id": "scatter",
+      "name": "散射弹",
+      "icon": "✦",
+      "desc": "投射物数 +1 / 层",
+      "rarity": "common",
+      "stackCap": 4,
+      "weight": 100
+    },
+    {
       "id": "max_hp",
       "name": "强化体魄",
       "icon": "❤",
       "desc": "最大生命 +20 / 层",
+      "rarity": "common",
+      "stackCap": 5,
+      "weight": 100
+    },
+    {
+      "id": "xp_magnet",
+      "name": "经验磁场",
+      "icon": "🧲",
+      "desc": "拾取范围 +50 / 层",
+      "rarity": "common",
+      "stackCap": 4,
+      "weight": 100
+    }
+  ],
+
+  "_disabled_cards": [
+    {
+      "id": "attack_up",
+      "name": "力量增幅",
+      "icon": "⚔",
+      "desc": "攻击伤害 ×1.25 / 层",
       "rarity": "common",
       "stackCap": 5,
       "weight": 100
@@ -88,16 +107,6 @@
       "stackCap": 4,
       "weight": 80
     },
-    {
-      "id": "xp_magnet",
-      "name": "经验磁场",
-      "icon": "🧲",
-      "desc": "拾取范围 +50 / 层",
-      "rarity": "common",
-      "stackCap": 4,
-      "weight": 70
-    },
-
     {
       "id": "crit",
       "name": "致命一击",
@@ -115,15 +124,6 @@
       "rarity": "rare",
       "stackCap": 1,
       "weight": 40
-    },
-    {
-      "id": "scatter",
-      "name": "散射弹",
-      "icon": "✦",
-      "desc": "投射物数 +1 / 层",
-      "rarity": "rare",
-      "stackCap": 4,
-      "weight": 50
     },
     {
       "id": "shield",
@@ -161,7 +161,6 @@
       "stackCap": 4,
       "weight": 50
     },
-
     {
       "id": "imbue_burn",
       "name": "烈焰附魔",
@@ -206,7 +205,6 @@
       "stackEffect": [0.08, 0.14, 0.20],
       "newInWave2": true
     },
-
     {
       "id": "chain_lightning",
       "name": "连锁闪电",
@@ -259,9 +257,8 @@
     "allowSkipLevelUp": false,
     "allowDuplicateInSameRoll": false,
     "rerollEnabled": false,
-    "evolutionForceInsert": true,
-    "evolutionReplacesLowestWeight": true,
-    "_note": "Per PM 2026-04-11: poolSize=22, no skip, no reroll v1 (Wave 3 polish). Evolution cards forcibly inserted by replacing the lowest-weight rolled card."
+    "evolutionForceInsert": false,
+    "evolutionReplacesLowestWeight": false
   },
 
   "uiSpec": {
@@ -277,18 +274,5 @@
     "keyBindings": ["1", "2", "3"],
     "blockEscClose": true,
     "blockOverlayClickClose": true
-  },
-
-  "_knownGaps": [
-    {
-      "phase": "wave2",
-      "gap": "online-mode-upgrade-choice-sync",
-      "issue": "TBD",
-      "owner": "Developer",
-      "severity": "P1",
-      "flaggedBy": "GameDesigner",
-      "flaggedDate": "2026-04-11",
-      "_note": "Same epic as Phase 2 online attack animation gap. Online mode level-up choice sync requires server protocol extension. Offline demo mode unaffected."
-    }
-  ]
+  }
 }

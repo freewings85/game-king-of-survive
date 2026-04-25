@@ -2747,7 +2747,6 @@ function doLogin() {
     { id: 'kill_200', name: '双百斩', desc: '单局击杀200个敌人', check: function() { return kills >= 200; }, goldReward: 150 },
     { id: 'pvp_kill', name: '玩家猎手', desc: '击杀1名敌方玩家', check: function() { return player && player.kills >= 1; }, goldReward: 30 },
     { id: 'streak_50', name: '50连杀', desc: '达成50连杀', check: function() { return maxStreak >= 50; }, goldReward: 80 },
-    { id: 'speed_lv5', name: '闪电升级', desc: '30秒内达到5级', check: function() { return gameTime <= 30 && playerLevel >= 5; }, goldReward: 40 },
     { id: 'wave_15', name: '第15波', desc: '到达第15波', check: function() { return wave >= 15; }, goldReward: 100 },
     { id: 'full_hp', name: '无伤通关', desc: '到达第5波且满血', check: function() { return wave >= 5 && player && player.hp >= player.maxHp; }, goldReward: 60 }
   ];
@@ -2935,6 +2934,19 @@ function doLogin() {
     ];
     for (var i = 0; i < pts.length; i++) _waveSpawnPoints.push(pts[i]);
   }
+  // R6-respawn F1 — player-centric ring spawn (250-450px around player).
+  // 旧 8-zone fixed picker 把怪散在玩家半径外，n300 全程 0；改成跟随玩家。
+  function _ringSpawnPoint() {
+    var R_MIN = 250, R_MAX = 450;
+    var ang = Math.random() * Math.PI * 2;
+    var r = R_MIN + Math.random() * (R_MAX - R_MIN);
+    var ex = player.x + Math.cos(ang) * r;
+    var ey = player.y + Math.sin(ang) * r;
+    return {
+      x: Math.max(30, Math.min(WORLD_W - 30, ex)),
+      y: Math.max(30, Math.min(WORLD_H - 30, ey))
+    };
+  }
   function _startWave(num) {
     _waveState.wave = num;
     wave = num;
@@ -2995,25 +3007,10 @@ function doLogin() {
       _waveState.nextSpawnTimer -= dt;
       while (_waveState.nextSpawnTimer <= 0 && _waveState.spawnQueue.length > 0) {
         var type = _waveState.spawnQueue.shift();
-        // Pick spawn point preferring the ones closer to player (70%) or random (30%)
-        var sp;
-        if (Math.random() < 0.7) {
-          var best = null, bestDist = 1e9;
-          for (var pi = 0; pi < _waveSpawnPoints.length; pi++) {
-            var p = _waveSpawnPoints[pi];
-            var pd = (p.x - player.x) * (p.x - player.x) + (p.y - player.y) * (p.y - player.y);
-            if (pd < bestDist && pd > 300 * 300) { bestDist = pd; best = p; }
-          }
-          sp = best || _waveSpawnPoints[Math.floor(Math.random() * _waveSpawnPoints.length)];
-        } else {
-          sp = _waveSpawnPoints[Math.floor(Math.random() * _waveSpawnPoints.length)];
-        }
-        var jitter = 70;
-        var ex = Math.max(30, Math.min(WORLD_W - 30, sp.x + (Math.random() - 0.5) * jitter));
-        var ey = Math.max(30, Math.min(WORLD_H - 30, sp.y + (Math.random() - 0.5) * jitter));
-        spawnOfflineEnemy(type, ex, ey);
+        var sp = _ringSpawnPoint();
+        spawnOfflineEnemy(type, sp.x, sp.y);
         // Portal spawn FX
-        if (typeof emit === 'function') emit(ex, ey, type === 'boss' ? '#f22' : type === 'miniBoss' ? '#f80' : '#f66', 10, 80);
+        if (typeof emit === 'function') emit(sp.x, sp.y, type === 'boss' ? '#f22' : type === 'miniBoss' ? '#f80' : '#f66', 10, 80);
         var gap = (type === 'boss') ? 2.0 : (type === 'miniBoss' ? 1.2 : (0.35 + Math.random() * 0.35));
         _waveState.nextSpawnTimer += gap;
       }
@@ -9438,33 +9435,6 @@ function doLogin() {
         }
         picks.push(pool[pickIdx]);
         pool.splice(pickIdx, 1);
-      }
-      // Evolution force-insert: if any recipe is fulfilled, replace the
-      // lowest-weight card with an evolution-marked card.
-      // (Wave 2 scope: check existing EVOLUTION_RECIPES; evolution cards are
-      //  not in cards.json but we synthesize a pseudo-card for UI.)
-      if (WAVE2_CARDS._pmDecisions && WAVE2_CARDS._pmDecisions.evolutionForceInsert) {
-        for (var ri = 0; ri < EVOLUTION_RECIPES.length; ri++) {
-          var rec = EVOLUTION_RECIPES[ri];
-          if (evolvedSkills[rec.result]) continue;
-          if ((skillLevels[rec.a] || 0) >= 3 && (skillLevels[rec.b] || 0) >= 3) {
-            // Find lowest-weight pick and replace
-            var lowIdx = 0, lowW = Infinity;
-            for (var pi = 0; pi < picks.length; pi++) {
-              var w = picks[pi].weight || 50;
-              if (w < lowW) { lowW = w; lowIdx = pi; }
-            }
-            picks[lowIdx] = {
-              id: '__evo_' + rec.result,
-              name: rec.name + ' (进化)',
-              icon: rec.icon || '⭐',
-              desc: rec.desc || '进化卡',
-              rarity: 'evolution',
-              _evolution: rec
-            };
-            break;
-          }
-        }
       }
       skillChoices = picks;
       return;
