@@ -861,6 +861,11 @@ function doLogin() {
   var player, entities = [], particles = [], floats = [], gems = [], coins = [];
   var skillPickups = []; // Experiment D: skill drops from bot kills
   var _ultReadyBtn = null; // HUD hit-rect when class ultimate is ready
+  // R6-control F1 — class active ability (right-bottom button, fixed 6s CD)
+  var _ABILITY_CD = 6.0;
+  var _abilityCdLeft = 0;
+  var _abilityBtn = null; // hit-rect set during render
+  var _abilityFx = { active: false, t: 0, dur: 0, kind: '' }; // fullscreen feedback
   var bossSlainBanner = { active: false, timer: 0, duration: 1.8, name: '' };
   var bossBuffChoice = { active: false, options: [], rects: [] };
   var worldEvent = { active: false, kind: '', phase: 'idle', phaseTimer: 0, target: null, banner: '', timeLeft: 0, nextAt: 30 };
@@ -1571,7 +1576,7 @@ function doLogin() {
         _mm.fade = 0.4;
         var _pdx = player.x - _mm.x, _pdy = player.y - _mm.y;
         if (_pdx * _pdx + _pdy * _pdy < _mm.impactRadius * _mm.impactRadius) {
-          player.hp -= _mm.damage * _healerInitShieldMul(player);
+          player.hp -= _mm.damage * _healerInitShieldMul(player) * _abilityDmgScale();
           triggerPlayerHurt && triggerPlayerHurt();
           screenShake(10, 400);
         }
@@ -4171,6 +4176,8 @@ function doLogin() {
     for (var i = 0; i < offlineEnemies.length; i++) {
       var e = offlineEnemies[i];
       if (!e.alive) continue;
+      // R6-control F1 — mage ability freeze: stop enemy AI entirely while frozen.
+      if (e._freezeUntil && gameTime < e._freezeUntil) continue;
       e._moveTimer += dt;
       // Round 5e F3 — collapse global slow into a per-enemy effective dt for
       // movement only (not knockback). Cheaper than rewriting every speed term.
@@ -4214,6 +4221,9 @@ function doLogin() {
     for (var bi = 0; bi < offlineBots.length; bi++) {
       var b = offlineBots[bi];
       if (!b.alive) continue;
+      // R6-control F1 — mage ability freezes hostile bots: skip movement, AI,
+      // attack timer ticking. Friendly bots ignore the freeze flag entirely.
+      if (b._freezeUntil && gameTime < b._freezeUntil) continue;
       b._moveTimer += dt;
       b._attackTimer -= dt;
       b._nextDecision -= dt;
@@ -4720,7 +4730,7 @@ function doLogin() {
       if (_psd > stormZone.radius) {
         // Round 5e F2 — graduated spawn shield applies to storm tick too
         var _ssM = _spawnShieldMul(gameTime);
-        var _stormDmg = 8 * _ssM * _healerInitShieldMul(player);
+        var _stormDmg = 8 * _ssM * _healerInitShieldMul(player) * _abilityDmgScale();
         player.hp -= _stormDmg * dt;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
@@ -5074,6 +5084,10 @@ function doLogin() {
       } else if (_cls === 'assassin') {
         _atkCdMul = 0.85; // snappy knives
       }
+      // R6-control F1 — warrior/scout active ability: +50% attack speed.
+      if (player._abilityAtkSpdUntil && gameTime < player._abilityAtkSpdUntil) {
+        _atkCdMul *= (1 / 1.5);
+      }
       player._timer = player.attackCooldown * _atkCdMul;
       // R5j F2 + R5t F3 — auto-attack scan radius.
       // scout always 520 (sharpshooter identity, holds across both maps).
@@ -5403,7 +5417,7 @@ function doLogin() {
       var cdx = e.x - player.x, cdy = e.y - player.y;
       var cd = Math.sqrt(cdx*cdx + cdy*cdy);
       if (cd < player.radius + e.radius + 2) {
-        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt * _healerInitShieldMul(player);
+        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt * _healerInitShieldMul(player) * _abilityDmgScale();
         // Fire a discrete hit feedback at most every 0.4s per enemy
         e._nextHitFxAt = e._nextHitFxAt || 0;
         if (gameTime >= e._nextHitFxAt) {
@@ -5974,7 +5988,7 @@ function doLogin() {
       var dx = player.x - boss.x, dy = player.y - boss.y;
       var dist = Math.sqrt(dx * dx + dy * dy);
       if (dist < range) {
-        var _bsDmg = boss.damage * _healerInitShieldMul(player);
+        var _bsDmg = boss.damage * _healerInitShieldMul(player) * _abilityDmgScale();
         player.hp -= _bsDmg;
         floatText(player.x, player.y - 20, '-' + Math.round(_bsDmg), '#f00', 16);
       }
@@ -5999,7 +6013,7 @@ function doLogin() {
         var dx = player.x - mb.x, dy = player.y - mb.y;
         var dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < range && !player._invincible) {
-          var _mbDmg = mb.damage * _healerInitShieldMul(player);
+          var _mbDmg = mb.damage * _healerInitShieldMul(player) * _abilityDmgScale();
           player.hp -= _mbDmg;
           floatText(player.x, player.y - 20, '-' + Math.round(_mbDmg), '#f00', 14);
         }
@@ -7281,6 +7295,88 @@ function doLogin() {
     if (!p || p.playerClass !== 'healer') return 1;
     if (p._healerShieldUntil && gameTime < p._healerShieldUntil) return 0.5;
     return 1;
+  }
+  // R6-control F1 — healer ability: 5s 30% damage reduction on self.
+  function _abilityDmgScale() {
+    if (player && player._abilityShieldUntil && gameTime < player._abilityShieldUntil) return 0.7;
+    return 1;
+  }
+  // R6-control F1 — class active ability dispatcher (right-bottom button, 6s CD).
+  // mage: fullscreen freeze 1.5s on visible enemies + hostile bots
+  // healer: 280px AoE +120 HP to allies + 5s self 30% dmg reduction
+  // warrior/scout: +50% atk speed 4s (placeholder, atkSpd buff via _abilityAtkSpdUntil)
+  function triggerClassAbility() {
+    if (!player || !player.alive) return false;
+    if (state !== 'playing') return false;
+    if (_abilityCdLeft > 0) return false;
+    var cls = player.playerClass || selectedClass || 'warrior';
+    if (cls === 'mage') {
+      // Visible-area freeze (camera bounds + 80px margin so off-screen targets
+      // hugging the edge still get caught — feels less arbitrary).
+      var _fL = cameraX - 80, _fR = cameraX + W + 80;
+      var _fT = cameraY - 80, _fB = cameraY + H + 80;
+      var _frozen = 0;
+      if (typeof offlineEnemies !== 'undefined' && offlineEnemies) {
+        for (var _ei = 0; _ei < offlineEnemies.length; _ei++) {
+          var _en = offlineEnemies[_ei];
+          if (!_en || !_en.alive || !_en.hostile) continue;
+          if (_en.x < _fL || _en.x > _fR || _en.y < _fT || _en.y > _fB) continue;
+          _en._freezeUntil = gameTime + 1.5;
+          _frozen++;
+        }
+      }
+      if (typeof offlineBots !== 'undefined' && offlineBots) {
+        for (var _bi = 0; _bi < offlineBots.length; _bi++) {
+          var _bb = offlineBots[_bi];
+          if (!_bb || !_bb.alive) continue;
+          if (_bb.factionId === player.factionId) continue;
+          if (_bb.x < _fL || _bb.x > _fR || _bb.y < _fT || _bb.y > _fB) continue;
+          _bb._freezeUntil = gameTime + 1.5;
+          _frozen++;
+        }
+      }
+      _abilityFx = { active: true, t: 0, dur: 0.55, kind: 'mage' };
+      floatText(player.x, player.y - 30, '冰冻 ' + _frozen, { color: '#a8e6ff', size: 16 });
+    } else if (cls === 'healer') {
+      var _r = 280, _r2 = _r * _r, _healed = 0;
+      if (typeof allPlayers !== 'undefined' && allPlayers) {
+        for (var _pi = 0; _pi < allPlayers.length; _pi++) {
+          var _ap = allPlayers[_pi];
+          if (!_ap || !_ap.alive) continue;
+          if (_ap.factionId !== player.factionId) continue;
+          var _adx = _ap.x - player.x, _ady = _ap.y - player.y;
+          if (_adx * _adx + _ady * _ady > _r2) continue;
+          var _maxHp = _ap.maxHp || _ap.hp || 100;
+          var _before = _ap.hp;
+          _ap.hp = Math.min(_maxHp, _ap.hp + 120);
+          if (_ap.hp > _before) _healed++;
+        }
+      }
+      // Also heal friendly bots (offlineBots) within radius — allPlayers may
+      // not include them depending on lobby setup.
+      if (typeof offlineBots !== 'undefined' && offlineBots) {
+        for (var _bi2 = 0; _bi2 < offlineBots.length; _bi2++) {
+          var _fb = offlineBots[_bi2];
+          if (!_fb || !_fb.alive) continue;
+          if (_fb.factionId !== player.factionId) continue;
+          var _fdx = _fb.x - player.x, _fdy = _fb.y - player.y;
+          if (_fdx * _fdx + _fdy * _fdy > _r2) continue;
+          var _fmax = _fb.maxHp || _fb.hp || 100;
+          if (_fb.hp < _fmax) { _fb.hp = Math.min(_fmax, _fb.hp + 120); _healed++; }
+        }
+      }
+      player._abilityShieldUntil = gameTime + 5.0;
+      _abilityFx = { active: true, t: 0, dur: 0.6, kind: 'healer' };
+      floatText(player.x, player.y - 30, '群疗 +120 / 护盾 5s', { color: '#ffd86b', size: 14 });
+    } else {
+      // warrior / scout / fallback — placeholder atk speed burst
+      player._abilityAtkSpdUntil = gameTime + 4.0;
+      _abilityFx = { active: true, t: 0, dur: 0.55, kind: 'atkspd' };
+      floatText(player.x, player.y - 30, '攻速 +50% 4s', { color: '#ff7755', size: 14 });
+    }
+    _abilityCdLeft = _ABILITY_CD;
+    if (typeof playSound === 'function') playSound('shoot');
+    return true;
   }
   // Round 5e F3 — global "altar slain" slow. R5i diag: 0.7 was too harsh,
   // lane_b combat fully stalled (avg 0/0 player+bot kills across 3 runs).
@@ -9101,6 +9197,15 @@ function doLogin() {
       if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); }
       else { networkUpdate(logicDt); }
       gameTime += logicDt;
+      // R6-control F1 — tick ability CD (logicDt only, freezes during hit-stop/tutorial).
+      if (logicDt > 0 && _abilityCdLeft > 0) {
+        _abilityCdLeft = Math.max(0, _abilityCdLeft - logicDt);
+      }
+      // FX clock uses render dt so the flash plays even during hit-stop.
+      if (_abilityFx.active) {
+        _abilityFx.t += dt;
+        if (_abilityFx.t >= _abilityFx.dur) _abilityFx.active = false;
+      }
       // R5ag F2 — daily 60s 内夺冠: 硬截止 gameTime>=60 即结算，记录结果。
       // _recordDailyResult 内部 guard 防止和 back-to-menu hook 重复计数。
       if (isDailyMode && gameTime >= 60 && state === 'playing') {
@@ -11207,6 +11312,139 @@ function doLogin() {
         ctx.fillText('拖拽移动', _joyAnchorX, _joyAnchorY + joystick.radius + _joyFS + 6);
         ctx.restore();
       }
+      // R6-control F1 — class active ability button (right-bottom).
+      // Mirrors joystick anchor on opposite side. CD: clockwise sweep mask;
+      // ready: ~1s breath glow so the state reads even with thumb on it.
+      if (player) {
+        var _abR = Math.max(60, Math.round(joystick.radius * 1.05));
+        var _abX = Math.min(W - _abR - 16, W * 0.9);
+        var _abY = Math.min(H - _abR - 20, H * 0.85);
+        _abilityBtn = { x: _abX - _abR, y: _abY - _abR, w: _abR * 2, h: _abR * 2, cx: _abX, cy: _abY, r: _abR };
+        var _abCls = player.playerClass || selectedClass || 'warrior';
+        var _abColor = _abCls === 'mage' ? '#6cc5ff'
+                      : _abCls === 'healer' ? '#ffd86b'
+                      : _abCls === 'warrior' ? '#ff8866'
+                      : _abCls === 'scout' ? '#ff8866'
+                      : '#ddddff';
+        var _abLabel = _abCls === 'mage' ? '冰冻'
+                      : _abCls === 'healer' ? '群疗'
+                      : '爆发';
+        var _ready = _abilityCdLeft <= 0;
+        ctx.save();
+        // Breath glow when ready (~1s period, sin-driven alpha+radius wobble).
+        if (_ready) {
+          var _br = 0.5 + 0.5 * Math.sin(((typeof gameTime !== 'undefined' ? gameTime : 0) + (typeof _dt !== 'undefined' ? 0 : 0)) * Math.PI * 2 / 1.0);
+          ctx.globalAlpha = 0.18 + 0.22 * _br;
+          ctx.beginPath(); ctx.arc(_abX, _abY, _abR + 6 + 4 * _br, 0, Math.PI * 2);
+          ctx.fillStyle = _abColor; ctx.fill();
+        }
+        // Base disc
+        ctx.globalAlpha = _ready ? 0.78 : 0.55;
+        ctx.beginPath(); ctx.arc(_abX, _abY, _abR, 0, Math.PI * 2);
+        ctx.fillStyle = _ready ? _abColor : '#444';
+        ctx.fill();
+        ctx.globalAlpha = 0.9;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = _ready ? '#fff' : '#888';
+        ctx.beginPath(); ctx.arc(_abX, _abY, _abR, 0, Math.PI * 2); ctx.stroke();
+        // CD overlay — clockwise sweep mask (consumed portion is dark).
+        if (!_ready) {
+          var _cdRatio = Math.max(0, Math.min(1, _abilityCdLeft / _ABILITY_CD));
+          ctx.globalAlpha = 0.65;
+          ctx.fillStyle = '#000';
+          ctx.beginPath();
+          ctx.moveTo(_abX, _abY);
+          // Start at 12 o'clock (-PI/2), sweep clockwise by remaining ratio.
+          ctx.arc(_abX, _abY, _abR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * _cdRatio);
+          ctx.closePath();
+          ctx.fill();
+          // CD seconds text
+          ctx.globalAlpha = 0.95;
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.font = 'bold ' + Math.round(_abR * 0.55) + 'px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+          ctx.fillText(_abilityCdLeft.toFixed(1), _abX, _abY + _abR * 0.2);
+        } else {
+          ctx.globalAlpha = 0.95;
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.font = 'bold ' + Math.round(_abR * 0.42) + 'px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+          ctx.fillText(_abLabel, _abX, _abY + _abR * 0.15);
+        }
+        ctx.restore();
+      } else {
+        _abilityBtn = null;
+      }
+    }
+    // R6-control F1 — fullscreen ability trigger feedback (mage cyan / healer
+    // gold ring / warrior+scout red glow). Linear ease-out on alpha.
+    if (_abilityFx.active) {
+      var _fxR = Math.min(1, _abilityFx.t / Math.max(0.001, _abilityFx.dur));
+      var _fxA = 1 - _fxR;
+      ctx.save();
+      if (_abilityFx.kind === 'mage') {
+        // Cyan tint + ice-shard streaks
+        ctx.globalAlpha = 0.45 * _fxA;
+        ctx.fillStyle = '#a8e6ff';
+        ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 0.8 * _fxA;
+        ctx.strokeStyle = '#e0f7ff';
+        ctx.lineWidth = 2;
+        var _shards = 18;
+        for (var _si = 0; _si < _shards; _si++) {
+          var _sx = (W * (_si + 0.5) / _shards) + Math.sin(_si * 1.3) * 18;
+          var _slen = 40 + (_si % 3) * 18;
+          var _sy0 = -10 + _fxR * 30;
+          ctx.beginPath();
+          ctx.moveTo(_sx, _sy0);
+          ctx.lineTo(_sx + 4, _sy0 + _slen);
+          ctx.stroke();
+        }
+        // Vignette ring of frost
+        ctx.globalAlpha = 0.5 * _fxA;
+        var _g = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.2, W/2, H/2, Math.max(W,H)*0.7);
+        _g.addColorStop(0, 'rgba(168,230,255,0)');
+        _g.addColorStop(1, 'rgba(80,180,255,0.7)');
+        ctx.fillStyle = _g;
+        ctx.fillRect(0, 0, W, H);
+      } else if (_abilityFx.kind === 'healer') {
+        // Gold expanding ring centered on player screen pos
+        if (player) {
+          var _hx = player.x - cameraX, _hy = player.y - cameraY;
+          var _maxR = 280 * (0.4 + _fxR * 0.9);
+          ctx.globalAlpha = 0.85 * _fxA;
+          ctx.strokeStyle = '#ffd86b';
+          ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.arc(_hx, _hy, _maxR, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 0.45 * _fxA;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(_hx, _hy, _maxR * 0.65, 0, Math.PI * 2); ctx.stroke();
+          // soft fill
+          ctx.globalAlpha = 0.18 * _fxA;
+          var _hg = ctx.createRadialGradient(_hx, _hy, 0, _hx, _hy, _maxR);
+          _hg.addColorStop(0, 'rgba(255,232,150,0.7)');
+          _hg.addColorStop(1, 'rgba(255,232,150,0)');
+          ctx.fillStyle = _hg;
+          ctx.beginPath(); ctx.arc(_hx, _hy, _maxR, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (_abilityFx.kind === 'atkspd') {
+        // Red glow halo around player
+        if (player) {
+          var _wx = player.x - cameraX, _wy = player.y - cameraY;
+          var _wr = (player.radius || 24) + 30 + _fxR * 80;
+          ctx.globalAlpha = 0.85 * _fxA;
+          ctx.strokeStyle = '#ff6644';
+          ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.arc(_wx, _wy, _wr, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 0.35 * _fxA;
+          var _wg = ctx.createRadialGradient(_wx, _wy, 0, _wx, _wy, _wr);
+          _wg.addColorStop(0, 'rgba(255,120,80,0.6)');
+          _wg.addColorStop(1, 'rgba(255,80,40,0)');
+          ctx.fillStyle = _wg;
+          ctx.beginPath(); ctx.arc(_wx, _wy, _wr, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.restore();
     }
 
     drawEdgeBeacons();
@@ -13670,6 +13908,16 @@ function doLogin() {
       var r = canvas.getBoundingClientRect();
       var tx = (t.clientX - r.left) * W / r.width;
       var ty = (t.clientY - r.top) * H / r.height;
+      // R6-control F1 — ability button hit-test (right-bottom). Consume the
+      // touch instead of forwarding to joystick so dragging from the button
+      // doesn't accidentally pull the stick around.
+      if (state === 'playing' && _abilityBtn) {
+        var _abdx = tx - _abilityBtn.cx, _abdy = ty - _abilityBtn.cy;
+        if (_abdx * _abdx + _abdy * _abdy <= _abilityBtn.r * _abilityBtn.r) {
+          triggerClassAbility();
+          continue;
+        }
+      }
       joystickStart(tx, ty, t.identifier);
     }
   }, { passive: false });
@@ -13695,6 +13943,14 @@ function doLogin() {
     var r = canvas.getBoundingClientRect();
     var mx = (ev.clientX - r.left) * W / r.width;
     var my = (ev.clientY - r.top) * H / r.height;
+    // R6-control F1 — ability button hit-test (mouse fallback for desktop QA).
+    if (state === 'playing' && _abilityBtn) {
+      var _mbdx = mx - _abilityBtn.cx, _mbdy = my - _abilityBtn.cy;
+      if (_mbdx * _mbdx + _mbdy * _mbdy <= _abilityBtn.r * _abilityBtn.r) {
+        triggerClassAbility();
+        return;
+      }
+    }
     if (joystickStart(mx, my, 'mouse')) { _joystickMouseDown = true; }
   });
   canvas.addEventListener('mousemove', function(ev) {
@@ -14046,6 +14302,9 @@ function doLogin() {
     triggerWorldEvent: function(kind) { return triggerWorldEvent(kind || 'airdrop'); },
     grantClassUltimate: function() { return grantClassUltimate(); },
     castClassUltimate: function() { return castClassUltimate(); },
+    // R6-control F1 — headless QA hook for the new active ability button.
+    triggerClassAbility: function() { return triggerClassAbility(); },
+    abilityCdLeft: function() { return _abilityCdLeft; },
     dropSkillPickup: function(x, y, tint) { return dropSkillPickup(x, y, tint); },
     applyBossBuff: function(idx) { return applyBossBuff(idx); },
     startGame: function(daily) { startGame(daily); },
