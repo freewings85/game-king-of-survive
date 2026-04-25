@@ -2532,21 +2532,6 @@ function doLogin() {
     { name: '好友B', score: 300, rank: 3, is_self: false }
   ];
 
-  // Daily challenge modifier system (US-255)
-  var DAILY_MODIFIERS = [
-    { name: '双倍速敌人', id: 'fast_enemies', desc: '敌人移速x2', apply: function() { /* applied in makeEnemy */ } },
-    { name: '弹幕地狱', id: 'bullet_hell', desc: '敌人射速x2', apply: function() { /* applied in enemy AI */ } },
-    { name: '巨人模式', id: 'giant_mode', desc: '敌人体积x1.5+HP x2', apply: function() { /* applied in makeEnemy */ } },
-    { name: '玻璃大炮', id: 'glass_cannon', desc: '伤害x3但HP-50%', apply: function() { /* applied in startGame */ } },
-    { name: '经验狂潮', id: 'xp_rush', desc: 'XP获取x3', apply: function() { /* applied in gem pickup */ } },
-    { name: '无限连杀', id: 'infinite_streak', desc: '连杀不中断', apply: function() { /* applied in streak decay */ } }
-  ];
-  var dailyModifier = DAILY_MODIFIERS[(function() {
-    var d = new Date().toDateString(), h = 0;
-    for (var i = 0; i < d.length; i++) h = ((h << 5) - h + d.charCodeAt(i)) | 0;
-    return Math.abs(h) % DAILY_MODIFIERS.length;
-  })()];
-
   // tauntSystem (US-293): dynamic share taunt messages based on performance grade
   var TAUNT_MESSAGES = {
     'S': ['不服来战!', '谁能超越这个?', '传说级操作!', '这就是最强幸存者!'],
@@ -2744,92 +2729,6 @@ function doLogin() {
     } catch(e) {}
   })();
 
-  var dailySeed = (function() {
-    var d = new Date().toDateString();
-    var h = 0;
-    for (var i = 0; i < d.length; i++) h = ((h << 5) - h + d.charCodeAt(i)) | 0;
-    return Math.abs(h);
-  })();
-  var dailyBest = 0;
-  var dailyRewardClaimed = false;
-  var isDailyMode = false;
-  // R5u F3 — Daily challenge skeleton (bones only, Leo: "不求好玩")
-  //   - todayKey()           : YYYY-MM-DD local-date string, the daily seed
-  //   - _dailyLoad/_dailySave: localStorage-backed record of past attempts
-  //   - _recordDailyResult   : called on game-over when isDailyMode is true
-  function _dailyTodayKey() {
-    var d = new Date();
-    return d.getFullYear() + '-' + ('0' + (d.getMonth()+1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-  }
-  function _dailyLoad() {
-    try {
-      var raw = localStorage.getItem('daily_records');
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
-  }
-  function _dailySave(rec) {
-    try { localStorage.setItem('daily_records', JSON.stringify(rec)); } catch (e) {}
-  }
-  function _recordDailyResult() {
-    if (!isDailyMode) return;
-    // R5ag F2 — guard against double-record (60s-timeout hook + back-to-menu
-    // hook both called _recordDailyResult; one attempt should bump attempts
-    // by 1, not 2). Flag reset in _startDailyMatch.
-    if (window._r5agDailyRecorded) return;
-    window._r5agDailyRecorded = true;
-    var rec = _dailyLoad();
-    var key = _dailyTodayKey();
-    var existing = rec[key] || { attempts: 0, bestKills: 0 };
-    existing.attempts++;
-    if (kills > existing.bestKills) existing.bestKills = kills;
-    existing.lastClass = selectedClass;
-    existing.lastMap = (MAP_DATA && MAP_DATA.name) || 'unknown';
-    rec[key] = existing;
-    _dailySave(rec);
-  }
-  // R5ag F2 — daily challenge entry: skip charSelect, force mage + arena_a
-  // + 60s time limit. Rule is intentionally fixed (not date-rotated) so the
-  // first activation round stays deterministic for Testor validation.
-  function _startDailyMatch() {
-    window._r5agDailyRecorded = false;
-    isDailyMode = true;
-    selectedClass = 'mage';
-    gameMode = 'solo';
-    if (typeof loadMapLayout === 'function') loadMapLayout('maps/arena_a.json');
-    if (typeof startGame === 'function') startGame(true);
-    if (typeof startOfflineDemo === 'function') startOfflineDemo();
-  }
-  // Expose for QA harness (playwright smoke) — bypass menu click coord fragility.
-  window._startDailyMatch = _startDailyMatch;
-  // R5ah F1 — arena_c (Frozen Peaks) entry. Whitelist 3 classes per Leo
-  // directive; assassin/healer stay on arena_a to avoid mixing untested
-  // class × map combos into Testor's expanding matrix. Default class 'mage'
-  // when invoked from the menu button (no class picker in prototype UI);
-  // harness may pass any of warrior/mage/scout explicitly.
-  var _SNOW_CLASSES = ['mage', 'warrior', 'scout', 'healer'];
-  function _startSnowArenaMatch(cls) {
-    if (!cls || _SNOW_CLASSES.indexOf(cls) < 0) cls = 'mage';
-    isDailyMode = false;
-    selectedClass = cls;
-    gameMode = 'solo';
-    if (typeof loadMapLayout === 'function') loadMapLayout('maps/arena_c.json');
-    if (typeof startGame === 'function') startGame(false);
-    if (typeof startOfflineDemo === 'function') startOfflineDemo();
-  }
-  window._startSnowArenaMatch = _startSnowArenaMatch;
-  // Seeded RNG for daily matches — deterministic bot/rival roll per date
-  var _dailyRngState = 0;
-  function _dailySeedFromDate(key) {
-    var h = 0;
-    for (var i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
-    return h >>> 0;
-  }
-  function _dailyRand() {
-    _dailyRngState = (_dailyRngState * 1103515245 + 12345) & 0x7fffffff;
-    return (_dailyRngState & 0xffff) / 0xffff;
-  }
-  function _dailyRngActive() { return isDailyMode && _dailyRngState !== 0; }
-
   // Achievements
   var unlockedAchievements = {};
   var achievementQueue = []; // popups to show
@@ -2845,7 +2744,6 @@ function doLogin() {
     { id: 'lv10', name: '技能大师', desc: '达到10级', check: function() { return playerLevel >= 10; }, goldReward: 50 },
     { id: 'survive_60', name: '一分钟生存者', desc: '存活超过60秒', check: function() { return gameTime >= 60; }, goldReward: 25 },
     { id: 'survive_180', name: '三分钟铁人', desc: '存活超过180秒', check: function() { return gameTime >= 180; }, goldReward: 100 },
-    { id: 'daily_done', name: '每日勇士', desc: '完成每日挑战', check: function() { return isDailyMode && kills > 0; }, goldReward: 50 },
     { id: 'kill_200', name: '双百斩', desc: '单局击杀200个敌人', check: function() { return kills >= 200; }, goldReward: 150 },
     { id: 'pvp_kill', name: '玩家猎手', desc: '击杀1名敌方玩家', check: function() { return player && player.kills >= 1; }, goldReward: 30 },
     { id: 'streak_50', name: '50连杀', desc: '达成50连杀', check: function() { return maxStreak >= 50; }, goldReward: 80 },
@@ -2889,9 +2787,7 @@ function doLogin() {
   ];
   var evolvedSkills = {};
 
-  function startGame(daily) {
-    isDailyMode = !!daily;
-
+  function startGame() {
     // Minimal local player placeholder (server will fill real values via snapshot)
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     player = {
@@ -3566,12 +3462,6 @@ function doLogin() {
     offlineMode = true;
     state = 'playing';
     player.skinId = equippedSkin || 'default';
-    // R5u F3 — reset daily RNG state at match start when daily mode is on
-    if (isDailyMode) {
-      _dailyRngState = _dailySeedFromDate(_dailyTodayKey());
-    } else {
-      _dailyRngState = 0;
-    }
     // R5n F2 + R5o F2 + R5p F2 — assassin opening 隐身.
     // arena/default: 3.0s (full identity — NOT shortened).
     // lane-3 only: 1.5s (lane chokes broke 3s flow).
@@ -3728,8 +3618,7 @@ function doLogin() {
         }
       }
       if (_rivIdx < 0) {
-        var _rvRandFn = _dailyRngActive() ? _dailyRand : Math.random;
-        _rivIdx = Math.floor(_rvRandFn() * offlineBots.length);
+        _rivIdx = Math.floor(Math.random() * offlineBots.length);
       }
       var _rivalBot = offlineBots[_rivIdx];
       var _initRD = Math.round(Math.hypot(_rivalBot.x - player.x, _rivalBot.y - player.y));
@@ -7508,7 +7397,7 @@ function doLogin() {
         enterOfflineDemo: function(classType) {
           try {
             if (classType && typeof selectedClass !== 'undefined') selectedClass = classType;
-            if (typeof startGame === 'function') startGame(false);
+            if (typeof startGame === 'function') startGame();
             if (typeof startOfflineDemo === 'function') {
               startOfflineDemo();
               // Hide login overlay so the canvas is visible for visual tests
@@ -9205,12 +9094,6 @@ function doLogin() {
       if (_abilityFx.active) {
         _abilityFx.t += dt;
         if (_abilityFx.t >= _abilityFx.dur) _abilityFx.active = false;
-      }
-      // R5ag F2 — daily 60s 内夺冠: 硬截止 gameTime>=60 即结算，记录结果。
-      // _recordDailyResult 内部 guard 防止和 back-to-menu hook 重复计数。
-      if (isDailyMode && gameTime >= 60 && state === 'playing') {
-        _recordDailyResult();
-        state = 'gameOver';
       }
       // R5aa F2 — one-shot 25s boundary diagnostic. Spawn shield fully wears off
       // at t>=25; playtest reports "25s 爆死". Capture snapshot ONCE per match.
@@ -12552,7 +12435,7 @@ function doLogin() {
   // menuOverhaul: enhanced menu with character preview + best score + particles (US-268)
   var menuParticles = [];
   // Shared button hit-rects — populated by drawMenu, consumed by click handler
-  var _menuBtns = { solo: null, team: null, daily: null, upgrade: null, multi: null, timed: null, snowArena: null };
+  var _menuBtns = { solo: null, team: null, upgrade: null, multi: null, timed: null };
   // Generic menu-state scale transform — wraps charSelect/mapSelect/buildSelect/upgrade
   // so their hardcoded 400-wide layouts fill the phone screen.
   // _uiTransform stores the active {scale, ox, oy} for click coordinate inversion.
@@ -12741,23 +12624,10 @@ function doLogin() {
     _drawMenuButton(bXr, bY0, bW, bH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
     var bY1 = bY0 + bH + bGap;
     ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    // R5ag F2 — surface today's attempt count on the daily button so players
-    // see '📅 每日 #N' progression from localStorage across sessions.
-    var _dailyLabel = '📅 每日挑战';
-    try {
-      var _dRec = _dailyLoad();
-      var _dToday = (_dRec && _dRec[_dailyTodayKey()]) || null;
-      if (_dToday && _dToday.attempts > 0) _dailyLabel = '📅 每日 #' + _dToday.attempts;
-    } catch (e) {}
-    _drawMenuButton(bXl, bY1, bW, bH, _dailyLabel, '#3a5a9a', '#1a2a4e', '#7fa6e6');
     _drawMenuButton(bXr, bY1, bW, bH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
     var bY2 = bY1 + bH + bGap;
     _drawMenuButton(bXl, bY2, bW, bH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
     _drawMenuButton(bXr, bY2, bW, bH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
-    // R5ah F1 — arena_c (Frozen Peaks) solo entry, centered row 4.
-    var bY3 = bY2 + bH + bGap;
-    var bXc = 200 - bW / 2;
-    _drawMenuButton(bXc, bY3, bW, bH, '🏔 雪地竞技场', '#5a7a9a', '#1a2a4a', '#a0c4ff');
 
     // Tutorial hint
     ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
@@ -12769,11 +12639,9 @@ function doLogin() {
     function _scRect(dx, dy, dw, dh) { return { x: dx * menuScale + offsetX, y: dy * menuScale + offsetY, w: dw * menuScale, h: dh * menuScale }; }
     _menuBtns.solo    = _scRect(bXl, bY0, bW, bH);
     _menuBtns.team    = _scRect(bXr, bY0, bW, bH);
-    _menuBtns.daily   = _scRect(bXl, bY1, bW, bH);
     _menuBtns.upgrade = _scRect(bXr, bY1, bW, bH);
-    _menuBtns.multi     = _scRect(bXl, bY2, bW, bH);
-    _menuBtns.timed     = _scRect(bXr, bY2, bW, bH);
-    _menuBtns.snowArena = _scRect(bXc, bY3, bW, bH);
+    _menuBtns.multi   = _scRect(bXl, bY2, bW, bH);
+    _menuBtns.timed   = _scRect(bXr, bY2, bW, bH);
   }
 
   function drawCharSelect() {
@@ -14012,11 +13880,9 @@ function doLogin() {
       function _hitBtn(b) { return b && cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h; }
       if (_hitBtn(_menuBtns.solo))    { gameMode = 'solo'; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.team))    { gameMode = 'team'; state = 'charSelect'; }
-      if (_hitBtn(_menuBtns.daily))   { _startDailyMatch(); }
       if (_hitBtn(_menuBtns.upgrade)) { state = 'upgrade'; }
       if (_hitBtn(_menuBtns.multi))   { localMultiplayer = true; state = 'charSelect'; }
       if (_hitBtn(_menuBtns.timed))   { countdownTimerMode = true; state = 'charSelect'; }
-      if (_hitBtn(_menuBtns.snowArena)) { _startSnowArenaMatch(); }
     } else if (state === 'mapSelect') {
       // Convert screen coords to design space (400x700)
       var _dc = _toDesignCoords(cx, cy); var dcx = _dc.x, dcy = _dc.y;
@@ -14099,9 +13965,7 @@ function doLogin() {
       }
       // Back
       if (dcx2 > 200 - 50 && dcx2 < 200 + 50 && dcy2 > 700 - 50 && dcy2 < 700 - 14) {
-        // R5u F3 — record daily result if this was a daily match, then return
-        if (isDailyMode) _recordDailyResult();
-        state = 'menu'; isDailyMode = false;
+        state = 'menu';
       }
     } else if (state === 'buildSelect') {
       // Convert screen coords to design space (400x700)
@@ -14137,7 +14001,7 @@ function doLogin() {
       var buildPanelY = startY + Math.ceil(available.length / cols) * (cardH + gapY) + 15;
       var btnY = buildPanelY + 65;
       if (selectedBuild.length === 5 && dcx3 > 200 - 80 && dcx3 < 200 + 80 && dcy3 > btnY && dcy3 < btnY + 40) {
-        startGame(isDailyMode);
+        startGame();
       }
 
       // Back button
@@ -14283,7 +14147,6 @@ function doLogin() {
     get gameMode() { return gameMode; },
     set gameMode(v) { gameMode = v; },
     get allPlayers() { return allPlayers; },
-    get isDailyMode() { return isDailyMode; },
     get entities() { return entities; },
     get playerLevel() { return playerLevel; },
     get kills() { return kills; },
@@ -14307,7 +14170,7 @@ function doLogin() {
     abilityCdLeft: function() { return _abilityCdLeft; },
     dropSkillPickup: function(x, y, tint) { return dropSkillPickup(x, y, tint); },
     applyBossBuff: function(idx) { return applyBossBuff(idx); },
-    startGame: function(daily) { startGame(daily); },
+    startGame: function() { startGame(); },
     finalizeGameRewards: typeof finalizeGameRewards === 'function' ? finalizeGameRewards : function() {}
   };
 
