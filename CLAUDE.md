@@ -24,7 +24,10 @@
 旧 GameDev 团队（ArtDesigner / Developer / Testor）方向已确认错误，进入团队重建期。
 
 - **旧路线**：8 人 BR + 4v4 MOBA + 大秘境，稳态评分 7.0/10 三周推不动
-- **新路线**：survivor.io / Vampire Survivors PvE 路线，15-20 分钟一局，皮肤+段位作钩子，幽灵房段位机制
+- **新路线**：8 人同图 PvE + PvP 杂交（类 survivor.io「Battle of Survivors」），怪海 + 真人双威胁，最后存活赢段位，一局 15-20 分钟
+  - 核心钩子：玩法重玩性（8 人 × 怪海 × 选卡变量）
+  - Meta 钩子：皮肤 + 段位（放大器，不是必需）
+  - 砍：4v4 团战 / 友伤免疫 / 大秘境 / daily challenge / 纯 PvP 不带刷怪
 - **代码目标**：`demo/survivor.html` 14k 行 → 8-10k 行
 - **基线政策**：旧 `.claude/PLAYTEST_BASELINE.md` 全部作废，不要参考
 
