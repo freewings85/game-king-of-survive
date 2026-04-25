@@ -3630,9 +3630,9 @@ function doLogin() {
       stormZone.centerX = WORLD_W / 2;
       stormZone.centerY = WORLD_H / 2;
     }
-    // BR + MOBA: early minutes are farming, final minute is forced engagement.
-    stormZone.shrinkRate = 18; // px/s
-    stormZone._shrinkDelay = 75; // R5f F2 — extended farm window so player lives to altar unlock at 60s
+    // R6-storm-01 — survivor.io 局长 15-20min: 前 3 min 纯刷+升级，3-10 min 收圈施压。
+    stormZone.shrinkRate = 9; // px/s (was 18 — 收圈减半)
+    stormZone._shrinkDelay = 180; // s (was 75 — 前 3 min 不收圈)
     stormZone._minRadius = 180;
   }
 
@@ -4530,6 +4530,7 @@ function doLogin() {
         var _ssM = _spawnShieldMul(gameTime);
         var _stormDmg = 8 * _ssM * _healerInitShieldMul(player) * _abilityDmgScale();
         player.hp -= _stormDmg * dt;
+        window._stormDoTCount = (window._stormDoTCount || 0) + 1;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
         // One alert sound on edge-transition, then throttle to every 3s

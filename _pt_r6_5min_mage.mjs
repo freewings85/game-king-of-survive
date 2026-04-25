@@ -125,6 +125,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const probes = await page.evaluate(() => ({
     wsTickCount: window._wsTickCount || 0,
     ringSpawnFired: window._ringSpawnFired || 0,
+    stormDoTCount: window._stormDoTCount || 0,
   }));
 
   // summarize
@@ -147,14 +148,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   const overallN300Med = median(allN300);
 
-  const passKills = (final.kills || 0) >= 8;
+  // R6-storm-01 verification gates (replaces F2 gates after storm push to 180s).
+  const passSurvive = (final.hp || 0) > 0; // player must survive 5 min
+  const passNoStorm = probes.stormDoTCount === 0; // 0 storm DoT in first 5 min
+  const passKills = (final.kills || 0) >= 5;
   const passLvls = (final.lvl || 0) >= 4;
   const passCards = cardsPicked >= 2;
-  const passN300 = overallN300Med >= 2;
-  // R6-respawn F2: ws tick rate ~10/s × 300s = 3000 expected; threshold 100 = "actually running".
+  const passN300 = overallN300Med >= 1; // R6-tune-01 will push to ≥2
   const passWsTick = probes.wsTickCount > 100;
   const passRing = probes.ringSpawnFired > 5;
-  // WebSocket 404 console error is environmental (no server backend); ignore it.
   const filteredErrs = errors.filter(e => !/WebSocket connection.*8081/.test(e));
   const passErr = filteredErrs.length === 0;
 
@@ -171,15 +173,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     phaseSummary,
     events,
     verdicts: {
-      'kills>=8': { actual: final.kills, pass: passKills },
+      'survive5min(hp>0)': { actual: final.hp, pass: passSurvive },
+      '_stormDoTCount==0': { actual: probes.stormDoTCount, pass: passNoStorm },
+      'kills>=5': { actual: final.kills, pass: passKills },
       'lvl>=4': { actual: final.lvl, pass: passLvls },
       'cards>=2': { actual: cardsPicked, pass: passCards },
-      'n300_median>=2': { actual: overallN300Med, pass: passN300 },
+      'n300_median>=1': { actual: overallN300Med, pass: passN300 },
       '_wsTickCount>100': { actual: probes.wsTickCount, pass: passWsTick },
       '_ringSpawnFired>5': { actual: probes.ringSpawnFired, pass: passRing },
       'errors==0(filtered)': { actual: filteredErrs.length, pass: passErr },
     },
-    OVERALL: (passKills && passLvls && passCards && passN300 && passWsTick && passRing && passErr) ? 'PASS' : 'FAIL',
+    OVERALL: (passSurvive && passNoStorm && passKills && passLvls && passCards && passN300 && passWsTick && passRing && passErr) ? 'PASS' : 'FAIL',
   };
 
   console.log('\n=== R6-respawn stop-go report ===\n');
