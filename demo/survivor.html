@@ -2908,15 +2908,11 @@ function doLogin() {
   var offlineSpawnTimer = 0;
   var offlineBots = [];
 
-  // === Wave spawn system (MOBA-style fixed spawn points + wave scaling) ===
+  // === Wave spawn system (R6-respawn F2 — continuous stream, survivor.io style) ===
   var _waveSpawnPoints = [];
   var _waveState = {
-    wave: 0,
-    phase: 'idle', // idle | spawning | fighting | intermission
-    phaseTimer: 0,
-    spawnQueue: [],
-    nextSpawnTimer: 0,
-    totalThisWave: 0
+    wave: 0,            // increments every 60s for difficulty + achievement gates
+    nextSpawnTimer: 0
   };
   function _initSpawnPoints() {
     _waveSpawnPoints = [];
@@ -2942,96 +2938,61 @@ function doLogin() {
     var r = R_MIN + Math.random() * (R_MAX - R_MIN);
     var ex = player.x + Math.cos(ang) * r;
     var ey = player.y + Math.sin(ang) * r;
-    return {
+    var pt = {
       x: Math.max(30, Math.min(WORLD_W - 30, ex)),
       y: Math.max(30, Math.min(WORLD_H - 30, ey))
     };
+    window._ringSpawnFired = (window._ringSpawnFired || 0) + 1;
+    return pt;
   }
-  function _startWave(num) {
-    _waveState.wave = num;
-    wave = num;
-    _waveState.phase = 'spawning';
-    _waveState.phaseTimer = 0;
-    _waveState.nextSpawnTimer = 0.3;
-    // Scale count with wave number, cap growth
-    var count = 6 + num * 2;
-    if (num >= 10) count += (num - 10);
-    if (num >= 20) count = Math.min(count, 60);
-    _waveState.totalThisWave = count;
-    _waveState.spawnQueue = [];
-    var isBossWave = (num % 5 === 0);
-    var isBigBoss = (num % 10 === 0);
-    if (isBigBoss) {
-      _waveState.spawnQueue.push('boss');
-      _waveState.spawnQueue.push('miniBoss');
-      _waveState.spawnQueue.push('miniBoss');
-    } else if (isBossWave) {
-      _waveState.spawnQueue.push('miniBoss');
-    }
-    var pool;
-    if (num < 3) pool = ['normal', 'normal', 'swarm'];
-    else if (num < 5) pool = ['normal', 'fast', 'swarm', 'ranged'];
-    else if (num < 10) pool = ['normal', 'fast', 'tank', 'ranged', 'swarm'];
-    else pool = ['fast', 'tank', 'ranged', 'swarm', 'normal', 'tank', 'ranged'];
-    for (var qi = 0; qi < count; qi++) {
-      _waveState.spawnQueue.push(pool[Math.floor(Math.random() * pool.length)]);
-    }
-    // Shuffle
-    for (var si = _waveState.spawnQueue.length - 1; si > 0; si--) {
-      var sj = Math.floor(Math.random() * (si + 1));
-      var tmp = _waveState.spawnQueue[si]; _waveState.spawnQueue[si] = _waveState.spawnQueue[sj]; _waveState.spawnQueue[sj] = tmp;
-    }
-    // Banner announcement
-    waveBanner.active = true; waveBanner.timer = 1.0;
-    waveBanner.text = isBigBoss ? ('⚠ 巨型BOSS 第' + num + '波 ⚠')
-                    : isBossWave ? ('⚠ BOSS 第' + num + '波 ⚠')
-                                 : ('— 第' + num + '波 —');
-    waveBanner.color = isBigBoss ? '#f44' : isBossWave ? '#fa0' : '#fff';
-    if (isBossWave && typeof bossWarning !== 'undefined') {
-      bossWarning.active = true; bossWarning.timer = 2.5;
-    }
-    if (isBossWave) {
-      if (typeof screenShake === 'function') screenShake(5, 240);
-      if (typeof playSound === 'function') playSound('boss_warn');
-    } else {
-      if (typeof playSound === 'function') playSound('wave_start');
-    }
+  // R6-respawn F2 — spawn rate ramps with gameTime (no wave gating).
+  function _spawnRatePerSec(t) {
+    if (t < 60) return 0.5;
+    if (t < 180) return 1.0;
+    return 1.5;
+  }
+  function _enemyTypePoolFor(w) {
+    if (w < 3) return ['normal', 'normal', 'swarm'];
+    if (w < 5) return ['normal', 'fast', 'swarm', 'ranged'];
+    if (w < 10) return ['normal', 'fast', 'tank', 'ranged', 'swarm'];
+    return ['fast', 'tank', 'ranged', 'swarm', 'normal', 'tank', 'ranged'];
   }
   function updateOfflineWaveSystem(dt) {
     if (!offlineMode) return;
-    if (_waveState.phase === 'idle') {
-      _startWave(1);
-      return;
+    window._wsTickCount = (window._wsTickCount || 0) + 1;
+    var t = gameTime || 0;
+    // Wave counter ticks every 60s — drives type-pool ramp + boss spawn + achievement gates.
+    var newWave = 1 + Math.floor(t / 60);
+    if (newWave !== _waveState.wave) {
+      var prev = _waveState.wave;
+      _waveState.wave = newWave;
+      wave = newWave;
+      waveBanner.active = true; waveBanner.timer = 1.0;
+      if (prev > 0) {
+        // Boss on every wave transition after wave 1 — ring-spawned + banner.
+        var spB = _ringSpawnPoint();
+        spawnOfflineEnemy('miniBoss', spB.x, spB.y);
+        if (typeof emit === 'function') emit(spB.x, spB.y, '#f80', 14, 100);
+        waveBanner.text = '⚠ BOSS 第' + newWave + '波 ⚠';
+        waveBanner.color = '#fa0';
+        if (typeof bossWarning !== 'undefined') { bossWarning.active = true; bossWarning.timer = 2.5; }
+        if (typeof screenShake === 'function') screenShake(5, 240);
+        if (typeof playSound === 'function') playSound('boss_warn');
+      } else {
+        waveBanner.text = '— 第' + newWave + '波 —';
+        waveBanner.color = '#fff';
+        if (typeof playSound === 'function') playSound('wave_start');
+      }
     }
-    if (_waveState.phase === 'spawning') {
-      _waveState.nextSpawnTimer -= dt;
-      while (_waveState.nextSpawnTimer <= 0 && _waveState.spawnQueue.length > 0) {
-        var type = _waveState.spawnQueue.shift();
-        var sp = _ringSpawnPoint();
-        spawnOfflineEnemy(type, sp.x, sp.y);
-        // Portal spawn FX
-        if (typeof emit === 'function') emit(sp.x, sp.y, type === 'boss' ? '#f22' : type === 'miniBoss' ? '#f80' : '#f66', 10, 80);
-        var gap = (type === 'boss') ? 2.0 : (type === 'miniBoss' ? 1.2 : (0.35 + Math.random() * 0.35));
-        _waveState.nextSpawnTimer += gap;
-      }
-      if (_waveState.spawnQueue.length === 0) {
-        _waveState.phase = 'fighting';
-      }
-    } else if (_waveState.phase === 'fighting') {
-      var alive = 0;
-      for (var ei = 0; ei < offlineEnemies.length; ei++) {
-        var oe = offlineEnemies[ei];
-        if (oe.alive && oe.hostile) alive++;
-      }
-      if (alive === 0) {
-        _waveState.phase = 'intermission';
-        _waveState.phaseTimer = (_waveState.wave % 5 === 0) ? 8 : 5;
-      }
-    } else if (_waveState.phase === 'intermission') {
-      _waveState.phaseTimer -= dt;
-      if (_waveState.phaseTimer <= 0) {
-        _startWave(_waveState.wave + 1);
-      }
+    // Continuous mob spawn at rate ramped by gameTime.
+    _waveState.nextSpawnTimer -= dt;
+    if (_waveState.nextSpawnTimer <= 0) {
+      var pool = _enemyTypePoolFor(_waveState.wave);
+      var type = pool[Math.floor(Math.random() * pool.length)];
+      var sp = _ringSpawnPoint();
+      spawnOfflineEnemy(type, sp.x, sp.y);
+      if (typeof emit === 'function') emit(sp.x, sp.y, '#f66', 10, 80);
+      _waveState.nextSpawnTimer += 1 / _spawnRatePerSec(t);
     }
   }
   // Draw fixed spawn points as glowing rune circles (world-space via camera offset)
@@ -3060,53 +3021,6 @@ function doLogin() {
       ctx.beginPath(); ctx.arc(sx, sy, 5 + pulse * 1.5, 0, Math.PI * 2); ctx.fill();
     }
   }
-  // Track phase transitions so the banner only shows for 1s after entering each phase
-  var _waveHudLastPhase = null, _waveHudStartT = 0;
-  function drawWaveStatusHUD() {
-    if (!offlineMode) return;
-    // Detect phase change → restart 1s visibility window
-    if (_waveState.phase !== _waveHudLastPhase) {
-      _waveHudLastPhase = _waveState.phase;
-      _waveHudStartT = gameTime || 0;
-    }
-    var elapsed = (gameTime || 0) - _waveHudStartT;
-    if (elapsed > 1.0) return; // hide after 1 second
-    var alpha = elapsed > 0.7 ? (1 - (elapsed - 0.7) / 0.3) : 1; // fade in last 0.3s
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    var _whs = Math.min(W / 400, H / 700);
-    var _wfs = Math.round(22 * _whs);
-    var _wfsSmall = Math.round(19 * _whs);
-    var _wby = Math.round(H * 0.105) + Math.round(30 * _whs);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(3, 4 * _whs);
-    var txt, color;
-    if (_waveState.phase === 'intermission') {
-      var secs = Math.max(0, Math.ceil(_waveState.phaseTimer));
-      txt = '下一波 第 ' + (_waveState.wave + 1) + ' 波 · ' + secs + 's';
-      color = '#fa0';
-      ctx.font = 'bold ' + _wfs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    } else if (_waveState.phase === 'spawning') {
-      var remain = _waveState.spawnQueue.length;
-      txt = '第 ' + _waveState.wave + ' 波 来袭! 剩余 ' + remain;
-      color = '#ff6';
-      ctx.font = 'bold ' + _wfsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    } else if (_waveState.phase === 'fighting') {
-      var stillAlive = 0;
-      for (var ai = 0; ai < offlineEnemies.length; ai++) if (offlineEnemies[ai].alive && offlineEnemies[ai].hostile) stillAlive++;
-      txt = '第 ' + _waveState.wave + ' 波 · 残敌 ' + stillAlive;
-      color = '#fff';
-      ctx.font = 'bold ' + _wfsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    }
-    if (txt) {
-      ctx.strokeText(txt, W / 2, _wby);
-      ctx.fillStyle = color;
-      ctx.fillText(txt, W / 2, _wby);
-    }
-    ctx.textBaseline = 'alphabetic';
-    ctx.restore();
-  }
-
   // === BR tactical structures — buildings, walls, crates (PUBG-inspired) ===
   var _brStructures = []; // { type, x, y, w, h, angle, color }
   function _generateBRStructures() {
@@ -3515,12 +3429,10 @@ function doLogin() {
       player.y = WORLD_H / 2;
     }
 
-    // Initialize wave system — wave 1 starts on first update tick
+    // R6-respawn F2 — wave counter ticks via gameTime in updateOfflineWaveSystem.
     _initSpawnPoints();
     _waveState.wave = 0;
-    _waveState.phase = 'idle';
-    _waveState.spawnQueue = [];
-    _waveState.phaseTimer = 0;
+    _waveState.nextSpawnTimer = 0;
     offlineEnemies = [];
 
     // === Spawn 7 AI bot players (8 total including local player) ===
@@ -9080,7 +8992,7 @@ function doLogin() {
       ctx.fillText('Connecting to ' + serverUrl, W / 2, H / 2 + 30);
     }
     else if (state === 'playing') {
-      if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); }
+      if (offlineMode) { updateOfflineDemo(logicDt); offlinePlayerUpdate(logicDt); updateOfflineWaveSystem(logicDt); }
       else { networkUpdate(logicDt); }
       gameTime += logicDt;
       // R6-control F1 — tick ability CD (logicDt only, freezes during hit-stop/tutorial).
@@ -11712,7 +11624,6 @@ function doLogin() {
     // Wave banner announcement (US-275)
     drawWaveBanner();
     // Wave status HUD (offline mode MOBA-style wave system)
-    drawWaveStatusHUD();
     // Off-screen enemy direction arrows (final polish)
     drawOffScreenEnemyArrows();
     // Combo popup (Double/Triple/Penta/...)
