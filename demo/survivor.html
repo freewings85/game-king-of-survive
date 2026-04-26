@@ -5272,6 +5272,26 @@ function doLogin() {
         if (player.hp <= 0) { player.hp = 0; player.alive = false; state = 'gameOver'; deathCause = '被怪物击败'; }
       }
     }
+    for (var _bmi = 0; _bmi < offlineBots.length; _bmi++) {
+      var _bm = offlineBots[_bmi];
+      if (!_bm.alive) continue;
+      for (var _emi = 0; _emi < offlineEnemies.length; _emi++) {
+        var _em = offlineEnemies[_emi];
+        if (!_em.alive || !_em.hostile) continue;
+        var _bcdx = _em.x - _bm.x, _bcdy = _em.y - _bm.y;
+        var _bcd = Math.sqrt(_bcdx * _bcdx + _bcdy * _bcdy);
+        if (_bcd < (_bm.radius || 32) + (_em.radius || 16) + 2) {
+          var _bmDmg = 3 * dt;
+          _bm.hp -= _bmDmg;
+          window._dmgSourceLog = window._dmgSourceLog || {};
+          window._dmgSourceLog['mob_to_bot'] = (window._dmgSourceLog['mob_to_bot'] || 0) + _bmDmg;
+          if (_bm.hp <= 0) {
+            _bm.alive = false;
+            killFeed.push({ text: _bm.name + ' 被怪物击败', color: '#f88', time: 4 });
+          }
+        }
+      }
+    }
   }
 
   function _connectWebSocket(playerId, roomId) {
