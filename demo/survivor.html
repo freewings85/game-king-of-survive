@@ -3993,20 +3993,33 @@ function doLogin() {
           e._knockbackVx = 0; e._knockbackVy = 0;
         }
       }
-      var dx = player.x - e.x, dy = player.y - e.y;
-      var dist = Math.sqrt(dx * dx + dy * dy);
+      var _bestT = null, _bestTD = 500;
+      if (e.type !== 'treasure' && e.hostile) {
+        var _candidates = [player].concat(offlineBots);
+        for (var _ti = 0; _ti < _candidates.length; _ti++) {
+          var _ct = _candidates[_ti];
+          if (!_ct || !_ct.alive) continue;
+          var _ctdx = _ct.x - e.x, _ctdy = _ct.y - e.y;
+          var _ctd = Math.sqrt(_ctdx * _ctdx + _ctdy * _ctdy);
+          if (_ctd < _bestTD) { _bestTD = _ctd; _bestT = _ct; }
+        }
+      }
       if (e.type === 'treasure') {
-        if (dist < 200) {
-          e.x -= (dx / dist) * e.speed * _eMoveDt;
-          e.y -= (dy / dist) * e.speed * _eMoveDt;
+        var _trDx = player.x - e.x, _trDy = player.y - e.y;
+        var _trDist = Math.sqrt(_trDx * _trDx + _trDy * _trDy) || 0.001;
+        if (_trDist < 200) {
+          e.x -= (_trDx / _trDist) * e.speed * _eMoveDt;
+          e.y -= (_trDy / _trDist) * e.speed * _eMoveDt;
         } else {
           e._angle += (Math.random() - 0.5) * 2 * dt;
           e.x += Math.cos(e._angle) * e.speed * 0.3 * _eMoveDt;
           e.y += Math.sin(e._angle) * e.speed * 0.3 * _eMoveDt;
         }
-      } else if (dist < 300 && e.hostile) {
-        e.x += (dx / dist) * e.speed * _eMoveDt;
-        e.y += (dy / dist) * e.speed * _eMoveDt;
+      } else if (_bestT) {
+        var _chDx = _bestT.x - e.x, _chDy = _bestT.y - e.y;
+        var _chD = _bestTD || 0.001;
+        e.x += (_chDx / _chD) * e.speed * _eMoveDt;
+        e.y += (_chDy / _chD) * e.speed * _eMoveDt;
       } else {
         e._angle += (Math.random() - 0.5) * dt;
         e.x += Math.cos(e._angle) * e.speed * 0.5 * _eMoveDt;
