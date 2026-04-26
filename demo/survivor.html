@@ -5106,6 +5106,16 @@ function doLogin() {
           // Only player-vs-player kills count as "kills"; mob kills roll into farmKills.
           if (closest.isBot) {
             kills++; player.kills++;
+            player._koBonusUsed = player._koBonusUsed || 0;
+            if (player._koBonusUsed < 3) {
+              player._koBonusUsed++;
+              playerXP = xpToNextLevel + 1;
+              if (typeof triggerPowerSpike === 'function') {
+                triggerPowerSpike('KO! ' + player._koBonusUsed + '/3 — POWER UP!');
+              }
+              screenFlash.color = '#ff3030'; screenFlash.alpha = 0.7;
+              screenShake(16, 320);
+            }
             // R5m F2 — PvP kill distinct SFX (boss kill handled below)
             if (!closest.bossTypeId && typeof playSound === 'function') playSound('pvp_kill');
             // Experiment B: PVP kill restores 30% of maxHp + kill-cinema shake
