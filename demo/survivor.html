@@ -1576,7 +1576,10 @@ function doLogin() {
         _mm.fade = 0.4;
         var _pdx = player.x - _mm.x, _pdy = player.y - _mm.y;
         if (_pdx * _pdx + _pdy * _pdy < _mm.impactRadius * _mm.impactRadius) {
-          player.hp -= _mm.damage * _healerInitShieldMul(player) * _abilityDmgScale();
+          var _meteorDmg = _mm.damage * _healerInitShieldMul(player) * _abilityDmgScale();
+          player.hp -= _meteorDmg;
+          window._dmgSourceLog = window._dmgSourceLog || {};
+          window._dmgSourceLog['meteor'] = (window._dmgSourceLog['meteor'] || 0) + _meteorDmg;
           triggerPlayerHurt && triggerPlayerHurt();
           screenShake(10, 400);
         }
@@ -4241,6 +4244,10 @@ function doLogin() {
           b._attackTimer = b.attackCooldown;
           var _farmDmg = b.attackDamage + Math.floor(Math.random() * 4);
           b._aiTarget.hp -= _farmDmg;
+          if (b._aiTarget === player) {
+            window._dmgSourceLog = window._dmgSourceLog || {};
+            window._dmgSourceLog['bot_pvp'] = (window._dmgSourceLog['bot_pvp'] || 0) + _farmDmg;
+          }
           emit(b._aiTarget.x, b._aiTarget.y, '#ffd060', 4, 90);
           if (b._aiTarget.hp <= 0 && b._aiTarget.alive) {
             b._aiTarget.alive = false;
@@ -4398,6 +4405,10 @@ function doLogin() {
             if (_hsM < 1) _aDmg = Math.max(1, Math.floor(_aDmg * _hsM));
           }
           b._aiTarget.hp -= _aDmg;
+          if (b._aiTarget === player) {
+            window._dmgSourceLog = window._dmgSourceLog || {};
+            window._dmgSourceLog['bot_pvp'] = (window._dmgSourceLog['bot_pvp'] || 0) + _aDmg;
+          }
           // Visual feedback
           var _projAngle = Math.atan2(_edy, _edx);
           particles.push({
@@ -4531,6 +4542,8 @@ function doLogin() {
         var _stormDmg = 8 * _ssM * _healerInitShieldMul(player) * _abilityDmgScale();
         player.hp -= _stormDmg * dt;
         window._stormDoTCount = (window._stormDoTCount || 0) + 1;
+        window._dmgSourceLog = window._dmgSourceLog || {};
+        window._dmgSourceLog['storm'] = (window._dmgSourceLog['storm'] || 0) + _stormDmg * dt;
         // Pulse hurt vignette at ~2Hz while outside the safe zone
         if (playerHurtVignette.timer <= 0) triggerPlayerHurt();
         // One alert sound on edge-transition, then throttle to every 3s
@@ -5216,7 +5229,12 @@ function doLogin() {
       var cdx = e.x - player.x, cdy = e.y - player.y;
       var cd = Math.sqrt(cdx*cdx + cdy*cdy);
       if (cd < player.radius + e.radius + 2) {
-        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) player.hp -= 3 * dt * _healerInitShieldMul(player) * _abilityDmgScale();
+        if (!(player._comboInvUntil && gameTime < player._comboInvUntil)) {
+          var _meleeDmg = 3 * dt * _healerInitShieldMul(player) * _abilityDmgScale();
+          player.hp -= _meleeDmg;
+          window._dmgSourceLog = window._dmgSourceLog || {};
+          window._dmgSourceLog['enemy_melee'] = (window._dmgSourceLog['enemy_melee'] || 0) + _meleeDmg;
+        }
         // Fire a discrete hit feedback at most every 0.4s per enemy
         e._nextHitFxAt = e._nextHitFxAt || 0;
         if (gameTime >= e._nextHitFxAt) {
@@ -5789,6 +5807,8 @@ function doLogin() {
       if (dist < range) {
         var _bsDmg = boss.damage * _healerInitShieldMul(player) * _abilityDmgScale();
         player.hp -= _bsDmg;
+        window._dmgSourceLog = window._dmgSourceLog || {};
+        window._dmgSourceLog['boss_shockwave'] = (window._dmgSourceLog['boss_shockwave'] || 0) + _bsDmg;
         floatText(player.x, player.y - 20, '-' + Math.round(_bsDmg), '#f00', 16);
       }
     }
@@ -5814,6 +5834,8 @@ function doLogin() {
         if (dist < range && !player._invincible) {
           var _mbDmg = mb.damage * _healerInitShieldMul(player) * _abilityDmgScale();
           player.hp -= _mbDmg;
+          window._dmgSourceLog = window._dmgSourceLog || {};
+          window._dmgSourceLog['miniboss_aoe'] = (window._dmgSourceLog['miniboss_aoe'] || 0) + _mbDmg;
           floatText(player.x, player.y - 20, '-' + Math.round(_mbDmg), '#f00', 14);
         }
         emit(mb.x, mb.y, '#f4a', 12, range);
