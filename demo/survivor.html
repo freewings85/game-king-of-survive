@@ -5282,9 +5282,10 @@ function doLogin() {
         var _bcdx = _em.x - _bm.x, _bcdy = _em.y - _bm.y;
         var _bcd2 = _bcdx * _bcdx + _bcdy * _bcdy;
         var _bcr = (_bm.radius || 32) + (_em.radius || 16) + 2;
-        if (_bcd2 < _bcr * _bcr) {
-          _bm._staggerUntil = Math.max(_bm._staggerUntil || 0, gameTime + 0.3);
-          _bm._attackTimer = Math.max(_bm._attackTimer, 0.3);
+        if (_bcd2 < _bcr * _bcr && gameTime > (_bm._staggerImmuneUntil || 0)) {
+          _bm._staggerUntil = gameTime + 0.2;
+          _bm._staggerImmuneUntil = gameTime + 0.7;
+          _bm._attackTimer = Math.max(_bm._attackTimer, 0.2);
           window._dmgSourceLog = window._dmgSourceLog || {};
           window._dmgSourceLog['mob_stagger_bot'] = (window._dmgSourceLog['mob_stagger_bot'] || 0) + 1;
           break;
