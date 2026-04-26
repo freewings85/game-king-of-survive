@@ -7316,138 +7316,153 @@ function doLogin() {
         return;
       }
     }
-    // homm3_bright: render as orc sprite sheet. Facing derived from angle-to-player
-    // since AI chases; idle enemies default to facing down.
-    if (HOMM3_ART.monsterReady && HOMM3_ART.monsterMeta) {
-      var meta = HOMM3_ART.monsterMeta;
-      var fw = meta.frameW, fh = meta.frameH;
-      var ang = (typeof player !== 'undefined' && player) ? Math.atan2(player.y - y, player.x - x) : Math.PI / 2;
-      var dir = charDirOffset(ang); // U/L/D/R = 0/1/2/3
-      var frameCount = meta.anims.walk.frames;
-      var fps = meta.anims.walk.fps;
-      var frameIdx = Math.floor((gt || 0) * fps) % frameCount;
-      var sx = frameIdx * fw, sy = dir * fh;
-      // Scale sheet 64px to ~4.5x enemy radius (matches player sprite scaling)
-      var dh = r * 4.5, dw = dh;
-      ctx.save();
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(HOMM3_ART.monsterImg, sx, sy, fw, fh, x - dw / 2, y - dh * 0.72, dw, dh);
-      // Hostile hit-flash tint overlay
-      if (themeColor === '#fff') {
-        ctx.globalAlpha = 0.5;
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x - dw / 2, y - dh * 0.72, dw, dh);
-      }
-      ctx.restore();
-      return;
-    }
+    // zombie-skin-01: drop monster_orc override; all non-boss enemies render as
+    // procedural zombies below. ctx.scale(2,2) brings procedural footprint up to
+    // the ~4.5×r sprite footprint so visual size doesn't collapse.
     ctx.save();
     ctx.translate(x, y);
+    ctx.scale(2.0, 2.0);
     switch (type) {
-      case 'normal': // Goblin — big round head, small body, club
+      case 'normal': { // Walker zombie — slow shamble, arms forward, rotted clothes
+        var shamble = Math.sin(gt * 2.5) * r * 0.04;
         // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.15)';
-        ctx.beginPath(); ctx.ellipse(0, r*0.55, r*0.45, r*0.12, 0, 0, Math.PI*2); ctx.fill();
-        // Legs
-        ctx.fillStyle = '#4a7a2a';
-        ctx.fillRect(-r*0.2, r*0.25, r*0.12, r*0.3);
-        ctx.fillRect(r*0.08, r*0.25, r*0.12, r*0.3);
-        // Body (small trapezoid)
-        ctx.fillStyle = themeColor;
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.6, r*0.5, r*0.13, 0, 0, Math.PI*2); ctx.fill();
+        // Legs (uneven, dragging)
+        ctx.fillStyle = '#3a2820';
+        ctx.fillRect(-r*0.22, r*0.2, r*0.16, r*0.4);
+        ctx.fillRect(r*0.06, r*0.2 + shamble, r*0.16, r*0.4 - shamble);
+        // Torn shirt body
+        ctx.fillStyle = '#6a5040';
         ctx.beginPath();
-        ctx.moveTo(-r*0.3, -r*0.05); ctx.lineTo(r*0.3, -r*0.05);
-        ctx.lineTo(r*0.25, r*0.3); ctx.lineTo(-r*0.25, r*0.3);
+        ctx.moveTo(-r*0.32, -r*0.08); ctx.lineTo(r*0.32, -r*0.08);
+        ctx.lineTo(r*0.28, r*0.28); ctx.lineTo(r*0.05, r*0.22); ctx.lineTo(-r*0.1, r*0.3); ctx.lineTo(-r*0.28, r*0.22);
         ctx.closePath(); ctx.fill();
-        // Head (large round)
-        ctx.fillStyle = themeColor;
-        ctx.beginPath(); ctx.arc(0, -r*0.3, r*0.4, 0, Math.PI*2); ctx.fill();
-        // Pointy ears
-        ctx.beginPath(); ctx.moveTo(-r*0.35, -r*0.35); ctx.lineTo(-r*0.65, -r*0.5); ctx.lineTo(-r*0.3, -r*0.2); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(r*0.35, -r*0.35); ctx.lineTo(r*0.65, -r*0.5); ctx.lineTo(r*0.3, -r*0.2); ctx.closePath(); ctx.fill();
-        // Eyes (yellow triangular)
-        ctx.fillStyle = '#ffcc00';
-        ctx.beginPath(); ctx.moveTo(-r*0.18, -r*0.4); ctx.lineTo(-r*0.08, -r*0.28); ctx.lineTo(-r*0.28, -r*0.28); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(r*0.18, -r*0.4); ctx.lineTo(r*0.28, -r*0.28); ctx.lineTo(r*0.08, -r*0.28); ctx.closePath(); ctx.fill();
-        // Club (right hand)
-        ctx.fillStyle = '#8B6914';
-        ctx.save(); ctx.translate(r*0.3, r*0.05); ctx.rotate(-0.3);
-        ctx.fillRect(0, -r*0.05, r*0.6, r*0.1);
-        ctx.fillStyle = '#6a5a3a';
-        ctx.beginPath(); ctx.arc(r*0.6, 0, r*0.12, 0, Math.PI*2); ctx.fill();
+        // Blood stain on shirt
+        ctx.fillStyle = '#5a0a0a'; ctx.globalAlpha = 0.7;
+        ctx.beginPath(); ctx.ellipse(r*0.05, r*0.08, r*0.18, r*0.13, 0.3, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // Outstretched arms (signature zombie pose)
+        ctx.fillStyle = '#7a8865'; // rotted skin
+        ctx.fillRect(-r*0.55, -r*0.05, r*0.25, r*0.12);
+        ctx.fillRect(r*0.3, -r*0.05 + shamble*0.5, r*0.25, r*0.12);
+        // Hands (claws)
+        ctx.beginPath(); ctx.arc(-r*0.55, r*0.0, r*0.1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.55, r*0.0 + shamble*0.5, r*0.1, 0, Math.PI*2); ctx.fill();
+        // Head (slumped, gray-green)
+        ctx.fillStyle = '#7a8865';
+        ctx.beginPath(); ctx.arc(0, -r*0.3 + shamble*0.3, r*0.32, 0, Math.PI*2); ctx.fill();
+        // Sunken cheek shadow
+        ctx.fillStyle = '#4a5840'; ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(0, -r*0.25 + shamble*0.3, r*0.28, 0.2, Math.PI - 0.2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // Hollow red eyes
+        ctx.fillStyle = '#cc2010';
+        ctx.beginPath(); ctx.arc(-r*0.12, -r*0.33 + shamble*0.3, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.12, -r*0.33 + shamble*0.3, r*0.06, 0, Math.PI*2); ctx.fill();
+        // Open mouth (black, dripping)
+        ctx.fillStyle = '#180808';
+        ctx.beginPath(); ctx.ellipse(0, -r*0.18 + shamble*0.3, r*0.1, r*0.08, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#5a0a0a';
+        ctx.beginPath(); ctx.moveTo(-r*0.04, -r*0.13 + shamble*0.3); ctx.lineTo(-r*0.06, -r*0.02 + shamble*0.3); ctx.lineTo(0, -r*0.1 + shamble*0.3); ctx.fill();
+        break;
+      }
+      case 'fast': { // Runner zombie — sprint pose, exposed muscle, blood-soaked
+        var sprint = Math.sin(gt * 14) * r * 0.2;
+        // Shadow (small, motion blurred)
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.55, r*0.5, r*0.1, 0, 0, Math.PI*2); ctx.fill();
+        // Trail streaks
+        ctx.fillStyle = 'rgba(180,30,30,0.25)';
+        ctx.fillRect(-r*0.9, -r*0.1, r*0.5, r*0.06);
+        // Forward-leaning body (shredded shirt)
+        ctx.save(); ctx.rotate(-0.18);
+        ctx.fillStyle = '#3a2018';
+        ctx.beginPath();
+        ctx.moveTo(-r*0.28, -r*0.05); ctx.lineTo(r*0.32, -r*0.05);
+        ctx.lineTo(r*0.22, r*0.3); ctx.lineTo(-r*0.05, r*0.18); ctx.lineTo(-r*0.22, r*0.28);
+        ctx.closePath(); ctx.fill();
+        // Exposed bloody flesh under shirt
+        ctx.fillStyle = '#a83020';
+        ctx.beginPath(); ctx.ellipse(r*0.0, r*0.05, r*0.14, r*0.09, 0, 0, Math.PI*2); ctx.fill();
+        // Sprint legs (one back, one forward)
+        ctx.fillStyle = '#b06045';
+        ctx.fillRect(-r*0.18 - sprint*0.3, r*0.22, r*0.13, r*0.38);
+        ctx.fillRect(r*0.05 + sprint*0.3, r*0.22, r*0.13, r*0.38 - Math.abs(sprint)*0.4);
+        // Lunging arms (claws forward)
+        ctx.fillStyle = '#b06045';
+        ctx.fillRect(r*0.15, -r*0.1, r*0.45, r*0.1);
+        ctx.fillRect(-r*0.55, -r*0.05 + sprint*0.2, r*0.4, r*0.1);
+        ctx.beginPath(); ctx.arc(r*0.6, -r*0.05, r*0.09, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-r*0.55, 0 + sprint*0.2, r*0.09, 0, Math.PI*2); ctx.fill();
+        // Lean head (jaw forward, screaming)
+        ctx.fillStyle = '#b06045';
+        ctx.beginPath(); ctx.arc(r*0.05, -r*0.32, r*0.28, 0, Math.PI*2); ctx.fill();
+        // Wide screaming mouth
+        ctx.fillStyle = '#180808';
+        ctx.beginPath(); ctx.ellipse(r*0.1, -r*0.22, r*0.13, r*0.1, 0, 0, Math.PI*2); ctx.fill();
+        // Bloody fangs
+        ctx.fillStyle = '#e8d8b0';
+        ctx.fillRect(r*0.04, -r*0.25, r*0.03, r*0.08);
+        ctx.fillRect(r*0.15, -r*0.25, r*0.03, r*0.08);
+        // Bloodshot white eyes
+        ctx.fillStyle = '#f8e8c0';
+        ctx.beginPath(); ctx.arc(r*0.0, -r*0.36, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.18, -r*0.36, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#a01010';
+        ctx.beginPath(); ctx.arc(r*0.02, -r*0.36, r*0.025, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.2, -r*0.36, r*0.025, 0, Math.PI*2); ctx.fill();
         ctx.restore();
         break;
-      case 'fast': // Bat — spread wings with fangs
-        var wingFlap = Math.sin(gt * 12) * 0.3;
-        ctx.fillStyle = themeColor;
-        // Left wing
+      }
+      case 'tank': { // Bloater zombie — bloated mottled body, pus boils, leaking
+        var pulse = Math.sin(gt * 1.8) * r * 0.04;
+        // Wide shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.75, r*0.95, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+        // Stubby legs
+        ctx.fillStyle = '#3a4830';
+        ctx.fillRect(-r*0.45, r*0.4, r*0.32, r*0.35);
+        ctx.fillRect(r*0.13, r*0.4, r*0.32, r*0.35);
+        // Distended bloated torso (mottled greenish-purple)
+        ctx.fillStyle = '#5a7050';
         ctx.beginPath();
-        ctx.moveTo(-r * 0.2, -r * 0.1);
-        ctx.quadraticCurveTo(-r * 1.1, -r * (0.9 + wingFlap), -r * 0.9, r * 0.2);
-        ctx.lineTo(-r * 0.6, r * 0.1);
-        ctx.lineTo(-r * 0.2, r * 0.15);
-        ctx.closePath(); ctx.fill();
-        // Right wing
-        ctx.beginPath();
-        ctx.moveTo(r * 0.2, -r * 0.1);
-        ctx.quadraticCurveTo(r * 1.1, -r * (0.9 + wingFlap), r * 0.9, r * 0.2);
-        ctx.lineTo(r * 0.6, r * 0.1);
-        ctx.lineTo(r * 0.2, r * 0.15);
-        ctx.closePath(); ctx.fill();
-        // Body
-        ctx.beginPath(); ctx.ellipse(0, 0, r * 0.35, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
-        // Ears
-        ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 0.4); ctx.lineTo(-r * 0.35, -r * 0.85); ctx.lineTo(-r * 0.05, -r * 0.5); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(r * 0.2, -r * 0.4); ctx.lineTo(r * 0.35, -r * 0.85); ctx.lineTo(r * 0.05, -r * 0.5); ctx.fill();
-        // Eyes
-        ctx.fillStyle = '#f44';
-        ctx.beginPath(); ctx.arc(-r * 0.12, -r * 0.15, r * 0.09, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.12, -r * 0.15, r * 0.09, 0, Math.PI * 2); ctx.fill();
-        // Fangs
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.moveTo(-r * 0.08, r * 0.1); ctx.lineTo(-r * 0.04, r * 0.35); ctx.lineTo(0, r * 0.1); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(0, r * 0.1); ctx.lineTo(r * 0.04, r * 0.35); ctx.lineTo(r * 0.08, r * 0.1); ctx.fill();
+        ctx.ellipse(0, r*0.05 + pulse, r*0.85, r*0.62 + pulse, 0, 0, Math.PI*2);
+        ctx.fill();
+        // Mottling patches (dark)
+        ctx.fillStyle = '#3a4035'; ctx.globalAlpha = 0.7;
+        ctx.beginPath(); ctx.ellipse(-r*0.3, r*0.1, r*0.18, r*0.13, 0.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(r*0.35, r*0.2, r*0.16, r*0.11, -0.3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(r*0.0, r*0.32, r*0.2, r*0.1, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // Pus boils (yellow-green pustules)
+        ctx.fillStyle = '#c8d040';
+        ctx.beginPath(); ctx.arc(-r*0.2, -r*0.15, r*0.13, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.4, -r*0.05, r*0.1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.15, r*0.35, r*0.09, 0, Math.PI*2); ctx.fill();
+        // Boil highlights
+        ctx.fillStyle = '#f0f880';
+        ctx.beginPath(); ctx.arc(-r*0.23, -r*0.18, r*0.04, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.38, -r*0.08, r*0.03, 0, Math.PI*2); ctx.fill();
+        // Stubby arms (small relative to body)
+        ctx.fillStyle = '#5a7050';
+        ctx.fillRect(-r*1.0, -r*0.05, r*0.3, r*0.18);
+        ctx.fillRect(r*0.7, -r*0.05, r*0.3, r*0.18);
+        ctx.beginPath(); ctx.arc(-r*1.0, r*0.04, r*0.15, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*1.0, r*0.04, r*0.15, 0, Math.PI*2); ctx.fill();
+        // Tiny shrunken head
+        ctx.fillStyle = '#5a7050';
+        ctx.beginPath(); ctx.arc(0, -r*0.55, r*0.22, 0, Math.PI*2); ctx.fill();
+        // Half-closed eyes
+        ctx.fillStyle = '#180808';
+        ctx.fillRect(-r*0.13, -r*0.55, r*0.08, r*0.025);
+        ctx.fillRect(r*0.05, -r*0.55, r*0.08, r*0.025);
+        // Drool / pus drip
+        ctx.fillStyle = '#a8b830'; ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.moveTo(-r*0.05, -r*0.4); ctx.quadraticCurveTo(0, -r*0.2, r*0.04, -r*0.4); ctx.fill();
+        ctx.globalAlpha = 1;
         break;
-      case 'tank': // Stone Giant — large block body, small head, thick arms
-        // Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.beginPath(); ctx.ellipse(0, r*0.7, r*0.8, r*0.2, 0, 0, Math.PI*2); ctx.fill();
-        // Legs (thick stumps)
-        ctx.fillStyle = '#666655';
-        ctx.fillRect(-r*0.4, r*0.35, r*0.3, r*0.35);
-        ctx.fillRect(r*0.1, r*0.35, r*0.3, r*0.35);
-        // Body (large rounded rectangle)
-        ctx.fillStyle = themeColor;
-        ctx.beginPath();
-        ctx.moveTo(-r*0.6, -r*0.4);
-        ctx.lineTo(r*0.6, -r*0.4);
-        ctx.quadraticCurveTo(r*0.7, 0, r*0.6, r*0.4);
-        ctx.lineTo(-r*0.6, r*0.4);
-        ctx.quadraticCurveTo(-r*0.7, 0, -r*0.6, -r*0.4);
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#555544'; ctx.lineWidth = 2; ctx.stroke();
-        // Rock cracks
-        ctx.strokeStyle = '#555544'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(-r*0.3, -r*0.2); ctx.lineTo(-r*0.1, r*0.15); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r*0.2, -r*0.3); ctx.lineTo(r*0.35, r*0.1); ctx.stroke();
-        // Arms (thick rectangles from sides)
-        ctx.fillStyle = '#888877';
-        ctx.fillRect(-r*0.95, -r*0.2, r*0.4, r*0.35);
-        ctx.fillRect(r*0.55, -r*0.2, r*0.4, r*0.35);
-        // Fists
-        ctx.fillStyle = '#777766';
-        ctx.beginPath(); ctx.arc(-r*0.95, r*0.0, r*0.2, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r*0.95, r*0.0, r*0.2, 0, Math.PI*2); ctx.fill();
-        // Small head (embedded in body top)
-        ctx.fillStyle = '#999988';
-        ctx.beginPath();
-        ctx.moveTo(-r*0.25, -r*0.4); ctx.lineTo(r*0.25, -r*0.4);
-        ctx.lineTo(r*0.2, -r*0.7); ctx.lineTo(-r*0.2, -r*0.7);
-        ctx.closePath(); ctx.fill();
-        // Eyes (glowing amber)
-        ctx.fillStyle = '#ffaa00';
-        ctx.beginPath(); ctx.arc(-r*0.1, -r*0.52, r*0.07, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r*0.1, -r*0.52, r*0.07, 0, Math.PI*2); ctx.fill();
-        break;
+      }
       case 'boss': { // Lich King — tall hooded necromancer, levitating, crystal staff
         // Floating levitation offset
         var levitate = Math.sin(gt * 1.5) * r * 0.08;
@@ -7542,54 +7557,84 @@ function doLogin() {
         ctx.restore();
         break;
       }
-      case 'ranged': // Archer — hooded figure with bow
-        // Cloak
-        ctx.fillStyle = themeColor;
-        ctx.beginPath();
-        ctx.moveTo(0, -r * 0.9);
-        ctx.lineTo(-r * 0.65, r * 0.7);
-        ctx.quadraticCurveTo(0, r * 0.9, r * 0.65, r * 0.7);
-        ctx.closePath(); ctx.fill();
-        // Hood shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath(); ctx.arc(0, -r * 0.3, r * 0.4, 0, Math.PI * 2); ctx.fill();
-        // Glowing eye
-        ctx.fillStyle = '#ff4';
-        ctx.beginPath(); ctx.arc(r * 0.05, -r * 0.35, r * 0.1, 0, Math.PI * 2); ctx.fill();
-        // Bow
-        ctx.strokeStyle = '#a86'; ctx.lineWidth = r * 0.1;
-        ctx.beginPath(); ctx.arc(r * 0.5, 0, r * 0.55, -0.8, 0.8); ctx.stroke();
-        // Bowstring
-        ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(r * 0.5 + Math.cos(-0.8) * r * 0.55, Math.sin(-0.8) * r * 0.55);
-        ctx.lineTo(r * 0.5 + Math.cos(0.8) * r * 0.55, Math.sin(0.8) * r * 0.55);
-        ctx.stroke();
+      case 'ranged': { // Spitter zombie — gaunt, hunched, acid bile dripping from mouth
+        var bilePulse = 0.6 + 0.4 * Math.sin(gt * 4);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.55, r*0.45, r*0.11, 0, 0, Math.PI*2); ctx.fill();
+        // Hunched legs
+        ctx.fillStyle = '#2a2018';
+        ctx.fillRect(-r*0.2, r*0.2, r*0.14, r*0.4);
+        ctx.fillRect(r*0.06, r*0.2, r*0.14, r*0.4);
+        // Gaunt skeletal torso (ribs visible)
+        ctx.fillStyle = '#708855';
+        ctx.beginPath(); ctx.ellipse(0, 0, r*0.3, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+        // Rib lines
+        ctx.strokeStyle = '#3a4835'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-r*0.22, -r*0.05); ctx.lineTo(r*0.22, -r*0.05); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-r*0.22, r*0.08); ctx.lineTo(r*0.22, r*0.08); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-r*0.2, r*0.18); ctx.lineTo(r*0.2, r*0.18); ctx.stroke();
+        // Long lanky arms hanging down
+        ctx.fillStyle = '#708855';
+        ctx.fillRect(-r*0.42, -r*0.05, r*0.12, r*0.5);
+        ctx.fillRect(r*0.3, -r*0.05, r*0.12, r*0.5);
+        ctx.beginPath(); ctx.arc(-r*0.36, r*0.5, r*0.1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.36, r*0.5, r*0.1, 0, Math.PI*2); ctx.fill();
+        // Elongated head
+        ctx.fillStyle = '#708855';
+        ctx.beginPath(); ctx.ellipse(0, -r*0.4, r*0.22, r*0.3, 0, 0, Math.PI*2); ctx.fill();
+        // Wide gaping mouth (full of bile)
+        ctx.fillStyle = '#3a4810';
+        ctx.beginPath(); ctx.ellipse(0, -r*0.28, r*0.16, r*0.14, 0, 0, Math.PI*2); ctx.fill();
+        // Glowing acid bile inside mouth
+        ctx.fillStyle = '#9aff40'; ctx.globalAlpha = bilePulse;
+        ctx.beginPath(); ctx.ellipse(0, -r*0.25, r*0.12, r*0.08, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+        // Bile drip
+        ctx.fillStyle = '#9aff40';
+        ctx.beginPath(); ctx.moveTo(-r*0.04, -r*0.18); ctx.quadraticCurveTo(0, r*0.05, r*0.04, -r*0.18); ctx.fill();
+        // Sunken eyes (black with green glow)
+        ctx.fillStyle = '#080808';
+        ctx.beginPath(); ctx.arc(-r*0.1, -r*0.5, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.1, -r*0.5, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#9aff40'; ctx.globalAlpha = bilePulse;
+        ctx.beginPath(); ctx.arc(-r*0.1, -r*0.5, r*0.025, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.1, -r*0.5, r*0.025, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
         break;
-      case 'swarm': // Bug — segmented body with legs
-        ctx.fillStyle = themeColor;
-        // Head
-        ctx.beginPath(); ctx.ellipse(0, -r * 0.45, r * 0.35, r * 0.28, 0, 0, Math.PI * 2); ctx.fill();
-        // Thorax
-        ctx.beginPath(); ctx.ellipse(0, r * 0.05, r * 0.28, r * 0.2, 0, 0, Math.PI * 2); ctx.fill();
-        // Abdomen
-        ctx.beginPath(); ctx.ellipse(0, r * 0.5, r * 0.38, r * 0.3, 0, 0, Math.PI * 2); ctx.fill();
-        // Legs
-        ctx.strokeStyle = themeColor; ctx.lineWidth = 1;
-        for (var li = 0; li < 3; li++) {
-          var ly = -r * 0.15 + li * r * 0.28;
-          ctx.beginPath(); ctx.moveTo(-r * 0.25, ly); ctx.lineTo(-r * 0.75, ly - r * 0.2); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(r * 0.25, ly); ctx.lineTo(r * 0.75, ly - r * 0.2); ctx.stroke();
-        }
-        // Mandibles
-        ctx.strokeStyle = '#c66'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-r * 0.2, -r * 0.6); ctx.lineTo(-r * 0.35, -r * 0.85); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(r * 0.2, -r * 0.6); ctx.lineTo(r * 0.35, -r * 0.85); ctx.stroke();
-        // Eyes
-        ctx.fillStyle = '#f44';
-        ctx.beginPath(); ctx.arc(-r * 0.15, -r * 0.55, r * 0.08, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r * 0.15, -r * 0.55, r * 0.08, 0, Math.PI * 2); ctx.fill();
+      }
+      case 'swarm': { // Crawler zombie — small fast crawler, scuttling on all fours
+        var scuttle = Math.sin(gt * 16) * r * 0.1;
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.45, r*0.4, r*0.08, 0, 0, Math.PI*2); ctx.fill();
+        // Low-slung body (crawling pose, oriented horizontal)
+        ctx.fillStyle = '#7a8865';
+        ctx.beginPath(); ctx.ellipse(0, r*0.15, r*0.45, r*0.22, 0, 0, Math.PI*2); ctx.fill();
+        // Tattered shorts
+        ctx.fillStyle = '#3a2820';
+        ctx.beginPath(); ctx.ellipse(r*0.05, r*0.22, r*0.25, r*0.13, 0, 0, Math.PI*2); ctx.fill();
+        // Splayed legs (4-legged crawler)
+        ctx.fillStyle = '#7a8865';
+        ctx.fillRect(-r*0.4 - scuttle*0.5, r*0.1, r*0.12, r*0.4);
+        ctx.fillRect(r*0.28 + scuttle*0.5, r*0.1, r*0.12, r*0.4);
+        // Forward arms (planted on ground)
+        ctx.fillRect(-r*0.55, -r*0.05 + scuttle*0.3, r*0.18, r*0.1);
+        ctx.fillRect(r*0.37, -r*0.05 - scuttle*0.3, r*0.18, r*0.1);
+        ctx.beginPath(); ctx.arc(-r*0.55, r*0.0 + scuttle*0.3, r*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.55, r*0.0 - scuttle*0.3, r*0.08, 0, Math.PI*2); ctx.fill();
+        // Head (low, forward)
+        ctx.fillStyle = '#7a8865';
+        ctx.beginPath(); ctx.arc(r*0.05, -r*0.05, r*0.2, 0, Math.PI*2); ctx.fill();
+        // Snarling mouth
+        ctx.fillStyle = '#180808';
+        ctx.beginPath(); ctx.ellipse(r*0.08, r*0.04, r*0.1, r*0.05, 0, 0, Math.PI*2); ctx.fill();
+        // Tiny red eyes
+        ctx.fillStyle = '#cc2010';
+        ctx.beginPath(); ctx.arc(-r*0.04, -r*0.1, r*0.04, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.14, -r*0.1, r*0.04, 0, Math.PI*2); ctx.fill();
         break;
+      }
       case 'splitting': // Slime — wobbly blob with highlight
         ctx.fillStyle = themeColor;
         ctx.beginPath();
