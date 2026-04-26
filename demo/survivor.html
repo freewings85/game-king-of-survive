@@ -3464,7 +3464,7 @@ function doLogin() {
       // BR spawn: prefer handcrafted spawnPoints[1..7] if a static map is loaded.
       // Fall back to perimeter ring when generating procedurally.
       var bAngle = Math.PI * 2 * bi / 7 + 0.3;
-      var _halfDiag = Math.min(WORLD_W, WORLD_H) * 0.38;
+      var _halfDiag = Math.min(WORLD_W, WORLD_H) * 0.22;
       var bDist = _halfDiag + Math.random() * _halfDiag * 0.25;
       var _botX, _botY;
       if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length > bi + 1) {
@@ -5107,7 +5107,9 @@ function doLogin() {
           if (closest.isBot) {
             kills++; player.kills++;
             player._koBonusUsed = player._koBonusUsed || 0;
+            window._koBonusAttempts = (window._koBonusAttempts || 0) + 1;
             if (player._koBonusUsed < 3) {
+              window._koBonusFired = (window._koBonusFired || 0) + 1;
               player._koBonusUsed++;
               playerXP = xpToNextLevel + 1;
               if (typeof triggerPowerSpike === 'function') {
