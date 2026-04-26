@@ -9414,10 +9414,13 @@ function doLogin() {
         picks.push(pool[pickIdx]);
         pool.splice(pickIdx, 1);
       }
+      window._lastOffer = picks.map(function(c) { return c.id + ':' + c.rarity; });
+      window._allOffers = (window._allOffers || []).concat([window._lastOffer.join('|')]);
       skillChoices = picks;
       return;
     }
     // Fallback: legacy path (no cards.json)
+    window._fallbackUsed = (window._fallbackUsed || 0) + 1;
     var pool = SKILL_IDS.filter(function(id) { return (skillLevels[id] || 0) < 5; });
     for (var i = pool.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
@@ -9446,6 +9449,9 @@ function doLogin() {
     if (id && typeof applySkill === 'function') {
       // Ignore applySkill failure for synthesized evolution IDs
       try { applySkill(id); } catch (e) {}
+      window._allPicks = (window._allPicks || []).concat([
+        id + ':' + ((WAVE2_CARDS && WAVE2_CARDS.cards.find(function(c){return c.id===id;})) || {rarity:'?'}).rarity
+      ]);
     }
     skillChoices = [];
     state = 'playing';
