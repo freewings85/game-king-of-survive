@@ -365,6 +365,113 @@ function doLogin() {
     });
     // Landmark sprites loaded lazily; rasterised on ready for faster per-frame draw.
   })();
+  // ldoe-overhaul-01: 5 LDOE landmark procedural draws (no SVG load)
+  function drawLdoeLandmark(c2, sx, sy, w, h, kind) {
+    c2.save();
+    // ground shadow
+    c2.fillStyle = 'rgba(0,0,0,0.4)';
+    c2.beginPath(); c2.ellipse(sx + w/2, sy + h - 6, w*0.42, 8, 0, 0, Math.PI*2); c2.fill();
+    if (kind === 'gas_station') {
+      // canopy posts + roof
+      c2.fillStyle = '#3a3a38'; c2.fillRect(sx + 6, sy + 12, 6, h - 30);
+      c2.fillRect(sx + w - 12, sy + 12, 6, h - 30);
+      c2.fillStyle = '#dad8d4'; c2.fillRect(sx, sy + 4, w, 14);
+      // rust streaks down canopy
+      c2.fillStyle = '#6e2a1c';
+      c2.fillRect(sx + 8, sy + 18, 2, h - 36); c2.fillRect(sx + w - 30, sy + 18, 2, h - 36);
+      // big yellow sign
+      c2.fillStyle = '#cfa84a'; c2.fillRect(sx + w/2 - 18, sy, 36, 14);
+      c2.strokeStyle = '#1a1a18'; c2.lineWidth = 2; c2.strokeRect(sx + w/2 - 18, sy, 36, 14);
+      c2.fillStyle = '#1a1a18'; c2.font = 'bold 10px sans-serif'; c2.textAlign = 'center';
+      c2.fillText('GAS', sx + w/2, sy + 11); c2.textAlign = 'left';
+      // pump (small)
+      c2.fillStyle = '#dad8d4'; c2.fillRect(sx + w/2 - 8, sy + h - 22, 16, 18);
+      c2.fillStyle = '#6e2a1c'; c2.fillRect(sx + w/2 - 6, sy + h - 18, 12, 6);
+      // hose
+      c2.strokeStyle = '#1a1a18'; c2.lineWidth = 1.5;
+      c2.beginPath(); c2.moveTo(sx + w/2 + 8, sy + h - 16); c2.quadraticCurveTo(sx + w/2 + 18, sy + h - 4, sx + w/2 + 14, sy + h - 6); c2.stroke();
+    } else if (kind === 'wreck_car') {
+      // crashed car body, tilted, rusted red
+      c2.save(); c2.translate(sx + w/2, sy + h - 16); c2.rotate(-0.18);
+      c2.fillStyle = '#6e2a1c'; c2.fillRect(-w*0.42, -14, w*0.84, 18);
+      // roof crumple
+      c2.fillStyle = '#5a221a'; c2.fillRect(-w*0.28, -22, w*0.42, 10);
+      // broken windshield
+      c2.fillStyle = '#1a1a18'; c2.fillRect(-w*0.22, -19, w*0.32, 6);
+      c2.strokeStyle = '#3a3a38'; c2.lineWidth = 1;
+      c2.beginPath(); c2.moveTo(-w*0.18, -19); c2.lineTo(-w*0.05, -13); c2.stroke();
+      c2.beginPath(); c2.moveTo(w*0.05, -19); c2.lineTo(-w*0.02, -13); c2.stroke();
+      // tires (one flat)
+      c2.fillStyle = '#0a0a08';
+      c2.beginPath(); c2.arc(-w*0.28, 4, 7, 0, Math.PI*2); c2.fill();
+      c2.beginPath(); c2.arc(w*0.28, 6, 5, 0, Math.PI*2); c2.fill();
+      c2.restore();
+      // scattered debris
+      c2.fillStyle = '#3a3a38';
+      c2.fillRect(sx + 4, sy + h - 10, 6, 3); c2.fillRect(sx + w - 14, sy + h - 8, 8, 4);
+    } else if (kind === 'barricade') {
+      // sandbag stack
+      c2.fillStyle = '#8a7050';
+      var rows = Math.max(2, Math.floor(h / 18));
+      for (var r = 0; r < rows; r++) {
+        var rowY = sy + h - 14 - r * 14;
+        var bagN = Math.floor(w / 18) - (r % 2);
+        for (var b = 0; b < bagN; b++) {
+          var bx = sx + 6 + b * 18 + (r % 2 ? 9 : 0);
+          c2.beginPath(); c2.ellipse(bx + 8, rowY, 9, 6, 0, 0, Math.PI*2); c2.fill();
+          c2.strokeStyle = '#5a4a32'; c2.lineWidth = 1; c2.stroke();
+        }
+      }
+      // wood plank cross
+      c2.strokeStyle = '#3e3220'; c2.lineWidth = 4;
+      c2.beginPath(); c2.moveTo(sx + 4, sy + 10); c2.lineTo(sx + w - 4, sy + h - 14); c2.stroke();
+      c2.beginPath(); c2.moveTo(sx + w - 4, sy + 10); c2.lineTo(sx + 4, sy + h - 14); c2.stroke();
+    } else if (kind === 'fence') {
+      // chain-link fence — diagonal grid + tilted post
+      c2.strokeStyle = '#3a3a38'; c2.lineWidth = 2;
+      // posts
+      c2.beginPath(); c2.moveTo(sx + 2, sy + h); c2.lineTo(sx + 4, sy); c2.stroke();
+      c2.beginPath(); c2.moveTo(sx + w - 2, sy + h); c2.lineTo(sx + w - 4, sy); c2.stroke();
+      // top wire
+      c2.beginPath(); c2.moveTo(sx + 4, sy); c2.lineTo(sx + w - 4, sy); c2.stroke();
+      c2.beginPath(); c2.moveTo(sx + 4, sy + h); c2.lineTo(sx + w - 4, sy + h); c2.stroke();
+      // diagonal mesh
+      c2.strokeStyle = '#888880'; c2.lineWidth = 1;
+      var step = 8;
+      for (var d = 0; d < w + h; d += step) {
+        c2.beginPath(); c2.moveTo(sx + d, sy); c2.lineTo(sx + d - h, sy + h); c2.stroke();
+        c2.beginPath(); c2.moveTo(sx + d, sy + h); c2.lineTo(sx + d - h, sy); c2.stroke();
+      }
+      // barbed-wire coils on top
+      c2.strokeStyle = '#6e2a1c'; c2.lineWidth = 1.5;
+      for (var _bi = 0; _bi < Math.floor(w / 12); _bi++) {
+        var bcx = sx + 6 + _bi * 12;
+        c2.beginPath(); c2.arc(bcx, sy - 2, 4, 0, Math.PI); c2.stroke();
+        // barbs
+        c2.beginPath(); c2.moveTo(bcx, sy - 6); c2.lineTo(bcx, sy - 10); c2.stroke();
+        c2.beginPath(); c2.moveTo(bcx - 2, sy - 4); c2.lineTo(bcx - 5, sy - 6); c2.stroke();
+        c2.beginPath(); c2.moveTo(bcx + 2, sy - 4); c2.lineTo(bcx + 5, sy - 6); c2.stroke();
+      }
+    } else if (kind === 'debris') {
+      // brick pile + exposed rebar
+      c2.fillStyle = '#6e2a1c';
+      for (var br = 0; br < 8; br++) {
+        var brx = sx + (br * 17) % (w - 12);
+        var bry = sy + h - 8 - ((br * 5) % (h - 4));
+        c2.fillRect(brx, bry, 12, 6);
+        c2.strokeStyle = '#3a1a14'; c2.lineWidth = 0.6; c2.strokeRect(brx, bry, 12, 6);
+      }
+      // rebar bent steel
+      c2.strokeStyle = '#3a3a38'; c2.lineWidth = 2;
+      c2.beginPath(); c2.moveTo(sx + 8, sy + h - 4); c2.quadraticCurveTo(sx + 14, sy + 4, sx + 20, sy + h - 16); c2.stroke();
+      c2.beginPath(); c2.moveTo(sx + w - 12, sy + h - 8); c2.lineTo(sx + w - 6, sy + 6); c2.stroke();
+      // dust
+      c2.fillStyle = 'rgba(138,112,80,0.5)';
+      c2.fillRect(sx, sy + h - 4, w, 4);
+    }
+    c2.restore();
+  }
+
   function _getLandmarkSprite(relPath) {
     if (!relPath) return null;
     var hit = MAP_ART.landmarkSprites[relPath];
@@ -3323,6 +3430,22 @@ function doLogin() {
         ctx2.strokeStyle = 'rgba(0,0,0,0.55)'; ctx2.lineWidth = 1.5;
         ctx2.stroke();
       } else if (s.type === 'landmark') {
+        // ldoe-overhaul-01: 5 procedural LDOE landmarks; JSON sets sprite to ldoe kind
+        var _lsk = s.sprite;
+        if (_lsk === 'gas_station' || _lsk === 'wreck_car' || _lsk === 'barricade' || _lsk === 'fence' || _lsk === 'debris') {
+          drawLdoeLandmark(ctx2, sx, sy, s.w, s.h, _lsk);
+          if (s.label) {
+            ctx2.font = 'bold 14px "PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
+            ctx2.textAlign = 'center';
+            ctx2.lineWidth = 3;
+            ctx2.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx2.fillStyle = '#ffe8a0';
+            ctx2.strokeText(s.label, sx + s.w / 2, sy - 6);
+            ctx2.fillText(s.label, sx + s.w / 2, sy - 6);
+            ctx2.textAlign = 'left';
+          }
+          continue;
+        }
         var spr = s.sprite ? _getLandmarkSprite(s.sprite) : null;
         var _sprSrc = spr && spr.canvas ? spr.canvas : (spr && spr.ready ? spr.img : null);
         if (_sprSrc) {
@@ -4661,80 +4784,24 @@ function doLogin() {
       var _fx = offlineSkillFx[_fxi];
       _fx.life -= dt;
       if (_fx.life <= 0) {
-        // Impact burst
-        var impactColor = _fx.kind === 'fireball' ? '#ff6020' : (_fx.kind === 'arrow' ? '#88ff88' : '#ffdd44');
-        for (var _imp = 0; _imp < 10; _imp++) {
-          var _ia = Math.random() * Math.PI * 2;
-          var _is = 40 + Math.random() * 80;
+        // ldoe-overhaul-01: blood spurt impact (dark red, short cone-shaped burst)
+        for (var _imp = 0; _imp < 7; _imp++) {
+          var _ia = (_fx.angle || 0) + (Math.random() - 0.5) * 1.4;
+          var _is = 40 + Math.random() * 60;
           particles.push({
             x: _fx.x, y: _fx.y,
             vx: Math.cos(_ia) * _is, vy: Math.sin(_ia) * _is,
-            life: 0.4, maxLife: 0.4,
-            color: impactColor,
-            size: 2 + Math.random() * 2,
+            life: 0.3, maxLife: 0.3,
+            color: Math.random() < 0.6 ? '#4a1a14' : '#6e2a1c',
+            size: 2 + Math.random() * 1.5,
             particleType: 'circle'
           });
-        }
-        // Fireball: expanding ring
-        if (_fx.kind === 'fireball') {
-          for (var _ri2 = 0; _ri2 < 14; _ri2++) {
-            var _ra = _ri2 / 14 * Math.PI * 2;
-            particles.push({
-              x: _fx.x, y: _fx.y,
-              vx: Math.cos(_ra) * 120, vy: Math.sin(_ra) * 120,
-              life: 0.35, maxLife: 0.35,
-              color: '#ffaa00', size: 3, particleType: 'circle'
-            });
-          }
         }
         offlineSkillFx.splice(_fxi, 1);
         continue;
       }
       _fx.x += _fx.vx * dt;
       _fx.y += _fx.vy * dt;
-      _fx._trailT += dt;
-      // Spawn trail particles
-      if (_fx._trailT > 0.015) {
-        _fx._trailT = 0;
-        if (_fx.kind === 'fireball') {
-          // Fire trail — orange/yellow glow particles
-          for (var _tp = 0; _tp < 2; _tp++) {
-            particles.push({
-              x: _fx.x + (Math.random() - 0.5) * 4,
-              y: _fx.y + (Math.random() - 0.5) * 4,
-              vx: -_fx.vx * 0.1 + (Math.random() - 0.5) * 30,
-              vy: -_fx.vy * 0.1 + (Math.random() - 0.5) * 30 - 20,
-              life: 0.4, maxLife: 0.4,
-              color: Math.random() < 0.5 ? '#ff4400' : '#ffaa00',
-              size: 3 + Math.random() * 2,
-              particleType: 'circle'
-            });
-          }
-        } else if (_fx.kind === 'arrow') {
-          // Green sparkle trail
-          particles.push({
-            x: _fx.x + (Math.random() - 0.5) * 3,
-            y: _fx.y + (Math.random() - 0.5) * 3,
-            vx: (Math.random() - 0.5) * 20,
-            vy: (Math.random() - 0.5) * 20,
-            life: 0.3, maxLife: 0.3,
-            color: '#88ff88',
-            size: 1.5,
-            particleType: 'circle'
-          });
-        } else if (_fx.kind === 'slash') {
-          // Warrior energy slash — red/gold streaks
-          particles.push({
-            x: _fx.x + (Math.random() - 0.5) * 6,
-            y: _fx.y + (Math.random() - 0.5) * 6,
-            vx: -_fx.vx * 0.15, vy: -_fx.vy * 0.15,
-            life: 0.25, maxLife: 0.25,
-            color: Math.random() < 0.5 ? '#ffaa20' : '#ffff80',
-            size: 2,
-            particleType: 'circle'
-          });
-        }
-      }
     }
 
     // === Pickup magnetism — gems and coins fly toward player when close ===
@@ -4956,42 +5023,48 @@ function doLogin() {
         player._attackUntil = gameTime + _atkDur;
         player._attackFacing = angle;
         playSound('shoot');
-        // Spawn class-specific visual projectile (fireball/arrow/slash)
-        var projSpeed = 350;
-        var projColor = selectedClass === 'warrior' ? '#ffa' : selectedClass === 'mage' ? '#a6f' : '#8f8';
-        var fxKind = selectedClass === 'warrior' ? 'slash' : (selectedClass === 'mage' ? 'fireball' : 'arrow');
+        // ldoe-overhaul-01: unified bullet tracer (no class-specific kind variation)
+        var projSpeed = 600;
+        var fxKind = 'bullet';
+        var _muzX = player.x + Math.cos(angle) * player.radius * 1.2;
+        var _muzY = player.y + Math.sin(angle) * player.radius * 1.2;
         offlineSkillFx.push({
           kind: fxKind,
-          x: player.x, y: player.y,
+          x: _muzX, y: _muzY,
           vx: Math.cos(angle) * projSpeed,
           vy: Math.sin(angle) * projSpeed,
           angle: angle,
-          life: 0.8, maxLife: 0.8,
-          color: projColor,
-          _trailT: 0,
+          life: 0.4, maxLife: 0.4,
+          color: '#ffd24a',
           targetX: closest.x, targetY: closest.y
         });
-        particles.push({ x: player.x, y: player.y, vx: Math.cos(angle)*projSpeed, vy: Math.sin(angle)*projSpeed, life: 0.8, maxLife: 0.8, color: projColor, size: 12, particleType: 'circle', _isProjectile: true });
-        // Muzzle flash on cast
-        // R5l F1 / R5m F1 / R5q F1 — muzzle particle count.
-        //   warrior 3 (0.27s cd, +48% attack rate vs mage)
-        //   scout   4 (R5q: R5p revert to 6 dropped FPS pass-rate 25%→10%,
-        //              re-reverted per Leo P0 instruction, no discussion)
-        //   mage/assassin 6 (baseline)
-        var _muzCount = (selectedClass === 'warrior') ? 3 : (selectedClass === 'scout' ? 4 : 6);
-        for (var _muz = 0; _muz < _muzCount; _muz++) {
-          var _muzA = angle + (Math.random() - 0.5) * 0.8;
-          var _muzS = 100 + Math.random() * 80;
+        // LDOE muzzle flash — bright orange cone, 0.08s, 4 particles
+        for (var _muz = 0; _muz < 4; _muz++) {
+          var _muzA = angle + (Math.random() - 0.5) * 0.5;
+          var _muzS = 140 + Math.random() * 80;
           particles.push({
-            x: player.x + Math.cos(angle) * player.radius * 1.2,
-            y: player.y + Math.sin(angle) * player.radius * 1.2,
+            x: _muzX, y: _muzY,
             vx: Math.cos(_muzA) * _muzS, vy: Math.sin(_muzA) * _muzS,
-            life: 0.3, maxLife: 0.3,
-            color: selectedClass === 'warrior' ? '#ffaa40' : (selectedClass === 'mage' ? '#c088ff' : '#88ff88'),
-            size: 2 + Math.random() * 2,
+            life: 0.08, maxLife: 0.08,
+            color: _muz === 0 ? '#ffffcc' : '#ff8c2a',
+            size: 3 + Math.random() * 3,
             particleType: 'circle'
           });
         }
+        window.__lastMuzzleAt = { x: _muzX, y: _muzY, t: gameTime };
+        // Casing eject — small gold rect, right-rear of player, gravity
+        var _csA = angle - Math.PI * 0.55; // ~100° behind-right of fire dir
+        var _csX = player.x + Math.cos(_csA) * player.radius * 0.6;
+        var _csY = player.y + Math.sin(_csA) * player.radius * 0.6;
+        particles.push({
+          x: _csX, y: _csY,
+          vx: Math.cos(_csA) * 60 + (Math.random()-0.5) * 30,
+          vy: Math.sin(_csA) * 60 - 80,
+          life: 0.45, maxLife: 0.45,
+          color: '#cfa84a', size: 1.5,
+          particleType: 'casing', _gravity: 220
+        });
+        window.__lastCasingAt = { x: _csX, y: _csY, t: gameTime };
         // Wave 1: damage roll with crit chance
         var _rawDmg = player.attackDamage;
         // Round 3 K: combo attack buff (+50% for 5s)
@@ -6172,10 +6245,14 @@ function doLogin() {
 
   // Get part colors with skin overrides
   function getPartColors(skinData, partName, classType) {
+    // ldoe-overhaul-01: LDOE survivor palette — 灰土锈, no bright colors.
+    // warrior=tactical / mage=heavy / scout=light / healer=medic
     var defaults = {
-      warrior: { head: {p:'#888',s:'#666'}, body: {p:'#777',s:'#c33',o:'#444'}, weapon: {w:'#aaa',sh:'#963'}, legs: {c:'#555'}, eye: '#fff' },
-      mage: { head: {p:'#624a8a',s:'#483670'}, body: {p:'#624a8a',s:'#8866bb',o:'#3a2a5a'}, weapon: {w:'#8B4513',g:'#aa66ff'}, legs: {c:'#483670'}, eye: '#f0f' },
-      scout: { head: {p:'#4a5a3a',s:'#3a4a2a'}, body: {p:'#6a5a3a',s:'#4a3a2a',o:'#3a2a1a'}, weapon: {w:'#8B6914',st:'#ccc'}, legs: {c:'#5a4a3a'}, eye: '#8f8' }
+      warrior: { head: {p:'#3a3e38',s:'#2a2e2a'}, body: {p:'#2e3a2a',s:'#1a221a',o:'#0e1410'}, weapon: {w:'#3a3a38',gun:'#2a2a28'}, legs: {c:'#2a2e2a'}, eye: '#cfd8c4' },
+      mage:    { head: {p:'#1a1a18',s:'#0a0a08'}, body: {p:'#3a3838',s:'#2a2828',o:'#0e0e0c'}, weapon: {w:'#3a3a38',gun:'#1e1e1c'}, legs: {c:'#1e1e1c'}, eye: '#cfd8c4' },
+      scout:   { head: {p:'#8a7050',s:'#5a4a32'}, body: {p:'#6e5a3e',s:'#3e3220',o:'#2a2218'}, weapon: {w:'#3a3a38',gun:'#2a2a28'}, legs: {c:'#5a4a32'}, eye: '#cfd8c4' },
+      healer:  { head: {p:'#4a4a48',s:'#2a2a28'}, body: {p:'#4a4a48',s:'#6e2a1c',o:'#1e1e1c'}, weapon: {w:'#3a3a38',gun:'#2a2a28'}, legs: {c:'#2e2e2c'}, eye: '#cfd8c4' },
+      assassin:{ head: {p:'#1a1a18',s:'#0a0a08'}, body: {p:'#1e1e1c',s:'#3e3220',o:'#0a0a08'}, weapon: {w:'#3a3a38',gun:'#1e1e1c'}, legs: {c:'#0e0e0c'}, eye: '#cfd8c4' }
     };
     var d = defaults[classType] || defaults.warrior;
     var result = JSON.parse(JSON.stringify(d[partName] || {}));
@@ -6203,268 +6280,224 @@ function doLogin() {
     ctx.fill();
   }
 
-  // Layer 2: Legs
+  // Layer 2: Legs — LDOE tactical pants + boots
   function drawCharLegs(r, classType, colors, gt) {
-    var legW, legH, legGap, walkAmp, walkSpeed;
-    if (classType === 'warrior') { legW = r*0.2; legH = r*0.35; legGap = r*0.15; walkAmp = r*0.08; walkSpeed = 8; }
-    else if (classType === 'mage') { legW = r*0.12; legH = r*0.15; legGap = r*0.1; walkAmp = r*0.03; walkSpeed = 6; }
-    else { legW = r*0.15; legH = r*0.3; legGap = r*0.12; walkAmp = r*0.12; walkSpeed = 10; }
-    var lc = colors.c || colors.p || '#555';
-    var walkL = Math.sin(gt * walkSpeed) * walkAmp;
-    var walkR = Math.sin(gt * walkSpeed + Math.PI) * walkAmp;
+    var lc = colors.c || '#2a2e2a';
+    var walkSpeed = 9;
+    var walkL = Math.sin(gt * walkSpeed) * r * 0.06;
+    var walkR = Math.sin(gt * walkSpeed + Math.PI) * r * 0.06;
+    // Tactical pants (slim, dark)
     ctx.fillStyle = lc;
-    // Left leg
-    ctx.fillRect(-legGap - legW/2, r*0.3 + walkL, legW, legH);
-    // Right leg
-    ctx.fillRect(legGap - legW/2, r*0.3 + walkR, legW, legH);
+    ctx.fillRect(-r*0.22, r*0.28 + walkL, r*0.18, r*0.4);
+    ctx.fillRect(r*0.04, r*0.28 + walkR, r*0.18, r*0.4 - Math.abs(walkR));
+    // Knee pockets (darker rectangle)
+    ctx.fillStyle = '#1a1c18';
+    ctx.fillRect(-r*0.2, r*0.42 + walkL, r*0.14, r*0.06);
+    ctx.fillRect(r*0.06, r*0.42 + walkR, r*0.14, r*0.06);
+    // Combat boots (solid black, wider than pant cuff)
+    ctx.fillStyle = '#0a0a08';
+    ctx.fillRect(-r*0.24, r*0.62 + walkL, r*0.22, r*0.1);
+    ctx.fillRect(r*0.02, r*0.62 + walkR, r*0.22, r*0.1);
   }
 
-  // Layer 3: Body (class-specific torso)
+  // Layer 3: Body — LDOE survivor jacket + backpack silhouette
   function drawCharBody(r, classType, colors, isFury, shieldActive) {
-    var p = colors.p || '#777', s = colors.s || '#c33', o = colors.o || '#444';
-    if (isFury) p = '#c33';
-    if (shieldActive && !isFury) p = '#669';
+    var p = colors.p || '#2e3a2a', s = colors.s || '#6e2a1c', o = colors.o || '#0e1410';
+    if (isFury) p = '#6e2a1c';
+    if (shieldActive && !isFury) p = '#3a4a3a';
+    // Backpack silhouette (behind torso, all classes — LDOE survivor staple)
+    ctx.fillStyle = '#1a1c18';
+    ctx.fillRect(-r*0.42, -r*0.25, r*0.84, r*0.55);
+    ctx.fillStyle = '#0a0a08';
+    ctx.fillRect(-r*0.42, -r*0.25, r*0.84, r*0.04); // top strap
+    // Torso jacket
+    ctx.fillStyle = p;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.36, -r*0.3); ctx.lineTo(r*0.36, -r*0.3);
+    ctx.lineTo(r*0.32, r*0.32); ctx.lineTo(-r*0.32, r*0.32);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = o; ctx.lineWidth = 1.5; ctx.stroke();
     if (classType === 'warrior') {
-      // Heavy plate armor — trapezoid, wide shoulders
-      ctx.fillStyle = p;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.5, -r*0.3); ctx.lineTo(r*0.3, -r*0.3);
-      ctx.lineTo(r*0.2, r*0.4); ctx.lineTo(-r*0.4, r*0.4);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = o; ctx.lineWidth = 1.5; ctx.stroke();
-      // Shoulder pads
-      ctx.fillStyle = s;
-      ctx.beginPath(); ctx.arc(-r*0.4, -r*0.3, r*0.2, Math.PI, 0); ctx.fill();
-      ctx.beginPath(); ctx.arc(r*0.2, -r*0.3, r*0.2, Math.PI, 0); ctx.fill();
-      // Chest emblem
-      ctx.fillStyle = s; ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.05, -r*0.1); ctx.lineTo(r*0.1, 0);
-      ctx.lineTo(-r*0.05, r*0.1); ctx.lineTo(-r*0.2, 0);
-      ctx.closePath(); ctx.fill();
-      ctx.globalAlpha = 1;
+      // Tactical: chest rig with magazine pouches
+      ctx.fillStyle = '#1a1c18';
+      ctx.fillRect(-r*0.28, -r*0.18, r*0.56, r*0.22);
+      ctx.fillStyle = '#3a3a38';
+      ctx.fillRect(-r*0.22, -r*0.14, r*0.12, r*0.14);
+      ctx.fillRect(-r*0.06, -r*0.14, r*0.12, r*0.14);
+      ctx.fillRect(r*0.1, -r*0.14, r*0.12, r*0.14);
     } else if (classType === 'mage') {
-      // Robe — inverted trapezoid, flowing hem
-      ctx.fillStyle = p;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.3, -r*0.35); ctx.lineTo(r*0.2, -r*0.35);
-      ctx.lineTo(r*0.45, r*0.5); ctx.lineTo(-r*0.55, r*0.5);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = o; ctx.lineWidth = 1; ctx.stroke();
-      // Belt
-      ctx.fillStyle = s;
-      ctx.fillRect(-r*0.35, -r*0.05, r*0.6, r*0.08);
-      // Hem folds
-      ctx.strokeStyle = s; ctx.lineWidth = 0.8; ctx.globalAlpha = 0.5;
-      for (var fi = 0; fi < 3; fi++) {
-        var fx = -r*0.4 + fi * r*0.3;
-        ctx.beginPath(); ctx.arc(fx, r*0.48, r*0.12, 0, Math.PI); ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
+      // Heavy: bulky bulletproof vest, big collar
+      ctx.fillStyle = '#1a1c18';
+      ctx.fillRect(-r*0.38, -r*0.2, r*0.76, r*0.4);
+      ctx.strokeStyle = '#0a0a08'; ctx.lineWidth = 1;
+      ctx.strokeRect(-r*0.34, -r*0.16, r*0.68, r*0.32);
+      // Collar zip
+      ctx.fillStyle = '#3a3a38';
+      ctx.fillRect(-r*0.02, -r*0.3, r*0.04, r*0.5);
+    } else if (classType === 'healer') {
+      // Medic: red cross armband
+      ctx.fillStyle = s; // accent → rust red
+      ctx.fillRect(-r*0.42, -r*0.05, r*0.12, r*0.14);
+      ctx.fillStyle = '#dad8d4';
+      ctx.fillRect(-r*0.39, -r*0.02, r*0.06, r*0.02);
+      ctx.fillRect(-r*0.37, -r*0.04, r*0.02, r*0.06);
     } else {
-      // Scout leather vest — slim, with short cape
-      ctx.fillStyle = p;
+      // Scout / assassin: light parka with hood drape, drawstring
+      ctx.fillStyle = '#3e3220';
       ctx.beginPath();
-      ctx.moveTo(-r*0.35, -r*0.3); ctx.lineTo(r*0.25, -r*0.3);
-      ctx.lineTo(r*0.15, r*0.05); ctx.lineTo(r*0.2, r*0.35);
-      ctx.lineTo(-r*0.3, r*0.35); ctx.lineTo(-r*0.25, r*0.05);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = o; ctx.lineWidth = 1; ctx.stroke();
-      // Short cape
-      var capeC = s;
-      ctx.fillStyle = capeC; ctx.globalAlpha = 0.7;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.35, -r*0.3);
-      ctx.quadraticCurveTo(-r*0.7, r*0.1, -r*0.5, r*0.3);
-      ctx.lineTo(-r*0.3, r*0.2);
-      ctx.closePath(); ctx.fill();
-      ctx.globalAlpha = 1;
+      ctx.moveTo(-r*0.36, -r*0.3); ctx.lineTo(0, -r*0.42);
+      ctx.lineTo(r*0.36, -r*0.3); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#1a1c18'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-r*0.05, -r*0.3); ctx.lineTo(-r*0.05, r*0.05); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r*0.05, -r*0.3); ctx.lineTo(r*0.05, r*0.05); ctx.stroke();
     }
+    // Belt
+    ctx.fillStyle = '#0a0a08';
+    ctx.fillRect(-r*0.34, r*0.18, r*0.68, r*0.06);
   }
 
-  // Layer 4: Weapon
+  // Layer 4: Weapon — LDOE firearms (rifle / carbine / handgun)
   function drawCharWeapon(r, classType, colors, gt) {
+    var bodyC = colors.gun || '#2a2a28';
+    var stockC = colors.w || '#3a3a38';
     if (classType === 'warrior') {
-      // Shield (left/back)
-      var shC = colors.sh || '#963';
-      ctx.fillStyle = shC;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.5, -r*0.35); ctx.lineTo(-r*1.0, -r*0.25);
-      ctx.lineTo(-r*1.05, 0); ctx.lineTo(-r*1.0, r*0.25);
-      ctx.lineTo(-r*0.5, r*0.35);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
-      // Shield cross emblem
-      ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(-r*0.78, -r*0.12); ctx.lineTo(-r*0.78, r*0.12); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-r*0.92, 0); ctx.lineTo(-r*0.65, 0); ctx.stroke();
-      // Sword (right/front)
-      var wC = colors.w || '#aaa';
-      ctx.fillStyle = wC;
-      ctx.beginPath();
-      ctx.moveTo(r*0.4, -r*0.06); ctx.lineTo(r*1.3, -r*0.06);
-      ctx.lineTo(r*1.45, 0); ctx.lineTo(r*1.3, r*0.06);
-      ctx.lineTo(r*0.4, r*0.06);
-      ctx.closePath(); ctx.fill();
-      // Hilt
-      ctx.fillStyle = '#8B4513';
-      ctx.fillRect(r*0.25, -r*0.12, r*0.18, r*0.24);
-      // Cross-guard
-      ctx.fillStyle = '#DAA520';
-      ctx.fillRect(r*0.38, -r*0.18, r*0.06, r*0.36);
+      // Assault rifle held across chest (long, with magazine + stock)
+      // Stock
+      ctx.fillStyle = stockC;
+      ctx.fillRect(-r*0.55, -r*0.1, r*0.3, r*0.14);
+      // Receiver / barrel
+      ctx.fillStyle = bodyC;
+      ctx.fillRect(-r*0.25, -r*0.06, r*1.5, r*0.1);
+      // Magazine (curved box below)
+      ctx.fillStyle = '#1a1a18';
+      ctx.fillRect(r*0.05, r*0.04, r*0.14, r*0.22);
+      // Foregrip / sight
+      ctx.fillStyle = '#0a0a08';
+      ctx.fillRect(r*0.5, -r*0.12, r*0.14, r*0.06);
+      ctx.fillRect(r*0.7, -r*0.06, r*0.04, r*0.04);
+      // Muzzle ring
+      ctx.fillRect(r*1.18, -r*0.07, r*0.08, r*0.12);
     } else if (classType === 'mage') {
-      // Staff
-      ctx.strokeStyle = colors.w || '#8B4513'; ctx.lineWidth = 2.5;
-      ctx.beginPath(); ctx.moveTo(r*0.15, r*0.3); ctx.lineTo(r*0.3, -r*1.0); ctx.stroke();
-      // Staff gem
-      var gemC = colors.g || '#aa66ff';
-      ctx.fillStyle = gemC;
-      ctx.save();
-      ctx.shadowColor = gemC; ctx.shadowBlur = 8;
-      ctx.beginPath(); ctx.arc(r*0.3, -r*1.05, r*0.12, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.7;
-      ctx.beginPath(); ctx.arc(r*0.3, -r*1.05, r*0.04, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1;
-      // Floating orb (left hand)
-      var orbC = colors.g || '#aa66ff';
-      var orbY = -r*0.1 + Math.sin(gt * 3) * r*0.05;
-      ctx.fillStyle = orbC;
-      ctx.save();
-      ctx.shadowColor = orbC; ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.arc(-r*0.5, orbY, r*0.1, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      // Arcane particles
-      for (var ap = 0; ap < 3; ap++) {
-        var apA = gt * 2.5 + ap * Math.PI * 2 / 3;
-        var apD = r * 0.8;
-        ctx.fillStyle = orbC; ctx.globalAlpha = 0.3 + 0.2 * Math.sin(gt * 3 + ap);
-        ctx.beginPath(); ctx.arc(Math.cos(apA) * apD, Math.sin(apA) * apD, r*0.06, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.globalAlpha = 1;
+      // Heavy: short carbine with red-dot, gripped near body
+      ctx.fillStyle = stockC;
+      ctx.fillRect(-r*0.3, -r*0.08, r*0.22, r*0.12);
+      ctx.fillStyle = bodyC;
+      ctx.fillRect(-r*0.08, -r*0.06, r*1.05, r*0.1);
+      // Optic (red-dot)
+      ctx.fillStyle = '#0a0a08';
+      ctx.fillRect(r*0.2, -r*0.16, r*0.12, r*0.08);
+      ctx.fillStyle = '#6e2a1c';
+      ctx.fillRect(r*0.25, -r*0.14, r*0.04, r*0.04);
+      // Magazine
+      ctx.fillStyle = '#1a1a18';
+      ctx.fillRect(r*0.04, r*0.04, r*0.16, r*0.18);
+      // Muzzle
+      ctx.fillRect(r*0.94, -r*0.07, r*0.06, r*0.12);
+    } else if (classType === 'healer') {
+      // Medic: handgun + medkit pouch on hip
+      ctx.fillStyle = bodyC;
+      ctx.fillRect(r*0.3, -r*0.06, r*0.42, r*0.1);
+      ctx.fillStyle = '#1a1a18';
+      ctx.fillRect(r*0.3, r*0.04, r*0.1, r*0.16); // grip
+      ctx.fillStyle = stockC;
+      ctx.fillRect(r*0.7, -r*0.07, r*0.04, r*0.12); // muzzle
+      // Medkit on hip (left)
+      ctx.fillStyle = '#dad8d4';
+      ctx.fillRect(-r*0.5, r*0.18, r*0.18, r*0.16);
+      ctx.fillStyle = '#6e2a1c';
+      ctx.fillRect(-r*0.45, r*0.22, r*0.08, r*0.02);
+      ctx.fillRect(-r*0.43, r*0.2, r*0.04, r*0.06);
     } else {
-      // Scout bow
-      var bowC = colors.w || '#8B6914';
-      var strC = colors.st || '#ccc';
-      // Bow (left side, behind)
-      ctx.strokeStyle = bowC; ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.6, -r*0.5);
-      ctx.quadraticCurveTo(-r*1.1, 0, -r*0.6, r*0.5);
-      ctx.stroke();
-      // Bowstring
-      ctx.strokeStyle = strC; ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(-r*0.6, -r*0.5); ctx.lineTo(-r*0.6, r*0.5);
-      ctx.stroke();
-      // Arrow
-      ctx.fillStyle = '#ddd';
-      ctx.beginPath();
-      ctx.moveTo(r*1.1, 0); ctx.lineTo(r*0.6, -r*0.05); ctx.lineTo(r*0.6, r*0.05);
-      ctx.closePath(); ctx.fill();
-      // Arrow shaft
-      ctx.strokeStyle = '#c96'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(r*0.2, 0); ctx.lineTo(r*1.0, 0); ctx.stroke();
+      // Scout / assassin: handgun + bandolier
+      ctx.fillStyle = bodyC;
+      ctx.fillRect(r*0.28, -r*0.06, r*0.46, r*0.1);
+      ctx.fillStyle = '#1a1a18';
+      ctx.fillRect(r*0.28, r*0.04, r*0.1, r*0.18);
+      ctx.fillStyle = stockC;
+      ctx.fillRect(r*0.72, -r*0.07, r*0.04, r*0.12);
+      // Bandolier (diagonal strap with rounds)
+      ctx.strokeStyle = '#3e3220'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-r*0.4, -r*0.3); ctx.lineTo(r*0.3, r*0.3); ctx.stroke();
+      ctx.fillStyle = '#cfa84a';
+      for (var bri = 0; bri < 4; bri++) {
+        var brt = bri / 4;
+        ctx.fillRect(-r*0.4 + brt*r*0.7 - r*0.02, -r*0.3 + brt*r*0.6 - r*0.04, r*0.04, r*0.08);
+      }
     }
   }
 
-  // Layer 5: Head
+  // Layer 5: Head — LDOE survivor headgear (helmet / hood / cap / dust mask)
   function drawCharHead(r, classType, colors, gt) {
-    var p = colors.p || '#888', s = colors.s || '#666';
-    var eyeC = colors.eye || '#fff';
+    var p = colors.p || '#3a3e38', s = colors.s || '#2a2e2a';
+    // Skin (always weathered tan)
+    ctx.fillStyle = '#a88a6e';
+    ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.26, 0, Math.PI * 2); ctx.fill();
     if (classType === 'warrior') {
-      // Round helmet
+      // Tactical helmet (low cover) + NVG mount
       ctx.fillStyle = p;
-      ctx.beginPath(); ctx.arc(0, -r*0.45, r*0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, -r*0.5, r*0.3, Math.PI, 0); ctx.fill();
+      ctx.fillRect(-r*0.3, -r*0.5, r*0.6, r*0.1);
       ctx.strokeStyle = s; ctx.lineWidth = 1.5; ctx.stroke();
-      // T-shaped visor
-      ctx.fillStyle = eyeC; ctx.globalAlpha = 0.9;
-      ctx.fillRect(-r*0.08, -r*0.55, r*0.16, r*0.06);
-      ctx.fillRect(-r*0.12, -r*0.49, r*0.24, r*0.06);
-      ctx.globalAlpha = 1;
+      // NVG mount stub
+      ctx.fillStyle = '#0a0a08';
+      ctx.fillRect(-r*0.06, -r*0.78, r*0.12, r*0.08);
+      // Eye band shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(-r*0.2, -r*0.42, r*0.4, r*0.06);
     } else if (classType === 'mage') {
-      // Face
-      ctx.fillStyle = '#ddb89a';
-      ctx.beginPath(); ctx.arc(0, -r*0.5, r*0.28, 0, Math.PI * 2); ctx.fill();
-      // Pointed hat
+      // Heavy: black hood pulled up + dust/respirator mask
       ctx.fillStyle = p;
-      // Brim
       ctx.beginPath();
-      ctx.ellipse(0, -r*0.65, r*0.35, r*0.1, 0, 0, Math.PI * 2); ctx.fill();
-      // Cone
-      ctx.beginPath();
-      ctx.moveTo(-r*0.2, -r*0.7);
-      ctx.quadraticCurveTo(r*0.05, -r*1.4, r*0.15, -r*0.7);
+      ctx.moveTo(-r*0.3, -r*0.32); ctx.lineTo(-r*0.35, -r*0.6);
+      ctx.quadraticCurveTo(0, -r*0.85, r*0.35, -r*0.6);
+      ctx.lineTo(r*0.3, -r*0.32);
       ctx.closePath(); ctx.fill();
-      // Glowing eyes
-      ctx.fillStyle = eyeC;
-      ctx.globalAlpha = 0.7 + 0.3 * Math.sin(gt * 5);
-      ctx.beginPath(); ctx.arc(-r*0.08, -r*0.48, r*0.05, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(r*0.08, -r*0.48, r*0.05, 0, Math.PI * 2); ctx.fill();
+      // Respirator mask (lower face)
+      ctx.fillStyle = '#1a1a18';
+      ctx.beginPath(); ctx.ellipse(0, -r*0.36, r*0.18, r*0.12, 0, 0, Math.PI*2); ctx.fill();
+      // Mask filter canister
+      ctx.fillStyle = '#3a3a38';
+      ctx.beginPath(); ctx.arc(r*0.18, -r*0.34, r*0.06, 0, Math.PI*2); ctx.fill();
+      // Goggles
+      ctx.fillStyle = '#0a0a08';
+      ctx.fillRect(-r*0.18, -r*0.5, r*0.36, r*0.06);
+      ctx.fillStyle = '#6e2a1c'; ctx.globalAlpha = 0.7;
+      ctx.fillRect(-r*0.16, -r*0.49, r*0.12, r*0.04);
+      ctx.fillRect(r*0.04, -r*0.49, r*0.12, r*0.04);
       ctx.globalAlpha = 1;
-    } else {
-      // Hood
-      ctx.fillStyle = p;
+    } else if (classType === 'healer') {
+      // Medic: bandana + visible face
+      ctx.fillStyle = '#dad8d4';
       ctx.beginPath();
-      ctx.moveTo(-r*0.3, -r*0.35);
-      ctx.quadraticCurveTo(-r*0.2, -r*1.0, r*0.15, -r*0.8);
-      ctx.quadraticCurveTo(r*0.25, -r*0.5, r*0.2, -r*0.35);
+      ctx.moveTo(-r*0.26, -r*0.6); ctx.lineTo(r*0.26, -r*0.6);
+      ctx.lineTo(r*0.22, -r*0.5); ctx.lineTo(-r*0.22, -r*0.5);
       ctx.closePath(); ctx.fill();
-      // Face partial
-      ctx.fillStyle = '#ccb89a';
-      ctx.beginPath(); ctx.arc(r*0.02, -r*0.5, r*0.2, -0.3, 1.2); ctx.fill();
-      // Single visible eye
-      ctx.fillStyle = eyeC;
-      ctx.save(); ctx.shadowColor = eyeC; ctx.shadowBlur = 4;
-      ctx.beginPath(); ctx.arc(r*0.08, -r*0.52, r*0.04, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
+      // Bandana knot tail
+      ctx.fillRect(-r*0.36, -r*0.55, r*0.1, r*0.04);
+      // Eyes
+      ctx.fillStyle = '#1a1a18';
+      ctx.fillRect(-r*0.1, -r*0.45, r*0.05, r*0.04);
+      ctx.fillRect(r*0.05, -r*0.45, r*0.05, r*0.04);
+    } else {
+      // Scout / assassin: baseball cap + scarf
+      ctx.fillStyle = p;
+      // Cap crown
+      ctx.beginPath(); ctx.arc(0, -r*0.55, r*0.26, Math.PI, 0); ctx.fill();
+      // Cap brim
+      ctx.fillRect(-r*0.04, -r*0.58, r*0.36, r*0.06);
+      // Scarf around neck
+      ctx.fillStyle = '#3e3220';
+      ctx.fillRect(-r*0.22, -r*0.32, r*0.44, r*0.08);
+      // Eye shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(-r*0.18, -r*0.5, r*0.36, r*0.04);
     }
   }
 
-  // === LPC CHARACTER SPRITE SHEETS ===
-  // Config mirrors demo/assets/characters/sprites.json (locked by GameDesigner v1, 2026-04-11).
-  // Inlined so we don't need a fetch() round-trip (works under file:// too).
-  // homm3_bright art style active (Leo decision 2026-04-18).
-  // Until warrior/scout sprites exist, all 3 classes share the mage sheet for
-  // visual consistency; gameplay stats remain per-class.
+  // ldoe-overhaul-01: dropped CHAR_SPRITE_CFG/IMGS sprite-sheet preload.
+  // Player rendering is now fully procedural (draw{Shadow,Legs,Body,Weapon,Head})
+  // — see drawCharacterSprite below. HOMM3_ART_BASE retained for tileset only.
   var HOMM3_ART_BASE = 'assets/style_homm3_bright/';
-  var _homm3PlayerAnims = {
-    idle:   { rowBase: 2, rowFromDir: false, frames: 1, fps: 1,  skipFrame0: false },
-    walk:   { rowBase: 0, rowFromDir: true,  frames: 4, fps: 10, skipFrame0: false },
-    attack: { rowBase: 4, rowFromDir: false, frames: 3, fps: 12, skipFrame0: false },
-    death:  { rowBase: 5, rowFromDir: false, frames: 3, fps: 8,  skipFrame0: false, loop: false }
-  };
-  var CHAR_SPRITE_CFG = {
-    frameW: 64, frameH: 64,
-    // Direction row offset inside an anim's 4-row block. Order U/L/D/R.
-    classes: {
-      warrior: { sheet: HOMM3_ART_BASE + 'player_warrior.png', anims: _homm3PlayerAnims },
-      mage:    { sheet: HOMM3_ART_BASE + 'player_mage.png',    anims: _homm3PlayerAnims },
-      scout:   { sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims },
-      // R5n F2 — Assassin reuses scout sheet until ArtDesigner ships a dedicated
-      // black-cloak sprite. Tint from CLASS_DEFS.assassin.color differentiates.
-      assassin:{ sheet: HOMM3_ART_BASE + 'player_scout.png',   anims: _homm3PlayerAnims },
-      // R5v F3 — Healer dedicated sprite (ArtDesigner 3e9f1d8 player_healer.svg)
-      healer:  { sheet: HOMM3_ART_BASE + 'player_healer.svg',  anims: _homm3PlayerAnims }
-    }
-  };
-  var CHAR_SPRITE_IMGS = {}; // { warrior: {img, ready}, ... }
-  (function preloadCharSprites() {
-    // Dedup sheet paths so 3 classes sharing the homm3 mage sheet load one image.
-    var _sharedByPath = {};
-    Object.keys(CHAR_SPRITE_CFG.classes).forEach(function(cls) {
-      var p = CHAR_SPRITE_CFG.classes[cls].sheet;
-      var entry = _sharedByPath[p];
-      if (!entry) {
-        entry = { img: new Image(), ready: false, failed: false };
-        entry.img.onload  = function() { entry.ready = true; };
-        entry.img.onerror = function() { entry.failed = true; };
-        entry.img.src = p;
-        _sharedByPath[p] = entry;
-      }
-      CHAR_SPRITE_IMGS[cls] = entry;
-    });
-  })();
 
   // Archetype head icons (ArtDesigner 2026-04-19). 24×24 PNG shown above
   // each bot nameplate so archetype is recognisable at a glance.
@@ -6818,6 +6851,17 @@ function doLogin() {
     if (camY < 0) ctx.fillRect(Math.max(camX, 0), camY, W, -camY);
     if (camX + W > WORLD_W) ctx.fillRect(WORLD_W, camY, camX + W - WORLD_W, H);
     if (camY + H > WORLD_H) ctx.fillRect(Math.max(camX, 0), WORLD_H, W, camY + H - WORLD_H);
+    // ldoe-overhaul-01: 末日色板 multiply overlay (灰土锈, kills cartoon green/pink)
+    var _ovX = Math.max(0, camX), _ovY = Math.max(0, camY);
+    var _ovW = Math.min(WORLD_W, camX + W) - _ovX;
+    var _ovH = Math.min(WORLD_H, camY + H) - _ovY;
+    if (_ovW > 0 && _ovH > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = 'rgba(138,112,80,0.55)';
+      ctx.fillRect(_ovX, _ovY, _ovW, _ovH);
+      ctx.restore();
+    }
   }
 
   // 9-slice stretch: corners fixed, edges repeat/stretch, center fills.
@@ -7022,14 +7066,7 @@ function doLogin() {
         return null;
       }
       window.__spriteDebug = {
-        getLoadedSheets: function() {
-          var out = [];
-          Object.keys(CHAR_SPRITE_IMGS).forEach(function(k) {
-            var e = CHAR_SPRITE_IMGS[k];
-            if (e.ready) out.push((CHAR_SPRITE_CFG.classes[k].sheet).split('/').pop());
-          });
-          return out;
-        },
+        getLoadedSheets: function() { return []; }, // ldoe-overhaul-01: procedural, no sheets
         getCurrentFrame: function(id) {
           var p = resolvePlayer(id);
           if (!p || !p._spriteDebugFrame) return null;
@@ -7076,6 +7113,34 @@ function doLogin() {
             }
           } catch (e) { return 'err: ' + e.message; }
           return false;
+        },
+        // ldoe-overhaul-01: Playtester closeup hooks
+        getLastMuzzleAt: function() { return window.__lastMuzzleAt || null; },
+        getLastCasingAt: function() { return window.__lastCasingAt || null; },
+        getCamera: function() {
+          return {
+            x: (typeof cameraX !== 'undefined') ? cameraX : 0,
+            y: (typeof cameraY !== 'undefined') ? cameraY : 0,
+            w: (typeof W !== 'undefined') ? W : 0,
+            h: (typeof H !== 'undefined') ? H : 0
+          };
+        },
+        getLandmarksOnScreen: function() {
+          if (typeof MAP_DATA === 'undefined' || !MAP_DATA || !MAP_DATA.structures) return [];
+          var camX = (typeof cameraX !== 'undefined') ? cameraX : 0;
+          var camY = (typeof cameraY !== 'undefined') ? cameraY : 0;
+          var sw = (typeof W !== 'undefined') ? W : 0;
+          var sh = (typeof H !== 'undefined') ? H : 0;
+          var out = [];
+          for (var i = 0; i < MAP_DATA.structures.length; i++) {
+            var s = MAP_DATA.structures[i];
+            var k = s.kind || s.type;
+            if (k !== 'landmark' || !s.sprite) continue;
+            if (s.x + s.w < camX || s.x > camX + sw) continue;
+            if (s.y + s.h < camY || s.y > camY + sh) continue;
+            out.push({ kind: s.sprite, x: s.x, y: s.y, w: s.w, h: s.h, screenX: s.x - camX, screenY: s.y - camY });
+          }
+          return out;
         },
         spawnEnemyNear: function(type, dx, dy) {
           try {
@@ -7190,73 +7255,7 @@ function doLogin() {
       drawSkinAura(cx, cy, r, skinData, gt);
     }
 
-    // === Sprite-sheet render path ===
-    var cls = classType;
-    if (!CHAR_SPRITE_CFG.classes[cls]) cls = 'warrior';
-    var sheet = CHAR_SPRITE_IMGS[cls];
-    if (sheet && sheet.ready) {
-      var cfg = CHAR_SPRITE_CFG.classes[cls];
-      var state = opts.animState || 'idle';
-      if (!cfg.anims[state]) state = 'idle';
-      var animDef = cfg.anims[state];
-      var dirOff = charDirOffset(facingAngle);
-      var _addDir = (animDef.rowFromDir === undefined) ? true : !!animDef.rowFromDir;
-      var row = animDef.rowBase + (_addDir ? dirOff : 0);
-      // Frame index: walking skips frame 0 (LPC idle pose), attack uses full range
-      var frameCount = animDef.frames;
-      var frameIdx;
-      if (frameCount <= 1) {
-        frameIdx = 0;
-      } else if (state === 'attack' && opts.animTime != null) {
-        // One-shot: clamp to last frame when done
-        var af = Math.floor(opts.animTime * animDef.fps);
-        frameIdx = Math.min(af, frameCount - 1);
-      } else {
-        frameIdx = Math.floor(gt * animDef.fps) % frameCount;
-      }
-      if (animDef.skipFrame0) frameIdx += 1;
-      var fw = CHAR_SPRITE_CFG.frameW, fh = CHAR_SPRITE_CFG.frameH;
-      var sx = frameIdx * fw, sy = row * fh;
-      if (opts._debugOut) {
-        opts._debugOut.animState = state;
-        opts._debugOut.row = row;
-        opts._debugOut.col = frameIdx;
-        opts._debugOut.dir = dirOff;
-        opts._debugOut.facingAngle = facingAngle;
-        opts._debugOut.sheetSource = (cfg.sheet || '').split('/').pop();
-      }
-      // Destination: scale 64px sprite to be clearly visible on gameplay screen.
-      // radius=14 (player) → dh≈63 (matches native LPC 64px, 1:1 pixel art).
-      // radius=18 (class card UI) → dh≈81, still fits card panel.
-      // radius=10 (skin card UI) → dh≈45, within skin card area.
-      var dh = r * 4.5, dw = dh;
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.imageSmoothingEnabled = false;
-      // Anchor feet near cy + r*0.55 (matches old shadow line), head upward
-      ctx.drawImage(sheet.img, sx, sy, fw, fh, cx - dw / 2, cy - dh * 0.72, dw, dh);
-      // Fury / shield visual overlays
-      if (isFury) {
-        ctx.globalAlpha = 0.25 + Math.sin(gt * 10) * 0.1;
-        ctx.fillStyle = '#f44';
-        ctx.beginPath(); ctx.arc(cx, cy, r * 1.15, 0, Math.PI * 2); ctx.fill();
-      }
-      if (shieldActive) {
-        ctx.globalAlpha = 0.4;
-        ctx.strokeStyle = '#8cf'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(cx, cy, r * 1.3, 0, Math.PI * 2); ctx.stroke();
-      }
-      ctx.restore();
-
-      // Layer 6: Outline + Particles on top
-      if (skinData && !isBot) {
-        drawSkinOutline(cx, cy, r, skinData, gt);
-        drawSkinParticles(cx, cy, r, skinData, gt);
-      }
-      return;
-    }
-
-    // === Fallback: original Canvas-drawn layered sprite (used until PNGs load) ===
+    // === Fully procedural — LDOE survivor render path ===
     ctx.save();
     ctx.globalAlpha = alpha;
     ctx.translate(cx, cy);
@@ -8717,10 +8716,12 @@ function doLogin() {
     var pLen = particles.length;
     for (var i = pLen - 1; i >= 0; i--) {
       var p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
+      if (p._gravity) p.vy += p._gravity * dt;
       if (p.life <= 0) { particles[i] = particles[--pLen]; continue; }
       ctx.globalAlpha = p.life / p.maxLife;
       ctx.fillStyle = p.color;
       if (p.particleType === 'star') { drawStarParticle(p.x, p.y, p.size * (p.life / p.maxLife), p.color); }
+      else if (p.particleType === 'casing') { ctx.fillRect(p.x - 0.75, p.y - 1.5, 1.5, 3); }
       else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2); ctx.fill(); }
     }
     particles.length = pLen;
@@ -9468,97 +9469,22 @@ function doLogin() {
     // Strategic point pulse halos (world-space)
     drawStratPulse();
 
-    // Class-based projectile visuals (offline mode: fireball/arrow/slash)
+    // ldoe-overhaul-01: unified bullet tracer (replaces fireball/arrow/slash branches)
     for (var _fri = 0; _fri < offlineSkillFx.length; _fri++) {
       var _frfx = offlineSkillFx[_fri];
       var _frAlpha = Math.min(1, _frfx.life / _frfx.maxLife);
-      if (_frfx.kind === 'fireball') {
-        // Friendly cyan halo ring (marks player projectile)
-        ctx.globalAlpha = 0.5 * _frAlpha;
-        ctx.strokeStyle = '#aef6ff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 14, 0, Math.PI * 2); ctx.stroke();
-        // Outer heat distortion
-        ctx.globalAlpha = 0.25 * _frAlpha;
-        ctx.fillStyle = '#f40';
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 22, 0, Math.PI * 2); ctx.fill();
-        // Outer flame
-        ctx.globalAlpha = 0.6 * _frAlpha;
-        ctx.fillStyle = '#ff6020';
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 12, 0, Math.PI * 2); ctx.fill();
-        // Mid flame
-        ctx.globalAlpha = 0.9 * _frAlpha;
-        ctx.fillStyle = '#ffaa00';
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 8, 0, Math.PI * 2); ctx.fill();
-        // Hot core
-        ctx.globalAlpha = _frAlpha;
-        ctx.fillStyle = '#ffff80';
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 2, 0, Math.PI * 2); ctx.fill();
-        // Outline the whole orb in bright white
-        ctx.globalAlpha = 0.9 * _frAlpha;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(_frfx.x, _frfx.y, 9, 0, Math.PI * 2); ctx.stroke();
-      } else if (_frfx.kind === 'arrow') {
-        ctx.save();
-        ctx.translate(_frfx.x, _frfx.y);
-        ctx.rotate(_frfx.angle);
-        // Friendly cyan halo on arrow tip (marks player projectile)
-        ctx.globalAlpha = 0.5 * _frAlpha;
-        ctx.strokeStyle = '#aef6ff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
-        // Trail streak
-        ctx.globalAlpha = 0.35 * _frAlpha;
-        ctx.fillStyle = '#aaffaa';
-        ctx.beginPath();
-        ctx.moveTo(-22, -1.5); ctx.lineTo(-4, 0); ctx.lineTo(-22, 1.5); ctx.closePath();
-        ctx.fill();
-        // Arrow shaft
-        ctx.globalAlpha = _frAlpha;
-        ctx.fillStyle = '#cc9966';
-        ctx.fillRect(-10, -1, 14, 2);
-        // Arrow head
-        ctx.fillStyle = '#eeeeee';
-        ctx.beginPath();
-        ctx.moveTo(8, 0); ctx.lineTo(3, -3); ctx.lineTo(3, 3); ctx.closePath();
-        ctx.fill();
-        // Fletching
-        ctx.fillStyle = '#44aa44';
-        ctx.beginPath();
-        ctx.moveTo(-10, 0); ctx.lineTo(-14, -3); ctx.lineTo(-8, 0); ctx.lineTo(-14, 3); ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      } else if (_frfx.kind === 'slash') {
-        // Warrior energy slash — crescent blade (R5v F1: R5u simplification
-        // auto-reverted per baseline rule; profile was neutral but real-device
-        // 20-game matrix dropped 3 cell metrics > 50%).
-        ctx.save();
-        ctx.translate(_frfx.x, _frfx.y);
-        ctx.rotate(_frfx.angle);
-        // Outer glow
-        ctx.globalAlpha = 0.3 * _frAlpha;
-        ctx.fillStyle = '#ffaa40';
-        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
-        // Friendly cyan halo (marks player projectile)
-        ctx.globalAlpha = 0.45 * _frAlpha;
-        ctx.strokeStyle = '#aef6ff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.stroke();
-        // Crescent blade
-        ctx.globalAlpha = _frAlpha;
-        ctx.fillStyle = '#ffdd60';
-        ctx.beginPath();
-        ctx.moveTo(-8, -8);
-        ctx.quadraticCurveTo(10, 0, -8, 8);
-        ctx.quadraticCurveTo(4, 0, -8, -8);
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      }
+      ctx.save();
+      ctx.translate(_frfx.x, _frfx.y);
+      ctx.rotate(_frfx.angle || 0);
+      // Tracer streak (亮黄, 18px tail)
+      ctx.globalAlpha = 0.6 * _frAlpha;
+      ctx.fillStyle = '#ffd24a';
+      ctx.fillRect(-18, -0.8, 18, 1.6);
+      // Bullet head (bright tip)
+      ctx.globalAlpha = _frAlpha;
+      ctx.fillStyle = '#ffffaa';
+      ctx.fillRect(-2, -1.5, 5, 3);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
 
@@ -9778,166 +9704,9 @@ function doLogin() {
           // Nose
           ctx.beginPath(); ctx.moveTo(e.x, skY); ctx.lineTo(e.x - 0.8, skY + 1.5); ctx.lineTo(e.x + 0.8, skY + 1.5); ctx.closePath(); ctx.fill();
         }
-      } else if (e.type === 'projectile') {
-        // Projectile color based on abilities + evolution visuals (US-203)
-        var projColor = '#ff0';
-        var projGlow = '#ffa';
-        var projRadius = e.radius;
-        var projVisual = e.visual || 'bullet';
-        // Visual type defaults
-        if (projVisual === 'slash') { projColor = '#f44'; projGlow = '#f88'; projRadius = e.radius * 2.5; }
-        else if (projVisual === 'sword_wave') { projColor = '#f64'; projGlow = '#fa8'; projRadius = e.radius * 2.0; }
-        else if (projVisual === 'fireball') { projColor = '#f80'; projGlow = '#fa0'; projRadius = e.radius * 1.8; }
-        else if (projVisual === 'arrow') { projColor = '#4f4'; projGlow = '#8f8'; projRadius = e.radius * 0.9; }
-        // Skill modifier overrides
-        if (e._explosive > 0) { projColor = '#f80'; projGlow = '#f60'; projRadius = e.radius * 1.6; }
-        else if (e._chain > 0) { projColor = '#aaf'; projGlow = '#88f'; }
-        else if (e.pierce) { projColor = '#ff0'; projRadius = e.radius * 0.8; }
-        if (player._furyBonus > 1) { projColor = '#f44'; projGlow = '#f88'; }
-        // Evolved projectile visuals
-        if (evolvedSkills['bullet_hell']) { projColor = '#f0f'; projGlow = '#c0c'; projRadius = e.radius * 0.7; }
-        else if (evolvedSkills['berserker']) { projColor = '#f22'; projGlow = '#f44'; projRadius = e.radius * 1.8; }
-        else if (evolvedSkills['inferno']) { projColor = '#f80'; projGlow = '#fa0'; projRadius = e.radius * 1.4; }
-
-        if (projVisual === 'slash') {
-          // Melee slash: draw as an arc sweep
-          ctx.globalAlpha = 0.6; ctx.fillStyle = projGlow;
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 3, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 0.9; ctx.strokeStyle = projColor; ctx.lineWidth = 3;
-          var slashAngle = e.vx !== undefined ? Math.atan2(e.vy || 0, e.vx || 0) : 0;
-          ctx.beginPath();
-          ctx.arc(e.x, e.y, projRadius * 2, slashAngle - 0.8, slashAngle + 0.8);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        } else if (projVisual === 'sword_wave') {
-          // Warrior sword wave: crescent energy slash that flies forward
-          var swAngle = Math.atan2(e.vy || 0, e.vx || 0);
-          var swR = projRadius * 2.5;
-          // Outer energy glow
-          ctx.globalAlpha = 0.3; ctx.fillStyle = '#fa4';
-          ctx.beginPath(); ctx.arc(e.x, e.y, swR * 2, 0, Math.PI * 2); ctx.fill();
-          // Crescent blade shape
-          ctx.save();
-          ctx.translate(e.x, e.y);
-          ctx.rotate(swAngle);
-          // Main crescent
-          ctx.globalAlpha = 0.8;
-          ctx.fillStyle = projColor;
-          ctx.beginPath();
-          ctx.arc(0, 0, swR, -0.7, 0.7);
-          ctx.arc(0, 0, swR * 0.4, 0.5, -0.5, true);
-          ctx.closePath();
-          ctx.fill();
-          // Bright edge
-          ctx.strokeStyle = '#ffe'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.9;
-          ctx.beginPath(); ctx.arc(0, 0, swR, -0.6, 0.6); ctx.stroke();
-          // Inner energy trail
-          ctx.globalAlpha = 0.5; ctx.fillStyle = '#fda';
-          ctx.beginPath();
-          ctx.arc(0, 0, swR * 0.6, -0.4, 0.4);
-          ctx.arc(0, 0, swR * 0.2, 0.3, -0.3, true);
-          ctx.closePath();
-          ctx.fill();
-          // Energy spark at tip
-          ctx.globalAlpha = 0.7; ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(swR * 0.9, 0, projRadius * 0.5, 0, Math.PI * 2); ctx.fill();
-          ctx.restore();
-          ctx.globalAlpha = 1;
-        } else if (projVisual === 'fireball') {
-          // Fireball: dramatic fire effect with trailing embers
-          var fbAngle = Math.atan2(e.vy || 0, e.vx || 0);
-          // Outer heat distortion
-          ctx.globalAlpha = 0.2; ctx.fillStyle = '#f40';
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 5, 0, Math.PI * 2); ctx.fill();
-          // Fire trail behind
-          ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(fbAngle);
-          ctx.globalAlpha = 0.4; ctx.fillStyle = '#f60';
-          ctx.beginPath();
-          ctx.moveTo(-projRadius * 6, -projRadius * 1.5);
-          ctx.quadraticCurveTo(-projRadius * 3, 0, -projRadius * 6, projRadius * 1.5);
-          ctx.quadraticCurveTo(-projRadius * 2, 0, -projRadius * 6, -projRadius * 1.5);
-          ctx.fill();
-          // Inner fire trail
-          ctx.globalAlpha = 0.5; ctx.fillStyle = '#fa0';
-          ctx.beginPath();
-          ctx.moveTo(-projRadius * 4, -projRadius);
-          ctx.quadraticCurveTo(-projRadius * 2, 0, -projRadius * 4, projRadius);
-          ctx.quadraticCurveTo(-projRadius, 0, -projRadius * 4, -projRadius);
-          ctx.fill();
-          ctx.restore();
-          // Main fireball body
-          ctx.globalAlpha = 0.7; ctx.fillStyle = projGlow;
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 2.5, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 1; ctx.fillStyle = projColor;
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 1.5, 0, Math.PI * 2); ctx.fill();
-          // Hot core
-          ctx.fillStyle = '#ff0';
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 0.7, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 0.3, 0, Math.PI * 2); ctx.fill();
-        } else if (projVisual === 'arrow') {
-          // Arrow: sleek arrow with energy trail
-          var arrowAngle = e.vx !== undefined ? Math.atan2(e.vy || 0, e.vx || 0) : 0;
-          ctx.save();
-          ctx.translate(e.x, e.y);
-          ctx.rotate(arrowAngle);
-          // Speed trail
-          ctx.globalAlpha = 0.15; ctx.fillStyle = '#4f4';
-          ctx.beginPath();
-          ctx.moveTo(-projRadius * 8, -projRadius * 0.3);
-          ctx.lineTo(-projRadius * 2, 0);
-          ctx.lineTo(-projRadius * 8, projRadius * 0.3);
-          ctx.closePath();
-          ctx.fill();
-          // Energy trail
-          ctx.globalAlpha = 0.3; ctx.fillStyle = projGlow;
-          ctx.beginPath();
-          ctx.moveTo(-projRadius * 5, -projRadius * 0.5);
-          ctx.lineTo(-projRadius, 0);
-          ctx.lineTo(-projRadius * 5, projRadius * 0.5);
-          ctx.closePath();
-          ctx.fill();
-          // Arrow shaft
-          ctx.globalAlpha = 0.9;
-          ctx.fillStyle = '#a86';
-          ctx.fillRect(-projRadius * 2.5, -projRadius * 0.12, projRadius * 4, projRadius * 0.24);
-          // Arrow head (sharp triangle)
-          ctx.fillStyle = '#ddd';
-          ctx.beginPath();
-          ctx.moveTo(projRadius * 2.5, 0);
-          ctx.lineTo(projRadius * 1.2, -projRadius * 0.5);
-          ctx.lineTo(projRadius * 1.5, 0);
-          ctx.lineTo(projRadius * 1.2, projRadius * 0.5);
-          ctx.closePath();
-          ctx.fill();
-          // Fletching
-          ctx.fillStyle = projColor; ctx.globalAlpha = 0.8;
-          ctx.beginPath();
-          ctx.moveTo(-projRadius * 2.5, 0);
-          ctx.lineTo(-projRadius * 2, -projRadius * 0.6);
-          ctx.lineTo(-projRadius * 1.5, 0);
-          ctx.lineTo(-projRadius * 2, projRadius * 0.6);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-          ctx.globalAlpha = 1;
-        } else {
-          // Default bullet rendering
-          ctx.globalAlpha = 0.5; ctx.fillStyle = projGlow;
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 4, 0, Math.PI * 2); ctx.fill();
-          if (projTrail) ctx.globalAlpha = 0.25;
-          var trailLen = 12;
-          var tvx = -e.vx / 450 * trailLen, tvy = -e.vy / 450 * trailLen;
-          ctx.fillStyle = projGlow;
-          ctx.beginPath(); ctx.arc(e.x + tvx, e.y + tvy, projRadius * 2, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 0.12;
-          ctx.beginPath(); ctx.arc(e.x + tvx * 2, e.y + tvy * 2, projRadius * 1.5, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 1; ctx.fillStyle = projColor;
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(e.x, e.y, projRadius * 0.4, 0, Math.PI * 2); ctx.fill();
-        }
       }
+      // ldoe-overhaul-01: removed e.type==='projectile' draw branch (160 dead lines).
+      // Real projectiles flow through offlineSkillFx (push site ~4963, draw below).
     }
 
     // Enemy projectiles (US-197) — spiky dark-violet menacing orb (visually distinct from player's clean bright projectiles)
