@@ -4971,7 +4971,7 @@ function doLogin() {
       player._stepTimer = (player._stepTimer || 0) - dt;
       if (player._stepTimer <= 0) {
         player._stepTimer = 0.34 + Math.random() * 0.08;
-        var _tsz = (typeof HOMM3_ART !== 'undefined' && HOMM3_ART && HOMM3_ART.tilesetMeta) ? HOMM3_ART.tilesetMeta.tileW : 64;
+        var _tsz = 64;
         var _tx = Math.floor(player.x / _tsz), _ty = Math.floor(player.y / _tsz);
         var _bi = (typeof _biomeAt === 'function') ? _biomeAt(_tx, _ty) : 0;
         playSound(_bi === 1 ? 'step_dirt' : 'step_grass');
@@ -6635,8 +6635,6 @@ function doLogin() {
 
   // homm3_bright: tileset floor, monster sheet, decor, 9-slice UI
   var HOMM3_ART = {
-    tilesetImg: null, tilesetReady: false, tilesetMeta: null, tileIndex: {},
-    monsterImg: null, monsterReady: false, monsterMeta: null,
     ui9: {}, ui9Meta: null, ui9Ready: false,
     // boss sprites removed in zombie-skin-02 — boss now uses procedural zombie tank
   };
@@ -6654,19 +6652,7 @@ function doLogin() {
       im.onload = function() { box.ready = true; };
       return box;
     }
-    // Tileset
-    HOMM3_ART.tilesetImg = new Image();
-    HOMM3_ART.tilesetImg.onload = function() { HOMM3_ART.tilesetReady = true; };
-    HOMM3_ART.tilesetImg.src = HOMM3_ART_BASE + 'tileset.png';
-    loadJSON(HOMM3_ART_BASE + 'tileset.json', function(j) {
-      HOMM3_ART.tilesetMeta = j;
-      for (var i = 0; i < j.tiles.length; i++) HOMM3_ART.tileIndex[j.tiles[i].id] = j.tiles[i];
-    });
-    // Monster
-    HOMM3_ART.monsterImg = new Image();
-    HOMM3_ART.monsterImg.onload = function() { HOMM3_ART.monsterReady = true; };
-    HOMM3_ART.monsterImg.src = HOMM3_ART_BASE + 'monster_orc.png';
-    loadJSON(HOMM3_ART_BASE + 'monster_orc.json', function(j) { HOMM3_ART.monsterMeta = j; });
+    // ldoe-overhaul-02: tileset + monster_orc dropped (procedural rendering, sprite assets unused).
     // 9-slice UI
     var _ui9Keys = ['tl', 't', 'tr', 'l', 'c', 'r', 'bl', 'b', 'br'];
     var _ui9Loaded = 0;
@@ -6683,9 +6669,10 @@ function doLogin() {
   // Ids 0-2 use the homm3 autotile sprite atlas; 3-6 are flat colour fills.
   var _biomeGrid = null;
   var _biomeCols = 0, _biomeRows = 0;
+  // ldoe-overhaul-02: tile size locked to 64 (was tilesetMeta.tileW)
+  var LDOE_TILE_SZ = 64;
   function _initBiomeGrid() {
-    if (!HOMM3_ART.tilesetMeta) return;
-    var tsz = HOMM3_ART.tilesetMeta.tileW;
+    var tsz = LDOE_TILE_SZ;
     // Handcrafted map: copy tiles[] from MAP_DATA and add water to obstacles.
     if (MAP_DATA && MAP_DATA.tiles && MAP_DATA.cols && MAP_DATA.rows) {
       _biomeCols = MAP_DATA.cols;
@@ -6751,135 +6738,123 @@ function doLogin() {
     return _biomeGrid[ty * _biomeCols + tx];
   }
 
-  // Tiled floor across the whole world. New schema (seams + variants) uses
-  // 4-bit autotile; old schema (tiles[] with grass0/1, dirt0/1, stone0/1)
-  // falls back to per-tile hash pick.
+  // ldoe-overhaul-02: procedural LDOE tiles. No圆角/六八角形状, only rects + scatter.
+  // biome id → LDOE tile kind:
+  //   0 (grass) → dry_grass (土黄 + 稀疏短线)
+  //   1 (dirt)  → dirt (土黄褐 + 不规则斑)
+  //   2 (stone) → cracked_concrete (灰白 + 块缝)
+  //   3 (water) → muddy_water (暗蓝灰 + 涟漪)
+  //   4 (sand)  → asphalt (深灰 + 裂缝白线)  [biome region北 → 城市道路]
+  //   5 (swamp) → mud (暗棕 + puddle)
+  //   6 (snow)  → gravel (暗灰 + 颗粒)
+  function drawLdoeTile(ctx, x, y, sz, biomeId, h) {
+    var hr = (h * 2654435761) >>> 0;
+    if (biomeId === 1) { // dirt
+      ctx.fillStyle = '#5a4a32'; ctx.fillRect(x, y, sz, sz);
+      ctx.fillStyle = '#6e5a3e'; // lighter patches (rectangular blotches, NOT round)
+      ctx.fillRect(x + (h % 12), y + ((h >> 2) % 14), 18 + (h & 7), 6 + ((h >> 3) & 4));
+      ctx.fillRect(x + 28 + ((h >> 5) % 16), y + 38 - ((h >> 7) & 11), 14 + ((h >> 4) & 5), 5);
+      ctx.fillStyle = '#3e3220';
+      ctx.fillRect(x + 6 + (h & 9), y + 12 + ((h >> 1) & 7), 4, 3);
+      ctx.fillRect(x + 42 - ((h >> 3) & 13), y + 50 - ((h >> 6) & 9), 5, 3);
+    } else if (biomeId === 2) { // cracked_concrete
+      ctx.fillStyle = '#7a7a72'; ctx.fillRect(x, y, sz, sz);
+      // Block seams (rectangular grid, urban concrete)
+      ctx.fillStyle = '#3a3a38';
+      ctx.fillRect(x + 31, y, 2, sz);   // vertical seam
+      ctx.fillRect(x, y + 31, sz, 2);   // horizontal seam
+      // Cracks (diagonal short lines)
+      ctx.strokeStyle = '#1a1a18'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 8 + (h & 11), y + 8); ctx.lineTo(x + 16 + (h & 5), y + 22 - ((h >> 2) & 7)); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + 38 - ((h >> 4) & 9), y + 38); ctx.lineTo(x + 50 - ((h >> 5) & 5), y + 50 + ((h >> 1) & 6)); ctx.stroke();
+      // Stain
+      ctx.fillStyle = 'rgba(40,30,20,0.35)';
+      ctx.fillRect(x + 18 + ((hr >> 4) & 13), y + 42 - ((hr >> 7) & 9), 12, 5);
+    } else if (biomeId === 3) { // muddy_water
+      ctx.fillStyle = '#3a4a4a'; ctx.fillRect(x, y, sz, sz);
+      ctx.fillStyle = '#2a3a3a'; ctx.fillRect(x, y, sz, sz);
+      // Horizontal ripple lines
+      ctx.strokeStyle = 'rgba(180,180,160,0.28)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x + 6 + (h & 7), y + 18); ctx.lineTo(x + 28 + (h & 9), y + 18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 30 - (h & 5), y + 44); ctx.lineTo(x + 56 - (h & 11), y + 44); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + 14, y + 32); ctx.lineTo(x + 38 - (h & 7), y + 32); ctx.stroke();
+    } else if (biomeId === 4) { // asphalt — paved road
+      ctx.fillStyle = '#2a2a28'; ctx.fillRect(x, y, sz, sz);
+      // Lane white dashed line down center (every other tile shows a dash)
+      if ((h & 1) === 0) {
+        ctx.fillStyle = '#dad8d4';
+        ctx.fillRect(x + 30, y + 20, 4, 18);
+      }
+      // Cracks
+      ctx.strokeStyle = '#1a1a18'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 12 + (h & 9)); ctx.lineTo(x + sz, y + 14 + ((h >> 2) & 7)); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + 6 + (h & 13), y); ctx.lineTo(x + 8 + ((h >> 4) & 11), y + sz); ctx.stroke();
+      // Oil stain
+      if ((hr & 7) === 0) {
+        ctx.fillStyle = 'rgba(8,8,8,0.5)';
+        ctx.fillRect(x + 14, y + 30, 16, 10);
+      }
+    } else if (biomeId === 5) { // mud
+      ctx.fillStyle = '#3e2e1e'; ctx.fillRect(x, y, sz, sz);
+      ctx.fillStyle = '#2e1e10';
+      ctx.fillRect(x + (h & 13), y + ((h >> 1) & 11), 22 + (h & 9), 12);
+      // Puddle (dark wet patch — rectangular outline, not ellipse)
+      if ((h & 3) === 0) {
+        ctx.fillStyle = '#1a1a12';
+        ctx.fillRect(x + 14 + ((hr >> 3) & 9), y + 28 - ((hr >> 6) & 7), 24, 14);
+        ctx.fillStyle = 'rgba(180,180,160,0.18)';
+        ctx.fillRect(x + 16 + ((hr >> 3) & 9), y + 30 - ((hr >> 6) & 7), 6, 2);
+      }
+    } else if (biomeId === 6) { // gravel
+      ctx.fillStyle = '#4a4a48'; ctx.fillRect(x, y, sz, sz);
+      // Pebbles (small rect dots, NOT round)
+      ctx.fillStyle = '#6a6a68';
+      for (var pg = 0; pg < 8; pg++) {
+        var px = x + ((h * (pg+1)) % (sz - 4));
+        var py = y + (((h >> (pg & 3)) * 31) % (sz - 4));
+        ctx.fillRect(px, py, 2 + (pg & 1), 2);
+      }
+      ctx.fillStyle = '#2a2a28';
+      for (var pg2 = 0; pg2 < 5; pg2++) {
+        var px2 = x + ((h * (pg2+13)) % (sz - 3));
+        var py2 = y + (((h >> ((pg2+1) & 3)) * 47) % (sz - 3));
+        ctx.fillRect(px2, py2, 2, 2);
+      }
+    } else { // 0 = dry_grass (default)
+      ctx.fillStyle = '#6e5a3e'; ctx.fillRect(x, y, sz, sz);
+      // Sparse短线 grass tufts (small horizontal/vertical sticks, NOT round dots)
+      ctx.strokeStyle = '#8a7050'; ctx.lineWidth = 1;
+      for (var gg = 0; gg < 6; gg++) {
+        var gx = x + ((h * (gg+3)) % (sz - 4));
+        var gy = y + (((h >> (gg & 3)) * 17) % (sz - 4));
+        ctx.beginPath();
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(gx + ((gg & 1) ? 2 : 0), gy - 4);
+        ctx.stroke();
+      }
+      // Dirt patch
+      if ((h & 7) === 0) {
+        ctx.fillStyle = '#4a3a26';
+        ctx.fillRect(x + 18, y + 34, 14, 8);
+      }
+    }
+  }
+
   function drawTilesetFloor(ctx, camX, camY) {
-    if (!HOMM3_ART.tilesetReady || !HOMM3_ART.tilesetMeta) return;
-    var meta = HOMM3_ART.tilesetMeta;
-    var tsz = meta.tileW;
-    var img = HOMM3_ART.tilesetImg;
-    var hasSeams = !!(meta.seams && meta.seams.grass_dirt && meta.variants);
-    if (hasSeams && !_biomeGrid) _initBiomeGrid();
+    if (!_biomeGrid) _initBiomeGrid();
+    var tsz = LDOE_TILE_SZ;
     var x0 = Math.max(0, Math.floor(camX / tsz));
     var y0 = Math.max(0, Math.floor(camY / tsz));
     var x1 = Math.min(Math.ceil(WORLD_W / tsz), Math.ceil((camX + W) / tsz));
     var y1 = Math.min(Math.ceil(WORLD_H / tsz), Math.ceil((camY + H) / tsz));
-    if (hasSeams) {
-      var vgrass = meta.variants.grass, vdirt = meta.variants.dirt, vstone = meta.variants.stone;
-      var seamsGD = meta.seams.grass_dirt, seamsGS = meta.seams.grass_stone;
-      // Flat biome palette (Leo spec 2026-04-21). Each biome uses a base + a
-      // primary accent + a secondary accent so quadrants read distinctly from afar.
-      var FLAT_FILL = {
-        3: { base: '#2e5aa8', edge: '#1e4c90', accent: '#7fb8e8', accent2: '#ffffff' }, // water
-        4: { base: '#d4a24a', edge: '#a06c2a', accent: '#f0d088', accent2: '#8a4a1a' }, // desert sand+bone+rock
-        5: { base: '#2d5a3d', edge: '#1a3a2a', accent: '#4a7a5a', accent2: '#6b8ea0' }, // swamp deep-green+moss+water
-        6: { base: '#e8f0f5', edge: '#c8dce8', accent: '#b8d4e0', accent2: '#2d4a3a' }  // snow+ice+evergreen
-      };
-      for (var ty = y0; ty < y1; ty++) {
-        for (var tx = x0; tx < x1; tx++) {
-          var h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
-          var self = _biomeAt(tx, ty);
-          var tile;
-          if (self >= 3) {
-            var ff = FLAT_FILL[self];
-            if (ff) {
-              var tsx = tx * tsz, tsy = ty * tsz;
-              // Prefer ArtDesigner biome atlas tile when ready (desert/swamp/snow).
-              var _atlas = MAP_ART.biomeAtlases[self];
-              var _src = _atlas && _atlas.canvas ? _atlas.canvas : (_atlas && _atlas.ready ? _atlas.img : null);
-              if (_src) {
-                var _col = h % _atlas.cols;
-                var _row = ((h >> 4) & 7) === 0 ? 1 : 0;
-                ctx.drawImage(_src, _col * _atlas.tileW, _row * _atlas.tileH, _atlas.tileW, _atlas.tileH, tsx, tsy, tsz, tsz);
-                continue;
-              }
-              ctx.fillStyle = ff.base;
-              ctx.fillRect(tsx, tsy, tsz, tsz);
-              // Subtle hatch so biome reads more solid at distance
-              ctx.fillStyle = ((h & 1) === 0) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-              ctx.fillRect(tsx, tsy, tsz, tsz);
-              if (self === 3) {
-                // Water — 2 horizontal ripple dashes
-                ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(tsx + 8 + (h & 7), tsy + 20);
-                ctx.lineTo(tsx + 26 + (h & 7), tsy + 20);
-                ctx.moveTo(tsx + 34 - (h & 5), tsy + 44);
-                ctx.lineTo(tsx + 54 - (h & 5), tsy + 44);
-                ctx.stroke();
-              } else if (self === 4) {
-                // Desert — light sand streak; occasional dark rock fleck
-                if ((h & 1) === 0) {
-                  ctx.fillStyle = ff.accent;
-                  ctx.fillRect(tsx + 16 + (h & 15), tsy + 22 + ((h >> 3) & 15), 22, 3);
-                } else if ((h & 7) === 0) {
-                  ctx.fillStyle = ff.accent2;
-                  ctx.fillRect(tsx + 40 - (h & 7), tsy + 44 - ((h >> 2) & 7), 5, 4);
-                }
-              } else if (self === 5) {
-                // Swamp — moss patch OR muck puddle (one accent per tile)
-                if ((h & 1) === 0) {
-                  ctx.fillStyle = ff.accent;
-                  ctx.fillRect(tsx + 12 + (h & 11), tsy + 18 + ((h >> 4) & 11), 20, 10);
-                } else if ((h & 3) === 0) {
-                  ctx.fillStyle = ff.accent2;
-                  ctx.fillRect(tsx + 30 - (h & 5), tsy + 40 - ((h >> 3) & 5), 18, 8);
-                } else {
-                  ctx.fillStyle = ff.edge;
-                  ctx.fillRect(tsx + 6 + (h & 3), tsy + 50 - ((h >> 1) & 7), 6, 3);
-                }
-              } else if (self === 6) {
-                // Snow — sparkles + occasional evergreen silhouette
-                ctx.fillStyle = 'rgba(255,255,255,0.85)';
-                ctx.fillRect(tsx + 8 + (h & 15), tsy + 10 + ((h >> 2) & 11), 2, 2);
-                ctx.fillRect(tsx + 40 - (h & 9), tsy + 48 - ((h >> 3) & 7), 2, 2);
-                if ((h & 31) === 0) {
-                  ctx.fillStyle = ff.accent2;
-                  ctx.beginPath();
-                  ctx.moveTo(tsx + 32, tsy + 16);
-                  ctx.lineTo(tsx + 24, tsy + 46);
-                  ctx.lineTo(tsx + 40, tsy + 46);
-                  ctx.closePath(); ctx.fill();
-                } else if ((h & 3) === 0) {
-                  ctx.fillStyle = ff.accent;
-                  ctx.fillRect(tsx + 12 + (h & 7), tsy + 30 + (h & 5), 18, 2);
-                }
-              }
-            }
-            continue;
-          }
-          if (self === 1) {
-            tile = vdirt[h % vdirt.length];
-          } else if (self === 2) {
-            tile = vstone[h % vstone.length];
-          } else {
-            // grass — check 4 neighbors; prefer dirt seam over stone seam (arbitrary precedence)
-            var n = _biomeAt(tx, ty - 1), e = _biomeAt(tx + 1, ty), s = _biomeAt(tx, ty + 1), w = _biomeAt(tx - 1, ty);
-            var mDirt = (n === 1 ? 1 : 0) | (e === 1 ? 2 : 0) | (s === 1 ? 4 : 0) | (w === 1 ? 8 : 0);
-            var mStone = (n === 2 ? 1 : 0) | (e === 2 ? 2 : 0) | (s === 2 ? 4 : 0) | (w === 2 ? 8 : 0);
-            if (mDirt) tile = seamsGD[mDirt];
-            else if (mStone) tile = seamsGS[mStone];
-            else tile = vgrass[h % vgrass.length];
-          }
-          if (tile) ctx.drawImage(img, tile.px.x, tile.px.y, tsz, tsz, tx * tsz, ty * tsz, tsz, tsz);
-        }
-      }
-    } else {
-      // Legacy schema fallback — per-tile hash
-      var grass0 = HOMM3_ART.tileIndex.grass0, grass1 = HOMM3_ART.tileIndex.grass1;
-      if (!grass0) return;
-      for (var ty2 = y0; ty2 < y1; ty2++) {
-        for (var tx2 = x0; tx2 < x1; tx2++) {
-          var h2 = ((tx2 * 73856093) ^ (ty2 * 19349663)) >>> 0 % 100;
-          var tl;
-          if (h2 < 4 && HOMM3_ART.tileIndex.stone0) tl = HOMM3_ART.tileIndex.stone0;
-          else if (h2 < 9 && HOMM3_ART.tileIndex.dirt0) tl = HOMM3_ART.tileIndex.dirt0;
-          else if (h2 < 12 && HOMM3_ART.tileIndex.dirt1) tl = HOMM3_ART.tileIndex.dirt1;
-          else tl = (h2 & 1) ? grass1 : grass0;
-          ctx.drawImage(img, tl.px.x, tl.px.y, tsz, tsz, tx2 * tsz, ty2 * tsz, tsz, tsz);
-        }
+    for (var ty = y0; ty < y1; ty++) {
+      for (var tx = x0; tx < x1; tx++) {
+        var h = ((tx * 73856093) ^ (ty * 19349663)) >>> 0;
+        drawLdoeTile(ctx, tx * tsz, ty * tsz, tsz, _biomeAt(tx, ty), h);
       }
     }
     // World boundary — dark vignette outside the playable area
@@ -6888,17 +6863,7 @@ function doLogin() {
     if (camY < 0) ctx.fillRect(Math.max(camX, 0), camY, W, -camY);
     if (camX + W > WORLD_W) ctx.fillRect(WORLD_W, camY, camX + W - WORLD_W, H);
     if (camY + H > WORLD_H) ctx.fillRect(Math.max(camX, 0), WORLD_H, W, camY + H - WORLD_H);
-    // ldoe-overhaul-01: 末日色板 multiply overlay (灰土锈, kills cartoon green/pink)
-    var _ovX = Math.max(0, camX), _ovY = Math.max(0, camY);
-    var _ovW = Math.min(WORLD_W, camX + W) - _ovX;
-    var _ovH = Math.min(WORLD_H, camY + H) - _ovY;
-    if (_ovW > 0 && _ovH > 0) {
-      ctx.save();
-      ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = 'rgba(138,112,80,0.55)';
-      ctx.fillRect(_ovX, _ovY, _ovW, _ovH);
-      ctx.restore();
-    }
+    // multiply overlay removed — procedural tiles already carry the LDOE 灰土锈 palette
   }
 
   // 9-slice stretch: corners fixed, edges repeat/stretch, center fills.
@@ -9190,6 +9155,14 @@ function doLogin() {
   var _levelUpQueue = { pending: 0, wait: 0 };
   function triggerLevelUp() {
     if (state === 'levelUp') return;
+    // ldoe-overhaul-02: 静默开局 30s — 让玩家先感受 LDOE 探索氛围。XP 累积
+    // 不丢失，到 t≥30s 后下一次 trigger 时一次性弹出。trade-off: 牺牲首
+    // 30s 内升级反馈节奏，换取 LDOE 末日空地的紧张感建立窗口。
+    if (offlineMode && (gameTime || 0) < 30) {
+      _levelUpQueue.pending++;
+      _levelUpQueue.wait = Math.max(_levelUpQueue.wait, 30 - (gameTime || 0));
+      return;
+    }
     // Round 2: defer level-up if a high-priority banner is showing so the
     // BOSS SLAIN / combo / RIVAL SLAIN banner gets its 1.2s spotlight.
     var _bannerActive = (bossSlainBanner.active || synergyBanner.active ||
