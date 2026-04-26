@@ -38,24 +38,24 @@ const tpx = (t) => t * TS + TS / 2;
 const structures = [];
 const push = (s) => structures.push(s);
 
-// ldoe-overhaul-02a: 11 LDOE landmarks真的入地图 (arena_a — circular arena).
-// Distributed in 4 cardinal sectors so harness fence_hit_rate ≥ 2/3 reachable.
+// ldoe-overhaul-02b: spawn-ring distribution. 8 spawns sit on radius-15 ring;
+// place 8 landmarks at midpoints between adjacent spawns (radius ~13 tiles)
+// so each spawn has fence+wreck within ~6 tiles (~380px, well under 700px KPI).
+// Alternate fence / wreck_car around the ring at 45° steps. 3 fillers near apron.
+// Sizes bumped 130-144 → 200×170/180 (1.5×) per Director 02b spec.
 const ldoeLm = [
-  // North sector
-  { kind: 'fence',       tx: 20, ty: 6,  w: 130, h: 110, label: '北铁丝网' },
-  { kind: 'gas_station', tx: 14, ty: 8,  w: 144, h: 132, label: '北加油站' },
-  { kind: 'wreck_car',   tx: 26, ty: 8,  w: 140, h: 130, label: '北翻车' },
-  // East sector
-  { kind: 'fence',       tx: 33, ty: 20, w: 130, h: 110, label: '东铁丝网' },
-  { kind: 'barricade',   tx: 31, ty: 14, w: 140, h: 130, label: '东路障' },
-  // South sector
-  { kind: 'fence',       tx: 20, ty: 33, w: 130, h: 110, label: '南铁丝网' },
-  { kind: 'wreck_car',   tx: 26, ty: 31, w: 140, h: 130, label: '南翻车' },
-  { kind: 'debris',      tx: 14, ty: 31, w: 130, h: 110, label: '南废墟' },
-  // West sector
-  { kind: 'gas_station', tx: 7,  ty: 20, w: 144, h: 132, label: '西加油站' },
-  { kind: 'barricade',   tx: 9,  ty: 14, w: 140, h: 130, label: '西路障' },
-  { kind: 'debris',      tx: 9,  ty: 26, w: 130, h: 110, label: '西废墟' }
+  { kind: 'fence',     tx: 33, ty: 20, w: 200, h: 170, label: '东铁丝网' },
+  { kind: 'wreck_car', tx: 29, ty: 29, w: 200, h: 180, label: '东南翻车' },
+  { kind: 'fence',     tx: 20, ty: 33, w: 200, h: 170, label: '南铁丝网' },
+  { kind: 'wreck_car', tx: 11, ty: 29, w: 200, h: 180, label: '西南翻车' },
+  { kind: 'fence',     tx: 7,  ty: 20, w: 200, h: 170, label: '西铁丝网' },
+  { kind: 'wreck_car', tx: 11, ty: 11, w: 200, h: 180, label: '西北翻车' },
+  { kind: 'fence',     tx: 20, ty: 7,  w: 200, h: 170, label: '北铁丝网' },
+  { kind: 'wreck_car', tx: 29, ty: 11, w: 200, h: 180, label: '东北翻车' },
+  // 3 apron fillers covering pull-point engagements
+  { kind: 'gas_station', tx: 15, ty: 15, w: 200, h: 180, label: '西北加油站' },
+  { kind: 'barricade',   tx: 25, ty: 15, w: 200, h: 180, label: '东北路障' },
+  { kind: 'debris',      tx: 20, ty: 26, w: 200, h: 170, label: '南废墟' }
 ];
 ldoeLm.forEach(s => push({ kind: s.kind, x: s.tx * TS - s.w/2, y: s.ty * TS - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
 

@@ -46,24 +46,26 @@ const tpx = (t) => t * TS + TS / 2;
 const structures = [];
 const push = (s) => structures.push(s);
 
-// ldoe-overhaul-02a: 11 LDOE landmarks真的入地图 (lane_b — 3-lane).
-// Distributed across top/mid/bot lane corridors so each lane has ≥1 fence.
+// ldoe-overhaul-02b: spawn-ring distribution. lane_b 8 spawns =
+// {top-L, mid-L×2, bot-L, top-R, mid-R×2, bot-R}. Pair fence+wreck near each
+// of 4 corner spawns (8 total) — corner spawns get full KPI ≤6 tiles ≈380px.
+// Mid spawns (2,20)/(37,20) get 1 fence each + 1 shared wreck (compromise:
+// budget 11 hard-cap means mid sacrifices 1 of 2 KPI items vs corner pairs).
+// 3 fillers in jungle covering lateral pull. Sizes 1.5×.
 const ldoeLm = [
-  // Top lane
-  { kind: 'fence',       tx: 14, ty: 6,  w: 130, h: 110, label: '上路铁丝网' },
-  { kind: 'gas_station', tx: 22, ty: 4,  w: 144, h: 132, label: '上路加油站' },
-  { kind: 'wreck_car',   tx: 28, ty: 6,  w: 140, h: 130, label: '上路翻车' },
-  // Mid lane
-  { kind: 'fence',       tx: 12, ty: 19, w: 130, h: 110, label: '中路铁丝网' },
-  { kind: 'barricade',   tx: 20, ty: 17, w: 140, h: 130, label: '中路路障' },
-  { kind: 'debris',      tx: 28, ty: 21, w: 130, h: 110, label: '中路废墟' },
-  // Bot lane
-  { kind: 'fence',       tx: 14, ty: 33, w: 130, h: 110, label: '下路铁丝网' },
-  { kind: 'wreck_car',   tx: 22, ty: 35, w: 140, h: 130, label: '下路翻车' },
-  { kind: 'gas_station', tx: 28, ty: 33, w: 144, h: 132, label: '下路加油站' },
-  // Side flanks
-  { kind: 'barricade',   tx: 6,  ty: 26, w: 140, h: 130, label: '左翼路障' },
-  { kind: 'debris',      tx: 34, ty: 13, w: 130, h: 110, label: '右翼废墟' }
+  // 4 corner pairs (full fence+wreck KPI)
+  { kind: 'fence',     tx: 7,  ty: 6,  w: 200, h: 170, label: '上路左铁丝网' },
+  { kind: 'wreck_car', tx: 11, ty: 6,  w: 200, h: 180, label: '上路左翻车' },
+  { kind: 'fence',     tx: 33, ty: 6,  w: 200, h: 170, label: '上路右铁丝网' },
+  { kind: 'wreck_car', tx: 29, ty: 6,  w: 200, h: 180, label: '上路右翻车' },
+  { kind: 'fence',     tx: 7,  ty: 33, w: 200, h: 170, label: '下路左铁丝网' },
+  { kind: 'wreck_car', tx: 11, ty: 33, w: 200, h: 180, label: '下路左翻车' },
+  { kind: 'fence',     tx: 33, ty: 33, w: 200, h: 170, label: '下路右铁丝网' },
+  { kind: 'wreck_car', tx: 29, ty: 33, w: 200, h: 180, label: '下路右翻车' },
+  // Mid lane fillers (mid spawns get partial KPI — see comment)
+  { kind: 'gas_station', tx: 8,  ty: 20, w: 200, h: 180, label: '中路左加油站' },
+  { kind: 'barricade',   tx: 32, ty: 20, w: 200, h: 180, label: '中路右路障' },
+  { kind: 'debris',      tx: 20, ty: 20, w: 200, h: 170, label: '中央废墟' }
 ];
 ldoeLm.forEach(s => push({ kind: s.kind, x: s.tx * TS - s.w/2, y: s.ty * TS - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
 

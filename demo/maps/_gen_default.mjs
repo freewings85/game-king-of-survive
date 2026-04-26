@@ -95,24 +95,29 @@ pushRow('mountain', tpx(2), tpx(31),  4, 96, 96,  96, 96, '#8a8a90');
 // SE swamp mangrove ridges along (24,29)...(32,36)
 pushRow('mountain', tpx(26),tpx(29),  4, 96, 96,  96, 96, '#6a7a4a');
 
-// ldoe-overhaul-02a: 11 LDOE landmarks真的入地图，每 biome (NW/NE/SW/SE) 各 ≥1 fence
-// + 1 gas/wreck，分散在玩家可视半径内不扎堆中央。schema: kind === ldoe-kind 直查得到。
+// ldoe-overhaul-02b: spawn-ring distribution. Each 4 corner spawnPoint
+// (NW/NE/SW/SE @ tpx(4)/(35)) must have ≥1 fence + ≥1 wreck_car within 700px.
+// Center 3 fillers (gas_station / barricade / debris) cover the怪海 pull point.
+// Sizes bumped 130-144 → 180-200 (1.5×) so legible at 600px.
+// fence×4 + wreck_car×4 = 8 (corner KPI), gas/barricade/debris ×1 each = 3, total 11.
+const SP_RING = 320; // landmark offset from spawn (tile units roughly 5)
 const ldoeLm = [
-  // NW biome (snow→gravel)
-  { kind: 'fence',       x: tpx(4),  y: tpx(8),  w: 130, h: 110, label: '北铁丝网' },
-  { kind: 'gas_station', x: tpx(12), y: tpx(3),  w: 144, h: 132, label: '北加油站' },
-  { kind: 'wreck_car',   x: tpx(8),  y: tpx(15), w: 140, h: 130, label: '北翻车' },
-  // NE biome (sand→asphalt)
-  { kind: 'fence',       x: tpx(35), y: tpx(8),  w: 130, h: 110, label: '东铁丝网' },
-  { kind: 'wreck_car',   x: tpx(28), y: tpx(13), w: 140, h: 130, label: '东翻车' },
-  { kind: 'barricade',   x: tpx(31), y: tpx(2),  w: 140, h: 130, label: '东路障' },
-  // SW biome (stone→cracked_concrete)
-  { kind: 'fence',       x: tpx(4),  y: tpx(28), w: 130, h: 110, label: '西铁丝网' },
-  { kind: 'gas_station', x: tpx(15), y: tpx(33), w: 144, h: 132, label: '西加油站' },
-  { kind: 'debris',      x: tpx(9),  y: tpx(36), w: 130, h: 110, label: '西废墟' },
-  // SE biome (swamp→mud)
-  { kind: 'barricade',   x: tpx(34), y: tpx(28), w: 140, h: 130, label: '南路障' },
-  { kind: 'debris',      x: tpx(28), y: tpx(35), w: 130, h: 110, label: '南废墟' }
+  // NW spawn ring (288,288) — fence + wreck_car within ~440px
+  { kind: 'fence',     x: tpx(8),  y: tpx(8),  w: 200, h: 170, label: '北西铁丝网' },
+  { kind: 'wreck_car', x: tpx(9),  y: tpx(4),  w: 200, h: 180, label: '北西翻车' },
+  // NE spawn ring (2272,288)
+  { kind: 'fence',     x: tpx(31), y: tpx(8),  w: 200, h: 170, label: '北东铁丝网' },
+  { kind: 'wreck_car', x: tpx(30), y: tpx(4),  w: 200, h: 180, label: '北东翻车' },
+  // SW spawn ring (288,2272)
+  { kind: 'fence',     x: tpx(8),  y: tpx(31), w: 200, h: 170, label: '南西铁丝网' },
+  { kind: 'wreck_car', x: tpx(9),  y: tpx(35), w: 200, h: 180, label: '南西翻车' },
+  // SE spawn ring (2272,2272)
+  { kind: 'fence',     x: tpx(31), y: tpx(31), w: 200, h: 170, label: '南东铁丝网' },
+  { kind: 'wreck_car', x: tpx(30), y: tpx(35), w: 200, h: 180, label: '南东翻车' },
+  // Center fillers — cover怪海 pull point (玩家 30s 后被拉到中央)
+  { kind: 'gas_station', x: tpx(20), y: tpx(15), w: 200, h: 180, label: '中央加油站' },
+  { kind: 'barricade',   x: tpx(15), y: tpx(20), w: 200, h: 180, label: '西中路障' },
+  { kind: 'debris',      x: tpx(25), y: tpx(20), w: 200, h: 170, label: '东中废墟' }
 ];
 ldoeLm.forEach(s => push({ kind: s.kind, x: s.x - s.w/2, y: s.y - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
 

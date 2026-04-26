@@ -7202,6 +7202,25 @@ function doLogin() {
           }
           return out;
         },
+        // ldoe-overhaul-02b: full-map landmark dump + dist-to-player for spawn-ring diag
+        getLandmarksAll: function() {
+          if (typeof MAP_DATA === 'undefined' || !MAP_DATA || !MAP_DATA.structures) return [];
+          var px = (typeof player !== 'undefined' && player) ? player.x : 0;
+          var py = (typeof player !== 'undefined' && player) ? player.y : 0;
+          var _ldoeSet = { fence:1, gas_station:1, wreck_car:1, barricade:1, debris:1 };
+          var out = [];
+          for (var i = 0; i < MAP_DATA.structures.length; i++) {
+            var s = MAP_DATA.structures[i];
+            var k = s.kind || s.type;
+            var ldoeKind = _ldoeSet[k] ? k : (k === 'landmark' && _ldoeSet[s.sprite] ? s.sprite : null);
+            if (!ldoeKind) continue;
+            var cx = s.x + s.w / 2, cy = s.y + s.h / 2;
+            out.push({ kind: ldoeKind, x: s.x, y: s.y, w: s.w, h: s.h, cx: cx, cy: cy, distToPlayer: Math.hypot(px - cx, py - cy) });
+          }
+          out.sort(function(a, b) { return a.distToPlayer - b.distToPlayer; });
+          return out;
+        },
+        getLastTracerSegment: function() { return window.__lastTracerSegment || null; },
         spawnEnemyNear: function(type, dx, dy) {
           try {
             if (typeof spawnOfflineEnemy === 'function' && typeof player !== 'undefined') {
@@ -9587,6 +9606,13 @@ function doLogin() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(-3, -2, 9, 4);
       ctx.restore();
+      // ldoe-overhaul-02b: expose last-rendered tracer segment for harness
+      var _ta = _frfx.angle || 0;
+      window.__lastTracerSegment = {
+        x1: _frfx.x - 22 * Math.cos(_ta), y1: _frfx.y - 22 * Math.sin(_ta),
+        x2: _frfx.x + 24 * Math.cos(_ta), y2: _frfx.y + 24 * Math.sin(_ta),
+        angle: _ta, t: (typeof gameTime !== 'undefined' ? gameTime : 0)
+      };
     }
     ctx.globalAlpha = 1;
 
