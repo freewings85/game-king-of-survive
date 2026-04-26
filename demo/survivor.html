@@ -6568,7 +6568,7 @@ function doLogin() {
     tilesetImg: null, tilesetReady: false, tilesetMeta: null, tileIndex: {},
     monsterImg: null, monsterReady: false, monsterMeta: null,
     ui9: {}, ui9Meta: null, ui9Ready: false,
-    bossImgs: {}, bossMetas: {} // keyed by bossId: { img, ready, meta }
+    // boss sprites removed in zombie-skin-02 — boss now uses procedural zombie tank
   };
   (function preloadHomm3Art() {
     function loadJSON(path, cb) {
@@ -6607,14 +6607,6 @@ function doLogin() {
       HOMM3_ART.ui9[k] = im;
     });
     loadJSON(HOMM3_ART_BASE + 'ui9/meta.json', function(j) { HOMM3_ART.ui9Meta = j; });
-    // Boss species sprites — keyed by BOSS_TYPES.id
-    var _bossIds = ['stone_giant', 'shadow_mage', 'berserker', 'frost_dragon', 'rot_troll'];
-    _bossIds.forEach(function(bid) {
-      HOMM3_ART.bossImgs[bid] = { img: new Image(), ready: false };
-      HOMM3_ART.bossImgs[bid].img.onload = (function(id){ return function(){ HOMM3_ART.bossImgs[id].ready = true; }; })(bid);
-      HOMM3_ART.bossImgs[bid].img.src = HOMM3_ART_BASE + 'boss_' + bid + '.png';
-      loadJSON(HOMM3_ART_BASE + 'boss_' + bid + '.json', (function(id){ return function(j){ HOMM3_ART.bossMetas[id] = j; }; })(bid));
-    });
   })();
 
   // Per-tile biome grid. Values 0=grass 1=dirt 2=stone 3=water 4=sand 5=swamp 6=snow.
@@ -7291,31 +7283,6 @@ function doLogin() {
 
   // === ENEMY SPRITES — Canvas-drawn creatures per enemy type ===
   function drawEnemySprite(ctx, x, y, r, type, themeColor, gt, srcEntity) {
-    // Boss species — dedicated sprite sheet per BOSS_TYPES.id with walk/attack/death.
-    if (srcEntity && srcEntity.bossTypeId) {
-      var bEntry = HOMM3_ART.bossImgs[srcEntity.bossTypeId];
-      var bMeta = HOMM3_ART.bossMetas[srcEntity.bossTypeId];
-      if (bEntry && bEntry.ready && bMeta) {
-        var bfw = bMeta.frameW, bfh = bMeta.frameH;
-        var bAng = (typeof player !== 'undefined' && player) ? Math.atan2(player.y - y, player.x - x) : Math.PI / 2;
-        var bDir = charDirOffset(bAng);
-        var bAnim = bMeta.anims.walk;
-        var bFrames = bAnim.frames, bFps = bAnim.fps;
-        var bIdx = Math.floor((gt || 0) * bFps) % bFrames;
-        var bsx = bIdx * bfw, bsy = bDir * bfh;
-        // Scale 128px boss sprite to ~4× radius for presence (boss r=60ish → ~240px tall)
-        var bdh = r * 4.0, bdw = bdh;
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(bEntry.img, bsx, bsy, bfw, bfh, x - bdw / 2, y - bdh * 0.72, bdw, bdh);
-        if (themeColor === '#fff') { // hit flash
-          ctx.globalAlpha = 0.5; ctx.fillStyle = '#fff';
-          ctx.fillRect(x - bdw / 2, y - bdh * 0.72, bdw, bdh);
-        }
-        ctx.restore();
-        return;
-      }
-    }
     // zombie-skin-01: drop monster_orc override; all non-boss enemies render as
     // procedural zombies below. ctx.scale(2,2) brings procedural footprint up to
     // the ~4.5×r sprite footprint so visual size doesn't collapse.
@@ -7463,98 +7430,93 @@ function doLogin() {
         ctx.globalAlpha = 1;
         break;
       }
-      case 'boss': { // Lich King — tall hooded necromancer, levitating, crystal staff
-        // Floating levitation offset
-        var levitate = Math.sin(gt * 1.5) * r * 0.08;
-        // Ground shadow (far below because floating)
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.beginPath(); ctx.ellipse(0, r*0.95, r*0.9, r*0.22, 0, 0, Math.PI*2); ctx.fill();
-        // Ethereal aura (pulsing purple ring)
-        var auraPulse = 0.25 + 0.15 * Math.sin(gt * 3);
-        ctx.globalAlpha = auraPulse;
-        var auraGrad = ctx.createRadialGradient(0, levitate, 0, 0, levitate, r*1.6);
-        auraGrad.addColorStop(0, '#7040ff');
-        auraGrad.addColorStop(0.6, 'rgba(80,32,160,0.4)');
-        auraGrad.addColorStop(1, 'rgba(32,8,64,0)');
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath(); ctx.arc(0, levitate, r*1.6, 0, Math.PI*2); ctx.fill();
+      case 'boss': { // Boss zombie tank — armored, asymmetric mutant arm, blood streaks, 2.2× scale
+        ctx.scale(1.1, 1.1); // additional scale on top of 2× → ~2.2× vs normals
+        var lurch = Math.sin(gt * 1.2) * r * 0.05;
+        // Heavy ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath(); ctx.ellipse(0, r*0.85, r*1.05, r*0.24, 0, 0, Math.PI*2); ctx.fill();
+        // Stout legs in tactical-armor greaves
+        ctx.fillStyle = '#1a1a18';
+        ctx.fillRect(-r*0.48, r*0.35, r*0.36, r*0.45);
+        ctx.fillRect(r*0.12, r*0.35, r*0.36, r*0.45);
+        // Knee plates (rusted metal)
+        ctx.fillStyle = '#5a4a3a';
+        ctx.fillRect(-r*0.48, r*0.45, r*0.36, r*0.08);
+        ctx.fillRect(r*0.12, r*0.45, r*0.36, r*0.08);
+        // Torso under armor (rotted skin, dark gray-green)
+        ctx.fillStyle = '#3a4a3a';
+        ctx.beginPath(); ctx.ellipse(0, lurch, r*0.7, r*0.55, 0, 0, Math.PI*2); ctx.fill();
+        // Chest armor plate (riveted steel, dented)
+        ctx.fillStyle = '#4a4a48';
+        ctx.beginPath();
+        ctx.moveTo(-r*0.5, -r*0.35 + lurch);
+        ctx.lineTo(r*0.5, -r*0.35 + lurch);
+        ctx.lineTo(r*0.55, r*0.2 + lurch);
+        ctx.lineTo(-r*0.55, r*0.2 + lurch);
+        ctx.closePath(); ctx.fill();
+        // Plate outline (heavy)
+        ctx.strokeStyle = '#1a1a18'; ctx.lineWidth = 3; ctx.stroke();
+        // Rivets
+        ctx.fillStyle = '#88887a';
+        for (var ri = 0; ri < 4; ri++) {
+          ctx.beginPath(); ctx.arc(-r*0.4 + ri*r*0.27, -r*0.28 + lurch, r*0.04, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.arc(-r*0.4 + ri*r*0.27, r*0.12 + lurch, r*0.04, 0, Math.PI*2); ctx.fill();
+        }
+        // Blood streaks down the chest plate
+        ctx.fillStyle = '#5a0808'; ctx.globalAlpha = 0.85;
+        ctx.beginPath(); ctx.moveTo(-r*0.2, -r*0.32 + lurch); ctx.lineTo(-r*0.18, r*0.18 + lurch); ctx.lineTo(-r*0.12, r*0.18 + lurch); ctx.lineTo(-r*0.14, -r*0.32 + lurch); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(r*0.05, -r*0.32 + lurch); ctx.lineTo(r*0.08, r*0.0 + lurch); ctx.lineTo(r*0.16, r*0.0 + lurch); ctx.lineTo(r*0.13, -r*0.32 + lurch); ctx.fill();
         ctx.globalAlpha = 1;
+        // Asymmetric — LEFT side: oversized mutant arm (huge claw)
+        ctx.fillStyle = '#3a4a3a';
+        ctx.beginPath();
+        ctx.moveTo(-r*0.55, -r*0.2 + lurch);
+        ctx.lineTo(-r*1.25, -r*0.05 + lurch);
+        ctx.lineTo(-r*1.3, r*0.45);
+        ctx.lineTo(-r*0.5, r*0.25 + lurch);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#1a2a1a'; ctx.lineWidth = 2; ctx.stroke();
+        // Mutant claw (3 thick fingers)
+        ctx.fillStyle = '#2a1818';
+        for (var ci = 0; ci < 3; ci++) {
+          var cay = r*0.25 + ci*r*0.18;
+          ctx.beginPath(); ctx.moveTo(-r*1.3, cay); ctx.lineTo(-r*1.55, cay + r*0.08); ctx.lineTo(-r*1.3, cay + r*0.16); ctx.fill();
+        }
+        // Bone protrusion through skin on the mutant arm
+        ctx.fillStyle = '#e8d8b0';
+        ctx.beginPath(); ctx.ellipse(-r*0.95, r*0.05 + lurch, r*0.08, r*0.12, 0.6, 0, Math.PI*2); ctx.fill();
+        // RIGHT side: smaller normal armored arm
+        ctx.fillStyle = '#4a4a48';
+        ctx.fillRect(r*0.5, -r*0.2 + lurch, r*0.3, r*0.45);
+        ctx.fillStyle = '#3a4a3a';
+        ctx.beginPath(); ctx.arc(r*0.65, r*0.3 + lurch, r*0.16, 0, Math.PI*2); ctx.fill();
+        // Helmet — open-face combat helm with jaw missing
+        ctx.fillStyle = '#3a3a38';
+        ctx.beginPath(); ctx.arc(0, -r*0.55 + lurch, r*0.32, Math.PI*1.0, Math.PI*2.0); ctx.fill();
+        // Skull face (jaw missing, exposed)
+        ctx.fillStyle = '#7a8865';
+        ctx.beginPath(); ctx.arc(0, -r*0.5 + lurch, r*0.26, 0, Math.PI*2); ctx.fill();
+        // Glowing red eyes (pulsing menace)
+        var bossEyePulse = 0.7 + 0.3 * Math.sin(gt * 5);
         ctx.save();
-        ctx.translate(0, levitate);
-        // Flowing robe bottom (tattered, animated sway)
-        var swayL = Math.sin(gt * 2 + 0.3) * r * 0.15;
-        var swayR = Math.sin(gt * 2 - 0.3) * r * 0.15;
-        ctx.fillStyle = '#1a0a33';
-        ctx.beginPath();
-        ctx.moveTo(-r*0.55, -r*0.2);
-        ctx.lineTo(-r*0.75, r*0.3 + swayL);
-        ctx.lineTo(-r*0.85, r*0.55 + swayL*0.5);
-        ctx.lineTo(-r*0.6, r*0.7);
-        ctx.lineTo(-r*0.3, r*0.5);
-        ctx.lineTo(0, r*0.75);
-        ctx.lineTo(r*0.3, r*0.5);
-        ctx.lineTo(r*0.6, r*0.7);
-        ctx.lineTo(r*0.85, r*0.55 + swayR*0.5);
-        ctx.lineTo(r*0.75, r*0.3 + swayR);
-        ctx.lineTo(r*0.55, -r*0.2);
-        ctx.closePath(); ctx.fill();
-        // Robe highlight (inner purple)
-        ctx.fillStyle = '#3a1a66';
-        ctx.beginPath();
-        ctx.moveTo(-r*0.4, -r*0.1);
-        ctx.lineTo(-r*0.55, r*0.45);
-        ctx.lineTo(r*0.55, r*0.45);
-        ctx.lineTo(r*0.4, -r*0.1);
-        ctx.closePath(); ctx.fill();
-        // Hood cowl (large, dominates upper silhouette)
-        ctx.fillStyle = '#0a0220';
-        ctx.beginPath();
-        ctx.moveTo(-r*0.55, -r*0.15);
-        ctx.quadraticCurveTo(-r*0.7, -r*0.9, 0, -r*1.05);
-        ctx.quadraticCurveTo(r*0.7, -r*0.9, r*0.55, -r*0.15);
-        ctx.quadraticCurveTo(0, -r*0.35, -r*0.55, -r*0.15);
-        ctx.closePath(); ctx.fill();
-        // Hood inner shadow (deep void)
-        ctx.fillStyle = '#000';
-        ctx.beginPath();
-        ctx.ellipse(0, -r*0.55, r*0.3, r*0.38, 0, 0, Math.PI*2);
-        ctx.fill();
-        // Two glowing cyan eye-points in the void
-        var lichEyePulse = 0.65 + 0.35 * Math.sin(gt * 4.5);
-        ctx.save();
-        ctx.shadowColor = '#44eeff'; ctx.shadowBlur = 12;
-        ctx.fillStyle = '#aaffff'; ctx.globalAlpha = lichEyePulse;
-        ctx.beginPath(); ctx.arc(-r*0.13, -r*0.55, r*0.06, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r*0.13, -r*0.55, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.shadowColor = '#ff2010'; ctx.shadowBlur = 14;
+        ctx.fillStyle = '#ff4020'; ctx.globalAlpha = bossEyePulse;
+        ctx.beginPath(); ctx.arc(-r*0.12, -r*0.55 + lurch, r*0.06, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r*0.12, -r*0.55 + lurch, r*0.06, 0, Math.PI*2); ctx.fill();
         ctx.restore();
         ctx.globalAlpha = 1;
-        // Bony skeletal hands emerging from sleeves
-        ctx.fillStyle = '#d8d0b8';
-        ctx.beginPath(); ctx.arc(-r*0.5, r*0.1, r*0.08, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(r*0.5, r*0.1, r*0.08, 0, Math.PI*2); ctx.fill();
-        // Crystal staff (diagonal, right hand) — tall, menacing
-        ctx.strokeStyle = '#4a2a1a'; ctx.lineWidth = r*0.08; ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(r*0.55, r*0.15);
-        ctx.lineTo(r*0.95, -r*1.15);
-        ctx.stroke();
-        // Staff orb (crystal ball with inner light)
-        var orbPulse = 0.7 + 0.3 * Math.sin(gt * 3.5);
-        ctx.save();
-        ctx.shadowColor = '#60c0ff'; ctx.shadowBlur = 15;
-        var orbGrad = ctx.createRadialGradient(r*0.95, -r*1.2, 0, r*0.95, -r*1.2, r*0.28);
-        orbGrad.addColorStop(0, '#ffffff');
-        orbGrad.addColorStop(0.4, '#aaffff');
-        orbGrad.addColorStop(1, '#3040a0');
-        ctx.fillStyle = orbGrad; ctx.globalAlpha = orbPulse;
-        ctx.beginPath(); ctx.arc(r*0.95, -r*1.2, r*0.22, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
-        ctx.globalAlpha = 1;
-        // Orb metal claw holding it
-        ctx.fillStyle = '#2a1a0a';
-        ctx.beginPath(); ctx.arc(r*0.95, -r*1.2, r*0.28, Math.PI*0.3, Math.PI*1.7);
-        ctx.closePath(); ctx.fill();
-        ctx.restore();
+        // Exposed jaw (no lower jaw, just teeth and tongue)
+        ctx.fillStyle = '#180808';
+        ctx.beginPath(); ctx.ellipse(0, -r*0.38 + lurch, r*0.14, r*0.08, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#e8d8b0';
+        for (var ti = 0; ti < 5; ti++) {
+          ctx.fillRect(-r*0.12 + ti*r*0.06, -r*0.42 + lurch, r*0.025, r*0.06);
+        }
+        // Helmet horns (broken metal spikes)
+        ctx.strokeStyle = '#3a3a38'; ctx.lineWidth = r*0.06; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-r*0.28, -r*0.78 + lurch); ctx.lineTo(-r*0.45, -r*1.0 + lurch); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(r*0.28, -r*0.78 + lurch); ctx.lineTo(r*0.45, -r*1.0 + lurch); ctx.stroke();
         break;
       }
       case 'ranged': { // Spitter zombie — gaunt, hunched, acid bile dripping from mouth
