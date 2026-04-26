@@ -85,19 +85,64 @@
       "rarity": "common",
       "stackCap": 4,
       "weight": 100
-    }
-  ],
-
-  "_disabled_cards": [
+    },
     {
       "id": "attack_up",
       "name": "力量增幅",
       "icon": "⚔",
       "desc": "攻击伤害 ×1.25 / 层",
-      "rarity": "common",
+      "rarity": "rare",
       "stackCap": 5,
-      "weight": 100
+      "weight": 50
     },
+    {
+      "id": "pierce",
+      "name": "穿透弹",
+      "icon": "➹",
+      "desc": "投射物穿透敌人",
+      "rarity": "rare",
+      "stackCap": 1,
+      "weight": 50
+    },
+    {
+      "id": "crit",
+      "name": "致命一击",
+      "icon": "🎯",
+      "desc": "暴击率 +5% / 层（上限 50%）",
+      "rarity": "rare",
+      "stackCap": 5,
+      "weight": 50
+    },
+    {
+      "id": "lifesteal",
+      "name": "吸血",
+      "icon": "🩸",
+      "desc": "造成伤害的 5% 回血 / 层",
+      "rarity": "rare",
+      "stackCap": 3,
+      "weight": 50
+    },
+    {
+      "id": "explosive",
+      "name": "爆裂弹",
+      "icon": "💥",
+      "desc": "弹幕命中产生爆炸（+6 / 层）",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    },
+    {
+      "id": "chain_lightning",
+      "name": "连锁闪电",
+      "icon": "⚡",
+      "desc": "命中后跳跃到附近敌人(+1 跳 / 层)",
+      "rarity": "epic",
+      "stackCap": 3,
+      "weight": 25
+    }
+  ],
+
+  "_disabled_cards": [
     {
       "id": "hp_regen",
       "name": "生命回复",
@@ -106,24 +151,6 @@
       "rarity": "common",
       "stackCap": 4,
       "weight": 80
-    },
-    {
-      "id": "crit",
-      "name": "致命一击",
-      "icon": "🎯",
-      "desc": "暴击率 +5% / 层（上限 25%）",
-      "rarity": "rare",
-      "stackCap": 5,
-      "weight": 60
-    },
-    {
-      "id": "pierce",
-      "name": "穿透弹",
-      "icon": "➹",
-      "desc": "攻击穿透敌人",
-      "rarity": "rare",
-      "stackCap": 1,
-      "weight": 40
     },
     {
       "id": "shield",
@@ -135,30 +162,12 @@
       "weight": 40
     },
     {
-      "id": "lifesteal",
-      "name": "吸血",
-      "icon": "🩸",
-      "desc": "伤害的 5% 转化为生命 / 层",
-      "rarity": "rare",
-      "stackCap": 4,
-      "weight": 50
-    },
-    {
       "id": "thorns_aura",
       "name": "荆棘护甲",
       "icon": "🌵",
       "desc": "反伤光环 +15 / 层",
       "rarity": "rare",
       "stackCap": 3,
-      "weight": 50
-    },
-    {
-      "id": "explosive",
-      "name": "爆裂弹",
-      "icon": "💥",
-      "desc": "投射物爆炸 +6 伤害 / 层",
-      "rarity": "rare",
-      "stackCap": 4,
       "weight": 50
     },
     {
@@ -204,15 +213,6 @@
       "weight": 50,
       "stackEffect": [0.08, 0.14, 0.20],
       "newInWave2": true
-    },
-    {
-      "id": "chain_lightning",
-      "name": "连锁闪电",
-      "icon": "⚡",
-      "desc": "攻击触发链电（每层 +1 跳）",
-      "rarity": "epic",
-      "stackCap": 3,
-      "weight": 25
     },
     {
       "id": "fire_trail",
