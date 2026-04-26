@@ -46,28 +46,29 @@ const tpx = (t) => t * TS + TS / 2;
 const structures = [];
 const push = (s) => structures.push(s);
 
-// ldoe-overhaul-02b: spawn-ring distribution. lane_b 8 spawns =
-// {top-L, mid-L×2, bot-L, top-R, mid-R×2, bot-R}. Pair fence+wreck near each
-// of 4 corner spawns (8 total) — corner spawns get full KPI ≤6 tiles ≈380px.
-// Mid spawns (2,20)/(37,20) get 1 fence each + 1 shared wreck (compromise:
-// budget 11 hard-cap means mid sacrifices 1 of 2 KPI items vs corner pairs).
-// 3 fillers in jungle covering lateral pull. Sizes 1.5×.
+// ldoe-overhaul-02b-cap11: per-side cycle. Left column has 4 spawns
+// (top-L, mid-L, mid-jungle-L, bot-L) — top/mid/bot 间距 ≤896px so
+// midpoint shares ≤448px (< 700 ✓). Mirror right side. Layout per side:
+// 2 shared midpoints (top-mid + mid-bot) alternating fence/wreck, plus
+// 2 direct items at top/bot corners filling missing KPI. = 4 items × 2
+// sides = 8 + 3 lane fillers = 11. All 8 spawns get fence+wreck within ≤466px.
 const ldoeLm = [
-  // 4 corner pairs (full fence+wreck KPI)
-  { kind: 'fence',     tx: 7,  ty: 6,  w: 200, h: 170, label: '上路左铁丝网' },
-  { kind: 'wreck_car', tx: 11, ty: 6,  w: 200, h: 180, label: '上路左翻车' },
-  { kind: 'fence',     tx: 33, ty: 6,  w: 200, h: 170, label: '上路右铁丝网' },
-  { kind: 'wreck_car', tx: 29, ty: 6,  w: 200, h: 180, label: '上路右翻车' },
-  { kind: 'fence',     tx: 7,  ty: 33, w: 200, h: 170, label: '下路左铁丝网' },
-  { kind: 'wreck_car', tx: 11, ty: 33, w: 200, h: 180, label: '下路左翻车' },
-  { kind: 'fence',     tx: 33, ty: 33, w: 200, h: 170, label: '下路右铁丝网' },
-  { kind: 'wreck_car', tx: 29, ty: 33, w: 200, h: 180, label: '下路右翻车' },
-  // Mid lane fillers (mid spawns get partial KPI — see comment)
-  { kind: 'gas_station', tx: 8,  ty: 20, w: 200, h: 180, label: '中路左加油站' },
-  { kind: 'barricade',   tx: 32, ty: 20, w: 200, h: 180, label: '中路右路障' },
-  { kind: 'debris',      tx: 20, ty: 20, w: 200, h: 170, label: '中央废墟' }
+  // Left side
+  { kind: 'fence',     cx: 160,  cy: 864,  w: 200, h: 170, label: '左中上铁丝网' },
+  { kind: 'wreck_car', cx: 160,  cy: 1728, w: 200, h: 180, label: '左中下翻车' },
+  { kind: 'wreck_car', cx: 288,  cy: 416,  w: 200, h: 180, label: '左上翻车' },
+  { kind: 'fence',     cx: 288,  cy: 2144, w: 200, h: 170, label: '左下铁丝网' },
+  // Right side
+  { kind: 'fence',     cx: 2400, cy: 864,  w: 200, h: 170, label: '右中上铁丝网' },
+  { kind: 'wreck_car', cx: 2400, cy: 1728, w: 200, h: 180, label: '右中下翻车' },
+  { kind: 'wreck_car', cx: 2272, cy: 416,  w: 200, h: 180, label: '右上翻车' },
+  { kind: 'fence',     cx: 2272, cy: 2144, w: 200, h: 170, label: '右下铁丝网' },
+  // 3 lane fillers (mid-map, cosmetic populating)
+  { kind: 'gas_station', cx: 1280, cy: 416,  w: 200, h: 180, label: '上路加油站' },
+  { kind: 'barricade',   cx: 1280, cy: 1312, w: 200, h: 180, label: '中路路障' },
+  { kind: 'debris',      cx: 1280, cy: 2144, w: 200, h: 170, label: '下路废墟' }
 ];
-ldoeLm.forEach(s => push({ kind: s.kind, x: s.tx * TS - s.w/2, y: s.ty * TS - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
+ldoeLm.forEach(s => push({ kind: s.kind, x: s.cx - s.w/2, y: s.cy - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
 
 // Bridge structures across rivers at crossings
 push({ kind: 'bridge', x: tpx(19) - TS, y: 13 * TS - 12, w: TS * 2, h: TS + 24, color: '#8a6a3a', label: '中桥' });
