@@ -453,21 +453,51 @@ function doLogin() {
         c2.beginPath(); c2.moveTo(bcx + 2, sy - 4); c2.lineTo(bcx + 5, sy - 6); c2.stroke();
       }
     } else if (kind === 'debris') {
-      // brick pile + exposed rebar
-      c2.fillStyle = '#6e2a1c';
-      for (var br = 0; br < 8; br++) {
-        var brx = sx + (br * 17) % (w - 12);
-        var bry = sy + h - 8 - ((br * 5) % (h - 4));
-        c2.fillRect(brx, bry, 12, 6);
-        c2.strokeStyle = '#3a1a14'; c2.lineWidth = 0.6; c2.strokeRect(brx, bry, 12, 6);
+      // Pile of broken concrete blocks — bigger, contrasted, with thick exposed rebar
+      // Concrete blocks (varied gray + tan, much bigger than before)
+      var blocks = [
+        { x: 4, y: h - 28, w: 28, h: 22, c: '#9a8a72' },
+        { x: 22, y: h - 36, w: 24, h: 18, c: '#7a6a52' },
+        { x: 40, y: h - 24, w: 26, h: 18, c: '#a89880' },
+        { x: 8, y: h - 50, w: 22, h: 16, c: '#6e5a44' },
+        { x: 32, y: h - 52, w: 26, h: 18, c: '#8a7a62' },
+        { x: 56, y: h - 40, w: 22, h: 16, c: '#7a6a52' }
+      ];
+      for (var _bk = 0; _bk < blocks.length; _bk++) {
+        var bb = blocks[_bk];
+        if (bb.x + bb.w > w - 4 || bb.y + bb.h > h - 2) continue;
+        c2.fillStyle = bb.c;
+        c2.fillRect(sx + bb.x, sy + bb.y, bb.w, bb.h);
+        c2.strokeStyle = '#1a1a18'; c2.lineWidth = 1.5;
+        c2.strokeRect(sx + bb.x, sy + bb.y, bb.w, bb.h);
+        // Cracks
+        c2.strokeStyle = '#2a2a28'; c2.lineWidth = 1;
+        c2.beginPath();
+        c2.moveTo(sx + bb.x + bb.w * 0.3, sy + bb.y);
+        c2.lineTo(sx + bb.x + bb.w * 0.5, sy + bb.y + bb.h * 0.6);
+        c2.stroke();
       }
-      // rebar bent steel
-      c2.strokeStyle = '#3a3a38'; c2.lineWidth = 2;
-      c2.beginPath(); c2.moveTo(sx + 8, sy + h - 4); c2.quadraticCurveTo(sx + 14, sy + 4, sx + 20, sy + h - 16); c2.stroke();
-      c2.beginPath(); c2.moveTo(sx + w - 12, sy + h - 8); c2.lineTo(sx + w - 6, sy + 6); c2.stroke();
-      // dust
-      c2.fillStyle = 'rgba(138,112,80,0.5)';
-      c2.fillRect(sx, sy + h - 4, w, 4);
+      // Exposed rebar — thick #2a2e2a steel rods, ≥3px width, 3 rods
+      c2.strokeStyle = '#2a2e2a'; c2.lineWidth = 3.5; c2.lineCap = 'round';
+      c2.beginPath();
+      c2.moveTo(sx + 12, sy + h - 6);
+      c2.quadraticCurveTo(sx + 18, sy + h * 0.3, sx + 26, sy + 4);
+      c2.stroke();
+      c2.beginPath();
+      c2.moveTo(sx + 38, sy + h - 8);
+      c2.lineTo(sx + 44, sy + 12);
+      c2.stroke();
+      c2.beginPath();
+      c2.moveTo(sx + w - 18, sy + h - 4);
+      c2.quadraticCurveTo(sx + w - 10, sy + h * 0.4, sx + w - 22, sy + 8);
+      c2.stroke();
+      // Rust streaks down rebar
+      c2.strokeStyle = '#6e2a1c'; c2.lineWidth = 1.5;
+      c2.beginPath(); c2.moveTo(sx + 26, sy + 4); c2.lineTo(sx + 22, sy + 18); c2.stroke();
+      c2.beginPath(); c2.moveTo(sx + 44, sy + 12); c2.lineTo(sx + 42, sy + 28); c2.stroke();
+      // Dust kick at base
+      c2.fillStyle = 'rgba(138,112,80,0.6)';
+      c2.fillRect(sx, sy + h - 6, w, 6);
     }
     c2.restore();
   }
@@ -5038,17 +5068,24 @@ function doLogin() {
           color: '#ffd24a',
           targetX: closest.x, targetY: closest.y
         });
-        // LDOE muzzle flash — bright orange cone, 0.08s, 4 particles
-        for (var _muz = 0; _muz < 4; _muz++) {
-          var _muzA = angle + (Math.random() - 0.5) * 0.5;
-          var _muzS = 140 + Math.random() * 80;
+        // LDOE muzzle flash — single explicit cone (long > wide), 0.1s.
+        // Uses particleType 'muzzleCone' which renders as a triangle pointing
+        // along (vx,vy). Bright yellow #ffeb3b + white core, distinct from auras.
+        particles.push({
+          x: _muzX, y: _muzY,
+          vx: Math.cos(angle) * 1, vy: Math.sin(angle) * 1, // direction marker, not motion
+          life: 0.1, maxLife: 0.1,
+          color: '#ffeb3b', size: 48,
+          particleType: 'muzzleCone', _angle: angle
+        });
+        // 2 small spark particles, sideways spread (smoke flash detail)
+        for (var _muz = 0; _muz < 2; _muz++) {
+          var _muzA = angle + (_muz === 0 ? -0.3 : 0.3);
           particles.push({
             x: _muzX, y: _muzY,
-            vx: Math.cos(_muzA) * _muzS, vy: Math.sin(_muzA) * _muzS,
-            life: 0.08, maxLife: 0.08,
-            color: _muz === 0 ? '#ffffcc' : '#ff8c2a',
-            size: 3 + Math.random() * 3,
-            particleType: 'circle'
+            vx: Math.cos(_muzA) * 80, vy: Math.sin(_muzA) * 80,
+            life: 0.12, maxLife: 0.12,
+            color: '#ff8c2a', size: 2.5, particleType: 'circle'
           });
         }
         window.__lastMuzzleAt = { x: _muzX, y: _muzY, t: gameTime };
@@ -7117,6 +7154,57 @@ function doLogin() {
         // ldoe-overhaul-01: Playtester closeup hooks
         getLastMuzzleAt: function() { return window.__lastMuzzleAt || null; },
         getLastCasingAt: function() { return window.__lastCasingAt || null; },
+        // ldoe-overhaul-01a: pause + force-fire so static screenshots can capture
+        // ephemeral muzzle/casing/tracer particles without timing race
+        pauseGame: function() {
+          if (typeof state !== 'undefined') { window.__prevState = state; state = 'paused'; return true; }
+          return false;
+        },
+        resumeGame: function() {
+          if (typeof state !== 'undefined' && window.__prevState) { state = window.__prevState; return true; }
+          return false;
+        },
+        forceFireMuzzleCasing: function(facingAngle) {
+          if (typeof player === 'undefined' || !player) return false;
+          var ang = (facingAngle != null) ? facingAngle : 0;
+          var muzX = player.x + Math.cos(ang) * player.radius * 1.2;
+          var muzY = player.y + Math.sin(ang) * player.radius * 1.2;
+          // muzzle cone particle
+          if (typeof particles !== 'undefined') {
+            particles.push({
+              x: muzX, y: muzY,
+              vx: Math.cos(ang), vy: Math.sin(ang),
+              life: 9.0, maxLife: 9.0, // long for static probe
+              color: '#ffeb3b', size: 48,
+              particleType: 'muzzleCone', _angle: ang
+            });
+            // casing — long lived for static probe, no gravity (frozen at spawn)
+            var csA = ang - Math.PI * 0.55;
+            var _csXp = player.x + Math.cos(csA) * player.radius * 0.6;
+            var _csYp = player.y + Math.sin(csA) * player.radius * 0.6;
+            particles.push({
+              x: _csXp, y: _csYp,
+              vx: 0, vy: 0,
+              life: 9.0, maxLife: 9.0,
+              color: '#fff2a0', size: 4,
+              particleType: 'casing'
+            });
+            window.__lastCasingAt = { x: _csXp, y: _csYp, t: (typeof gameTime !== 'undefined' ? gameTime : 0) };
+          }
+          // tracer (offlineSkillFx) — long-lived for static frame
+          if (typeof offlineSkillFx !== 'undefined') {
+            offlineSkillFx.push({
+              kind: 'bullet',
+              x: muzX + Math.cos(ang) * 60,
+              y: muzY + Math.sin(ang) * 60,
+              vx: Math.cos(ang) * 600, vy: Math.sin(ang) * 600,
+              angle: ang, life: 9.0, maxLife: 9.0,
+              color: '#ffeb3b'
+            });
+          }
+          window.__lastMuzzleAt = { x: muzX, y: muzY, t: (typeof gameTime !== 'undefined' ? gameTime : 0) };
+          return { muzX: muzX, muzY: muzY };
+        },
         getCamera: function() {
           return {
             x: (typeof cameraX !== 'undefined') ? cameraX : 0,
@@ -8721,7 +8809,36 @@ function doLogin() {
       ctx.globalAlpha = p.life / p.maxLife;
       ctx.fillStyle = p.color;
       if (p.particleType === 'star') { drawStarParticle(p.x, p.y, p.size * (p.life / p.maxLife), p.color); }
-      else if (p.particleType === 'casing') { ctx.fillRect(p.x - 0.75, p.y - 1.5, 1.5, 3); }
+      else if (p.particleType === 'casing') {
+        // Bright #fff2a0 + dark outline so it pops under multiply overlay.
+        // Bumped to 4×8 world (~2×4 CSS at scale 0.5) for visibility.
+        ctx.fillStyle = '#1a1a18'; ctx.fillRect(p.x - 2.5, p.y - 4.5, 5, 9);
+        ctx.fillStyle = '#fff2a0'; ctx.fillRect(p.x - 2, p.y - 4, 4, 8);
+      }
+      else if (p.particleType === 'muzzleCone') {
+        // Cone (triangle) along p._angle, length > width, bright yellow + white core
+        var mscale = p.life / p.maxLife;
+        var mlen = p.size * mscale;        // length along facing
+        var mwid = mlen * 0.45;            // width perpendicular (cone, not circle)
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p._angle || 0);
+        // Outer cone (yellow)
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -mwid * 0.4);
+        ctx.lineTo(mlen, 0);
+        ctx.lineTo(0, mwid * 0.4);
+        ctx.closePath(); ctx.fill();
+        // White core (smaller cone inside)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(0, -mwid * 0.18);
+        ctx.lineTo(mlen * 0.65, 0);
+        ctx.lineTo(0, mwid * 0.18);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
       else { ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2); ctx.fill(); }
     }
     particles.length = pLen;
@@ -9469,21 +9586,25 @@ function doLogin() {
     // Strategic point pulse halos (world-space)
     drawStratPulse();
 
-    // ldoe-overhaul-01: unified bullet tracer (replaces fireball/arrow/slash branches)
+    // ldoe-overhaul-01: unified bullet tracer — line segment + bright tip.
+    // Drawn brighter + thicker + with dark outline so it survives red multiply overlay.
     for (var _fri = 0; _fri < offlineSkillFx.length; _fri++) {
       var _frfx = offlineSkillFx[_fri];
       var _frAlpha = Math.min(1, _frfx.life / _frfx.maxLife);
       ctx.save();
       ctx.translate(_frfx.x, _frfx.y);
       ctx.rotate(_frfx.angle || 0);
-      // Tracer streak (亮黄, 18px tail)
-      ctx.globalAlpha = 0.6 * _frAlpha;
-      ctx.fillStyle = '#ffd24a';
-      ctx.fillRect(-18, -0.8, 18, 1.6);
-      // Bullet head (bright tip)
+      // Dark outline (so it stays readable under multiply overlay)
+      ctx.globalAlpha = 0.7 * _frAlpha;
+      ctx.fillStyle = '#1a1a14';
+      ctx.fillRect(-22, -1.8, 22, 3.6);
+      // Tracer body (bright亮黄 line, 24px length × 2px height)
       ctx.globalAlpha = _frAlpha;
-      ctx.fillStyle = '#ffffaa';
-      ctx.fillRect(-2, -1.5, 5, 3);
+      ctx.fillStyle = '#ffeb3b';
+      ctx.fillRect(-22, -1.2, 24, 2.4);
+      // Bright white core/head
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-3, -1.5, 7, 3);
       ctx.restore();
     }
     ctx.globalAlpha = 1;
