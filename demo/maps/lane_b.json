@@ -1662,18 +1662,6 @@
   ],
   "structures": [
     {
-      "kind": "landmark",
-      "x": 1088,
-      "y": 1024,
-      "w": 384,
-      "h": 512,
-      "color": "#b8a060",
-      "label": "中央祭坛",
-      "sprite": "assets/maps/landmarks/crystal_sanctum.svg",
-      "anchorX": 192,
-      "anchorY": 498
-    },
-    {
       "kind": "bridge",
       "x": 1184,
       "y": 820,
@@ -1719,14 +1707,6 @@
       "label": "蓝方基地"
     },
     {
-      "kind": "wall",
-      "x": 224,
-      "y": 1184,
-      "w": 16,
-      "h": 128,
-      "color": "#506080"
-    },
-    {
       "kind": "building",
       "x": 2352,
       "y": 1264,
@@ -1736,12 +1716,28 @@
       "label": "红方基地"
     },
     {
-      "kind": "wall",
-      "x": 2324,
-      "y": 1184,
-      "w": 16,
-      "h": 128,
-      "color": "#805060"
+      "kind": "landmark",
+      "name": "中央祭坛",
+      "x": 1088,
+      "y": 1024,
+      "w": 480,
+      "h": 480
+    },
+    {
+      "kind": "landmark",
+      "name": "古巨树",
+      "x": 580,
+      "y": 580,
+      "w": 360,
+      "h": 360
+    },
+    {
+      "kind": "landmark",
+      "name": "倒塌石碑",
+      "x": 1900,
+      "y": 1900,
+      "w": 360,
+      "h": 360
     }
   ],
   "spawnPoints": [

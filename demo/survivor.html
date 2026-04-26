@@ -2793,7 +2793,7 @@ function doLogin() {
     // Minimal local player placeholder (server will fill real values via snapshot)
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
     player = {
-      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 47, speed: cls.speed,
+      x: WORLD_W / 2, y: WORLD_H / 2, hp: cls.hp, maxHp: cls.maxHp, radius: 60, speed: cls.speed,
       attackDamage: cls.attackDamage, attackCooldown: 0.4, _timer: 0,
       projectileCount: 1, pierce: false, critChance: 0, slowAura: 0,
       hpRegen: 0, xpMagnetRange: 300, shieldActive: false, _shieldTimer: 0,
@@ -3500,7 +3500,7 @@ function doLogin() {
         kills: 0,
         factionId: gameMode === 'team' ? (bi < 3 ? 1 : 2) : bi + 1,
         shieldActive: false,
-        radius: 32,
+        radius: 48,
         facingAngle: bAngle + Math.PI,
         _moveTimer: Math.random() * 10,
         _aiState: 'patrol',    // patrol | engage | flee
@@ -3591,7 +3591,6 @@ function doLogin() {
       spawnOfflineEnemy(_seedType, _seedX, _seedY);
     }
     // homm3_bright decor scatter — retries once assets finish loading if empty
-    _generateHomm3Decor();
     // Autotile biome grid rebuilds to match current WORLD_W/H
     _biomeGrid = null;
     // Strategic points — handcrafted from MAP_DATA when available (5 fixed),
@@ -3957,7 +3956,7 @@ function doLogin() {
   function spawnOfflineEnemy(type, x, y) {
     var hp = { normal: 30, fast: 20, tank: 80, ranged: 25, swarm: 10, miniBoss: 200, boss: 500, treasure: 15 };
     var spd = { normal: 40, fast: 80, tank: 25, ranged: 35, swarm: 70, miniBoss: 30, boss: 20, treasure: 120 };
-    var rad = { normal: 22, fast: 18, tank: 36, ranged: 20, swarm: 14, miniBoss: 42, boss: 60, treasure: 16 };
+    var rad = { normal: 31, fast: 25, tank: 50, ranged: 28, swarm: 20, miniBoss: 59, boss: 84, treasure: 22 };
     var colors = { normal: '#5a8a3a', fast: '#442244', tank: '#777766', ranged: '#556677', swarm: '#885522', miniBoss: '#aa3355', boss: '#882222', treasure: '#aa8822' };
     offlineEnemies.push({
       x: x, y: y, hp: hp[type] || 30, maxHp: hp[type] || 30,
@@ -4516,7 +4515,7 @@ function doLogin() {
           var _nudge = 18;
           var nx = b.x + Math.cos(b._patrolAngle) * _nudge;
           var ny = b.y + Math.sin(b._patrolAngle) * _nudge;
-          if (!isBlockedByDecor(nx, ny, (b.radius || 32) * 0.55)) { b.x = nx; b.y = ny; }
+          b.x = nx; b.y = ny;
         }
       } else {
         b._stuckTimer = 0;
@@ -4845,26 +4844,6 @@ function doLogin() {
           }
         }
         player._healerTickAcc = 0;
-      }
-    }
-    // Emergency unstick (Leo 2026-04-21 hotfix): if the player's collider is
-    // overlapping a decor blocker (e.g. spawn placed inside a fence), search
-    // outward in 8 directions for a clear cell and teleport. Runs at most
-    // once per second so it doesn't fight legitimate "press into wall" input.
-    if (typeof isBlockedByDecor === 'function' && isBlockedByDecor(player.x, player.y, player.radius * 0.55)) {
-      player._unstickT = (player._unstickT || 0) + dt;
-      if (player._unstickT > 0.4) {
-        player._unstickT = 0;
-        for (var _us = 1; _us <= 6; _us++) {
-          for (var _ua = 0; _ua < 8; _ua++) {
-            var _uang = _ua * Math.PI / 4;
-            var _ux = player.x + Math.cos(_uang) * 40 * _us;
-            var _uy = player.y + Math.sin(_uang) * 40 * _us;
-            if (!isBlockedByDecor(_ux, _uy, player.radius * 0.55)) {
-              player.x = _ux; player.y = _uy; _us = 999; break;
-            }
-          }
-        }
       }
     }
     // Move player based on input (keyboard/mouse)
@@ -5758,14 +5737,14 @@ function doLogin() {
     if (waveNum >= 20) scale *= 1 + (waveNum - 20) * 0.08; // exponential multiplier
     var base;
     switch (type) {
-      case 'fast':    base = { hp: 10, speed: 155, damage: 8, radius: 14, color: '#4cf', xp: 8 }; break;
-      case 'tank':    base = { hp: 60, speed: 50, damage: 14, radius: 30, color: '#f80', xp: 20 }; break;
-      case 'ranged':  base = { hp: 18, speed: 56, damage: 10, radius: 16, color: '#c6f', xp: 12 }; break;
-      case 'boss':    base = { hp: 300, speed: 38, damage: 22, radius: 48, color: '#f22', xp: 80 }; break;
-      case 'swarm':   base = { hp: 6, speed: 130, damage: 5, radius: 10, color: '#8f4', xp: 4 }; break;
-      case 'miniBoss': base = { hp: 150, speed: 65, damage: 18, radius: 36, color: '#f4a', xp: 45 }; break;
-      case 'treasure': base = { hp: 30, speed: 190, damage: 0, radius: 16, color: '#ffd700', xp: 50 }; break; // enemySpeedBoost
-      default:        base = { hp: 20, speed: 75, damage: 12, radius: 18, color: '#e55', xp: 10 }; break;
+      case 'fast':    base = { hp: 10, speed: 155, damage: 8, radius: 20, color: '#4cf', xp: 8 }; break;
+      case 'tank':    base = { hp: 60, speed: 50, damage: 14, radius: 42, color: '#f80', xp: 20 }; break;
+      case 'ranged':  base = { hp: 18, speed: 56, damage: 10, radius: 22, color: '#c6f', xp: 12 }; break;
+      case 'boss':    base = { hp: 300, speed: 38, damage: 22, radius: 67, color: '#f22', xp: 80 }; break;
+      case 'swarm':   base = { hp: 6, speed: 130, damage: 5, radius: 14, color: '#8f4', xp: 4 }; break;
+      case 'miniBoss': base = { hp: 150, speed: 65, damage: 18, radius: 50, color: '#f4a', xp: 45 }; break;
+      case 'treasure': base = { hp: 30, speed: 190, damage: 0, radius: 22, color: '#ffd700', xp: 50 }; break;
+      default:        base = { hp: 20, speed: 75, damage: 12, radius: 25, color: '#e55', xp: 10 }; break;
     }
     // Late-game: enemies also get speed and damage scaling
     var speedScale = 1 + (waveNum > 15 ? (waveNum - 15) * 0.02 : 0);
@@ -6588,7 +6567,6 @@ function doLogin() {
   var HOMM3_ART = {
     tilesetImg: null, tilesetReady: false, tilesetMeta: null, tileIndex: {},
     monsterImg: null, monsterReady: false, monsterMeta: null,
-    decorImgs: {}, decorMeta: null,
     ui9: {}, ui9Meta: null, ui9Ready: false,
     bossImgs: {}, bossMetas: {} // keyed by bossId: { img, ready, meta }
   };
@@ -6619,17 +6597,6 @@ function doLogin() {
     HOMM3_ART.monsterImg.onload = function() { HOMM3_ART.monsterReady = true; };
     HOMM3_ART.monsterImg.src = HOMM3_ART_BASE + 'monster_orc.png';
     loadJSON(HOMM3_ART_BASE + 'monster_orc.json', function(j) { HOMM3_ART.monsterMeta = j; });
-    // Decor
-    loadJSON(HOMM3_ART_BASE + 'decor/index.json', function(j) {
-      HOMM3_ART.decorMeta = j;
-      for (var i = 0; i < j.items.length; i++) {
-        var it = j.items[i];
-        var im = new Image();
-        (function(name) { im.onload = function() { HOMM3_ART.decorImgs[name]._ready = true; }; })(it.name);
-        im.src = HOMM3_ART_BASE + it.file;
-        HOMM3_ART.decorImgs[it.name] = { img: im, meta: it, _ready: false };
-      }
-    });
     // 9-slice UI
     var _ui9Keys = ['tl', 't', 'tr', 'l', 'c', 'r', 'bl', 'b', 'br'];
     var _ui9Loaded = 0;
@@ -6890,265 +6857,6 @@ function doLogin() {
     return true;
   }
 
-  // Decor scatter — deterministic layout with collision filtering.
-  var _decorItems = []; // { name, x, y, meta }
-  // Region-based layout (Leo 2026-04-18 step 1.5): instead of uniform
-  // scatter, seed 6-10 thematic regions (forest/stones/village/ruins),
-  // pack their decor tightly inside a radius, and leave ≥200px open
-  // corridors between regions so players/bots have clean travel lanes.
-  // Sparse non-blocker scatter (tree_small / crate) fills open ground.
-  var _decorRegions = []; // {cx, cy, radius, type} — exposed for QA
-  // Regions are intentionally LARGE (≥1/4 screen worth) and dense so each
-  // reads as a terrain block rather than a decor cluster. Leo 2026-04-18.
-  // Uses ArtDesigner's 2026-04-18 variant pack (pine/autumn/spiky/flat/
-  // thatch/fence_long + broken_wall + stone_pile + tree_row) so no region
-  // looks monotone. Items with the same barrier hitbox read as texture
-  // variety rather than gameplay changes.
-  // Target: each region ≥1/4 viewport (≈r 430+). Forest goes widest,
-  // stones/ruins slightly smaller, village between.
-  var _REGION_TEMPLATES = {
-    forest:  { items: ['tree_dense', 'tree_dense_pine', 'tree_dense_autumn', 'tree_row', 'tree_row', 'tree_big'],
-               rMin: 460, rMax: 620, countMin: 30, countMax: 55, spacing: 28 },
-    stones:  { items: ['rock', 'rock', 'stone_pile', 'stone_pile', 'rock_spiky', 'rock_flat'],
-               rMin: 440, rMax: 560, countMin: 20, countMax: 36, spacing: 30 },
-    village: { items: ['house', 'house_thatch', 'fence_long', 'fence_long', 'fence_cluster', 'fence'],
-               rMin: 440, rMax: 560, countMin: 12, countMax: 20, spacing: 48 },
-    ruins:   { items: ['broken_wall', 'broken_wall', 'rock', 'stone_pile', 'fence_cluster', 'house'],
-               rMin: 440, rMax: 560, countMin: 16, countMax: 28, spacing: 36 }
-  };
-  function _generateHomm3Decor() {
-    _decorItems = [];
-    _decorRegions = [];
-    if (!HOMM3_ART.decorMeta) return;
-    var items = HOMM3_ART.decorMeta.items;
-    function findMeta(name) {
-      for (var i = 0; i < items.length; i++) if (items[i].name === name) return items[i];
-      return null;
-    }
-    // Deterministic seeded RNG (same seed => same layout across matches for QA)
-    var _seed = 91011;
-    function rnd() { _seed = ((_seed | 0) * 1103515245 + 12345) & 0x7fffffff; return (_seed & 0xffff) / 0xffff; }
-
-    var cx = WORLD_W / 2, cy = WORLD_H / 2;
-    var SPAWN_CLEAR_R = 360;
-    var CHANNEL = 100;        // 100px corridor — regions are big, this keeps 4-6 fitting
-    var waveSpawns = (typeof _waveSpawnPoints !== 'undefined' && _waveSpawnPoints) ? _waveSpawnPoints : [];
-
-    // 1) Place 4-6 big regions on a jittered 2×3 grid. Random placement
-    // is unreliable at this scale (regions cover ~5% of world each);
-    // grid-based ensures 4-6 always fit.
-    var typeKeys = Object.keys(_REGION_TEMPLATES);
-    var targetRegions = 4 + Math.floor(rnd() * 3); // 4-6
-    var GRID_COLS = 2, GRID_ROWS = 3;
-    var cellW = WORLD_W / GRID_COLS;
-    var cellH = WORLD_H / GRID_ROWS;
-    // Order cells by their distance from world center, farthest first, so
-    // the central cell (which would touch spawn clearance) is tried last.
-    var cellsOrder = [];
-    for (var gy = 0; gy < GRID_ROWS; gy++) for (var gx = 0; gx < GRID_COLS; gx++) {
-      var ccx = (gx + 0.5) * cellW, ccy = (gy + 0.5) * cellH;
-      cellsOrder.push({ gx: gx, gy: gy, ccx: ccx, ccy: ccy, d: Math.hypot(ccx - cx, ccy - cy) });
-    }
-    cellsOrder.sort(function(a, b) { return b.d - a.d; });
-    for (var ci = 0; ci < cellsOrder.length && _decorRegions.length < targetRegions; ci++) {
-      var cell = cellsOrder[ci];
-      // Round-robin type for first 4, then random
-      var type;
-      if (_decorRegions.length < typeKeys.length) {
-        type = typeKeys[_decorRegions.length];
-      } else {
-        type = typeKeys[Math.floor(rnd() * typeKeys.length)];
-      }
-      var spec = _REGION_TEMPLATES[type];
-      // Try several random positions within this cell
-      var placed = false;
-      for (var tryI = 0; tryI < 30 && !placed; tryI++) {
-        var radius = spec.rMin + rnd() * (spec.rMax - spec.rMin);
-        // Clamp radius so region fits inside the cell with some margin
-        var maxR = Math.min(cellW, cellH) * 0.48;
-        if (radius > maxR) radius = maxR;
-        var jitterX = (rnd() - 0.5) * (cellW - radius * 2 - 40);
-        var jitterY = (rnd() - 0.5) * (cellH - radius * 2 - 40);
-        var rx = cell.ccx + jitterX;
-        var ry = cell.ccy + jitterY;
-        // Clamp to world bounds
-        rx = Math.max(radius + 40, Math.min(WORLD_W - radius - 40, rx));
-        ry = Math.max(radius + 40, Math.min(WORLD_H - radius - 40, ry));
-        // Respect spawn clearance
-        var ddx = rx - cx, ddy = ry - cy;
-        if (ddx * ddx + ddy * ddy < (SPAWN_CLEAR_R + radius) * (SPAWN_CLEAR_R + radius)) continue;
-        // Respect wave-spawn points (relaxed — 30px cushion)
-        var tooClose = false;
-        for (var wi = 0; wi < waveSpawns.length; wi++) {
-          var wp = waveSpawns[wi];
-          var wdx = rx - wp.x, wdy = ry - wp.y;
-          if (wdx * wdx + wdy * wdy < (radius + 30) * (radius + 30)) { tooClose = true; break; }
-        }
-        if (tooClose) continue;
-        // Corridor between regions
-        var overlap = false;
-        for (var ri = 0; ri < _decorRegions.length; ri++) {
-          var o = _decorRegions[ri];
-          var dr = Math.sqrt((rx - o.cx) * (rx - o.cx) + (ry - o.cy) * (ry - o.cy));
-          if (dr < o.radius + radius + CHANNEL) { overlap = true; break; }
-        }
-        if (overlap) continue;
-        // Note: no BR-structure check at region-level — buildings just
-        // coexist inside a region; per-item placement skips their AABBs.
-        _decorRegions.push({ cx: rx, cy: ry, radius: radius, type: type });
-        placed = true;
-      }
-    }
-
-    // 2) Fill each region. Polar sampling with sqrt(rnd) concentrates toward
-    //    center, edges are looser — natural soft-edge look.
-    for (var rj = 0; rj < _decorRegions.length; rj++) {
-      var region = _decorRegions[rj];
-      var tmpl = _REGION_TEMPLATES[region.type];
-      var count = tmpl.countMin + Math.floor(rnd() * (tmpl.countMax - tmpl.countMin + 1));
-      var placed = 0, regionAttempts = 0;
-      while (placed < count && regionAttempts < count * 8) {
-        regionAttempts++;
-        var angle = rnd() * Math.PI * 2;
-        var dist = region.radius * Math.sqrt(rnd()); // uniform areal density
-        var px = region.cx + Math.cos(angle) * dist;
-        var py = region.cy + Math.sin(angle) * dist;
-        if (px < 40 || py < 40 || px > WORLD_W - 40 || py > WORLD_H - 40) continue;
-        var name = tmpl.items[Math.floor(rnd() * tmpl.items.length)];
-        var it = findMeta(name);
-        if (!it) continue;
-        // Minimum spacing within region
-        var hit = false;
-        for (var di = 0; di < _decorItems.length; di++) {
-          var d = _decorItems[di];
-          if (Math.abs(px - d.x) < tmpl.spacing && Math.abs(py - d.y) < tmpl.spacing) { hit = true; break; }
-        }
-        if (hit) continue;
-        _decorItems.push({ name: name, x: px, y: py, meta: it, regionId: rj });
-        placed++;
-      }
-    }
-
-    // 3) Sparse scatter in open areas — non-blocker decor only (visual flavour).
-    var sparseTarget = Math.round((WORLD_W * WORLD_H) / (320 * 320));
-    var sparsePlaced = 0, sparseTries = 0;
-    while (sparsePlaced < sparseTarget && sparseTries < sparseTarget * 10) {
-      sparseTries++;
-      var sx = 60 + rnd() * (WORLD_W - 120);
-      var sy = 60 + rnd() * (WORLD_H - 120);
-      var sDx = sx - cx, sDy = sy - cy;
-      if (sDx * sDx + sDy * sDy < (SPAWN_CLEAR_R - 40) * (SPAWN_CLEAR_R - 40)) continue;
-      var inRegion = false;
-      for (var rk = 0; rk < _decorRegions.length; rk++) {
-        var reg = _decorRegions[rk];
-        var rrDx = sx - reg.cx, rrDy = sy - reg.cy;
-        if (rrDx * rrDx + rrDy * rrDy < (reg.radius + 20) * (reg.radius + 20)) { inRegion = true; break; }
-      }
-      if (inRegion) continue;
-      var sparseName = rnd() < 0.55 ? 'tree_small' : 'crate';
-      var sm = findMeta(sparseName);
-      if (!sm) continue;
-      // loose spacing
-      var sparseHit = false;
-      for (var _sdi = 0; _sdi < _decorItems.length; _sdi++) {
-        var _sd = _decorItems[_sdi];
-        if (Math.abs(sx - _sd.x) < 52 && Math.abs(sy - _sd.y) < 52) { sparseHit = true; break; }
-      }
-      if (sparseHit) continue;
-      _decorItems.push({ name: sparseName, x: sx, y: sy, meta: sm, regionId: -1 });
-      sparsePlaced++;
-    }
-
-    _rebuildDecorBlockAABBs();
-  }
-
-  // Hard-collider decor (Leo 2026-04-18 step 1 — no FoW yet). Prefers the
-  // `hardBarrier` flag from decor/index.json (ArtDesigner 2026-04-18);
-  // falls back to a name-list for older assets.
-  var _DECOR_BLOCKER_FALLBACK = { house: true, rock: true, fence_cluster: true, tree_dense: true };
-  function _isBarrier(item) {
-    if (!item || !item.meta) return false;
-    if (typeof item.meta.hardBarrier === 'boolean') return item.meta.hardBarrier;
-    return !!_DECOR_BLOCKER_FALLBACK[item.name];
-  }
-  // Cached world-space AABB list + spatial hash for fast queries.
-  var _decorBlockAABBs = null;
-  var _decorBlockGrid = null; // { cell: 256, map: Map<cellKey, AABB[]> }
-  var _DECOR_CELL = 256;
-  function _rebuildDecorBlockAABBs() {
-    _decorBlockAABBs = [];
-    _decorBlockGrid = new Map();
-    if (!_decorItems) return;
-    // Hotfix (Leo 2026-04-21): clear collider footprint within 200px of every
-    // spawn point so the player can't get jammed inside a procedural fence/house
-    // at match start. Visual decor still draws — only collision is suppressed.
-    var _spawnList = (typeof MAP_DATA !== 'undefined' && MAP_DATA && MAP_DATA.spawnPoints) ? MAP_DATA.spawnPoints : [];
-    var _SPAWN_CLEAR_R2 = 200 * 200;
-    for (var i = 0; i < _decorItems.length; i++) {
-      var d = _decorItems[i];
-      if (!_isBarrier(d) || !d.meta || !d.meta.collider) continue;
-      var ax = d.meta.anchor ? d.meta.anchor.x : d.meta.w / 2;
-      var ay = d.meta.anchor ? d.meta.anchor.y : d.meta.h;
-      var cbx = d.x - ax + d.meta.collider.x;
-      var cby = d.y - ay + d.meta.collider.y;
-      var _ccx = cbx + d.meta.collider.w / 2;
-      var _ccy = cby + d.meta.collider.h / 2;
-      var _skipSpawn = false;
-      for (var _spi = 0; _spi < _spawnList.length; _spi++) {
-        var _sp = _spawnList[_spi];
-        var _sdx = _ccx - _sp.x, _sdy = _ccy - _sp.y;
-        if (_sdx * _sdx + _sdy * _sdy < _SPAWN_CLEAR_R2) { _skipSpawn = true; break; }
-      }
-      if (_skipSpawn) continue;
-      var aabb = { x: cbx, y: cby, w: d.meta.collider.w, h: d.meta.collider.h, name: d.name };
-      _decorBlockAABBs.push(aabb);
-      // Insert into every cell it overlaps
-      var gx0 = Math.floor(cbx / _DECOR_CELL);
-      var gy0 = Math.floor(cby / _DECOR_CELL);
-      var gx1 = Math.floor((cbx + aabb.w) / _DECOR_CELL);
-      var gy1 = Math.floor((cby + aabb.h) / _DECOR_CELL);
-      for (var gy = gy0; gy <= gy1; gy++) for (var gx = gx0; gx <= gx1; gx++) {
-        var key = gx + ',' + gy;
-        var list = _decorBlockGrid.get(key);
-        if (!list) { list = []; _decorBlockGrid.set(key, list); }
-        list.push(aabb);
-      }
-    }
-  }
-  // Circle (cx,cy,r) vs decor AABBs — O(neighbors) via spatial hash.
-  function isBlockedByDecor(cx, cy, r) {
-    // Round 5d F1 — deep_water rivers must actually block bodies. Without
-    // this, lane_b players walked straight through water, skipping bridges
-    // entirely (Testor: lane_b 2/10 "跨河没解决"). Bridges are still passable
-    // because they intentionally avoid the water tiles in the layout JSON.
-    for (var wi = 0; wi < terrainObstacles.length; wi++) {
-      var tw = terrainObstacles[wi];
-      if (tw.type !== 'deep_water' || !tw._rect) continue;
-      var rb = tw._rect;
-      var qwx = Math.max(rb.x, Math.min(cx, rb.x + rb.width));
-      var qwy = Math.max(rb.y, Math.min(cy, rb.y + rb.height));
-      var dwx = cx - qwx, dwy = cy - qwy;
-      if (dwx * dwx + dwy * dwy < r * r) return true;
-    }
-    if (!_decorBlockGrid) return false;
-    var gx0 = Math.floor((cx - r) / _DECOR_CELL);
-    var gy0 = Math.floor((cy - r) / _DECOR_CELL);
-    var gx1 = Math.floor((cx + r) / _DECOR_CELL);
-    var gy1 = Math.floor((cy + r) / _DECOR_CELL);
-    for (var gy = gy0; gy <= gy1; gy++) for (var gx = gx0; gx <= gx1; gx++) {
-      var list = _decorBlockGrid.get(gx + ',' + gy);
-      if (!list) continue;
-      for (var i = 0; i < list.length; i++) {
-        var b = list[i];
-        var qx = Math.max(b.x, Math.min(cx, b.x + b.w));
-        var qy = Math.max(b.y, Math.min(cy, b.y + b.h));
-        var dx = cx - qx, dy = cy - qy;
-        if (dx * dx + dy * dy < r * r) return true;
-      }
-    }
-    return false;
-  }
-  // Closest deep_water tile centre to a given point, or null if no rivers.
   // Round 5e F2 — graduated spawn shield. Returns the damage multiplier the
   // player should take at gameTime t. 0-15s 50%, 15-20s 30%, 20-25s 15%, 25s+ 100%.
   // Easing: linear interp between bands so the wear-off is smooth, not stepped.
@@ -7289,43 +6997,25 @@ function doLogin() {
     }
     return best;
   }
-  // Axis-separated move: try full, then X-only, then Y-only, else stay put.
-  // Returns the new (x, y) — callers assign directly.
   function moveWithCollision(oldX, oldY, newX, newY, radius) {
-    if (!isBlockedByDecor(newX, newY, radius)) return { x: newX, y: newY, blocked: false };
-    if (!isBlockedByDecor(newX, oldY, radius)) return { x: newX, y: oldY, blocked: true };
-    if (!isBlockedByDecor(oldX, newY, radius)) return { x: oldX, y: newY, blocked: true };
+    function blockedByWater(cx, cy) {
+      for (var wi = 0; wi < terrainObstacles.length; wi++) {
+        var tw = terrainObstacles[wi];
+        if (tw.type !== 'deep_water' || !tw._rect) continue;
+        var rb = tw._rect;
+        var qx = Math.max(rb.x, Math.min(cx, rb.x + rb.width));
+        var qy = Math.max(rb.y, Math.min(cy, rb.y + rb.height));
+        var dx = cx - qx, dy = cy - qy;
+        if (dx * dx + dy * dy < radius * radius) return true;
+      }
+      return false;
+    }
+    if (!blockedByWater(newX, newY)) return { x: newX, y: newY, blocked: false };
+    if (!blockedByWater(newX, oldY)) return { x: newX, y: oldY, blocked: true };
+    if (!blockedByWater(oldX, newY)) return { x: oldX, y: newY, blocked: true };
     return { x: oldX, y: oldY, blocked: true };
   }
 
-  // Draw decor in world space; y-sorted so further items render behind.
-  function drawHomm3Decor(ctx, camX, camY) {
-    // Lazy-regenerate once assets load — handles the case where startOfflineDemo
-    // fired before the decor/index.json fetch completed.
-    if (!_decorItems.length && HOMM3_ART.decorMeta && offlineMode) _generateHomm3Decor();
-    if (!_decorItems.length) return;
-    if (_decorBlockAABBs === null || _decorBlockGrid === null) _rebuildDecorBlockAABBs();
-    var pad = 80;
-    var camL = camX - pad, camR = camX + W + pad, camT = camY - pad, camB = camY + H + pad;
-    // Cull + sort by anchor y
-    var vis = [];
-    for (var i = 0; i < _decorItems.length; i++) {
-      var d = _decorItems[i];
-      if (d.x < camL || d.x > camR || d.y < camT || d.y > camB) continue;
-      vis.push(d);
-    }
-    vis.sort(function(a, b) { return a.y - b.y; });
-    for (var k = 0; k < vis.length; k++) {
-      var d2 = vis[k];
-      var box = HOMM3_ART.decorImgs[d2.name];
-      if (!box || !box._ready) continue;
-      var m = d2.meta;
-      // Anchor = bottom-center of sprite glued to world (d2.x, d2.y)
-      var dx = d2.x - m.anchor.x;
-      var dy = d2.y - m.anchor.y;
-      ctx.drawImage(box.img, dx, dy);
-    }
-  }
   // Debug hook — only mounted on localhost / ?debug=1 so production is zero-cost.
   // Testor uses this for sprite-sheet.spec.js assertions (see PM decision 2026-04-11).
   (function mountSpriteDebug() {
@@ -8362,9 +8052,7 @@ function doLogin() {
         var _cy = player.y + Math.sin(_teleAng) * _dist;
         _cx = Math.max(player.radius, Math.min(WORLD_W - player.radius, _cx));
         _cy = Math.max(player.radius, Math.min(WORLD_H - player.radius, _cy));
-        if (typeof isBlockedByDecor !== 'function' || !isBlockedByDecor(_cx, _cy, player.radius * 0.55)) {
-          _tx = _cx; _ty = _cy; _ok = true; break;
-        }
+        _tx = _cx; _ty = _cy; _ok = true; break;
       }
       if (!_ok) {
         // Abort — no clear spot ahead. Short red flash + no cd spend.
@@ -8476,110 +8164,6 @@ function doLogin() {
     return _biomeAtCell(Math.floor(wx / BIOME_CELL), Math.floor(wy / BIOME_CELL));
   }
 
-  // _drawDecoration — biome-themed Canvas sprites (screen-space)
-  function _drawDecoration(sx, sy, kind, scale) {
-    scale = scale || 1;
-    if (kind === 'tree') {
-      ctx.fillStyle = '#3a2412'; ctx.fillRect(sx - 2*scale, sy - 2*scale, 4*scale, 12*scale);
-      ctx.fillStyle = '#1e4a1e';
-      ctx.beginPath(); ctx.arc(sx, sy - 10*scale, 10*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#2e6a2e';
-      ctx.beginPath(); ctx.arc(sx - 4*scale, sy - 12*scale, 7*scale, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(sx + 4*scale, sy - 9*scale, 6*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#4a8a4a';
-      ctx.beginPath(); ctx.arc(sx - 2*scale, sy - 14*scale, 3*scale, 0, Math.PI*2); ctx.fill();
-    } else if (kind === 'pine') {
-      ctx.fillStyle = '#2a1810'; ctx.fillRect(sx - 1.5*scale, sy - 1*scale, 3*scale, 8*scale);
-      ctx.fillStyle = '#1a3a28';
-      ctx.beginPath();
-      ctx.moveTo(sx, sy - 20*scale);
-      ctx.lineTo(sx - 9*scale, sy - 2*scale);
-      ctx.lineTo(sx + 9*scale, sy - 2*scale);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#2a5038';
-      ctx.beginPath();
-      ctx.moveTo(sx, sy - 15*scale);
-      ctx.lineTo(sx - 7*scale, sy - 5*scale);
-      ctx.lineTo(sx + 7*scale, sy - 5*scale);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#f0f4ff';
-      ctx.beginPath(); ctx.arc(sx, sy - 18*scale, 2*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillRect(sx - 6*scale, sy - 3*scale, 12*scale, 1.2*scale);
-    } else if (kind === 'cactus') {
-      ctx.fillStyle = '#3a6a2e';
-      ctx.fillRect(sx - 2.5*scale, sy - 14*scale, 5*scale, 18*scale);
-      ctx.fillRect(sx - 7*scale, sy - 9*scale, 3*scale, 7*scale);
-      ctx.fillRect(sx + 4*scale, sy - 11*scale, 3*scale, 9*scale);
-      ctx.strokeStyle = '#1e4818'; ctx.lineWidth = 1;
-      ctx.strokeRect(sx - 2.5*scale, sy - 14*scale, 5*scale, 18*scale);
-    } else if (kind === 'boulder') {
-      ctx.fillStyle = '#6a6258';
-      ctx.beginPath(); ctx.ellipse(sx, sy - 3*scale, 9*scale, 6*scale, 0, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#504a40';
-      ctx.beginPath(); ctx.arc(sx - 3*scale, sy + scale, 4*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#8a8278';
-      ctx.beginPath(); ctx.ellipse(sx - 2*scale, sy - 5*scale, 3*scale, 1.8*scale, 0, 0, Math.PI*2); ctx.fill();
-    } else if (kind === 'reed') {
-      ctx.strokeStyle = '#7a8a3a'; ctx.lineWidth = 1.5;
-      for (var ri = 0; ri < 5; ri++) {
-        var rx = sx + (ri - 2) * 2*scale;
-        ctx.beginPath();
-        ctx.moveTo(rx, sy + 2*scale);
-        ctx.lineTo(rx + (ri%2?-1:1)*scale, sy - 10*scale);
-        ctx.stroke();
-      }
-      ctx.fillStyle = '#2a3818';
-      ctx.beginPath(); ctx.ellipse(sx, sy + 3*scale, 7*scale, 2*scale, 0, 0, Math.PI*2); ctx.fill();
-    } else if (kind === 'ruin') {
-      ctx.fillStyle = '#7a7268';
-      ctx.fillRect(sx - 7*scale, sy - 12*scale, 4*scale, 12*scale);
-      ctx.fillRect(sx + 3*scale, sy - 10*scale, 4*scale, 10*scale);
-      ctx.fillRect(sx - 3*scale, sy - 6*scale, 6*scale, 6*scale);
-      ctx.strokeStyle = '#403830'; ctx.lineWidth = 1;
-      ctx.strokeRect(sx - 7*scale, sy - 12*scale, 4*scale, 12*scale);
-      ctx.strokeRect(sx + 3*scale, sy - 10*scale, 4*scale, 10*scale);
-      ctx.fillStyle = '#5a5248';
-      ctx.fillRect(sx - 6*scale, sy - 3*scale, 2*scale, 3*scale);
-    } else if (kind === 'flower') {
-      ctx.fillStyle = '#3a8a2e';
-      ctx.fillRect(sx - 0.5*scale, sy - scale, scale, 5*scale);
-      ctx.fillStyle = '#e8d45a';
-      ctx.beginPath(); ctx.arc(sx, sy - scale, 2*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#ff7766';
-      ctx.beginPath(); ctx.arc(sx + 3*scale, sy + scale, 1.5*scale, 0, Math.PI*2); ctx.fill();
-    } else if (kind === 'bush') {
-      ctx.fillStyle = '#2a5a2e';
-      ctx.beginPath(); ctx.arc(sx, sy, 5*scale, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#4a8a4a';
-      ctx.beginPath(); ctx.arc(sx - 2*scale, sy - 2*scale, 2.5*scale, 0, Math.PI*2); ctx.fill();
-    }
-  }
-
-  function drawMapDecorations(camXw, camYw) {
-    // Deterministic per-cell decoration scatter
-    var DC = 96;
-    var startX = Math.floor(camXw / DC) - 1;
-    var startY = Math.floor(camYw / DC) - 1;
-    var endX = Math.ceil((camXw + W) / DC) + 1;
-    var endY = Math.ceil((camYw + H) / DC) + 1;
-    for (var cy = startY; cy <= endY; cy++) {
-      for (var cx = startX; cx <= endX; cx++) {
-        var hh = _hash2i(cx, cy);
-        if (hh < 0.38) continue;
-        var jx = _hash2i(cx * 17 + 3, cy * 31 + 5);
-        var jy = _hash2i(cx * 29 + 7, cy * 13 + 11);
-        var wx = cx * DC + jx * DC;
-        var wy = cy * DC + jy * DC;
-        if (wx < 20 || wy < 20 || wx > WORLD_W - 20 || wy > WORLD_H - 20) continue;
-        var biome = _biomeFromEditorRegions(wx, wy) || _dominantBiomeAt(wx, wy);
-        var kind = biome.decor;
-        var mixRoll = _hash2i(cx + 7, cy + 11);
-        if (mixRoll < 0.18) kind = (biome.id === 'grass' || biome.id === 'snow') ? 'flower' : 'bush';
-        var scale = 0.75 + _hash2i(cx + 99, cy + 77) * 0.7;
-        _drawDecoration(wx - camXw, wy - camYw, kind, scale);
-      }
-    }
-  }
 
   function drawWorldEdgeVignette() {
     var edge = 100;
@@ -8665,7 +8249,6 @@ function doLogin() {
       ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
     }
     // Step 3: Decorations (trees, rocks, ruins, flowers)
-    drawMapDecorations(camXw, camYw);
     // Step 4: Edge vignette for natural map boundary
     drawWorldEdgeVignette();
     // Step 5: A few ambient twinkles for mood
@@ -9595,7 +9178,6 @@ function doLogin() {
     // BR structures — buildings, walls, crates (world-space)
     drawBRStructures(ctx, cameraX, cameraY);
     // homm3_bright scattered decor (trees, rocks, houses, fences, crates)
-    drawHomm3Decor(ctx, cameraX, cameraY);
     // Experiment C: strategic capture points
     drawStrategicPoints(ctx, cameraX, cameraY);
     // Fixed spawn points (MOBA-style) — drawn in world space over terrain
@@ -13701,7 +13283,6 @@ function doLogin() {
   // === VIRTUAL JOYSTICK (touch + mouse fallback) ===
   // Debug exposure for QA — lets headless tests poke joystick state directly.
   window.__joystick = joystick;
-  window.__isBlockedByDecor = function(x, y, r) { return isBlockedByDecor(x, y, r); };
   function joystickStart(x, y, id) {
     if (state !== 'playing') return false;
     if (x < W * 0.45) {
@@ -14101,8 +13682,6 @@ function doLogin() {
     get offlineBots() { return offlineBots; },
     get offlineEnemies() { return offlineEnemies; },
     get HOMM3_ART() { return HOMM3_ART; },
-    get decorItems() { return _decorItems; },
-    get decorRegions() { return _decorRegions; },
     get waveSpawnPoints() { return _waveSpawnPoints; },
     get stratPoints() { return STRAT_POINTS.pointsInWorld; },
     get playerXP() { return playerXP; },
