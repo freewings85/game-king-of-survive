@@ -4243,7 +4243,8 @@ function doLogin() {
       // Round 5 N: rival rage buff (+20% speed/attack) for 15s after hatred ≥ 5
       // Round 5e F3: global enemy slow when altar slain (3 min, ×0.7)
       var _rageMul = (b._rageUntil && gameTime < b._rageUntil) ? 1.2 : 1.0;
-      var bSpeed = (b.speed || 100) * _rageMul * _altarSlowMul();
+      var _staggerMul = (b._staggerUntil && gameTime < b._staggerUntil) ? 0.5 : 1.0;
+      var bSpeed = (b.speed || 100) * _rageMul * _altarSlowMul() * _staggerMul;
       if (b._aiState === 'flee') {
         // Move toward storm center (storm is damaging)
         var _fcx = stormZone.centerX - b.x, _fcy = stormZone.centerY - b.y;
@@ -5279,16 +5280,14 @@ function doLogin() {
         var _em = offlineEnemies[_emi];
         if (!_em.alive || !_em.hostile) continue;
         var _bcdx = _em.x - _bm.x, _bcdy = _em.y - _bm.y;
-        var _bcd = Math.sqrt(_bcdx * _bcdx + _bcdy * _bcdy);
-        if (_bcd < (_bm.radius || 32) + (_em.radius || 16) + 2) {
-          var _bmDmg = 3 * dt;
-          _bm.hp -= _bmDmg;
+        var _bcd2 = _bcdx * _bcdx + _bcdy * _bcdy;
+        var _bcr = (_bm.radius || 32) + (_em.radius || 16) + 2;
+        if (_bcd2 < _bcr * _bcr) {
+          _bm._staggerUntil = Math.max(_bm._staggerUntil || 0, gameTime + 0.3);
+          _bm._attackTimer = Math.max(_bm._attackTimer, 0.3);
           window._dmgSourceLog = window._dmgSourceLog || {};
-          window._dmgSourceLog['mob_to_bot'] = (window._dmgSourceLog['mob_to_bot'] || 0) + _bmDmg;
-          if (_bm.hp <= 0) {
-            _bm.alive = false;
-            killFeed.push({ text: _bm.name + ' 被怪物击败', color: '#f88', time: 4 });
-          }
+          window._dmgSourceLog['mob_stagger_bot'] = (window._dmgSourceLog['mob_stagger_bot'] || 0) + 1;
+          break;
         }
       }
     }
