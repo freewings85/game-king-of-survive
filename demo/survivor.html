@@ -4019,6 +4019,12 @@ function doLogin() {
 
     // === BR AI bot update — patrol / engage / flee storm ===
     var _allBR = [player].concat(offlineBots); // all 8 players
+    // R6-pvp-01: snapshot bots currently aggro on player (cap dogpile)
+    var _playerAggroCount = 0;
+    for (var _pac = 0; _pac < _allBR.length; _pac++) {
+      var _pacB = _allBR[_pac];
+      if (_pacB && _pacB.alive && !_pacB.isLocal && _pacB._aiTarget === player) _playerAggroCount++;
+    }
     for (var bi = 0; bi < offlineBots.length; bi++) {
       var b = offlineBots[bi];
       if (!b.alive) continue;
@@ -4203,12 +4209,17 @@ function doLogin() {
             }
             if (_nearby >= 2) { b._aiState = 'push'; b._aiTarget = null; bestTarget = null; }
           }
-          if (bestTarget && bestDist < 420) {
+          var PLAYER_AGGRO_CAP = 2;
+          var _wouldHitPlayer = (bestTarget === player || (bestTarget && bestTarget.isLocal));
+          var _capBlocked = _wouldHitPlayer && _playerAggroCount >= PLAYER_AGGRO_CAP && !_forcePlayer;
+          if (bestTarget && bestDist < 420 && !_capBlocked) {
             b._aiState = 'engage'; b._aiTarget = bestTarget;
+            if (_wouldHitPlayer) _playerAggroCount++;
           } else if (bestMob) {
             b._aiState = 'farm'; b._aiTarget = bestMob;
-          } else if (bestTarget) {
+          } else if (bestTarget && !_capBlocked) {
             b._aiState = 'engage'; b._aiTarget = bestTarget;
+            if (_wouldHitPlayer) _playerAggroCount++;
           } else if (b._aiState !== 'capture') {
             b._aiState = 'push'; b._aiTarget = null;
           }
