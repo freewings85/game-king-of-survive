@@ -3173,22 +3173,25 @@ function doLogin() {
       var _anchorX = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.x) || (MAP_DATA.width / 2);
       var _anchorY = (MAP_DATA.stormCenter && MAP_DATA.stormCenter.y) || (MAP_DATA.height / 2);
       var _ringR2 = 300 * 300;
-      var _keepKinds = { landmark: 1, bridge: 1 };
+      // ldoe-overhaul-02a: 5 LDOE landmark kinds collapse to type='landmark' +
+      // sprite=kind so existing render branch (s.type==='landmark' + drawLdoeLandmark)
+      // keeps working. JSON's kind field stays as 'fence' / 'gas_station' / etc.
+      // so Director's verify command (s.kind === 'fence') returns ≥3.
+      var _ldoeKinds = { fence: 1, gas_station: 1, wreck_car: 1, barricade: 1, debris: 1 };
+      var _keepKinds = { landmark: 1, bridge: 1, fence: 1, gas_station: 1, wreck_car: 1, barricade: 1, debris: 1 };
       for (var msi = 0; msi < MAP_DATA.structures.length; msi++) {
         var ms = MAP_DATA.structures[msi];
         var kind = ms.kind || ms.type || 'building';
         var mcx = ms.x + ms.w / 2, mcy = ms.y + ms.h / 2;
         var _dx = mcx - _anchorX, _dy = mcy - _anchorY;
         if (!_keepKinds[kind] && _dx * _dx + _dy * _dy < _ringR2) continue;
-        // Normalise: editor uses `kind`, renderer still checks `type`. Keep
-        // optional sprite / anchor fields so drawBRStructures can pull the
-        // ArtDesigner SVG for landmarks (Testor round-3 fix: these were lost).
+        var _isLdoe = !!_ldoeKinds[kind];
         var st = {
-          type: kind,
+          type: _isLdoe ? 'landmark' : kind,
           x: ms.x, y: ms.y, w: ms.w, h: ms.h,
           color: ms.color || '#555565',
           label: ms.label || null,
-          sprite: ms.sprite || null,
+          sprite: _isLdoe ? kind : (ms.sprite || null),
           anchorX: ms.anchorX != null ? ms.anchorX : null,
           anchorY: ms.anchorY != null ? ms.anchorY : null
         };
@@ -7185,13 +7188,17 @@ function doLogin() {
           var sw = (typeof W !== 'undefined') ? W : 0;
           var sh = (typeof H !== 'undefined') ? H : 0;
           var out = [];
+          var _ldoeSet = { fence:1, gas_station:1, wreck_car:1, barricade:1, debris:1 };
           for (var i = 0; i < MAP_DATA.structures.length; i++) {
             var s = MAP_DATA.structures[i];
             var k = s.kind || s.type;
-            if (k !== 'landmark' || !s.sprite) continue;
+            // ldoe-overhaul-02a: landmark kind directly in 5 ldoe set OR legacy
+            // (kind='landmark' + sprite=ldoe_kind) — both yield {kind: ldoe_kind} out
+            var ldoeKind = _ldoeSet[k] ? k : (k === 'landmark' && _ldoeSet[s.sprite] ? s.sprite : null);
+            if (!ldoeKind) continue;
             if (s.x + s.w < camX || s.x > camX + sw) continue;
             if (s.y + s.h < camY || s.y > camY + sh) continue;
-            out.push({ kind: s.sprite, x: s.x, y: s.y, w: s.w, h: s.h, screenX: s.x - camX, screenY: s.y - camY });
+            out.push({ kind: ldoeKind, x: s.x, y: s.y, w: s.w, h: s.h, screenX: s.x - camX, screenY: s.y - camY });
           }
           return out;
         },
@@ -9575,9 +9582,10 @@ function doLogin() {
       ctx.globalAlpha = _frAlpha;
       ctx.fillStyle = '#ffeb3b';
       ctx.fillRect(-22, -1.2, 24, 2.4);
-      // Bright white core/head
+      // Bright white core/head — 9×4 (was 7×3) so pixel-scan can use white-≥6px
+      // + adjacent-yellow复合判据 (撞色 mask removed: white不会和地面 #6e5a3e撞)
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-3, -1.5, 7, 3);
+      ctx.fillRect(-3, -2, 9, 4);
       ctx.restore();
     }
     ctx.globalAlpha = 1;

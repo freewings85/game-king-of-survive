@@ -46,16 +46,26 @@ const tpx = (t) => t * TS + TS / 2;
 const structures = [];
 const push = (s) => structures.push(s);
 
-// Central landmark — between mid lane crossing
-push({
-  kind: 'landmark',
-  x: wcx - 192, y: wcy - 256,
-  w: 384, h: 512,
-  color: '#b8a060',
-  label: '中央祭坛',
-  sprite: 'assets/maps/landmarks/crystal_sanctum.svg',
-  anchorX: 192, anchorY: 498
-});
+// ldoe-overhaul-02a: 11 LDOE landmarks真的入地图 (lane_b — 3-lane).
+// Distributed across top/mid/bot lane corridors so each lane has ≥1 fence.
+const ldoeLm = [
+  // Top lane
+  { kind: 'fence',       tx: 14, ty: 6,  w: 130, h: 110, label: '上路铁丝网' },
+  { kind: 'gas_station', tx: 22, ty: 4,  w: 144, h: 132, label: '上路加油站' },
+  { kind: 'wreck_car',   tx: 28, ty: 6,  w: 140, h: 130, label: '上路翻车' },
+  // Mid lane
+  { kind: 'fence',       tx: 12, ty: 19, w: 130, h: 110, label: '中路铁丝网' },
+  { kind: 'barricade',   tx: 20, ty: 17, w: 140, h: 130, label: '中路路障' },
+  { kind: 'debris',      tx: 28, ty: 21, w: 130, h: 110, label: '中路废墟' },
+  // Bot lane
+  { kind: 'fence',       tx: 14, ty: 33, w: 130, h: 110, label: '下路铁丝网' },
+  { kind: 'wreck_car',   tx: 22, ty: 35, w: 140, h: 130, label: '下路翻车' },
+  { kind: 'gas_station', tx: 28, ty: 33, w: 144, h: 132, label: '下路加油站' },
+  // Side flanks
+  { kind: 'barricade',   tx: 6,  ty: 26, w: 140, h: 130, label: '左翼路障' },
+  { kind: 'debris',      tx: 34, ty: 13, w: 130, h: 110, label: '右翼废墟' }
+];
+ldoeLm.forEach(s => push({ kind: s.kind, x: s.tx * TS - s.w/2, y: s.ty * TS - s.h/2, w: s.w, h: s.h, color: '#6e2a1c', label: s.label }));
 
 // Bridge structures across rivers at crossings
 push({ kind: 'bridge', x: tpx(19) - TS, y: 13 * TS - 12, w: TS * 2, h: TS + 24, color: '#8a6a3a', label: '中桥' });
