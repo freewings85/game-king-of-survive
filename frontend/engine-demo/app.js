@@ -82,6 +82,10 @@ const game = {
   xp: 0,
   level: 1,
   kills: 0,
+  shotsFired: 0,
+  damageDealt: 0,
+  xpDropped: 0,
+  lastKillAt: 0,
   fireTimer: 0,
   hitTimer: 0,
   input: { active: false, id: null, startX: 0, startY: 0, x: 0, y: 0 }
@@ -753,6 +757,8 @@ function defeatZombie(z) {
   z.userData.alive = false;
   z.visible = false;
   game.kills += 1;
+  game.xpDropped += 1;
+  game.lastKillAt = performance.now() * 0.001;
   game.xp += demoTuning.progression.killXp;
   dropXpAt(z.position.x, z.position.z);
   if (game.xp >= 100) {
@@ -771,9 +777,12 @@ function fireWeapon(dt) {
   const targets = nearestZombies(skill.range).slice(0, skill.targets);
   if (!targets.length) return;
   game.fireTimer = activeClass === 'ranger' ? demoTuning.player.rangerFireCooldown : demoTuning.player.defaultFireCooldown;
+  game.shotsFired += 1;
   targets.forEach(({ z }, index) => {
     const splash = activeSkill === 'boom' && index === 0 ? 1.35 : 1;
-    z.userData.hp -= (skill.damage + game.level * 1.1) * splash;
+    const damage = (skill.damage + game.level * 1.1) * splash;
+    z.userData.hp -= damage;
+    game.damageDealt += damage;
     z.scale.setScalar(1.08);
     if (z.userData.hp <= 0) defeatZombie(z);
   });
@@ -882,6 +891,16 @@ function animate(now) {
   });
 
   updateHud();
+  window.__V03_ENGINE_DEMO_STATE.hp = Math.round(game.hp);
+  window.__V03_ENGINE_DEMO_STATE.xp = Math.round(game.xp);
+  window.__V03_ENGINE_DEMO_STATE.level = game.level;
+  window.__V03_ENGINE_DEMO_STATE.kills = game.kills;
+  window.__V03_ENGINE_DEMO_STATE.shotsFired = game.shotsFired;
+  window.__V03_ENGINE_DEMO_STATE.damageDealt = Math.round(game.damageDealt);
+  window.__V03_ENGINE_DEMO_STATE.xpDropped = game.xpDropped;
+  window.__V03_ENGINE_DEMO_STATE.livingZombieCount = livingZombies().length;
+  window.__V03_ENGINE_DEMO_STATE.visibleGemCount = gems.filter((gem) => gem.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.lastKillAgo = game.lastKillAt ? Number((t - game.lastKillAt).toFixed(2)) : null;
   window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
   window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));
 
