@@ -303,3 +303,36 @@ Next iteration direction:
 2. Add zombie variants with different heads, cloth colors, hunched angles, and threat poses.
 3. Push weapon/fire animation with muzzle cards and brief recoil so the hero action reads like the reference.
 4. After another WebGL visual pass, start mapping these unit requirements into Cocos prefab/component expectations.
+
+## 2026-05-10 Class And Zombie Variant Pass
+
+Related work:
+
+- WebGL reference WIP after `ce06b39`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- Class gear now has stronger in-combat silhouettes: Guardian gets a heavier shield/pauldrons, Tech gets a backpack device/dish/antenna, and Ranger gets a hood, scope, cape tip, and stronger long-rifle profile.
+- Zombies now spawn as three deterministic variants: brute, crawler, and hooded. The crowd reads less cloned in the landscape phone review.
+- The verifier now gates `activeGearCount >= 5`, `silhouettePartCount >= 75`, `zombieDetailPartCount >= 245`, and `zombieVariantCount >= 3`; the current run reports 5, 86, 253, and 3.
+- The landscape phone screenshot now has clearer hero-vs-horde shape contrast.
+
+What is still far from the reference:
+
+- The visual language is still procedural low-poly. The reference relies on painted sprite/model surfaces, outlines, readable faces, hair, armor, cloth folds, and richer color accents.
+- Zombie variants need stronger gameplay silhouettes: crawler should be visibly low, brute should feel wider/heavier, hooded should read as a different threat at small scale.
+- Class gear is more visible, but the class fantasy is not yet as strong as the reference's three class groups and skill-card presentation.
+- Cocos still only has bridge/runtime scaffolding for this direction, not prefab-quality translated assets.
+
+Next iteration direction:
+
+1. Add painted-style 2D planes/cards on top of the low-poly units: face highlights, armor decals, torn-cloth panels, and weapon/muzzle cards.
+2. Give zombie variants stronger scale/posture differences and color accents while preserving combat readability.
+3. Add a Cocos visual contract note for required class gear and zombie variant components so this work can migrate out of the WebGL reference.
+4. Continue using the landscape phone screenshot as the main target comparison for gameplay art direction.
