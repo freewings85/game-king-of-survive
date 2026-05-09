@@ -81,6 +81,7 @@ requiredText.forEach((text) => {
   'propSpriteCoverCount >= 12',
   'propSpriteCoverKinds >= 3',
   'propSpriteCoverUsesAsset',
+  'propSpriteBodyHiddenCount >= 34',
   'globalLightCount >= 8',
   'objectRimCount >= 60',
   'materialBlendCount >= 70',

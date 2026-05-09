@@ -146,6 +146,7 @@ let propWearCount = 0;
 let propShapeCount = 0;
 let propBreakCount = 0;
 let propSpriteCoverCount = 0;
+let propSpriteBodyHiddenCount = 0;
 let globalLightCount = 0;
 let objectRimCount = 0;
 let materialBlendCount = 0;
@@ -664,6 +665,26 @@ function addPropSpriteCover(root, kind, width, height, x, y, z) {
   return cover;
 }
 
+function markPropSpriteReplaceableBody(...parts) {
+  parts.forEach((part) => {
+    if (part && part.userData) part.userData.propSpriteReplaceableBody = true;
+  });
+}
+
+function hidePropSpriteCoveredBody(root, kind) {
+  if (!getPropCoverTexture(kind)) return 0;
+  let hidden = 0;
+  root.traverse((part) => {
+    if (part.userData && part.userData.propSpriteReplaceableBody) {
+      part.visible = false;
+      part.userData.propSpriteCoveredBody = kind;
+      hidden += 1;
+    }
+  });
+  propSpriteBodyHiddenCount += hidden;
+  return hidden;
+}
+
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
@@ -864,6 +885,7 @@ function makeCrate(x, z, s = 1) {
   const c = box(s, s, s, mats.crate);
   c.position.y = s * 0.5;
   c.castShadow = c.receiveShadow = true;
+  markPropSpriteReplaceableBody(c);
   root.add(c);
   addPropShapeBlock(root, s * 0.82, s * 0.26, s * 0.055, mats.propLightBlock, -s * 0.02, s * 0.70, -s * 0.535);
   addPropShapeBlock(root, s * 0.90, s * 0.22, s * 0.055, mats.propShadowBlock, s * 0.04, s * 0.30, -s * 0.538);
@@ -871,6 +893,7 @@ function makeCrate(x, z, s = 1) {
   const plank = box(s * 1.08, s * 0.08, s * 0.10, mats.gold);
   plank.position.set(0, s * 0.82, 0);
   plank.rotation.y = Math.PI / 4;
+  markPropSpriteReplaceableBody(plank);
   root.add(plank);
   addPropWear(root, s * 0.78, s * 0.055, s * 0.05, mats.propDarkWear, 0, s * 0.58, -s * 0.53);
   addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, -s * 0.42, s * 0.52, -s * 0.535);
@@ -884,6 +907,7 @@ function makeCrate(x, z, s = 1) {
   addBrokenChunk(root, s * 0.28, s * 0.12, s * 0.10, mats.propBrokenLight, s * 0.34, s * 0.14, -s * 0.48, -0.28, 0.18);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
   addPropSpriteCover(root, 'crate', s * 1.14, s * 1.04, 0, s * 0.56, -s * 0.63);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'crate');
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -894,9 +918,11 @@ function makeWreck(x, z, rot) {
   addContactShadow(root, 2.7, 1.38, 0.26);
   const body = box(2.2, 0.55, 1.05, mats.rust);
   body.position.y = 0.36;
+  markPropSpriteReplaceableBody(body);
   root.add(body);
   const cabin = box(0.8, 0.45, 0.82, mats.wall);
   cabin.position.set(-0.25, 0.85, -0.05);
+  markPropSpriteReplaceableBody(cabin);
   root.add(cabin);
   addPropShapeBlock(root, 1.48, 0.22, 0.065, mats.propLightBlock, -0.20, 0.56, -0.57, -0.03);
   addPropShapeBlock(root, 1.88, 0.24, 0.065, mats.propShadowBlock, 0.18, 0.28, -0.575, 0.02);
@@ -928,10 +954,12 @@ function makeWreck(x, z, rot) {
     const wheel = cyl(0.18, 0.18, 0.18, new THREE.MeshStandardMaterial({ color: 0x070908 }));
     wheel.rotation.z = Math.PI / 2;
     wheel.position.set(dx, 0.18, 0.58);
+    markPropSpriteReplaceableBody(wheel);
     root.add(wheel);
   }
   addPropGroundScatter(root, 1.25, 0.72, 7);
   addPropSpriteCover(root, 'wreck', 2.34, 1.30, 0, 0.66, -0.70);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'wreck');
   root.rotation.y = rot;
   root.position.set(x, 0, z);
   scene.add(root);
@@ -944,6 +972,7 @@ function makeWall(x, z, w, d) {
   const wall = box(w, 1.35, d, mats.wall);
   wall.position.y = 0.68;
   wall.castShadow = wall.receiveShadow = true;
+  markPropSpriteReplaceableBody(wall);
   root.add(wall);
   addPropShapeBlock(root, w * 0.82, 0.36, Math.max(0.04, d * 0.18), mats.propLightBlock, -w * 0.06, 1.02, -d * 0.56);
   addPropShapeBlock(root, w * 0.92, 0.34, Math.max(0.04, d * 0.18), mats.propShadowBlock, w * 0.04, 0.44, -d * 0.565);
@@ -951,6 +980,7 @@ function makeWall(x, z, w, d) {
   addPropRimFrame(root, w * 0.94, 1.18, Math.max(0.035, d * 0.14), 0.73, -d * 0.575);
   const cap = box(w * 1.04, 0.08, d * 1.04, mats.road);
   cap.position.y = 1.39;
+  markPropSpriteReplaceableBody(cap);
   root.add(cap);
   addPropWear(root, w * 0.86, 0.04, Math.max(0.035, d * 0.18), mats.propEdge, 0, 1.12, -d * 0.54);
   addPropWear(root, Math.max(0.035, w * 0.025), 0.82, Math.max(0.035, d * 0.16), mats.propDarkWear, -w * 0.25, 0.68, -d * 0.55);
@@ -967,6 +997,7 @@ function makeWall(x, z, w, d) {
   addBrokenChunk(root, Math.max(0.14, w * 0.10), 0.28, Math.max(0.06, d * 0.28), mats.propBrokenDark, w * 0.37, 0.30, -d * 0.54, -0.22, 0.28);
   addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
   addPropSpriteCover(root, 'wall', Math.max(0.96, w * 1.14), 1.34, 0, 0.74, -d * 0.66);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'wall');
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -2419,6 +2450,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.propSpriteCoverCount = propSpriteCoverCount;
   window.__V03_ENGINE_DEMO_STATE.propSpriteCoverKinds = new Set(painterlyCards.filter((card) => card.userData.propSpriteCover).map((card) => card.userData.propSpriteCover)).size;
   window.__V03_ENGINE_DEMO_STATE.propSpriteCoverUsesAsset = propCoverUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.propSpriteBodyHiddenCount = propSpriteBodyHiddenCount;
   window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
   window.__V03_ENGINE_DEMO_STATE.objectRimCount = objectRimCount;
   window.__V03_ENGINE_DEMO_STATE.materialBlendCount = materialBlendCount;

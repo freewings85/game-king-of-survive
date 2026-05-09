@@ -1921,3 +1921,41 @@ Next iteration direction:
 1. Convert wall and crate from overlay-first presentation into fuller asset-bodied props, reducing visible low-poly backing where it hurts the read.
 2. Add bitmap cover assets for barrels, tires, and debris after the main three prop families stabilize.
 3. Mirror actual bitmap asset names into the Cocos visual contract once WebGL scale and perspective are final.
+
+## 2026-05-10 Prop sprite body cleanup pass
+
+Related work:
+
+- Follow-up to `146c4c0`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The prop layer is closer because wreck, wall, and crate bitmap assets now take visual priority instead of sitting on top of fully visible low-poly bodies.
+- The phone screenshot reads less like procedural blocks with decals, especially around the lower wreck car and tall wall props.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Core low-poly bodies for covered wrecks, walls, and crates are hidden when bitmap cover assets are available.
+- Runtime gates now require `propSpriteBodyHiddenCount >= 34`, making the cleanup measurable rather than subjective.
+- Contact shadows, debris, scatter, and supporting rim/break layers remain, so the props do not become flat ungrounded sprites.
+
+What is still far from the reference:
+
+- Wall and crate assets still need better matching perspective and bespoke silhouettes for each prop footprint.
+- Barrels, tires, debris, and ground materials still rely mostly on procedural geometry and decals.
+- Cocos still has contract placeholders for prop cover sprites rather than real Creator prefabs.
+
+Next iteration direction:
+
+1. Generate or author additional bitmap assets for barrels, tires, and debris so the surrounding map layer stops reading as mixed-quality art.
+2. Tune wall/crate cover perspective and possibly add alternate wide/narrow wall cover variants.
+3. Start replacing more remaining procedural prop details with asset-backed sprites only where they improve phone-scale readability.
