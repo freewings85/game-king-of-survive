@@ -9738,11 +9738,19 @@
           ctx.fillStyle = '#300'; ctx.fillRect(e.x - e.radius, e.y - e.radius - 5, e.radius * 2, 3);
           ctx.fillStyle = hpBarColor; ctx.fillRect(e.x - e.radius, e.y - e.radius - 5, e.radius * 2 * (e.hp / e.maxHp), 3);
         }
-        // Red/green name label
-        var nameLabel = isHostile ? (e.enemyType || 'enemy') : '✦';
-        ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-        ctx.fillStyle = isHostile ? '#f44' : '#4f4';
-        ctx.fillText(nameLabel, e.x, e.y - e.radius - (e.hp < e.maxHp ? 7 : 2));
+        var shouldDrawNameLabel = !isHostile || e.eliteAffix || e.enemyType === 'boss' || e.enemyType === 'miniBoss' || e.enemyType === 'treasure';
+        if (shouldDrawNameLabel) {
+          var nameLabel = !isHostile ? '+' :
+            e.enemyType === 'boss' ? 'BOSS' :
+              e.enemyType === 'miniBoss' ? 'ELITE' :
+                e.enemyType === 'treasure' ? 'LOOT' :
+                  (e.eliteAffix || '');
+          if (nameLabel) {
+            ctx.font = '9px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.fillStyle = isHostile ? '#f44' : '#4f4';
+            ctx.fillText(nameLabel, e.x, e.y - e.radius - (e.hp < e.maxHp ? 7 : 2));
+          }
+        }
         // bossAuraRing (US-328): rotating magic circle under boss for dramatic presence
         if (e.enemyType === 'boss') {
           ctx.save();
