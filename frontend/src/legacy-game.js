@@ -10267,12 +10267,13 @@
     // ──── TOP BAR (15%) — 50% opacity, consistent tone with bottom bar ────
     ctx.save();
     // 50% alpha gradient with same tone as bottom bar (#14142a → #0a0a1a)
+    var topAlpha = _hudCfg.compactTopStats ? 0.34 : 0.5;
     var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
-    topGrad.addColorStop(0, 'rgba(20,20,42,0.5)');
-    topGrad.addColorStop(1, 'rgba(10,10,26,0.5)');
+    topGrad.addColorStop(0, 'rgba(20,20,42,' + topAlpha + ')');
+    topGrad.addColorStop(1, 'rgba(10,10,26,' + topAlpha + ')');
     ctx.fillStyle = topGrad; ctx.fillRect(0, 0, W, topH);
     // Gold bottom edge divider
-    ctx.fillStyle = '#ffd700'; ctx.fillRect(0, topH - 2, W, 2);
+    ctx.fillStyle = _hudCfg.compactTopStats ? 'rgba(255,215,0,0.55)' : '#ffd700'; ctx.fillRect(0, topH - 2, W, 2);
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, topH, W, 1);
 
     // ═══ LEFT: Avatar (1/2 size) + Name + Level — combined unit ═══
@@ -10305,7 +10306,7 @@
     ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     ctx.fillStyle = '#ffd700';
     ctx.strokeStyle = 'rgba(0,0,0,0.75)'; ctx.lineWidth = 2;
-    var lvGoldStr = 'Lv.' + playerLevel + '  💰' + gold;
+    var lvGoldStr = _hudCfg.compactTopStats ? ('Lv.' + playerLevel + '  金' + gold) : ('Lv.' + playerLevel + '  💰' + gold);
     ctx.strokeText(lvGoldStr, nameX, avCy + Math.round(8 * _zs));
     ctx.fillText(lvGoldStr, nameX, avCy + Math.round(8 * _zs));
     ctx.textBaseline = 'alphabetic';
@@ -10321,6 +10322,11 @@
     var centerLeft = leftBlockRight;
     var centerRight = W - _miniW - Math.round(10 * _zs);
     var centerW = Math.max(100, centerRight - centerLeft);
+    if (_hudCfg.compactTopStats) {
+      var statusMaxW = Math.max(Math.round(150 * _zs), Math.round(W * (_hudCfg.statusMaxWidthRatio || 0.34)));
+      centerW = Math.min(centerW, statusMaxW);
+      centerRight = centerLeft + centerW;
+    }
 
     // ═══ CENTER: single status capsule (wave + kills + time) + HP bar ═══
     var cellY1 = Math.round(topH * 0.10);
@@ -10355,7 +10361,9 @@
     } else {
       _aliveCount = allPlayers ? allPlayers.filter(function(p){ return p.alive; }).length : 0;
     }
-    var statusText = '剩余 ' + _aliveCount + ' 人  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's';
+    var statusText = _hudCfg.compactTopStats
+      ? (_aliveCount + '存  ' + kills + '杀  ' + Math.floor(gameTime) + 's')
+      : ('剩余 ' + _aliveCount + ' 人  ⚔' + kills + '  ⏱' + Math.floor(gameTime) + 's');
     ctx.fillText(statusText, centerLeft + centerW / 2, cellY1 + capRoundH / 2);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
@@ -10363,6 +10371,9 @@
     // --- HP bar (bottom row of center, same width as status capsule) ---
     var hpX = centerLeft;
     var hpW = centerW;
+    if (_hudCfg.compactTopStats) {
+      hpW = Math.min(hpW, Math.max(Math.round(140 * _zs), Math.round(W * (_hudCfg.hpMaxWidthRatio || 0.28))));
+    }
     var hpBarH = Math.round(topH * 0.22);
     var hpY = cellY2;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(hpX - 1, hpY - 1, hpW + 2, hpBarH + 2);
@@ -10377,7 +10388,9 @@
     ctx.strokeStyle = '#442a1a'; ctx.lineWidth = 1; ctx.strokeRect(hpX, hpY, hpW, hpBarH);
     // HP text centered on bar
     ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    var hpStr = '❤ ' + Math.floor(player.hp) + ' / ' + player.maxHp;
+    var hpStr = _hudCfg.compactTopStats
+      ? (Math.floor(player.hp) + '/' + player.maxHp)
+      : ('❤ ' + Math.floor(player.hp) + ' / ' + player.maxHp);
     ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = 2;
     ctx.strokeText(hpStr, hpX + hpW / 2, hpY + hpBarH / 2);
     ctx.fillStyle = '#fff'; ctx.fillText(hpStr, hpX + hpW / 2, hpY + hpBarH / 2);
@@ -11324,7 +11337,18 @@
   }
 
   function drawBossHealthBar(boss) {
-    var bossHpBar = { w: 300, h: 14, x: W / 2 - 150, y: 30 };
+    var _bossHudCfg = (window.KOS_UI && window.KOS_UI.hud) || {};
+    var _bossHudCompact = !!_bossHudCfg.compactTopStats;
+    var _bossHudZs = Math.min(W / 400, H / 700) * (_bossHudCfg.scale || 1);
+    var _bossTopH = Math.round(H * (_bossHudCfg.topHeightRatio || 0.105));
+    var _bossBarW = _bossHudCompact ? Math.round(Math.min(W * 0.34, 170 * _bossHudZs)) : 300;
+    var _bossBarH = _bossHudCompact ? Math.max(6, Math.round(6 * _bossHudZs)) : 14;
+    var bossHpBar = {
+      w: _bossBarW,
+      h: _bossBarH,
+      x: W / 2 - _bossBarW / 2,
+      y: _bossHudCompact ? (_bossTopH + Math.round(8 * _bossHudZs)) : 30
+    };
     // Background
     ctx.fillStyle = '#111'; ctx.fillRect(bossHpBar.x - 2, bossHpBar.y - 2, bossHpBar.w + 4, bossHpBar.h + 4);
     ctx.fillStyle = '#300'; ctx.fillRect(bossHpBar.x, bossHpBar.y, bossHpBar.w, bossHpBar.h);
@@ -11339,12 +11363,14 @@
     ctx.fillRect(bossHpBar.x + bossHpBar.w * 0.3, bossHpBar.y, 1, bossHpBar.h);
     ctx.globalAlpha = 1;
     // Boss name + phase
-    var bossName = '👑 BOSS - Phase ' + (boss.bossPhase || 1);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(bossName, W / 2, bossHpBar.y - 4);
+    var bossName = _bossHudCompact ? ('BOSS P' + (boss.bossPhase || 1)) : ('👑 BOSS - Phase ' + (boss.bossPhase || 1));
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + (_bossHudCompact ? Math.max(8, Math.round(6 * _bossHudZs)) : 12) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(bossName, W / 2, bossHpBar.y - (_bossHudCompact ? Math.max(3, Math.round(2 * _bossHudZs)) : 4));
     // HP percentage
-    ctx.fillStyle = '#ccc'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    ctx.fillText(Math.round(hpPct * 100) + '%', W / 2, bossHpBar.y + 12);
+    if (!_bossHudCompact) {
+      ctx.fillStyle = '#ccc'; ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.fillText(Math.round(hpPct * 100) + '%', W / 2, bossHpBar.y + 12);
+    }
   }
 
   // Player status panel — prominent display of all players' status
@@ -11615,9 +11641,10 @@
   function drawMinimap() {
     // Top-right position with gold frame (moved from bottom-right per UX rev)
     // Sized to fit within top bar (15% of H), positioned top-right
-    var _mmZs = Math.min(W / 400, H / 700);
-    var _topBarH = Math.round(H * 0.105);
-    var mmW = Math.min(Math.round(80 * _mmZs), _topBarH - Math.round(8 * _mmZs));
+    var _mmCfg = (window.KOS_UI && window.KOS_UI.hud) || {};
+    var _mmZs = Math.min(W / 400, H / 700) * (_mmCfg.scale || 1);
+    var _topBarH = Math.round(H * (_mmCfg.topHeightRatio || 0.105));
+    var mmW = Math.min(Math.round(80 * _mmZs * (_mmCfg.minimapScale || 1)), _topBarH - Math.round(8 * _mmZs));
     var mmH = mmW;
     var mmX = W - mmW - Math.round(6 * _mmZs);
     var mmY = Math.round((_topBarH - mmH) / 2);
