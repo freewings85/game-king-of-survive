@@ -435,3 +435,35 @@ Next iteration direction:
 1. Start a Cocos prefab/component scaffold that consumes `V03VisualContract.ts` names for hero gear, zombie variants, decal layers, and FX layers.
 2. Keep the WebGL reference evolving visually, but make every new major visual layer translatable to Cocos contract names.
 3. Add FAN-specific bullet/impact card improvements next, because FAN is the default gameplay screenshot and closest to the reference's main phone panel.
+
+## 2026-05-10 Cocos Visual Runtime Scaffold Pass
+
+Related work:
+
+- Cocos scaffold WIP after `470abd5`
+
+Reviewed artifacts:
+
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `e2e/v03-cocos-bridge-verify.js`
+- `cocos-v03-demo/README.md`
+
+What moved closer:
+
+- Cocos now has a `V03VisualRuntime` component that consumes `V03VisualContract.ts` and builds placeholder nodes for hero gear, zombie variants, unit decals, and skill FX layers.
+- `V03BattleDirector` exposes `public visualRuntime: V03VisualRuntime` and builds it with the current class/skill selection, so the visual contract is part of the slice flow rather than a standalone document.
+- The Cocos bridge verifier now checks `visualRuntime: true` in addition to runtime config, map bridge, map runtime, and visual contract coverage.
+- This creates a replaceable prefab/component structure for real Cocos assets while preserving the WebGL target's visual layers.
+
+What is still far from the reference:
+
+- The Cocos visual runtime builds placeholder boxes, not final sprites/models/materials/animations.
+- It still cannot be run in Cocos Creator here because the editor executable is not available.
+- The actual WeChat mini-game needs device screenshots and performance checks once Cocos prefabs replace placeholders.
+
+Next iteration direction:
+
+1. Add a Cocos-side first playable scene/prefab checklist that maps each runtime node group to required prefab assets.
+2. Continue improving FAN bullets and impact marks in the WebGL landscape review, then mirror the named layer in `V03VisualContract.ts` if the structure changes.
+3. When Cocos Creator is available, instantiate `V03BattleDirector`, `V03MapRuntime`, and `V03VisualRuntime` in a scene and verify it visually.

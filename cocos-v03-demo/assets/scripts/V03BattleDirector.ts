@@ -2,6 +2,7 @@ import { _decorator, Component, Label } from 'cc';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
 import { loadV03BridgeData, type V03BridgeData } from './V03ResourceBridge';
 import { V03MapRuntime, type V03MapRuntimeStats } from './V03MapRuntime';
+import { V03VisualRuntime, type V03VisualRuntimeStats } from './V03VisualRuntime';
 
 const { ccclass, property } = _decorator;
 
@@ -13,6 +14,9 @@ export class V03BattleDirector extends Component {
   @property(V03MapRuntime)
   public mapRuntime: V03MapRuntime | null = null;
 
+  @property(V03VisualRuntime)
+  public visualRuntime: V03VisualRuntime | null = null;
+
   private classId: V03ClassId = 'ranger';
   private skillId: V03SkillId = 'fan';
   private elapsed = 0;
@@ -23,11 +27,15 @@ export class V03BattleDirector extends Component {
   private alive = 32;
   private bridgeData: V03BridgeData | null = null;
   private mapStats: V03MapRuntimeStats | null = null;
+  private visualStats: V03VisualRuntimeStats | null = null;
 
   async start(): Promise<void> {
     this.bridgeData = await loadV03BridgeData();
     if (this.mapRuntime) {
       this.mapStats = this.mapRuntime.buildFromMap(this.bridgeData.map);
+    }
+    if (this.visualRuntime) {
+      this.visualStats = this.visualRuntime.buildVisualContract(this.classId, this.skillId);
     }
     this.hp = this.bridgeData.runtime.tuning.player.hp;
     this.alive = Math.max(18, this.bridgeData.map.zombieEntries.length * 8);
@@ -50,12 +58,20 @@ export class V03BattleDirector extends Component {
 
   public selectClass(classId: V03ClassId): void {
     this.classId = classId;
+    this.refreshVisualContract();
     this.renderStatus();
   }
 
   public selectSkill(skillId: V03SkillId): void {
     this.skillId = skillId;
+    this.refreshVisualContract();
     this.renderStatus();
+  }
+
+  private refreshVisualContract(): void {
+    if (this.visualRuntime) {
+      this.visualStats = this.visualRuntime.buildVisualContract(this.classId, this.skillId);
+    }
   }
 
   private simulateAutoFire(): void {
@@ -84,11 +100,15 @@ export class V03BattleDirector extends Component {
     const mapStats = this.mapStats
       ? `T${this.mapStats.tiles} P${this.mapStats.props} Z${this.mapStats.zombieEntries} R${this.mapStats.rewardPoints}`
       : 'runtime pending';
+    const visualStats = this.visualStats
+      ? `G${this.visualStats.heroGear} V${this.visualStats.zombieVariants} D${this.visualStats.unitDecals} FX${this.visualStats.fxLayers}`
+      : 'visual pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
       `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
-      `MAP ${mapName} ${mapStats}`
+      `MAP ${mapName} ${mapStats}`,
+      `VISUAL ${visualStats}`
     ].join('\n');
   }
 }

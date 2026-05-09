@@ -40,6 +40,7 @@ const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
 const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
+const visualRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualRuntime.ts'), 'utf8');
 const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
 
 const sourceClassIds = Object.keys(sourceConfig.classDefs).sort();
@@ -91,6 +92,18 @@ assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must e
 assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
+assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
+assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
+assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_GEAR'), 'Cocos visual runtime must consume hero gear contract');
+assert(visualRuntimeSource.includes('V03_ZOMBIE_VARIANTS'), 'Cocos visual runtime must consume zombie variant contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_UNIT_DECALS'), 'Cocos visual runtime must consume unit decal contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_FX_LAYERS'), 'Cocos visual runtime must consume FX layer contract');
+assert(visualRuntimeSource.includes('heroGear'), 'Cocos visual runtime must report hero gear stats');
+assert(visualRuntimeSource.includes('zombieVariants'), 'Cocos visual runtime must report zombie variant stats');
+assert(visualRuntimeSource.includes('unitDecals'), 'Cocos visual runtime must report unit decal stats');
+assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
+assert(battleDirectorSource.includes('public visualRuntime: V03VisualRuntime'), 'Battle director must expose V03VisualRuntime');
+assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(this.classId, this.skillId)'), 'Battle director must build visual runtime from contract');
 ['guardian', 'tech', 'ranger'].forEach((id) => {
   assert(visualContractSource.includes(id), `Visual contract must include ${id}`);
 });
@@ -121,5 +134,6 @@ console.log(JSON.stringify({
   resourceBridge: true,
   mapRuntime: true,
   visualContract: true,
+  visualRuntime: true,
   qualityOk: cocosMap.qualityChecks.every((check) => check.ok)
 }, null, 2));
