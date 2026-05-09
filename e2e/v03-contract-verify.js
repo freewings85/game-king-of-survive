@@ -142,12 +142,45 @@ async function verifyEngineDemo(browser) {
   return info;
 }
 
+async function verifyV03Shell(browser) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, deviceScaleFactor: 1 });
+  const logs = await collectErrors(page);
+  await page.goto(`${baseUrl}/frontend/v03-shell/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
+  await page.locator('.classCard').nth(2).click();
+  await page.waitForTimeout(500);
+  const info = await page.evaluate(() => ({
+    classCards: document.querySelectorAll('.classCard').length,
+    skillCards: document.querySelectorAll('.skillCard').length,
+    activeClass: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.activeClass,
+    usesSharedConfig: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.usesSharedConfig,
+    usesMapContract: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.usesMapContract,
+    classIds: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.classIds,
+    skillIds: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.skillIds,
+    skinCount: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.skinCount,
+    previewTileCount: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.previewTileCount,
+    previewPropCount: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.previewPropCount,
+    previewZombieEntries: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.previewZombieEntries,
+    previewRewardPoints: window.__V03_SHELL_STATE && window.__V03_SHELL_STATE.previewRewardPoints
+  }));
+  const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
+  const expectedClasses = JSON.stringify(['guardian', 'tech', 'ranger']);
+  const expectedSkills = JSON.stringify(['arc', 'boom', 'fan']);
+  if (errors.length || info.classCards !== 3 || info.skillCards !== 3 || !info.usesSharedConfig || !info.usesMapContract || JSON.stringify(info.classIds) !== expectedClasses || JSON.stringify(info.skillIds) !== expectedSkills || info.activeClass !== 'ranger' || info.skinCount < 9 || info.previewTileCount !== 572 || info.previewPropCount < 20 || info.previewZombieEntries < 4 || info.previewRewardPoints < 8) {
+    fail('V03 shell verification failed', { info, errors });
+  }
+  info.screenshot = path.join(artifactDir, 'v03-shell-framework.png');
+  await page.screenshot({ path: info.screenshot, fullPage: true });
+  await page.close();
+  return info;
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const result = {
     runtime: await verifyContractRuntime(browser),
     editor: await verifyEditor(browser),
-    engineDemo: await verifyEngineDemo(browser)
+    engineDemo: await verifyEngineDemo(browser),
+    shell: await verifyV03Shell(browser)
   };
   await browser.close();
   if (!process.exitCode) console.log(JSON.stringify(result, null, 2));
