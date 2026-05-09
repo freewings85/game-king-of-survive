@@ -12000,27 +12000,30 @@
     ctx.scale(menuScale, menuScale);
 
     // --- Logo frame (y: 20-100) ---
-    var logoPulse = 1 + Math.sin(Date.now() * 0.002) * 0.02;
-    var frameX = 30, frameY = 20, frameW = 340, frameH = 80;
-    var _logoUsed9 = draw9Slice(ctx, frameX, frameY, frameW, frameH, { cornerSize: 16, alpha: 1 });
-    if (!_logoUsed9) {
-      ctx.save();
-      ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 18;
-      var fGrad = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameH);
-      fGrad.addColorStop(0, 'rgba(40,30,10,0.85)'); fGrad.addColorStop(1, 'rgba(15,10,4,0.85)');
-      ctx.fillStyle = fGrad; ctx.fillRect(frameX, frameY, frameW, frameH);
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
-      ctx.strokeRect(frameX, frameY, frameW, frameH);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(255,215,0,0.5)'; ctx.lineWidth = 1;
-      ctx.strokeRect(frameX + 4, frameY + 4, frameW - 8, frameH - 8);
-    }
+    var logoPulse = 1 + Math.sin(Date.now() * 0.002) * 0.012;
+    var frameX = 28, frameY = 22, frameW = 344, frameH = 74;
+    var logoGrad = ctx.createLinearGradient(frameX, frameY, frameX, frameY + frameH);
+    logoGrad.addColorStop(0, 'rgba(18,23,22,0.86)');
+    logoGrad.addColorStop(1, 'rgba(7,9,9,0.92)');
+    ctx.fillStyle = logoGrad;
+    ctx.fillRect(frameX, frameY, frameW, frameH);
+    ctx.strokeStyle = 'rgba(244,201,90,0.62)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(frameX + 0.5, frameY + 0.5, frameW - 1, frameH - 1);
+    ctx.strokeStyle = 'rgba(230,83,63,0.48)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(frameX + 16, frameY + frameH);
+    ctx.lineTo(frameX + 86, frameY + frameH);
+    ctx.moveTo(frameX + frameW - 86, frameY);
+    ctx.lineTo(frameX + frameW - 16, frameY);
+    ctx.stroke();
     ctx.save();
     ctx.translate(200, frameY + frameH / 2);
     ctx.scale(logoPulse, logoPulse);
-    ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 20;
+    ctx.shadowColor = '#e6533f'; ctx.shadowBlur = 12;
     ctx.font = 'bold 42px "KaiTi", "STKaiti", "SimHei", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", serif';
-    ctx.textAlign = 'center'; ctx.fillStyle = '#ffe066';
+    ctx.textAlign = 'center'; ctx.fillStyle = '#f4c95a';
     ctx.fillText('生存之王', 0, 6);
     ctx.shadowBlur = 0;
     ctx.restore();
