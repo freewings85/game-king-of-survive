@@ -7172,6 +7172,9 @@
 
   // === ENEMY SPRITES — Canvas-drawn creatures per enemy type ===
   function drawEnemySprite(ctx, x, y, r, type, themeColor, gt, srcEntity) {
+    if (window.KOS_RENDER && typeof window.KOS_RENDER.drawEnemySprite === 'function') {
+      if (window.KOS_RENDER.drawEnemySprite(ctx, x, y, r, type, themeColor, gt, srcEntity)) return;
+    }
     // zombie-skin-01: drop monster_orc override; all non-boss enemies render as
     // procedural zombies below. ctx.scale(2,2) brings procedural footprint up to
     // the ~4.5×r sprite footprint so visual size doesn't collapse.
