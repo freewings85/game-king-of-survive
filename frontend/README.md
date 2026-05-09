@@ -29,6 +29,7 @@ python3 dev-server.py 8081
 - Mini-game engine decision: `frontend/docs/mini-game-engine-decision.md`
 - Engine decision: `frontend/docs/engine-evaluation.md`
 - Cocos vertical slice gate: `frontend/docs/cocos-vertical-slice.md`
+- V03 goal audit: `frontend/docs/v03-goal-audit.md`
 - V03 class/skill/tuning config: `frontend/src/v03-runtime-config.js`
 
 ## Production Engine Scaffold
