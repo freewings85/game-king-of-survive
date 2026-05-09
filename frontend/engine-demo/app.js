@@ -1394,6 +1394,7 @@ const showcaseMark = document.getElementById('showcaseMark');
 const showcaseTitle = document.getElementById('showcaseTitle');
 const showcaseRole = document.getElementById('showcaseRole');
 const showcaseSkins = document.getElementById('showcaseSkins');
+const showcaseThumbs = document.getElementById('showcaseThumbs');
 
 function placeMiniDot(dot, x, z) {
   const px = THREE.MathUtils.clamp(((x + 6) / 12) * 100, 8, 92);
@@ -1443,6 +1444,11 @@ function applyClass(id) {
   Array.from(showcaseSkins.children).forEach((el, index) => {
     el.style.background = def.skins[index] || def.skins[0];
   });
+  Array.from(showcaseThumbs.children).forEach((el, index) => {
+    el.style.setProperty('--skin-color', def.skins[index] || def.skins[0]);
+    el.style.setProperty('--accent-color', `#${def.accent.toString(16).padStart(6, '0')}`);
+    el.dataset.skin = String(index);
+  });
   Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.class === id);
   });
@@ -1468,6 +1474,9 @@ function applySkin(index) {
   Array.from(showcaseSkins.children).forEach((el, i) => {
     el.classList.toggle('active', i === activeSkin);
   });
+  Array.from(showcaseThumbs.children).forEach((el, i) => {
+    el.classList.toggle('active', i === activeSkin);
+  });
   window.__V03_ENGINE_DEMO_STATE = window.__V03_ENGINE_DEMO_STATE || {};
   window.__V03_ENGINE_DEMO_STATE.activeGearCount = activeGearCount;
   window.__V03_ENGINE_DEMO_STATE.activeGearClass = activeClass;
@@ -1479,6 +1488,8 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible = reviewMode === 'class' && !!classShowcase;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseTitle = showcaseTitle.textContent;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount = showcaseSkins.children.length;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseThumbCount = showcaseThumbs.children.length;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseActiveThumbs = showcaseThumbs.querySelectorAll('.active').length;
 }
 
 function applySkill(id) {

@@ -232,6 +232,37 @@ Next iteration direction:
 2. Add per-skin silhouette accents so the three swatches represent different looks, not only palette choices.
 3. Mirror this class showcase requirement in the Cocos first-playable checklist when real Cocos screenshots become possible.
 
+## 2026-05-10 Showcase Skin Thumbnail Pass
+
+Related work:
+
+- WIP after `e10ff65`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+What moved closer:
+
+- The class showcase now includes three skin thumbnail cards in addition to color swatches, so skin review is no longer only a row of abstract dots.
+- Each thumbnail inherits the selected class accent and that skin's palette, and the active skin thumbnail gets the same gold selection treatment as the active swatch.
+- The verifier now checks 3 showcase skin thumbnails and exactly 1 active thumbnail for every class review screenshot.
+
+What is still far from the reference:
+
+- The thumbnails are CSS-generated silhouettes, not final hand-authored skin portraits.
+- Skin differences still need stronger costume/gear silhouette changes, not only palette and selection treatment.
+- Cocos still needs real sprite/prefab equivalents for these skin thumbnails.
+
+Next iteration direction:
+
+1. Make each skin thumbnail carry a distinct costume silhouette: helmet/hood shape, cape/backpack, shoulder armor, and weapon trim.
+2. Add a Cocos checklist item for class showcase thumbnails once the Cocos scene work resumes.
+3. Keep the three-class screenshots as the comparison surface for class/skin readability.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
