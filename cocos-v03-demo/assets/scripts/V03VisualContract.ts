@@ -54,6 +54,14 @@ export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [
   'stage-diagonal-shadow'
 ] as const;
 
+export const V03_REQUIRED_OBJECT_RIM_LAYERS = [
+  'object-warm-rim',
+  'object-cool-rim',
+  'object-dark-side',
+  'object-weapon-rim',
+  'object-head-rim'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

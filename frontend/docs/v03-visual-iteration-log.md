@@ -925,3 +925,37 @@ Next iteration direction:
 1. Sync object rim/highlight categories into the Cocos contract if this layer remains mandatory.
 2. Improve material blending so rim/highlight shapes feel less like attached strips.
 3. Start shifting from individual visual layers toward a fuller first-playable presentation pass once Cocos scene authoring is available.
+
+## 2026-05-10 Cocos Object Rim Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `8c6d08f`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- Object-level rim/highlight layers are now part of the Cocos visual contract.
+- Cocos runtime stats now report `objectRimLayers` separately from global lighting and prop detail layers.
+- The first-playable checklist now names warm rim, cool rim, dark side, weapon rim, and head rim prefabs.
+- The Cocos bridge verifier now fails if object rim categories disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- This is still a contract sync, not real Cocos authored lighting.
+- The target image's highlights are blended into painterly materials; the current WebGL pass uses simple geometry strips.
+- Cocos Creator is still unavailable here, so no real Cocos phone screenshots verify these layers yet.
+
+Next iteration direction:
+
+1. Improve material blending in WebGL so rim/highlight strips feel less attached.
+2. Move toward a consolidated first-playable presentation pass once Cocos scene authoring is possible.
+3. Keep every mandatory visual layer represented in the Cocos contract until real prefabs replace placeholders.

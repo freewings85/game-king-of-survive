@@ -13,6 +13,7 @@ import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_GLOBAL_LIGHT_LAYERS,
   V03_REQUIRED_HERO_GEAR,
+  V03_REQUIRED_OBJECT_RIM_LAYERS,
   V03_REQUIRED_PROP_BREAK_SHAPES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
@@ -32,6 +33,7 @@ export interface V03VisualRuntimeStats {
   propShapeBlocks: number;
   propBreakShapes: number;
   globalLightLayers: number;
+  objectRimLayers: number;
   fxLayers: number;
 }
 
@@ -52,6 +54,7 @@ export class V03VisualRuntime extends Component {
     propShapeBlocks: 0,
     propBreakShapes: 0,
     globalLightLayers: 0,
+    objectRimLayers: 0,
     fxLayers: 0
   };
 
@@ -68,6 +71,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropShapeBlocks();
     this.buildPropBreakShapes();
     this.buildGlobalLightLayers();
+    this.buildObjectRimLayers();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -88,6 +92,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propShapeBlocks = 0;
     this.stats.propBreakShapes = 0;
     this.stats.globalLightLayers = 0;
+    this.stats.objectRimLayers = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -173,6 +178,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.22 - 0.44, 0.018, 1.88);
       this.actorRoot!.addChild(node);
       this.stats.globalLightLayers += 1;
+    });
+  }
+
+  private buildObjectRimLayers(): void {
+    V03_REQUIRED_OBJECT_RIM_LAYERS.forEach((layer, index) => {
+      const color = index === 0 ? '#ffd89a' : index === 1 ? '#a8eeff' : '#050706';
+      const node = this.makeBox(`object-rim-${layer}`, 0.18 + index * 0.04, 0.025, 0.14, color);
+      node.setPosition(index * 0.20 - 0.40, 0.84 + (index % 2) * 0.10, 2.08);
+      this.actorRoot!.addChild(node);
+      this.stats.objectRimLayers += 1;
     });
   }
 

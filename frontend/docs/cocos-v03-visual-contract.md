@@ -106,6 +106,18 @@ Required global lighting/value layers:
 
 These layers keep the phone battle readable by separating the central fight from the darker wasteland edges and by preserving the WebGL reference's warm/cool depth cues.
 
+## Object Rim Layers
+
+Required per-object rim/highlight layers:
+
+- `object-warm-rim`
+- `object-cool-rim`
+- `object-dark-side`
+- `object-weapon-rim`
+- `object-head-rim`
+
+These layers keep heroes, zombies, weapons, and major props separated from the ground after global lighting is applied.
+
 ## Skill FX
 
 Required FX layers:
@@ -118,4 +130,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, FX layers, and review screenshot names.

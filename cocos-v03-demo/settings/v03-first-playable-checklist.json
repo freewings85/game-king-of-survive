@@ -83,7 +83,12 @@
       "prefabs/map/StageCoolDepth.prefab",
       "prefabs/map/StageRimLight.prefab",
       "prefabs/map/StageEdgeDarkening.prefab",
-      "prefabs/map/StageDiagonalShadow.prefab"
+      "prefabs/map/StageDiagonalShadow.prefab",
+      "prefabs/map/ObjectWarmRim.prefab",
+      "prefabs/map/ObjectCoolRim.prefab",
+      "prefabs/map/ObjectDarkSide.prefab",
+      "prefabs/map/ObjectWeaponRim.prefab",
+      "prefabs/map/ObjectHeadRim.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -110,6 +115,7 @@
     "propShapeBlocks",
     "propBreakShapes",
     "globalLightLayers",
+    "objectRimLayers",
     "fxLayers",
     "reviewScreenshots"
   ],
