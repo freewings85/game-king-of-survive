@@ -69,6 +69,82 @@
     ctx.save();
     ctx.translate(fx.x, fx.y);
     ctx.rotate(fx.angle || 0);
+
+    if (fx.kind === 'chain') {
+      alpha(ctx, 0.25 * a, function() {
+        ctx.strokeStyle = '#62e6ff';
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(-len, 0);
+        for (var ci = 1; ci <= 5; ci++) {
+          var cx = -len + ci * (len + 10) / 5;
+          var cy = (ci % 2 ? -5 : 5) * (0.7 + a * 0.3);
+          ctx.lineTo(cx, cy);
+        }
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 0.95 * a;
+      ctx.strokeStyle = core;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-len, 0);
+      for (var si = 1; si <= 5; si++) {
+        ctx.lineTo(-len + si * (len + 10) / 5, (si % 2 ? -3 : 3));
+      }
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+      return true;
+    }
+
+    if (fx.kind === 'explosive') {
+      alpha(ctx, 0.32 * a, function() {
+        var rg = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+        rg.addColorStop(0, '#ffd26a');
+        rg.addColorStop(1, 'rgba(255,90,20,0)');
+        ctx.fillStyle = rg;
+        ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI * 2); ctx.fill();
+      });
+      alpha(ctx, 0.55 * a, function() {
+        var fire = ctx.createLinearGradient(-len, 0, 8, 0);
+        fire.addColorStop(0, 'rgba(255,80,20,0)');
+        fire.addColorStop(0.42, '#ff6a1a');
+        fire.addColorStop(1, '#fff2a8');
+        ctx.fillStyle = fire;
+        ctx.beginPath();
+        ctx.moveTo(-len, 0);
+        ctx.lineTo(-10, -7);
+        ctx.lineTo(12, 0);
+        ctx.lineTo(-10, 7);
+        ctx.closePath();
+        ctx.fill();
+      });
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(5, 0, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      return true;
+    }
+
+    if (fx.kind === 'arcane') {
+      alpha(ctx, 0.28 * a, function() {
+        ctx.strokeStyle = '#a78bff';
+        ctx.lineWidth = 10;
+        ctx.beginPath(); ctx.moveTo(-len, 0); ctx.lineTo(8, 0); ctx.stroke();
+      });
+      ctx.globalAlpha = 0.82 * a;
+      ctx.strokeStyle = core;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(-len, -2); ctx.quadraticCurveTo(-18, 8, 8, 0); ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-len * 0.35, 0); ctx.lineTo(10, 0); ctx.stroke();
+      ctx.restore();
+      return true;
+    }
+
     alpha(ctx, 0.28 * a, function() {
       ctx.fillStyle = '#000';
       ctx.fillRect(-len - 2, -4.5, len + 11, 9);

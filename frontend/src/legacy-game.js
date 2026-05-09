@@ -4938,9 +4938,15 @@
         player._attackUntil = gameTime + _atkDur;
         player._attackFacing = angle;
         playSound('shoot');
-        // ldoe-overhaul-01: unified bullet tracer (no class-specific kind variation)
+        // ldoe-overhaul-01: unified bullet tracer, now tinted by learned skill identity.
         var projSpeed = 600;
-        var fxKind = 'bullet';
+        var fxKind = player._chainCount > 0 ? 'chain'
+          : (player._explosiveDmg > 0 ? 'explosive'
+          : (selectedClass === 'mage' ? 'arcane' : 'bullet'));
+        var fxColor = fxKind === 'chain' ? '#62e6ff'
+          : fxKind === 'explosive' ? '#ff8a2a'
+          : fxKind === 'arcane' ? '#a78bff'
+          : '#ffd24a';
         var _muzX = player.x + Math.cos(angle) * player.radius * 1.2;
         var _muzY = player.y + Math.sin(angle) * player.radius * 1.2;
         offlineSkillFx.push({
@@ -4950,7 +4956,7 @@
           vy: Math.sin(angle) * projSpeed,
           angle: angle,
           life: 0.4, maxLife: 0.4,
-          color: '#ffd24a',
+          color: fxColor,
           targetX: closest.x, targetY: closest.y
         });
         // LDOE muzzle flash — single explicit cone (long > wide), 0.1s.
@@ -5023,6 +5029,52 @@
           _dmgValue = 0;
         }
         closest.hp -= _dmgValue;
+        if (_dmgValue > 0 && player._chainCount > 0) {
+          var _chainFrom = closest;
+          var _chainHits = Math.min(3, Math.max(1, player._chainCount || 1));
+          var _chainDmg = Math.max(5, player._chainDmg || 8);
+          for (var _ch = 0; _ch < _chainHits; _ch++) {
+            var _chainTarget = null;
+            var _chainBest = 190;
+            for (var _cei = 0; _cei < offlineEnemies.length; _cei++) {
+              var _ce = offlineEnemies[_cei];
+              if (!_ce.alive || _ce === closest || _ce === _chainFrom) continue;
+              var _cdx2 = _ce.x - _chainFrom.x, _cdy2 = _ce.y - _chainFrom.y;
+              var _cd2 = Math.sqrt(_cdx2 * _cdx2 + _cdy2 * _cdy2);
+              if (_cd2 < _chainBest) { _chainBest = _cd2; _chainTarget = _ce; }
+            }
+            if (!_chainTarget) break;
+            if (!window._chainArcs) window._chainArcs = [];
+            window._chainArcs.push({
+              x1: _chainFrom.x, y1: _chainFrom.y,
+              x2: _chainTarget.x, y2: _chainTarget.y,
+              life: 0.24, maxLife: 0.24,
+              color: '#62e6ff'
+            });
+            _chainTarget.hp -= _chainDmg;
+            _chainTarget.hitFlash = 3;
+            emit(_chainTarget.x, _chainTarget.y, '#62e6ff', 5, 55);
+            floatText(_chainTarget.x, _chainTarget.y - 24, '-' + _chainDmg, { color: '#9df6ff', size: 11 });
+            _chainFrom = _chainTarget;
+          }
+        }
+        if (_dmgValue > 0 && player._explosiveDmg > 0) {
+          var _exRadius = 78 + Math.min(42, player._explosiveDmg * 1.2);
+          var _exDmg = Math.max(6, player._explosiveDmg || 6);
+          if (!window._aoeSweep) window._aoeSweep = [];
+          window._aoeSweep.push({ x: closest.x, y: closest.y, radius: 0, maxRadius: _exRadius, life: 0.32, maxLife: 0.32, color: '#ff8a2a' });
+          emit(closest.x, closest.y, '#ff8a2a', 10, _exRadius);
+          for (var _exi = 0; _exi < offlineEnemies.length; _exi++) {
+            var _exe = offlineEnemies[_exi];
+            if (!_exe.alive || _exe === closest) continue;
+            var _exdx = _exe.x - closest.x, _exdy = _exe.y - closest.y;
+            if (Math.sqrt(_exdx * _exdx + _exdy * _exdy) < _exRadius + (_exe.radius || 0)) {
+              _exe.hp -= _exDmg;
+              _exe.hitFlash = 3;
+              floatText(_exe.x, _exe.y - 20, '-' + _exDmg, { color: '#ffb15f', size: 11 });
+            }
+          }
+        }
         // R5b T2 + R5h+R5i: altar struck — debris + 350ms golden flash; every
         // 3rd hit OR crossing 75/50/25% HP thresholds upgrades to BIG burst.
         if (closest._isAltar && _dmgValue > 0) {
