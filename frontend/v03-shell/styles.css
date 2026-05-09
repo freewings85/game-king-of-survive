@@ -1,0 +1,329 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1110;
+  --panel: #151918;
+  --panel-2: #1e2422;
+  --line: #3a423e;
+  --gold: #f4c95a;
+  --text: #edf1ea;
+  --muted: #99a49c;
+  --red: #e95b45;
+  --blue: #4ec9ff;
+  --green: #78d66a;
+  --purple: #a46bff;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 220px),
+    radial-gradient(circle at 68% 18%, rgba(244,201,90,0.10), transparent 280px),
+    var(--bg);
+  color: var(--text);
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+}
+
+button { font: inherit; }
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(420px, 1.05fr);
+  grid-template-rows: auto auto;
+  gap: 8px;
+  min-height: 100vh;
+  padding: 8px;
+}
+
+.panel,
+.phoneWrap {
+  border: 1px solid var(--line);
+  background: rgba(18,22,21,0.92);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.classes { min-height: 330px; padding: 18px; }
+.combat { padding: 12px; }
+.skills { padding: 18px; }
+.phoneWrap {
+  display: grid;
+  align-items: center;
+  min-height: 360px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(35,40,38,0.72), rgba(11,13,13,0.92));
+}
+
+.sectionHead { margin-bottom: 16px; }
+.sectionHead.compact { margin-bottom: 10px; }
+.kicker {
+  display: block;
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 3px 0 0;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+h1 { font-size: 30px; }
+h2 { font-size: 18px; }
+
+.classGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.classCard {
+  position: relative;
+  min-height: 210px;
+  padding: 12px;
+  overflow: hidden;
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.28));
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.classCard.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(244,201,90,0.16), inset 0 0 40px rgba(244,201,90,0.08);
+}
+
+.classIcon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  color: #101313;
+  background: var(--gold);
+  border: 2px solid rgba(0,0,0,0.35);
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.className {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.classRole {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.skinRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.skinSwatch {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,255,255,0.42);
+  border-radius: 50%;
+}
+
+.classFigure {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  width: 132px;
+  height: 164px;
+}
+
+.combatShots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.combatShots canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.9;
+  background: #202522;
+  border: 1px solid #363f3a;
+}
+
+.skillCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.skillCard {
+  min-height: 250px;
+  padding: 14px;
+  border-radius: 6px;
+  border: 2px solid var(--skill);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--skill) 20%, transparent), rgba(0,0,0,0.42)),
+    #171817;
+  box-shadow: inset 0 0 30px rgba(255,255,255,0.04), 0 8px 22px rgba(0,0,0,0.28);
+}
+
+.skillArt {
+  display: grid;
+  place-items: center;
+  height: 112px;
+  margin-bottom: 12px;
+  background: rgba(0,0,0,0.26);
+  border: 1px solid color-mix(in srgb, var(--skill) 45%, #000);
+}
+
+.skillTitle {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.skillDesc {
+  margin-top: 5px;
+  min-height: 38px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pips {
+  display: flex;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.pip {
+  width: 10px;
+  height: 10px;
+  background: var(--skill);
+  transform: rotate(45deg);
+}
+
+.phone {
+  position: relative;
+  width: min(100%, 760px);
+  aspect-ratio: 1.88;
+  margin: 0 auto;
+  padding: 16px 18px;
+  background: #080909;
+  border: 8px solid #242a2d;
+  border-radius: 42px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.55), inset 0 0 0 2px #465058;
+}
+
+.notch {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: 12px;
+  height: 92px;
+  transform: translateY(-50%);
+  background: #050606;
+  border-radius: 0 12px 12px 0;
+  z-index: 2;
+}
+
+#phoneCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  background: #252924;
+}
+
+.phoneHud {
+  position: absolute;
+  inset: 16px 18px;
+  pointer-events: none;
+}
+
+.stick {
+  position: absolute;
+  left: 58px;
+  bottom: 36px;
+  width: 82px;
+  height: 82px;
+  border: 2px solid rgba(255,255,255,0.20);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.28);
+}
+
+.stick span {
+  position: absolute;
+  left: 25px;
+  top: 24px;
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.58);
+  border-radius: 50%;
+}
+
+.hudBtn {
+  position: absolute;
+  right: 118px;
+  bottom: 35px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.32);
+}
+
+.hudBtn.orange { right: 34px; background: radial-gradient(circle, #ffca5a, #b4561e); }
+.hudBtn.purple { background: radial-gradient(circle, #b38cff, #5928a8); }
+
+@media (max-width: 920px) {
+  .shell {
+    grid-template-columns: 1fr;
+    padding: 6px;
+  }
+  .phoneWrap { order: -1; min-height: auto; padding: 10px; }
+  .phone {
+    border-radius: 32px;
+    padding: 10px;
+    border-width: 5px;
+  }
+  .notch { display: none; }
+  .classGrid,
+  .skillCards {
+    grid-template-columns: 1fr;
+  }
+  .classCard { min-height: 150px; }
+  .classFigure {
+    width: 150px;
+    height: 176px;
+    right: 2px;
+    bottom: -8px;
+    opacity: 0.95;
+  }
+  .combatShots { grid-template-columns: 1fr; }
+  .stick {
+    left: 34px;
+    bottom: 28px;
+    width: 58px;
+    height: 58px;
+  }
+  .stick span {
+    left: 18px;
+    top: 17px;
+    width: 24px;
+    height: 24px;
+  }
+  .hudBtn {
+    right: 78px;
+    bottom: 28px;
+    width: 54px;
+    height: 54px;
+    border-width: 3px;
+  }
+  .hudBtn.orange { right: 18px; }
+}
