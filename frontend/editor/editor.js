@@ -453,6 +453,8 @@
     var m = state.map;
     var roadTiles = m.tiles.filter(function(id) { return id === 4 || id === 2; }).length;
     var roadRatio = roadTiles / Math.max(1, m.tiles.length);
+    var decorKinds = { barrel: 1, tires: 1, blood_mark: 1 };
+    var decorCount = (m.structures || []).filter(function(item) { return decorKinds[item.kind]; }).length;
     return [
       { label: '出生点 >= 4', detail: (m.spawnPoints || []).length + ' / 4', ok: (m.spawnPoints || []).length >= 4 },
       { label: '尸群入口 >= 4', detail: (m.zombieEntries || []).length + ' / 4', ok: (m.zombieEntries || []).length >= 4 },
@@ -460,6 +462,7 @@
       { label: 'Rival 点 >= 2', detail: (m.rivalPoints || []).length + ' / 2', ok: (m.rivalPoints || []).length >= 2 },
       { label: 'Boss 点 >= 1', detail: (m.bossPoints || []).length + ' / 1', ok: (m.bossPoints || []).length >= 1 },
       { label: '掩体/道具 >= 20', detail: (m.structures || []).length + ' / 20', ok: (m.structures || []).length >= 20 },
+      { label: '废土细节 >= 6', detail: decorCount + ' / 6', ok: decorCount >= 6 },
       { label: '道路/混凝土 >= 20%', detail: Math.round(roadRatio * 100) + '% / 20%', ok: roadRatio >= 0.2 }
     ];
   }
@@ -495,9 +498,11 @@
       [0.22,0.38,6],[0.42,0.36,3],[0.66,0.40,1],[0.84,0.42,4],
       [0.16,0.56,2],[0.36,0.58,1],[0.56,0.55,6],[0.74,0.58,3],
       [0.24,0.76,0],[0.44,0.78,2],[0.62,0.74,4],[0.82,0.76,1],
-      [0.12,0.84,5],[0.30,0.86,3],[0.70,0.86,0],[0.88,0.84,2]
+      [0.12,0.84,5],[0.30,0.86,3],[0.70,0.86,0],[0.88,0.84,2],
+      [0.46,0.44,8],[0.53,0.42,9],[0.48,0.49,10],[0.58,0.55,8],
+      [0.40,0.62,9],[0.66,0.62,10],[0.26,0.48,8],[0.74,0.34,9]
     ];
-    for (var i = m.structures.length; i < 20 && i < placements.length; i++) {
+    for (var i = m.structures.length; i < 28 && i < placements.length; i++) {
       var p = placements[i];
       var def = defs[p[2] % defs.length];
       m.structures.push({

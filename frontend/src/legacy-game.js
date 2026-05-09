@@ -3030,7 +3030,8 @@
       // keeps working. JSON's kind field stays as 'fence' / 'gas_station' / etc.
       // so Director's verify command (s.kind === 'fence') returns ≥3.
       var _ldoeKinds = { fence: 1, gas_station: 1, wreck_car: 1, barricade: 1, debris: 1 };
-      var _keepKinds = { landmark: 1, bridge: 1, fence: 1, gas_station: 1, wreck_car: 1, barricade: 1, debris: 1 };
+      var _keepKinds = { landmark: 1, bridge: 1, fence: 1, gas_station: 1, wreck_car: 1, barricade: 1, debris: 1, barrel: 1, tires: 1, blood_mark: 1 };
+      var _decorKinds = { blood_mark: 1 };
       for (var msi = 0; msi < MAP_DATA.structures.length; msi++) {
         var ms = MAP_DATA.structures[msi];
         var kind = ms.kind || ms.type || 'building';
@@ -3040,6 +3041,7 @@
         var _isLdoe = !!_ldoeKinds[kind];
         var st = {
           type: _isLdoe ? 'landmark' : kind,
+          kind: kind,
           x: ms.x, y: ms.y, w: ms.w, h: ms.h,
           color: ms.color || '#555565',
           label: ms.label || null,
@@ -3054,6 +3056,7 @@
       for (var csi = 0; csi < _brStructures.length; csi++) {
         var _st0 = _brStructures[csi];
         if (_st0.type === 'bridge') continue;
+        if (_decorKinds[_st0.kind || _st0.type || _st0.sprite]) continue;
         var _stcx0 = _st0.x + _st0.w / 2;
         var _stcy0 = _st0.y + _st0.h / 2;
         var _str0 = Math.max(_st0.w, _st0.h) / 2;
@@ -3216,7 +3219,7 @@
       var _sxCull = s.x - camX2, _syCull = s.y - camY2;
       if (_sxCull + s.w < -10 || _sxCull > W + 10 || _syCull + s.h < -10 || _syCull > H + 10) continue;
       var sx = s.x, sy = s.y;
-      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawWorldProp === 'function' && window.KOS_RENDER.drawWorldProp(ctx2, sx, sy, s.w, s.h, s.sprite || s.type, s)) continue;
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawWorldProp === 'function' && window.KOS_RENDER.drawWorldProp(ctx2, sx, sy, s.w, s.h, s.kind || s.sprite || s.type, s)) continue;
       if (s.type === 'building') {
         // Building — base + roof + shadow
         ctx2.fillStyle = 'rgba(0,0,0,0.3)';
