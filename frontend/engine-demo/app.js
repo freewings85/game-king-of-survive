@@ -150,7 +150,12 @@ let painterlyCardCount = 0;
 let heroPainterlyCardCount = 0;
 let zombiePainterlyCardCount = 0;
 let skillPainterlyCardCount = 0;
+let activePainterlyClass = 'tech';
+let activePainterlySkin = 0;
+let activePainterlySkinColor = '#193743';
+let playerPainterlyCard = null;
 const painterlyCards = [];
+const heroTextureCache = new Map();
 
 function makeCanvasTexture(width, height, draw) {
   const art = document.createElement('canvas');
@@ -191,7 +196,7 @@ function addPaintedStroke(ctx, points, color, width, alpha = 1) {
   ctx.restore();
 }
 
-function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746') {
+function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'tech', skinIndex = 0) {
   return makeCanvasTexture(192, 256, (ctx, w, h) => {
     const glow = ctx.createRadialGradient(w * 0.50, h * 0.46, 8, w * 0.50, h * 0.50, w * 0.46);
     glow.addColorStop(0, 'rgba(255,236,176,0.70)');
@@ -256,7 +261,55 @@ function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746') {
     addPaintedStroke(ctx, [[w * 0.37, h * 0.72], [w * 0.31, h * 0.98]], '#0d1110', 14, 1);
     addPaintedStroke(ctx, [[w * 0.60, h * 0.72], [w * 0.70, h * 0.98]], '#0d1110', 14, 1);
     addPaintedStroke(ctx, [[w * 0.25, h * 0.36], [w * 0.54, h * 0.18], [w * 0.75, h * 0.29]], 'rgba(255,255,220,0.42)', 4, 1);
+    ctx.fillStyle = accent;
+    if (classId === 'guardian') {
+      ctx.beginPath();
+      ctx.moveTo(w * 0.16, h * 0.36);
+      ctx.lineTo(w * 0.33, h * 0.42);
+      ctx.lineTo(w * 0.30, h * 0.76);
+      ctx.lineTo(w * 0.16, h * 0.88);
+      ctx.lineTo(w * 0.06, h * 0.72);
+      ctx.lineTo(w * 0.08, h * 0.46);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,235,174,0.88)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    } else if (classId === 'tech') {
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(w * 0.31, h * 0.35, w * 0.085, 0, Math.PI * 2);
+      ctx.stroke();
+      addPaintedStroke(ctx, [[w * 0.30, h * 0.36], [w * 0.24, h * 0.16]], accent, 5, 0.92);
+      ctx.fillStyle = 'rgba(255,240,168,0.90)';
+      ctx.fillRect(w * 0.27, h * 0.49, w * 0.14, h * 0.045);
+    } else {
+      ctx.fillStyle = '#273321';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.35, h * 0.16);
+      ctx.lineTo(w * 0.50, h * 0.04);
+      ctx.lineTo(w * 0.69, h * 0.18);
+      ctx.lineTo(w * 0.61, h * 0.32);
+      ctx.lineTo(w * 0.41, h * 0.30);
+      ctx.closePath();
+      ctx.fill();
+      addPaintedStroke(ctx, [[w * 0.60, h * 0.52], [w * 1.02, h * 0.34]], accent, 6, 0.94);
+      addPaintedStroke(ctx, [[w * 0.35, h * 0.70], [w * 0.62, h * 0.92]], '#273321', 10, 0.90);
+    }
+    ctx.fillStyle = skinIndex === 0 ? 'rgba(255,255,255,0.26)' : skinIndex === 1 ? 'rgba(255,210,96,0.28)' : 'rgba(100,190,255,0.30)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.52, h * 0.58, w * 0.22, h * 0.08, -0.28, 0, Math.PI * 2);
+    ctx.fill();
   });
+}
+
+function getHeroCardTexture(classId, skinIndex, skinColor, accentHex) {
+  const key = `${classId}:${skinIndex}:${skinColor}:${accentHex}`;
+  if (!heroTextureCache.has(key)) {
+    heroTextureCache.set(key, makeHeroCardTexture(accentHex, skinColor, classId, skinIndex));
+  }
+  return heroTextureCache.get(key);
 }
 
 function makeZombieCardTexture(variant = 0) {
@@ -344,8 +397,8 @@ function makeFxCardTexture(kind) {
 }
 
 const painterlyMaterials = {
-  hero: makePainterlyMaterial(makeHeroCardTexture('#4ec9ff', '#243436'), 0.98),
-  rival: makePainterlyMaterial(makeHeroCardTexture('#ff8b3d', '#3b2d28'), 0.94),
+  hero: makePainterlyMaterial(getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
+  rival: makePainterlyMaterial(getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
   zombieBrute: makePainterlyMaterial(makeZombieCardTexture(0), 0.96),
   zombieCrawler: makePainterlyMaterial(makeZombieCardTexture(1), 0.96),
   zombieHooded: makePainterlyMaterial(makeZombieCardTexture(2), 0.96),
@@ -881,7 +934,8 @@ function pointNearArena(map, point, fallbackAngle, fallbackRadius) {
 function makeCharacter(colorMat, accentMat, scale = 1) {
   const root = new THREE.Group();
   addContactShadow(root, 1.05 * scale, 0.72 * scale, 0.28);
-  addPainterlyCard(root, accentMat === mats.rivalAccent ? painterlyMaterials.rival : painterlyMaterials.hero, 1.34 * scale, 2.08 * scale, 0.04 * scale, 1.12 * scale, -0.58 * scale, accentMat === mats.rivalAccent ? 'rival' : 'hero');
+  const characterCard = addPainterlyCard(root, accentMat === mats.rivalAccent ? painterlyMaterials.rival : painterlyMaterials.hero, 1.34 * scale, 2.08 * scale, 0.04 * scale, 1.12 * scale, -0.58 * scale, accentMat === mats.rivalAccent ? 'rival' : 'hero');
+  root.userData.painterlyCard = characterCard;
   const legs = [
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road),
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road)
@@ -1269,6 +1323,7 @@ window.__V03_ENGINE_DEMO_STATE = {
 
 const player = makeCharacter(mats.player, mats.playerAccent, 1);
 player.position.set(playerSpawn.x, 0, playerSpawn.z);
+playerPainterlyCard = player.userData.painterlyCard;
 scene.add(player);
 
 const rival = makeCharacter(mats.rival, mats.rivalAccent, 0.9);
@@ -1384,7 +1439,15 @@ function applySkin(index) {
   const def = classDefs[activeClass] || classDefs.tech;
   activeSkin = Math.max(0, Math.min(index, def.skins.length - 1));
   const skinColor = def.skins[activeSkin] || `#${def.body.toString(16).padStart(6, '0')}`;
+  const accentHex = `#${def.accent.toString(16).padStart(6, '0')}`;
   mats.player.color.set(skinColor);
+  if (playerPainterlyCard) {
+    playerPainterlyCard.material.map = getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
+    playerPainterlyCard.material.needsUpdate = true;
+  }
+  activePainterlyClass = activeClass;
+  activePainterlySkin = activeSkin;
+  activePainterlySkinColor = skinColor;
   Array.from(skinRow.children).forEach((el, i) => {
     el.classList.toggle('active', i === activeSkin);
   });
@@ -1393,6 +1456,9 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activeGearClass = activeClass;
   window.__V03_ENGINE_DEMO_STATE.activeSkin = activeSkin;
   window.__V03_ENGINE_DEMO_STATE.activeSkinColor = skinColor;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
 }
 
 function applySkill(id) {
@@ -1998,6 +2064,9 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount = heroPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount = zombiePainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

@@ -82,6 +82,9 @@ requiredText.forEach((text) => {
   'heroPainterlyCardCount >= 2',
   'zombiePainterlyCardCount >= 10',
   'skillPainterlyCardCount >= 30',
+  'activePainterlyClass: ranger',
+  'activePainterlySkin: 2',
+  'activePainterlySkinColor: #283746',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',
@@ -112,6 +115,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 8,
   mappedRequirements: 13,
-  gates: 23,
+  gates: 26,
   completionClaim: false
 }, null, 2));

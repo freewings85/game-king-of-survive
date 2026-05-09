@@ -138,6 +138,37 @@ Next iteration direction:
 2. Replace runtime generated cards with authored sprite assets once the shape language is approved.
 3. Add screenshot comparison discipline after each card pass, focusing on the whole phone frame rather than isolated object counts.
 
+## 2026-05-10 Class And Skin Painterly Card Pass
+
+Related work:
+
+- WIP after `2a32be4`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- The active player painterly card now regenerates from the selected class, skin index, skin color, and accent color instead of staying as a fixed Tech-style overlay.
+- The Ranger review path now proves that the in-match card layer follows `activePainterlyClass: ranger`, `activePainterlySkin: 2`, and `activePainterlySkinColor: #283746`.
+- The landscape phone review is now fixed to the same Ranger skin 2 state as the portrait gate, so the main comparison screenshot no longer drifts back to the default Tech class.
+- The generated card has class-specific marks for Guardian shield, Tech coil, and Ranger hood/rifle/cape, which moves the field presentation closer to the target image's profession/skin readability.
+
+What is still far from the reference:
+
+- The class cards are still generated canvas art, not authored final assets with strong faces, clothing folds, weapon polish, or skin-specific costume shapes.
+- Skin differences currently affect color and value treatment more than silhouette; the target image implies stronger costume/gear changes.
+- Cocos still has the contract for card layers, but not real imported sprite/prefab assets.
+
+Next iteration direction:
+
+1. Push skin differences beyond color: add skin-specific costume panels, hair/hood variants, weapon trims, and backpack/cape shapes.
+2. Add deterministic screenshots for Guardian and Tech painterly cards, not only Ranger, so all three professions can be visually compared against the target.
+3. Start replacing generated card shapes with authored bitmap assets once the class/skin direction stabilizes.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
