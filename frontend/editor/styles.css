@@ -59,6 +59,13 @@ input {
   font-weight: 700;
 }
 
+.cmd.toggle.active {
+  color: #101313;
+  background: #8da082;
+  border-color: #8da082;
+  font-weight: 700;
+}
+
 .status {
   margin-left: auto;
   color: #8fa099;
@@ -163,6 +170,7 @@ input {
 }
 
 .qualityList,
+.legendList,
 .selectionPanel {
   display: grid;
   gap: 6px;
@@ -211,6 +219,22 @@ input {
 
 .warn .badge {
   background: #e6533f;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  color: #aeb9b4;
+}
+
+.legendMark {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
 }
 
 .selectionPanel button {

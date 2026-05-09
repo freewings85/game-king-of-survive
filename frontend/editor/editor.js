@@ -44,6 +44,7 @@
     zoom: 0.42,
     panX: 24,
     panY: 24,
+    showGameplayOverlay: true,
     painting: false,
     panning: false,
     lastMouse: null
@@ -189,6 +190,7 @@
     ctx.scale(state.zoom, state.zoom);
     drawMapTiles();
     drawProps();
+    if (state.showGameplayOverlay) drawGameplayOverlay();
     drawPins();
     drawGrid();
     ctx.restore();
@@ -327,26 +329,98 @@
     });
   }
 
+  function drawGameplayOverlay() {
+    var m = state.map;
+    var center = m.stormCenter || { x: m.width / 2, y: m.height / 2 };
+    var outerR = Math.min(m.width, m.height) * 0.42;
+    var innerR = Math.min(m.width, m.height) * 0.24;
+    ctx.save();
+    ctx.lineWidth = 3 / state.zoom;
+    ctx.fillStyle = 'rgba(185,92,255,0.07)';
+    ctx.strokeStyle = 'rgba(185,92,255,0.58)';
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, outerR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(244,201,90,0.52)';
+    ctx.setLineDash([18 / state.zoom, 10 / state.zoom]);
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, innerR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(141,160,130,0.55)';
+    ctx.fillStyle = 'rgba(141,160,130,0.78)';
+    (m.zombieEntries || []).forEach(function(entry) {
+      drawArrow(entry.x, entry.y, center.x, center.y, 0.22);
+    });
+
+    ctx.strokeStyle = 'rgba(66,217,255,0.48)';
+    ctx.fillStyle = 'rgba(66,217,255,0.12)';
+    (m.spawnPoints || []).forEach(function(spawn) {
+      ctx.beginPath();
+      ctx.arc(spawn.x, spawn.y, 120, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function drawArrow(x1, y1, x2, y2, t) {
+    var tx = x1 + (x2 - x1) * t;
+    var ty = y1 + (y2 - y1) * t;
+    var angle = Math.atan2(y2 - y1, x2 - x1);
+    var head = 22 / state.zoom;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(tx, ty);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - Math.cos(angle - 0.55) * head, ty - Math.sin(angle - 0.55) * head);
+    ctx.lineTo(tx - Math.cos(angle + 0.55) * head, ty - Math.sin(angle + 0.55) * head);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function pinGlyph(kind) {
+    if (kind === 'spawn') return 'S';
+    if (kind === 'zombie_entry') return '尸';
+    if (kind === 'reward') return 'XP';
+    if (kind === 'rival') return 'R';
+    if (kind === 'boss') return 'B';
+    if (kind === 'storm') return 'O';
+    return '?';
+  }
+
   function drawPin(pin, def, selected) {
     if (!pin) return;
+    var r = Math.max(12 / state.zoom, 15);
     ctx.save();
     ctx.translate(pin.x, pin.y);
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
     ctx.beginPath();
-    ctx.arc(4, 5, 18, 0, Math.PI * 2);
+    ctx.arc(4 / state.zoom, 5 / state.zoom, r + 3 / state.zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = def.color;
     ctx.beginPath();
-    ctx.arc(0, 0, 15, 0, Math.PI * 2);
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = selected ? '#fff' : 'rgba(255,255,255,0.75)';
     ctx.lineWidth = selected ? 4 / state.zoom : 2 / state.zoom;
     ctx.stroke();
     ctx.fillStyle = '#101313';
-    ctx.font = 'bold 13px Arial';
+    ctx.font = 'bold ' + Math.round(10 / state.zoom) + 'px "Noto Sans SC", Arial, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(def.name.slice(0, 1), 0, 1);
+    ctx.fillText(pinGlyph(def.kind), 0, 1 / state.zoom);
+    if (selected || state.zoom > 0.22) {
+      ctx.fillStyle = 'rgba(10,13,13,0.78)';
+      ctx.fillRect(-38 / state.zoom, r + 6 / state.zoom, 76 / state.zoom, 18 / state.zoom);
+      ctx.fillStyle = '#dbe1dc';
+      ctx.font = 'bold ' + Math.round(9 / state.zoom) + 'px "Noto Sans SC", Arial, sans-serif';
+      ctx.fillText(def.name, 0, r + 16 / state.zoom);
+    }
     ctx.restore();
   }
 
@@ -431,6 +505,7 @@
     qs('mapSize').value = state.map.cols + 'x' + state.map.rows;
     qs('zoomReadout').value = Math.round(state.zoom * 100) + '%';
     renderQuality();
+    renderLegend();
     renderSelection();
   }
 
@@ -465,6 +540,20 @@
       { label: '废土细节 >= 6', detail: decorCount + ' / 6', ok: decorCount >= 6 },
       { label: '道路/混凝土 >= 20%', detail: Math.round(roadRatio * 100) + '% / 20%', ok: roadRatio >= 0.2 }
     ];
+  }
+
+  function renderLegend() {
+    var root = qs('legendList');
+    if (!root) return;
+    root.innerHTML = '';
+    pinDefs.forEach(function(def) {
+      var row = document.createElement('div');
+      row.className = 'legend';
+      row.innerHTML = '<span class="legendMark"></span><span></span>';
+      row.querySelector('.legendMark').style.background = def.color;
+      row.querySelector('span:last-child').textContent = pinGlyph(def.kind) + ' · ' + def.name;
+      root.appendChild(row);
+    });
   }
 
   function addMissingPoints(listName, points) {
@@ -700,6 +789,11 @@
       });
     });
     qs('autoStandard').addEventListener('click', autoStandardize);
+    qs('toggleOverlay').addEventListener('click', function() {
+      state.showGameplayOverlay = !state.showGameplayOverlay;
+      qs('toggleOverlay').classList.toggle('active', state.showGameplayOverlay);
+      draw();
+    });
     qs('loadFile').addEventListener('click', function() { qs('fileInput').click(); });
     qs('fileInput').addEventListener('change', function(event) {
       var file = event.target.files && event.target.files[0];
