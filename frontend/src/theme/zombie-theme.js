@@ -29,6 +29,11 @@
       bloater: 'round-heavy',
       spitter: 'hunched-long-head',
       boss: 'oversized-mutant-arm-core'
+    },
+    visual: {
+      depthMode: true,
+      floorPerspective: true,
+      screenVignette: true
     }
   };
 })();

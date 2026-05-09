@@ -17,6 +17,27 @@
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   }
 
+  function boxTop(ctx, x, y, w, h, lift, topColor, sideColor, frontColor) {
+    ctx.fillStyle = sideColor;
+    ctx.beginPath();
+    ctx.moveTo(x + w, y);
+    ctx.lineTo(x + w + lift, y + lift * 0.55);
+    ctx.lineTo(x + w + lift, y + h + lift * 0.55);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = frontColor || sideColor;
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w + lift, y + h + lift * 0.55);
+    ctx.lineTo(x + lift, y + h + lift * 0.55);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = topColor;
+    ctx.fillRect(x, y, w, h);
+  }
+
   function drawWreckCar(ctx, x, y, w, h) {
     shadow(ctx, x, y, w, h, 0.42);
     ctx.save();
@@ -50,8 +71,8 @@
 
   function drawCrate(ctx, x, y, w, h, color) {
     shadow(ctx, x, y, w, h, 0.26);
-    ctx.fillStyle = color || '#765538';
-    ctx.fillRect(x, y, w, h);
+    var base = color || '#765538';
+    boxTop(ctx, x, y, w, h, Math.max(5, Math.min(w, h) * 0.18), base, '#4b301c', '#5d3b22');
     ctx.fillStyle = 'rgba(255,220,150,0.16)';
     ctx.fillRect(x + 4, y + 4, w - 8, Math.max(3, h * 0.16));
     ctx.strokeStyle = '#4a2d18';
@@ -143,8 +164,7 @@
   function drawBuilding(ctx, x, y, w, h, color) {
     ctx.fillStyle = 'rgba(0,0,0,0.32)';
     ctx.fillRect(x + 5, y + 6, w, h);
-    ctx.fillStyle = color || '#5a454a';
-    ctx.fillRect(x, y, w, h);
+    boxTop(ctx, x, y, w, h, Math.max(8, Math.min(w, h) * 0.16), color || '#5a454a', '#30282c', '#42363a');
     ctx.fillStyle = 'rgba(255,255,255,0.12)';
     ctx.fillRect(x + w * 0.26, y + h * 0.22, w * 0.22, h * 0.18);
     ctx.fillRect(x + w * 0.58, y + h * 0.22, w * 0.18, h * 0.18);
@@ -162,8 +182,7 @@
   function drawWall(ctx, x, y, w, h, color) {
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.fillRect(x + 3, y + 3, w, h);
-    ctx.fillStyle = color || '#656963';
-    ctx.fillRect(x, y, w, h);
+    boxTop(ctx, x, y, w, h, Math.max(4, Math.min(w, h) * 0.16), color || '#656963', '#3d423e', '#505650');
     ctx.strokeStyle = 'rgba(0,0,0,0.28)';
     ctx.lineWidth = 1;
     var brick = 9;

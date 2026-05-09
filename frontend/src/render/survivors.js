@@ -260,9 +260,87 @@
     ctx.restore();
   }
 
+  function drawDepthSurvivor(ctx, cx, cy, radius, classType, facingAngle, options) {
+    var opts = options || {};
+    var t = theme();
+    var colors = colorForClass(classType, opts.skinId || 'default', opts.isBot ? opts.color : null);
+    var r = radius * ((t.scale && t.scale.playerRadiusMul) || 0.88);
+    var gt = (opts.gameTime != null ? opts.gameTime : 0);
+    var bob = Math.sin(gt * 5) * r * 0.025;
+    var aim = facingAngle || 0;
+    var side = Math.cos(aim) >= 0 ? 1 : -1;
+
+    ctx.save();
+    ctx.globalAlpha = opts.alpha == null ? 1 : opts.alpha;
+    ellipse(ctx, cx + r * 0.13 * side, cy + r * 0.72, r * 0.72, r * 0.20, -0.08 * side, 'rgba(0,0,0,0.38)');
+    ellipse(ctx, cx + r * 0.28 * side, cy + r * 0.65, r * 0.42, r * 0.10, -0.14 * side, 'rgba(0,0,0,0.24)');
+
+    if (!opts.isBot) {
+      ctx.save();
+      ctx.globalAlpha = 0.45 + Math.sin(gt * 3) * 0.06;
+      ctx.strokeStyle = colors.rim;
+      ctx.lineWidth = Math.max(2, r * 0.07);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + r * 0.62, r * 0.78, r * 0.26, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.translate(cx, cy + bob);
+    ctx.scale(side, 1);
+
+    limb(ctx, -r * 0.18, r * 0.18, -r * 0.30, r * 0.72, r * 0.16, '#202625');
+    limb(ctx, r * 0.18, r * 0.18, r * 0.30, r * 0.70, r * 0.16, '#202625');
+    circle(ctx, -r * 0.30, r * 0.77, r * 0.13, '#171b1a');
+    circle(ctx, r * 0.30, r * 0.75, r * 0.13, '#171b1a');
+
+    var bodyGrad = ctx.createLinearGradient(0, -r * 0.58, 0, r * 0.40);
+    bodyGrad.addColorStop(0, '#45504e');
+    bodyGrad.addColorStop(0.4, colors.jacket);
+    bodyGrad.addColorStop(1, '#17201f');
+    roundedRect(ctx, -r * 0.38, -r * 0.52, r * 0.76, r * 0.92, r * 0.14);
+    fillStroke(ctx, bodyGrad, '#0b0e0d', 2.4);
+    ctx.fillStyle = colors.accent;
+    ctx.globalAlpha = opts.fury ? 0.95 : 0.78;
+    ctx.fillRect(-r * 0.08, -r * 0.42, r * 0.16, r * 0.68);
+    ctx.globalAlpha = 1;
+    drawSkinPattern(ctx, r, opts.skinId || 'default', colors);
+    drawClassGear(ctx, r, classType, colors, gt);
+
+    ctx.save();
+    ctx.rotate(Math.max(-0.55, Math.min(0.55, aim * side)));
+    limb(ctx, -r * 0.30, -r * 0.18, r * 0.10, -r * 0.06, r * 0.15, '#273130');
+    limb(ctx, r * 0.20, -r * 0.16, r * 0.46, -r * 0.04, r * 0.15, '#273130');
+    drawWeapon(ctx, r, classType, colors, gt);
+    ctx.restore();
+
+    roundedRect(ctx, -r * 0.24, -r * 0.88, r * 0.48, r * 0.34, r * 0.14);
+    fillStroke(ctx, '#263032', '#0b0e0d', 1.8);
+    circle(ctx, 0, -r * 0.67, r * 0.22, '#c99a6c');
+    ctx.fillStyle = colors.accent;
+    ctx.globalAlpha = 0.8;
+    ctx.fillRect(-r * 0.24, -r * 0.80, r * 0.48, r * 0.08);
+    ctx.globalAlpha = 1;
+
+    if (opts.shield) {
+      ctx.strokeStyle = '#8ee8ff';
+      ctx.lineWidth = r * 0.08;
+      ctx.globalAlpha = 0.36;
+      ctx.beginPath();
+      ctx.ellipse(0, -r * 0.14, r * 0.78, r * 1.02, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
   root.drawSurvivorSprite = function(ctx, cx, cy, radius, classType, facingAngle, options) {
     var opts = options || {};
     var t = theme();
+    if (t.visual && t.visual.depthMode) {
+      drawDepthSurvivor(ctx, cx, cy, radius, classType, facingAngle, opts);
+      return true;
+    }
     var colors = colorForClass(classType, opts.skinId || 'default', opts.isBot ? opts.color : null);
     var scale = (t.scale && t.scale.playerRadiusMul) || 0.88;
     var r = radius * scale;

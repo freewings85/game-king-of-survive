@@ -72,6 +72,9 @@ function doGuestPlay() {
     rank: '离线',
     offlineGuest: true
   });
+  if (window._gameAPI && typeof window._gameAPI.quickStartFromLobby === 'function') {
+    window._gameAPI.quickStartFromLobby();
+  }
 }
 
 function doRegister() {

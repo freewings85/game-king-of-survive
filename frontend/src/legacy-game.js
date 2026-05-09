@@ -2686,6 +2686,7 @@
   // Character selection
   var selectedClass = 'warrior';
   var selectedBuild = []; // 5 skills chosen before game starts
+  var _quickOfflineStart = false;
   // [DATA-DRIVEN] CLASS_DEFS loaded from characters.json via RPGEngine
   // var CLASS_DEFS = {
   //   warrior: { name: '战士', icon: '🛡', hp: 200, maxHp: 200, attackDamage: 15, speed: 170, passive: '荆棘护甲: 反弹3伤害', thornsDamage: 3, color: '#f44' },
@@ -2903,6 +2904,11 @@
       }
     });
     networkInputTimer = 0;
+    if (_quickOfflineStart) {
+      _quickOfflineStart = false;
+      startOfflineDemo();
+      return;
+    }
 
     // Connect to server — create room, start game, then connect WebSocket
     state = 'connecting';
@@ -2936,6 +2942,34 @@
         });
       });
     });
+  }
+
+  function quickStartFromLobby() {
+    var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
+    var fallbackBuilds = {
+      warrior: ['attack_up', 'attack_speed', 'shield', 'thorns_aura', 'max_hp'],
+      mage: ['chain_lightning', 'explosive', 'frost_aura', 'xp_magnet', 'attack_up'],
+      scout: ['scatter', 'pierce', 'crit', 'move_speed', 'attack_speed']
+    };
+    var source = (cls.availableSkills && cls.availableSkills.length >= 5)
+      ? cls.availableSkills
+      : (fallbackBuilds[selectedClass] || SKILL_IDS);
+    selectedBuild = source.filter(function(id) { return !!SKILL_DATA[id]; }).slice(0, 5);
+    if (selectedBuild.length < 5) {
+      for (var i = 0; i < SKILL_IDS.length && selectedBuild.length < 5; i++) {
+        if (selectedBuild.indexOf(SKILL_IDS[i]) < 0) selectedBuild.push(SKILL_IDS[i]);
+      }
+    }
+    gameMode = 'solo';
+    localMultiplayer = false;
+    countdownTimerMode = false;
+    tutorialDone = true;
+    _tutorialSkipRect = null;
+    currentMap = mapConfig[0];
+    mapBoundary = currentMap.boundary;
+    _quickOfflineStart = true;
+    startGame();
+    return true;
   }
 
   // === OFFLINE DEMO MODE ===
@@ -9279,6 +9313,58 @@
   // of recomputing the slow-active condition per entity.
   var _slowActiveFrame = false;
   var _slowSrcFrame = null;
+  function drawV03DepthFloor(ctx2, camX2, camY2) {
+    var themeCfg = window.KOS_ZOMBIE_THEME || {};
+    if (!(themeCfg.visual && themeCfg.visual.floorPerspective)) return;
+    var left = camX2 - 120, right = camX2 + W + 120;
+    var top = camY2 - 120, bottom = camY2 + H + 120;
+    var step = 96;
+    ctx2.save();
+    ctx2.globalAlpha = 0.34;
+    ctx2.strokeStyle = 'rgba(8,10,9,0.55)';
+    ctx2.lineWidth = 2;
+    for (var x = Math.floor(left / step) * step; x < right + H; x += step) {
+      ctx2.beginPath();
+      ctx2.moveTo(x, top);
+      ctx2.lineTo(x - H * 0.48, bottom);
+      ctx2.stroke();
+    }
+    ctx2.globalAlpha = 0.22;
+    ctx2.strokeStyle = 'rgba(255,230,160,0.18)';
+    for (var y = Math.floor(top / step) * step; y < bottom + W; y += step) {
+      ctx2.beginPath();
+      ctx2.moveTo(left, y);
+      ctx2.lineTo(right, y + W * 0.20);
+      ctx2.stroke();
+    }
+    ctx2.globalAlpha = 0.18;
+    var vg = ctx2.createLinearGradient(camX2, camY2, camX2, camY2 + H);
+    vg.addColorStop(0, 'rgba(255,245,200,0.10)');
+    vg.addColorStop(0.38, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx2.fillStyle = vg;
+    ctx2.fillRect(camX2, camY2, W, H);
+    ctx2.restore();
+  }
+
+  function drawV03ScreenDepthOverlay() {
+    var themeCfg = window.KOS_ZOMBIE_THEME || {};
+    if (!(themeCfg.visual && themeCfg.visual.screenVignette)) return;
+    ctx.save();
+    var vg = ctx.createRadialGradient(W * 0.50, H * 0.48, Math.min(W, H) * 0.18, W * 0.50, H * 0.52, Math.max(W, H) * 0.72);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(0.72, 'rgba(0,0,0,0.12)');
+    vg.addColorStop(1, 'rgba(0,0,0,0.46)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+    var topLight = ctx.createLinearGradient(0, 0, 0, H * 0.45);
+    topLight.addColorStop(0, 'rgba(255,238,190,0.09)');
+    topLight.addColorStop(1, 'rgba(255,238,190,0)');
+    ctx.fillStyle = topLight;
+    ctx.fillRect(0, 0, W, H * 0.45);
+    ctx.restore();
+  }
+
   function drawGame() {
     if (!player) return;
     _slowActiveFrame = !!(window._altarSlowUntil && gameTime < window._altarSlowUntil);
@@ -9347,6 +9433,7 @@
     drawTilesetFloor(ctx, cameraX, cameraY);
     // Zone overlays — draw colored zone regions on the map
     drawZoneOverlays(ctx, cameraX, cameraY);
+    drawV03DepthFloor(ctx, cameraX, cameraY);
     // Terrain obstacles — rocks, bushes, water, lava, etc.
     drawTerrain(ctx, cameraX, cameraY);
     // Central landmark aura (Leo 2026-04-21) — world-space halo drawn under
@@ -10397,6 +10484,7 @@
     }
 
     ctx.restore(); // end camera transform
+    drawV03ScreenDepthOverlay();
 
     // XP bar — thin strip right above the bottom bar (between middle and bottom zones)
     var xpNeeded = xpToNextLevel > 0 ? xpToNextLevel : 100;
@@ -14044,6 +14132,7 @@
     set tutorialDone(v) { tutorialDone = !!v; if (v) _tutorialSkipRect = null; },
     get gameMode() { return gameMode; },
     set gameMode(v) { gameMode = v; },
+    get offlineMode() { return offlineMode; },
     get allPlayers() { return allPlayers; },
     get entities() { return entities; },
     get playerLevel() { return playerLevel; },
@@ -14069,6 +14158,7 @@
     dropSkillPickup: function(x, y, tint) { return dropSkillPickup(x, y, tint); },
     applyBossBuff: function(idx) { return applyBossBuff(idx); },
     startGame: function() { startGame(); },
+    quickStartFromLobby: quickStartFromLobby,
     finalizeGameRewards: typeof finalizeGameRewards === 'function' ? finalizeGameRewards : function() {}
   };
 
