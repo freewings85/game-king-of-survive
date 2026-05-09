@@ -257,6 +257,91 @@
     drawRunner(ctx, r * 0.78, gt);
   }
 
+  function drawDepthZombie(ctx, r, type, gt) {
+    var cfg = {
+      normal: { w: 0.44, h: 0.92, skin: '#8da082', cloth: '#4a3c2f', lean: 0.05, arm: 0.62, head: 0.24, eye: '#ff5a3d' },
+      fast: { w: 0.36, h: 0.82, skin: '#a2927a', cloth: '#332722', lean: -0.18, arm: 0.78, head: 0.21, eye: '#ff3a26', trail: true },
+      tank: { w: 0.72, h: 1.02, skin: '#66795f', cloth: '#46513f', lean: 0.02, arm: 0.82, head: 0.22, eye: '#ff5a3d', bulk: true },
+      ranged: { w: 0.38, h: 0.94, skin: '#788f60', cloth: '#283426', lean: 0.14, arm: 0.52, head: 0.22, eye: '#9aff40', spit: true },
+      swarm: { w: 0.34, h: 0.54, skin: '#83936f', cloth: '#324030', lean: 0.24, arm: 0.56, head: 0.20, eye: '#ff5a3d', crawl: true },
+      treasure: { w: 0.38, h: 0.72, skin: '#b28a35', cloth: '#5b4420', lean: -0.12, arm: 0.60, head: 0.20, eye: '#fff1a0' }
+    }[type] || null;
+    if (type === 'boss' || type === 'miniBoss') {
+      var bossScale = type === 'boss' ? 1.75 : 1.32;
+      ctx.save();
+      ctx.scale(bossScale, bossScale);
+      drawDepthZombie(ctx, r, 'tank', gt);
+      ctx.fillStyle = 'rgba(255,80,40,0.28)';
+      ctx.beginPath(); ctx.arc(0, -r * 0.18, r * 0.68, 0, Math.PI * 2); ctx.fill();
+      circle(ctx, 0, -r * 0.16, r * 0.16, '#f05a3a');
+      circle(ctx, 0, -r * 0.16, r * 0.08, '#ffd05a', 0.85);
+      ctx.restore();
+      return;
+    }
+    if (!cfg) return;
+
+    var bob = Math.sin(gt * (type === 'fast' ? 10 : 3.2)) * r * 0.035;
+    var step = Math.sin(gt * (type === 'fast' ? 12 : 4)) * r * 0.08;
+    ctx.save();
+    ctx.rotate(cfg.lean);
+    ellipse(ctx, r * 0.08, r * 0.64, r * (cfg.w + 0.14), r * 0.17, -0.04, 'rgba(0,0,0,0.36)');
+    if (cfg.trail) {
+      ctx.fillStyle = 'rgba(230,83,63,0.22)';
+      ctx.fillRect(-r * 0.92, -r * 0.10, r * 0.44, r * 0.05);
+    }
+
+    if (cfg.crawl) {
+      strokeLimb(ctx, -r * 0.30, r * 0.12 + step, -r * 0.70, r * 0.32, r * 0.12, cfg.skin);
+      strokeLimb(ctx, r * 0.28, r * 0.10 - step, r * 0.64, r * 0.30, r * 0.12, cfg.skin);
+      outline(ctx, function() {
+        ctx.beginPath();
+        ctx.ellipse(0, r * 0.16 + bob, r * 0.42, r * 0.24, 0, 0, Math.PI * 2);
+      }, cfg.skin, '#172018', 2);
+      outline(ctx, function() {
+        ctx.beginPath();
+        ctx.arc(r * 0.12, -r * 0.10 + bob, r * cfg.head, 0, Math.PI * 2);
+      }, cfg.skin, '#172018', 2);
+      drawEyes(ctx, r * 0.04, r * 0.12, -r * 0.15 + bob, r * 0.08, cfg.eye, 3);
+      ctx.restore();
+      return;
+    }
+
+    strokeLimb(ctx, -r * 0.16, r * 0.24, -r * 0.26 + step, r * 0.78, r * 0.15, '#25302b');
+    strokeLimb(ctx, r * 0.14, r * 0.24, r * 0.26 - step, r * 0.78, r * 0.15, '#25302b');
+    circle(ctx, -r * 0.26 + step, r * 0.82, r * 0.12, '#111514');
+    circle(ctx, r * 0.26 - step, r * 0.82, r * 0.12, '#111514');
+
+    var bodyGrad = ctx.createLinearGradient(0, -r * 0.58, 0, r * 0.42);
+    bodyGrad.addColorStop(0, cfg.bulk ? '#7d8d68' : cfg.skin);
+    bodyGrad.addColorStop(0.48, cfg.cloth);
+    bodyGrad.addColorStop(1, '#1f261f');
+    outline(ctx, function() {
+      ctx.beginPath();
+      ctx.moveTo(-r * cfg.w, -r * 0.34 + bob);
+      ctx.lineTo(r * cfg.w, -r * 0.30 + bob);
+      ctx.lineTo(r * cfg.w * 0.78, r * cfg.h * 0.40 + bob);
+      ctx.lineTo(-r * cfg.w * 0.70, r * cfg.h * 0.42 + bob);
+      ctx.closePath();
+    }, bodyGrad, '#141914', 2.4);
+    drawTornMarks(ctx, r, { markColor: '#1b1410', wound: cfg.spit ? '#6f9d2a' : '#6e1c18' }, bob);
+
+    strokeLimb(ctx, -r * cfg.w * 0.85, -r * 0.20 + bob, -r * cfg.arm, r * 0.18 + bob, r * 0.14, cfg.skin);
+    strokeLimb(ctx, r * cfg.w * 0.80, -r * 0.18 + bob, r * cfg.arm, r * 0.16 + bob, r * 0.14, cfg.skin);
+    circle(ctx, -r * cfg.arm, r * 0.18 + bob, r * 0.085, cfg.skin);
+    circle(ctx, r * cfg.arm, r * 0.16 + bob, r * 0.085, cfg.skin);
+
+    outline(ctx, function() {
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.66 + bob, r * cfg.head, 0, Math.PI * 2);
+    }, cfg.skin, '#172018', 2.2);
+    drawEyes(ctx, r * 0.045, 0, -r * 0.71 + bob, r * 0.095, cfg.eye, cfg.spit ? 6 : 4);
+    ellipse(ctx, 0, -r * 0.56 + bob, r * 0.10, r * 0.055, 0, '#160909');
+    if (cfg.spit) {
+      ellipse(ctx, 0, -r * 0.51 + bob, r * 0.13, r * 0.07, 0, '#9aff40', 0.7);
+    }
+    ctx.restore();
+  }
+
   root.drawEnemySprite = function(ctx, x, y, r, type, themeColor, gt, srcEntity) {
     var handled = {
       normal: 1, fast: 1, tank: 1, ranged: 1, swarm: 1,
@@ -271,6 +356,12 @@
 
     ctx.save();
     ctx.translate(x, y);
+    if (t.visual && t.visual.depthMode) {
+      ctx.scale(1.36 * visualScale, 1.36 * visualScale);
+      drawDepthZombie(ctx, r, type, gt);
+      ctx.restore();
+      return true;
+    }
     ctx.scale(1.55 * visualScale, 1.55 * visualScale);
 
     switch (type) {
