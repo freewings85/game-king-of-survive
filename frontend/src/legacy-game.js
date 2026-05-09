@@ -1672,23 +1672,23 @@
     for (var i = 0; i < STRAT_POINTS.pointsInWorld.length; i++) {
       var p = STRAT_POINTS.pointsInWorld[i];
       var owned = gameTime < p.buffUntil && p.owner != null;
+      var nearPlayer = player && Math.hypot(player.x - p.x, player.y - p.y) < 260;
+      if (!owned && !nearPlayer && !(p.progress > 0)) continue;
       var mine = owned && player && p.owner === player.factionId;
       var col = mine ? '#4aaaff' : (owned ? '#ff4a4a' : '#e8e8f0');
-      var rr = 180;
+      var rr = Math.max(64, Math.min(110, p.captureRadius || 90));
       ctx.save();
-      ctx.globalAlpha = 0.32 + 0.18 * pulse;
+      ctx.globalAlpha = owned ? (0.16 + 0.08 * pulse) : (nearPlayer ? 0.12 : 0.08);
       var g = ctx.createRadialGradient(p.x, p.y, Math.max(1, rr * 0.15), p.x, p.y, Math.max(2, rr));
       g.addColorStop(0, col);
-      g.addColorStop(0.7, col + '55');
+      g.addColorStop(0.7, col + '33');
       g.addColorStop(1, col + '00');
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, Math.PI * 2); ctx.fill();
       // Outer breathing ring
-      ctx.globalAlpha = 0.55 + 0.3 * pulse;
+      ctx.globalAlpha = owned ? (0.35 + 0.16 * pulse) : (nearPlayer ? 0.24 : 0.16);
       ctx.strokeStyle = col; ctx.lineWidth = 3;
-      ctx.setLineDash([8, 6]);
       ctx.beginPath(); ctx.arc(p.x, p.y, rr * (0.85 + 0.1 * pulse), 0, Math.PI * 2); ctx.stroke();
-      ctx.setLineDash([]);
       ctx.restore();
     }
   }
