@@ -12380,15 +12380,20 @@
       ctx.fillRect(DW / 2 - 190, by, 380, 50);
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
       ctx.strokeRect(DW / 2 - 190, by, 380, 50);
-      drawCharacterSprite(DW / 2 - 155, by + 25, 14, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
-      _drawClassGlyph(classKeys[i], DW / 2 - 175, by + 15, 22, cls.color);
+      ctx.save();
+      ctx.globalAlpha = isSelected ? 0.32 : 0.14;
+      ctx.fillStyle = cls.color;
+      ctx.beginPath(); ctx.arc(DW / 2 - 156, by + 25, 25, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      drawCharacterSprite(DW / 2 - 156, by + 27, 19, classKeys[i], -0.2, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
+      _drawClassGlyph(classKeys[i], DW / 2 - 182, by + 14, 14, cls.color);
       ctx.font = 'bold 14px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#fff';
       ctx.textAlign = 'left';
-      ctx.fillText(cls.name, DW / 2 - 135, by + 16);
+      ctx.fillText(cls.name, DW / 2 - 126, by + 16);
       ctx.font = '9px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#aaa';
-      ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 30);
+      ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 126, by + 30);
       ctx.fillStyle = '#888'; ctx.font = '8px "Noto Sans SC","PingFang SC",sans-serif';
-      ctx.fillText(cls.passive, DW / 2 - 135, by + 42);
+      ctx.fillText(cls.passive, DW / 2 - 126, by + 42);
       ctx.textAlign = 'right';
       ctx.fillStyle = isSelected ? cls.color : '#77807d';
       ctx.font = 'bold 9px "Noto Sans SC","PingFang SC",sans-serif';
@@ -12468,8 +12473,8 @@
       return !sd.applicableClasses || sd.applicableClasses.indexOf(selectedClass) >= 0;
     });
     var skinCols = Math.min(applicableSkins.length, 8);
-    var skinSize = 28;
-    var skinGap = 6;
+    var skinSize = 32;
+    var skinGap = 5;
     var skinStartX = DW / 2 - (skinCols * (skinSize + skinGap) - skinGap) / 2;
     var skinRowY = skinPanelY + 30;
     var tierColors = { C: '#aaa', B: '#4a9eff', A: '#c44aff', S: '#ffd700' };
@@ -12479,7 +12484,7 @@
       var row = Math.floor(si / 8);
       var col = si % 8;
       var skx = skinStartX + col * (skinSize + skinGap);
-      var sky = skinRowY + row * (skinSize + skinGap + 8);
+      var sky = skinRowY + row * (skinSize + skinGap + 3);
       var isEquipped = (equippedSkin === sk.id);
       // Background
       ctx.fillStyle = isEquipped ? '#2a2a4e' : '#111118';
@@ -12488,15 +12493,15 @@
       ctx.lineWidth = isEquipped ? 2 : 1;
       ctx.strokeRect(skx, sky, skinSize, skinSize);
       // Character preview
-      drawCharacterSprite(skx + skinSize / 2, sky + skinSize / 2, 10, selectedClass, 0, { skinId: sk.id, animState: 'idle' });
+      drawCharacterSprite(skx + skinSize / 2, sky + skinSize / 2 + 1, 13, selectedClass, -0.18, { skinId: sk.id, animState: 'idle' });
       // Lock icon for unowned
       if (!sk.owned && sk.id !== 'default') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(skx, sky, skinSize, skinSize);
         ctx.strokeStyle = '#888';
         ctx.lineWidth = 2;
-        ctx.strokeRect(skx + 9, sky + 13, 10, 9);
+        ctx.strokeRect(skx + 11, sky + 15, 10, 9);
         ctx.beginPath();
-        ctx.arc(skx + 14, sky + 13, 5, Math.PI, 0);
+        ctx.arc(skx + 16, sky + 15, 5, Math.PI, 0);
         ctx.stroke();
       }
       // Tier badge
@@ -12510,11 +12515,15 @@
     ctx.fillStyle = '#ccc'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('当前: ' + (eqSkinData.name || '默认'), DW / 2, skinPanelY + 103);
 
-    // Back
-    ctx.fillStyle = '#333'; ctx.fillRect(DW / 2 - 50, DH - 50, 100, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(DW / 2 - 48, DH - 48, 96, 32);
+    // Back / Continue
+    ctx.fillStyle = '#333'; ctx.fillRect(74, DH - 50, 100, 36);
+    ctx.fillStyle = '#888'; ctx.fillRect(76, DH - 48, 96, 32);
     ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('← 返回', DW / 2, DH - 28);
+    ctx.fillText('返回', 124, DH - 28);
+    ctx.fillStyle = '#5a3f1a'; ctx.fillRect(226, DH - 50, 100, 36);
+    ctx.fillStyle = '#f4c95a'; ctx.fillRect(228, DH - 48, 96, 32);
+    ctx.fillStyle = '#1a1204';
+    ctx.fillText('开始', 276, DH - 28);
   }
 
   function drawUpgradeMenu() {
@@ -13664,7 +13673,7 @@
         var cby = 50 + ci * 56;
         if (dcx2 > 200 - 190 && dcx2 < 200 + 190 && dcy2 > cby && dcy2 < cby + 50) {
           selectedClass = classKeys[ci];
-          state = 'mapSelect';
+          return;
         }
       }
       // Attribute +/- buttons (US-009)
@@ -13700,7 +13709,7 @@
         if (!sd) return sk.id === 'default';
         return !sd.applicableClasses || sd.applicableClasses.indexOf(selectedClass) >= 0;
       });
-      var _skinSize = 28, _skinGap = 6;
+      var _skinSize = 32, _skinGap = 5;
       var _skinCols = Math.min(_applicableSkins.length, 8);
       var _skinStartX = 200 - (_skinCols * (_skinSize + _skinGap) - _skinGap) / 2;
       var _skinRowY = _skinPanelY + 30;
@@ -13709,16 +13718,19 @@
         var row = Math.floor(si / 8);
         var col = si % 8;
         var skx = _skinStartX + col * (_skinSize + _skinGap);
-        var sky = _skinRowY + row * (_skinSize + _skinGap + 8);
+        var sky = _skinRowY + row * (_skinSize + _skinGap + 3);
         if (dcx2 > skx && dcx2 < skx + _skinSize && dcy2 > sky && dcy2 < sky + _skinSize) {
           if (sk.owned || sk.id === 'default') {
             equippedSkin = sk.id;
           }
         }
       }
-      // Back
-      if (dcx2 > 200 - 50 && dcx2 < 200 + 50 && dcy2 > 700 - 50 && dcy2 < 700 - 14) {
+      // Back / Continue
+      if (dcx2 > 74 && dcx2 < 174 && dcy2 > 700 - 50 && dcy2 < 700 - 14) {
         state = 'menu';
+      }
+      if (dcx2 > 226 && dcx2 < 326 && dcy2 > 700 - 50 && dcy2 < 700 - 14) {
+        state = 'mapSelect';
       }
     } else if (state === 'buildSelect') {
       // Convert screen coords to design space (400x700)
