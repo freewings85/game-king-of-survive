@@ -181,6 +181,17 @@ input {
   border-radius: 4px;
 }
 
+.quality span:first-child {
+  min-width: 0;
+}
+
+.quality small {
+  display: block;
+  margin-top: 2px;
+  color: #74827c;
+  font-size: 10px;
+}
+
 .quality.ok {
   border-color: rgba(124, 255, 79, 0.35);
 }

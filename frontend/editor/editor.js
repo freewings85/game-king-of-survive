@@ -437,8 +437,9 @@
     checks.forEach(function(check) {
       var row = document.createElement('div');
       row.className = 'quality ' + (check.ok ? 'ok' : 'warn');
-      row.innerHTML = '<span></span><span class="badge"></span>';
-      row.querySelector('span:first-child').textContent = check.label;
+      row.innerHTML = '<span><strong></strong><small></small></span><span class="badge"></span>';
+      row.querySelector('strong').textContent = check.label;
+      row.querySelector('small').textContent = check.detail || '';
       row.querySelector('.badge').textContent = check.ok ? 'OK' : '补';
       root.appendChild(row);
     });
@@ -447,15 +448,102 @@
   function getQualityChecks() {
     var m = state.map;
     var roadTiles = m.tiles.filter(function(id) { return id === 4 || id === 2; }).length;
+    var roadRatio = roadTiles / Math.max(1, m.tiles.length);
     return [
-      { label: '出生点 >= 4', ok: (m.spawnPoints || []).length >= 4 },
-      { label: '尸群入口 >= 4', ok: (m.zombieEntries || []).length >= 4 },
-      { label: '奖励点 >= 8', ok: (m.rewardPoints || []).length >= 8 },
-      { label: 'Rival 点 >= 2', ok: (m.rivalPoints || []).length >= 2 },
-      { label: 'Boss 点 >= 1', ok: (m.bossPoints || []).length >= 1 },
-      { label: '掩体/道具 >= 20', ok: (m.structures || []).length >= 20 },
-      { label: '道路/混凝土 >= 20%', ok: roadTiles / Math.max(1, m.tiles.length) >= 0.2 }
+      { label: '出生点 >= 4', detail: (m.spawnPoints || []).length + ' / 4', ok: (m.spawnPoints || []).length >= 4 },
+      { label: '尸群入口 >= 4', detail: (m.zombieEntries || []).length + ' / 4', ok: (m.zombieEntries || []).length >= 4 },
+      { label: '奖励点 >= 8', detail: (m.rewardPoints || []).length + ' / 8', ok: (m.rewardPoints || []).length >= 8 },
+      { label: 'Rival 点 >= 2', detail: (m.rivalPoints || []).length + ' / 2', ok: (m.rivalPoints || []).length >= 2 },
+      { label: 'Boss 点 >= 1', detail: (m.bossPoints || []).length + ' / 1', ok: (m.bossPoints || []).length >= 1 },
+      { label: '掩体/道具 >= 20', detail: (m.structures || []).length + ' / 20', ok: (m.structures || []).length >= 20 },
+      { label: '道路/混凝土 >= 20%', detail: Math.round(roadRatio * 100) + '% / 20%', ok: roadRatio >= 0.2 }
     ];
+  }
+
+  function addMissingPoints(listName, points) {
+    state.map[listName] = state.map[listName] || [];
+    for (var i = state.map[listName].length; i < points.length; i++) {
+      state.map[listName].push(points[i]);
+    }
+  }
+
+  function ensureStandardRoutes() {
+    var m = state.map;
+    var cx = Math.floor(m.cols / 2);
+    var cy = Math.floor(m.rows / 2);
+    for (var y = 0; y < m.rows; y++) {
+      for (var x = 0; x < m.cols; x++) {
+        var idx = y * m.cols + x;
+        if (Math.abs(x - cx) <= 1 || Math.abs(y - cy) <= 1) m.tiles[idx] = 4;
+        else if ((Math.abs(x - Math.floor(m.cols * 0.28)) <= 1 && y > m.rows * 0.18 && y < m.rows * 0.82)
+          || (Math.abs(y - Math.floor(m.rows * 0.72)) <= 1 && x > m.cols * 0.12 && x < m.cols * 0.88)) {
+          m.tiles[idx] = 2;
+        }
+      }
+    }
+  }
+
+  function ensureStandardProps() {
+    var m = state.map;
+    var defs = propDefs;
+    var placements = [
+      [0.18,0.22,0],[0.34,0.18,4],[0.62,0.20,5],[0.78,0.24,2],
+      [0.22,0.38,6],[0.42,0.36,3],[0.66,0.40,1],[0.84,0.42,4],
+      [0.16,0.56,2],[0.36,0.58,1],[0.56,0.55,6],[0.74,0.58,3],
+      [0.24,0.76,0],[0.44,0.78,2],[0.62,0.74,4],[0.82,0.76,1],
+      [0.12,0.84,5],[0.30,0.86,3],[0.70,0.86,0],[0.88,0.84,2]
+    ];
+    for (var i = m.structures.length; i < 20 && i < placements.length; i++) {
+      var p = placements[i];
+      var def = defs[p[2] % defs.length];
+      m.structures.push({
+        kind: def.kind,
+        x: Math.round(m.width * p[0] - def.w / 2),
+        y: Math.round(m.height * p[1] - def.h / 2),
+        w: def.w,
+        h: def.h,
+        color: def.color
+      });
+    }
+  }
+
+  function autoStandardize() {
+    var m = state.map;
+    m.visualProfile = 'zombie-br-v03';
+    addMissingPoints('spawnPoints', [
+      { x: 320, y: 320 },
+      { x: m.width - 320, y: 320 },
+      { x: 320, y: m.height - 320 },
+      { x: m.width - 320, y: m.height - 320 }
+    ]);
+    addMissingPoints('zombieEntries', [
+      { x: m.width * 0.50, y: 120, kind: 'zombie_entry', name: '北部尸潮' },
+      { x: m.width - 120, y: m.height * 0.46, kind: 'zombie_entry', name: '东侧尸潮' },
+      { x: m.width * 0.48, y: m.height - 120, kind: 'zombie_entry', name: '南部尸潮' },
+      { x: 120, y: m.height * 0.54, kind: 'zombie_entry', name: '西侧尸潮' }
+    ]);
+    addMissingPoints('rewardPoints', [
+      { x: m.width * 0.18, y: m.height * 0.18, kind: 'reward', tier: 'small', xp: 12 },
+      { x: m.width * 0.50, y: m.height * 0.16, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: m.width * 0.82, y: m.height * 0.20, kind: 'reward', tier: 'small', xp: 12 },
+      { x: m.width * 0.20, y: m.height * 0.50, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: m.width * 0.80, y: m.height * 0.50, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: m.width * 0.24, y: m.height * 0.82, kind: 'reward', tier: 'small', xp: 12 },
+      { x: m.width * 0.50, y: m.height * 0.84, kind: 'reward', tier: 'large', xp: 26 },
+      { x: m.width * 0.76, y: m.height * 0.80, kind: 'reward', tier: 'small', xp: 12 }
+    ]);
+    addMissingPoints('rivalPoints', [
+      { x: m.width * 0.30, y: m.height * 0.28, kind: 'rival' },
+      { x: m.width * 0.72, y: m.height * 0.72, kind: 'rival' }
+    ]);
+    if (!m.bossPoints || !m.bossPoints.length) m.bossPoints = [{ name: 'Boss', x: m.width / 2, y: m.height / 2, kind: 'boss' }];
+    m.stormCenter = m.stormCenter || { x: m.width / 2, y: m.height / 2 };
+    ensureStandardRoutes();
+    ensureStandardProps();
+    state.selected = null;
+    updateInspector();
+    draw();
+    setStatus('standardized: gameplay points and cover ready');
   }
 
   function renderSelection() {
@@ -602,6 +690,7 @@
         setStatus('load failed: ' + error.message);
       });
     });
+    qs('autoStandard').addEventListener('click', autoStandardize);
     qs('loadFile').addEventListener('click', function() { qs('fileInput').click(); });
     qs('fileInput').addEventListener('change', function(event) {
       var file = event.target.files && event.target.files[0];
