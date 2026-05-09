@@ -1959,3 +1959,44 @@ Next iteration direction:
 1. Generate or author additional bitmap assets for barrels, tires, and debris so the surrounding map layer stops reading as mixed-quality art.
 2. Tune wall/crate cover perspective and possibly add alternate wide/narrow wall cover variants.
 3. Start replacing more remaining procedural prop details with asset-backed sprites only where they improve phone-scale readability.
+
+## 2026-05-10 Secondary prop bitmap asset pass
+
+Related work:
+
+- Follow-up to `a11dcdb`
+- `frontend/engine-demo/assets/props/prop-cover-barrel.png`
+- `frontend/engine-demo/assets/props/prop-cover-tires.png`
+- `frontend/engine-demo/assets/props/prop-cover-debris.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The wasteland prop field is closer to the reference because lower-priority props now share the same bitmap asset treatment as wreck cars, walls, and crates.
+- Barrels and debris are visibly more authored in the phone screenshot, and the prop layer no longer mixes high-detail cars with mostly low-poly small clutter.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added transparent PNG cover assets for `barrel`, `tires`, and `debris`.
+- Runtime gates now require `propSpriteCoverCount >= 18`, `propSpriteCoverKinds >= 6`, and `propSpriteBodyHiddenCount >= 47`.
+- Cocos visual contract, scene manifest, and first-playable checklist now include `PropCoverBarrel`, `PropCoverTires`, and `PropCoverDebris` prefab requirements.
+
+What is still far from the reference:
+
+- The map still needs a more unified ground material and fewer visibly square tile seams.
+- Some wall/crate overlays still need better perspective variants for wide and narrow prop footprints.
+- Cocos still has contract placeholders for these new prop cover sprites rather than imported Creator prefabs.
+
+Next iteration direction:
+
+1. Improve ground/tile integration so props sit in a painterly wasteland surface rather than on a visibly modular grid.
+2. Add alternate wall/crate cover variants if repetition becomes too obvious in phone screenshots.
+3. Start a Cocos Creator asset import plan once the WebGL reference prop set stabilizes.

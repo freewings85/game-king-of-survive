@@ -35,6 +35,7 @@ assert(text.includes('Prop sprite cover pass'), 'Visual iteration log must recor
 assert(text.includes('Cocos prop cover sprite contract sync'), 'Visual iteration log must record the latest Cocos prop cover contract sync');
 assert(text.includes('Prop cover bitmap asset pass'), 'Visual iteration log must record the latest prop cover bitmap asset pass');
 assert(text.includes('Prop sprite body cleanup pass'), 'Visual iteration log must record the latest prop sprite body cleanup pass');
+assert(text.includes('Secondary prop bitmap asset pass'), 'Visual iteration log must record the latest secondary prop bitmap asset pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

@@ -158,7 +158,7 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
   assert(visualContractSource.includes(shape), `Visual contract must include prop break shape ${shape}`);
   assert(visualContractDoc.includes(shape), `Visual contract doc must include prop break shape ${shape}`);
 });
-['prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate'].forEach((sprite) => {
+['prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((sprite) => {
   assert(visualContractSource.includes(sprite), `Visual contract must include prop cover sprite ${sprite}`);
   assert(visualContractDoc.includes(sprite), `Visual contract doc must include prop cover sprite ${sprite}`);
 });
@@ -244,7 +244,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['PropJaggedCap.prefab', 'PropMissingCorner.prefab', 'PropBrokenHood.prefab', 'PropChippedSide.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map break prefab ${prefab}`);
 });
-['PropCoverWreck.prefab', 'PropCoverWall.prefab', 'PropCoverCrate.prefab'].forEach((prefab) => {
+['PropCoverWreck.prefab', 'PropCoverWall.prefab', 'PropCoverCrate.prefab', 'PropCoverBarrel.prefab', 'PropCoverTires.prefab', 'PropCoverDebris.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map cover sprite prefab ${prefab}`);
 });
 ['StageWarmFocus.prefab', 'StageCoolDepth.prefab', 'StageRimLight.prefab', 'StageEdgeDarkening.prefab', 'StageDiagonalShadow.prefab'].forEach((prefab) => {

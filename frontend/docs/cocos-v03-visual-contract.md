@@ -101,8 +101,11 @@ Required prop cover sprite families:
 - `prop-cover-wreck`
 - `prop-cover-wall`
 - `prop-cover-crate`
+- `prop-cover-barrel`
+- `prop-cover-tires`
+- `prop-cover-debris`
 
-These cover sprites preserve the current WebGL pass where wreck cars, tall walls, and crates receive painterly overlay cards above their functional collision roots. In Cocos they should become real sprite/prefab layers such as `PropCoverWreck`, `PropCoverWall`, and `PropCoverCrate`, not only extra box geometry.
+These cover sprites preserve the current WebGL pass where wreck cars, tall walls, crates, barrels, tires, and debris receive painterly overlay cards above their functional collision roots. In Cocos they should become real sprite/prefab layers such as `PropCoverWreck`, `PropCoverWall`, `PropCoverCrate`, `PropCoverBarrel`, `PropCoverTires`, and `PropCoverDebris`, not only extra box geometry.
 
 ## Global Light Layers
 

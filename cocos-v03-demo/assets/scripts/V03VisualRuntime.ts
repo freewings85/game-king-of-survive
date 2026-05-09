@@ -203,9 +203,9 @@ export class V03VisualRuntime extends Component {
 
   private buildPropCoverSprites(): void {
     V03_REQUIRED_PROP_COVER_SPRITES.forEach((sprite, index) => {
-      const color = sprite.includes('wreck') ? '#7b3f1f' : sprite.includes('wall') ? '#5a5f59' : '#7d552d';
-      const node = this.makeBox(`prop-cover-sprite-${sprite}`, 0.34 + index * 0.06, 0.018, 0.22, color);
-      node.setPosition(index * 0.28 - 0.28, 0.88 + (index % 2) * 0.08, 1.78);
+      const color = sprite.includes('wreck') || sprite.includes('barrel') ? '#7b3f1f' : sprite.includes('wall') ? '#5a5f59' : sprite.includes('tires') ? '#161816' : '#7d552d';
+      const node = this.makeBox(`prop-cover-sprite-${sprite}`, 0.30 + (index % 3) * 0.06, 0.018, 0.20, color);
+      node.setPosition((index % 3) * 0.26 - 0.26, 0.88 + Math.floor(index / 3) * 0.10, 1.78);
       this.actorRoot!.addChild(node);
       this.stats.propCoverSprites += 1;
     });

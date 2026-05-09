@@ -49,7 +49,10 @@ export const V03_REQUIRED_PROP_BREAK_SHAPES = [
 export const V03_REQUIRED_PROP_COVER_SPRITES = [
   'prop-cover-wreck',
   'prop-cover-wall',
-  'prop-cover-crate'
+  'prop-cover-crate',
+  'prop-cover-barrel',
+  'prop-cover-tires',
+  'prop-cover-debris'
 ] as const;
 
 export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [

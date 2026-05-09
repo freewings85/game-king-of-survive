@@ -212,7 +212,10 @@ const classUnitAssets = {
 const propCoverAssets = {
   wreck: '/frontend/engine-demo/assets/props/prop-cover-wreck.png',
   wall: '/frontend/engine-demo/assets/props/prop-cover-wall.png',
-  crate: '/frontend/engine-demo/assets/props/prop-cover-crate.png'
+  crate: '/frontend/engine-demo/assets/props/prop-cover-crate.png',
+  barrel: '/frontend/engine-demo/assets/props/prop-cover-barrel.png',
+  tires: '/frontend/engine-demo/assets/props/prop-cover-tires.png',
+  debris: '/frontend/engine-demo/assets/props/prop-cover-debris.png'
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -639,7 +642,7 @@ const painterlyMaterials = {
   arc: makePainterlyMaterial(getSkillSpriteTexture('arc') || makeFxCardTexture('arc'), 0.94)
 };
 skillPainterlyUsesSpriteAsset = ['arc', 'boom', 'fan'].every((kind) => !!getSkillSpriteTexture(kind));
-propCoverUsesSpriteAsset = ['wreck', 'wall', 'crate'].every((kind) => !!getPropCoverTexture(kind));
+propCoverUsesSpriteAsset = ['wreck', 'wall', 'crate', 'barrel', 'tires', 'debris'].every((kind) => !!getPropCoverTexture(kind));
 
 function addPainterlyCard(root, material, width, height, x, y, z, kind) {
   const card = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material.clone());
@@ -1008,9 +1011,11 @@ function makeBarrel(x, z, s = 1) {
   addContactShadow(root, 0.72 * s, 0.52 * s, 0.20);
   const barrel = cyl(0.22 * s, 0.22 * s, 0.54 * s, mats.rust, 18);
   barrel.position.y = 0.27 * s;
+  markPropSpriteReplaceableBody(barrel);
   root.add(barrel);
   const cap = cyl(0.23 * s, 0.23 * s, 0.04 * s, mats.orange, 18);
   cap.position.y = 0.56 * s;
+  markPropSpriteReplaceableBody(cap);
   root.add(cap);
   addPropShapeBlock(root, 0.30 * s, 0.18 * s, 0.035 * s, mats.propLightBlock, -0.05 * s, 0.42 * s, -0.225 * s);
   addPropShapeBlock(root, 0.34 * s, 0.16 * s, 0.035 * s, mats.propShadowBlock, 0.04 * s, 0.20 * s, -0.228 * s);
@@ -1025,6 +1030,8 @@ function makeBarrel(x, z, s = 1) {
   addBrokenChunk(root, 0.16 * s, 0.08 * s, 0.08 * s, mats.propBrokenRust, -0.15 * s, 0.62 * s, -0.04 * s, 0.34, -0.22);
   addBrokenChunk(root, 0.12 * s, 0.14 * s, 0.05 * s, mats.propBrokenDark, 0.19 * s, 0.23 * s, -0.19 * s, -0.18, 0.25);
   addPropGroundScatter(root, 0.38 * s, 0.32 * s, 4);
+  addPropSpriteCover(root, 'barrel', 0.72 * s, 0.88 * s, 0, 0.40 * s, -0.30 * s);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'barrel');
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
@@ -1044,10 +1051,13 @@ function makeTires(x, z, s = 1) {
     const tire = cyl(0.22 * s, 0.22 * s, 0.16 * s, tireMat, 20);
     tire.rotation.z = Math.PI / 2;
     tire.position.set((i - 1) * 0.28 * s, 0.18 * s, (i % 2) * 0.12 * s);
+    markPropSpriteReplaceableBody(tire);
     root.add(tire);
     addPropWear(root, 0.20 * s, 0.025 * s, 0.035 * s, mats.propEdge, (i - 1) * 0.28 * s, 0.32 * s, (i % 2) * 0.12 * s - 0.18 * s, i * 0.35);
   }
   addPropGroundScatter(root, 0.62 * s, 0.38 * s, 3);
+  addPropSpriteCover(root, 'tires', 1.10 * s, 0.88 * s, 0, 0.40 * s, -0.34 * s);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'tires');
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
@@ -1066,11 +1076,14 @@ function makeDebris(x, z, s = 1) {
     const chunk = box((0.28 + i * 0.04) * s, 0.16 * s, (0.18 + (i % 2) * 0.12) * s, i % 2 ? mats.wall : mats.crate);
     chunk.position.set((i - 1.5) * 0.22 * s, 0.08 * s, (i % 2 ? -0.14 : 0.16) * s);
     chunk.rotation.y = i * 0.42;
+    markPropSpriteReplaceableBody(chunk);
     root.add(chunk);
     addPropShapeBlock(root, (0.20 + i * 0.025) * s, 0.05 * s, 0.04 * s, i % 2 ? mats.propLightBlock : mats.propShadowBlock, chunk.position.x, 0.19 * s, chunk.position.z - 0.14 * s, i * 0.32);
     addPropWear(root, (0.16 + i * 0.025) * s, 0.025 * s, 0.035 * s, i % 2 ? mats.propEdge : mats.propDarkWear, chunk.position.x, 0.18 * s, chunk.position.z - 0.13 * s, i * 0.38);
   }
   addPropGroundScatter(root, 0.68 * s, 0.42 * s, 4);
+  addPropSpriteCover(root, 'debris', 1.18 * s, 0.82 * s, 0, 0.38 * s, -0.38 * s);
+  root.userData.propSpriteBodyHiddenCount = hidePropSpriteCoveredBody(root, 'debris');
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
