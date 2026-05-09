@@ -29,3 +29,11 @@ python3 dev-server.py 8081
 - Engine decision: `frontend/docs/engine-evaluation.md`
 - Cocos vertical slice gate: `frontend/docs/cocos-vertical-slice.md`
 - WebGL demo config: `frontend/engine-demo/v03-config.js`
+
+## Verification
+
+```text
+node e2e/v03-contract-verify.js
+```
+
+This checks the V03 contract runtime map, the editor standardization gate, and the WebGL engine demo on a mobile viewport.
