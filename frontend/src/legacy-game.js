@@ -12099,6 +12099,13 @@
     // R5n F2 / R5v F3 — 5 selectable classes. Further tightened pitch 68 → 56
     // and card height 60 → 50 to fit 5 cards above attribute panel (y=350).
     var classKeys = ['warrior', 'mage', 'scout', 'assassin', 'healer'];
+    var classRoles = {
+      warrior: '近战压制',
+      mage: '控场爆发',
+      scout: '远程机动',
+      assassin: '背刺收割',
+      healer: '续航支援'
+    };
     for (var i = 0; i < classKeys.length; i++) {
       var cls = CLASS_DEFS[classKeys[i]];
       var by = 50 + i * 56;
@@ -12118,6 +12125,26 @@
       ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 30);
       ctx.fillStyle = '#888'; ctx.font = '8px "Noto Sans SC","PingFang SC",sans-serif';
       ctx.fillText(cls.passive, DW / 2 - 135, by + 42);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = isSelected ? cls.color : '#77807d';
+      ctx.font = 'bold 9px "Noto Sans SC","PingFang SC",sans-serif';
+      ctx.fillText(classRoles[classKeys[i]] || '幸存者', DW / 2 + 146, by + 15);
+      var skillPreview = (cls.availableSkills && cls.availableSkills.length ? cls.availableSkills : ['attack_up', 'attack_speed', 'crit']).slice(0, 3);
+      for (var spi = 0; spi < skillPreview.length; spi++) {
+        var sid = skillPreview[spi];
+        var sd = SKILL_DATA[sid] || { icon: '★', color: cls.color };
+        var chipX = DW / 2 + 88 + spi * 24;
+        var chipY = by + 27;
+        ctx.fillStyle = 'rgba(0,0,0,0.38)';
+        ctx.fillRect(chipX, chipY, 19, 16);
+        ctx.strokeStyle = sd.color || cls.color;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(chipX + 0.5, chipY + 0.5, 18, 15);
+        ctx.fillStyle = sd.color || cls.color;
+        ctx.font = '11px "Noto Sans SC","PingFang SC",sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(sd.icon || '★', chipX + 9.5, chipY + 12);
+      }
       ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 13px "Noto Sans SC","PingFang SC",sans-serif';
       ctx.fillText('▶', DW / 2 + 170, by + 28);
     }

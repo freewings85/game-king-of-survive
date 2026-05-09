@@ -115,7 +115,7 @@
       ctx.arc(r * 0.73, -r * 0.02, r * (0.16 + Math.sin(gt * 4) * 0.015), 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
-    } else {
+    } else if (classType === 'scout') {
       ctx.fillStyle = '#23292b';
       roundedRect(ctx, r * 0.02, -r * 0.09, r * 0.68, r * 0.12, r * 0.035);
       ctx.fill();
@@ -124,6 +124,37 @@
       ctx.fillStyle = colors.accent;
       ctx.globalAlpha = 0.65;
       ctx.fillRect(r * 0.7, -r * 0.035, r * 0.06, r * 0.025);
+      ctx.globalAlpha = 1;
+    } else if (classType === 'healer') {
+      ctx.fillStyle = '#26342e';
+      roundedRect(ctx, r * 0.02, -r * 0.08, r * 0.50, r * 0.12, r * 0.035);
+      ctx.fill();
+      ctx.fillStyle = colors.accent;
+      roundedRect(ctx, r * 0.48, -r * 0.18, r * 0.28, r * 0.28, r * 0.05);
+      ctx.fill();
+      ctx.fillStyle = '#102018';
+      ctx.fillRect(r * 0.58, -r * 0.14, r * 0.08, r * 0.2);
+      ctx.fillRect(r * 0.52, -r * 0.08, r * 0.2, r * 0.08);
+    } else if (classType === 'assassin') {
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = Math.max(2, r * 0.07);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(r * 0.10, -r * 0.14);
+      ctx.lineTo(r * 0.66, -r * 0.36);
+      ctx.moveTo(r * 0.12, r * 0.08);
+      ctx.lineTo(r * 0.62, r * 0.34);
+      ctx.stroke();
+      ctx.fillStyle = '#17171d';
+      roundedRect(ctx, -r * 0.42, -r * 0.25, r * 0.16, r * 0.50, r * 0.05);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#23292b';
+      roundedRect(ctx, r * 0.02, -r * 0.09, r * 0.58, r * 0.12, r * 0.035);
+      ctx.fill();
+      ctx.fillStyle = colors.accent;
+      ctx.globalAlpha = 0.75;
+      ctx.fillRect(r * 0.58, -r * 0.035, r * 0.08, r * 0.025);
       ctx.globalAlpha = 1;
     }
     ctx.restore();
@@ -182,6 +213,29 @@
     ctx.globalAlpha = opts.fury ? 0.95 : 0.75;
     ctx.fillRect(-r * 0.05, -r * 0.28, r * 0.1, r * 0.58);
     ctx.globalAlpha = 1;
+
+    if (classType === 'healer') {
+      ctx.fillStyle = '#102018';
+      ctx.fillRect(-r * 0.13, -r * 0.15, r * 0.26, r * 0.08);
+      ctx.fillRect(-r * 0.04, -r * 0.24, r * 0.08, r * 0.26);
+    } else if (classType === 'assassin') {
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      roundedRect(ctx, -r * 0.30, -r * 0.44, r * 0.60, r * 0.20, r * 0.08);
+      ctx.fill();
+      ctx.fillStyle = colors.accent;
+      ctx.globalAlpha = 0.8;
+      ctx.fillRect(-r * 0.18, -r * 0.39, r * 0.36, r * 0.04);
+      ctx.globalAlpha = 1;
+    } else if (classType === 'scout') {
+      ctx.strokeStyle = colors.accent;
+      ctx.globalAlpha = 0.7;
+      ctx.lineWidth = Math.max(1, r * 0.035);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.22, -r * 0.23);
+      ctx.lineTo(r * 0.22, r * 0.23);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     limb(ctx, -r * 0.28, -r * 0.12, r * 0.1, -r * 0.03, r * 0.14, '#273130');
     limb(ctx, r * 0.28, -r * 0.12, r * 0.42, -r * 0.02, r * 0.14, '#273130');
