@@ -9207,7 +9207,7 @@
     cameraX = player.x - W/2;
     cameraY = player.y - (_gameZoneTop + _gameZoneH / 2);
     cameraX = Math.max(0, Math.min(WORLD_W - W, cameraX));
-    cameraY = Math.max(-_gameZoneTop, Math.min(WORLD_H - _gameZoneBot, cameraY));
+    cameraY = Math.max(0, Math.min(WORLD_H - _gameZoneBot, cameraY));
     ctx.save();
     // Padded clip — entities at the boundary stay fully visible; HUD covers spillover
     ctx.beginPath();
