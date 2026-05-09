@@ -1,5 +1,6 @@
 import { _decorator, Component, Label } from 'cc';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
+import { loadV03BridgeData, type V03BridgeData } from './V03ResourceBridge';
 
 const { ccclass, property } = _decorator;
 
@@ -16,8 +17,12 @@ export class V03BattleDirector extends Component {
   private xp = 0;
   private hp = V03_TUNING.playerHp;
   private alive = 32;
+  private bridgeData: V03BridgeData | null = null;
 
-  start(): void {
+  async start(): Promise<void> {
+    this.bridgeData = await loadV03BridgeData();
+    this.hp = this.bridgeData.runtime.tuning.player.hp;
+    this.alive = Math.max(18, this.bridgeData.map.zombieEntries.length * 8);
     this.renderStatus();
   }
 
@@ -67,10 +72,12 @@ export class V03BattleDirector extends Component {
 
     const classDef = V03_CLASSES[this.classId];
     const skillDef = V03_SKILLS[this.skillId];
+    const mapName = this.bridgeData ? `${this.bridgeData.map.cols}x${this.bridgeData.map.rows}` : 'loading map';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
-      `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`
+      `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
+      `MAP ${mapName}`
     ].join('\n');
   }
 }

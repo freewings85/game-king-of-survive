@@ -36,6 +36,7 @@ const sourceConfig = loadBrowserGlobal('frontend/src/v03-runtime-config.js', 'KO
 const sourceContract = loadBrowserGlobal('frontend/src/map-contract.js', 'KOS_MAP_CONTRACT');
 const cocosConfig = readJson('cocos-v03-demo/assets/resources/config/v03-runtime-config.json');
 const cocosMap = readJson('cocos-v03-demo/assets/resources/config/v03-standard-map.json');
+const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
 
 const sourceClassIds = Object.keys(sourceConfig.classDefs).sort();
 const cocosClassIds = Object.keys(cocosConfig.classes).sort();
@@ -75,6 +76,9 @@ assert(cocosMap.zombieEntries.length >= 4, 'Cocos map needs four zombie entries'
 assert(cocosMap.rewardPoints.length >= 8, 'Cocos map needs eight reward points');
 assert(cocosMap.rivalPoints.length >= 2, 'Cocos map needs two rival points');
 assert(cocosMap.qualityChecks.every((check) => check.ok), 'Cocos map quality gate failed');
+assert(resourceBridgeSource.includes("resources.load(path, JsonAsset"), 'Cocos bridge must load resources JsonAsset files');
+assert(resourceBridgeSource.includes("'config/v03-runtime-config'"), 'Cocos bridge must load runtime config JSON');
+assert(resourceBridgeSource.includes("'config/v03-standard-map'"), 'Cocos bridge must load standard map JSON');
 
 console.log(JSON.stringify({
   classes: cocosClassIds,
@@ -83,5 +87,6 @@ console.log(JSON.stringify({
   zombieEntries: cocosMap.zombieEntries.length,
   rewardPoints: cocosMap.rewardPoints.length,
   rivalPoints: cocosMap.rivalPoints.length,
+  resourceBridge: true,
   qualityOk: cocosMap.qualityChecks.every((check) => check.ok)
 }, null, 2));
