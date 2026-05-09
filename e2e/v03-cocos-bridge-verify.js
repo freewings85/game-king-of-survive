@@ -39,6 +39,8 @@ const cocosMap = readJson('cocos-v03-demo/assets/resources/config/v03-standard-m
 const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
+const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
+const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
 
 const sourceClassIds = Object.keys(sourceConfig.classDefs).sort();
 const cocosClassIds = Object.keys(cocosConfig.classes).sort();
@@ -89,6 +91,25 @@ assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must e
 assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
+['guardian', 'tech', 'ranger'].forEach((id) => {
+  assert(visualContractSource.includes(id), `Visual contract must include ${id}`);
+});
+['heavy-shield', 'coil-device', 'long-rifle', 'hood', 'scope', 'cape-stripe'].forEach((gear) => {
+  assert(visualContractSource.includes(gear), `Visual contract must include hero gear ${gear}`);
+});
+['brute', 'crawler', 'hooded'].forEach((variant) => {
+  assert(visualContractSource.includes(variant), `Visual contract must include zombie variant ${variant}`);
+});
+['face-highlight', 'armor-edge', 'wound-patch', 'rot-patch', 'torn-cloth-panel'].forEach((decal) => {
+  assert(visualContractSource.includes(decal), `Visual contract must include unit decal ${decal}`);
+});
+['muzzle-card', 'bullet-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card', 'branch-link', 'glow-link', 'node-ring', 'impact-card'].forEach((layer) => {
+  assert(visualContractSource.includes(layer), `Visual contract must include FX layer ${layer}`);
+});
+['engine-demo-landscape-phone.png', 'engine-demo-skill-fan.png', 'engine-demo-skill-boom.png', 'engine-demo-skill-arc.png'].forEach((screenshot) => {
+  assert(visualContractSource.includes(screenshot), `Visual contract must include review screenshot ${screenshot}`);
+  assert(visualContractDoc.includes(screenshot), `Visual contract doc must include review screenshot ${screenshot}`);
+});
 
 console.log(JSON.stringify({
   classes: cocosClassIds,
@@ -99,5 +120,6 @@ console.log(JSON.stringify({
   rivalPoints: cocosMap.rivalPoints.length,
   resourceBridge: true,
   mapRuntime: true,
+  visualContract: true,
   qualityOk: cocosMap.qualityChecks.every((check) => check.ok)
 }, null, 2));

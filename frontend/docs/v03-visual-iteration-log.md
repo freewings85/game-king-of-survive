@@ -403,3 +403,35 @@ Next iteration direction:
 2. Improve FAN specifically with painted bullet cards, warm trails, and target impact marks.
 3. Add stronger dust/smoke layers for BOOM without obscuring the playfield.
 4. Keep landscape screenshot review as the primary visual target for combat readability.
+
+## 2026-05-10 Cocos Visual Contract Pass
+
+Related work:
+
+- Cocos contract WIP after `238b3b4`
+
+Reviewed artifacts:
+
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `frontend/docs/cocos-v03-visual-contract.md`
+- `e2e/v03-cocos-bridge-verify.js`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- The WebGL reference expectations are now named for Cocos migration: hero class gear, zombie variants, unit decals, FX layers, and required review screenshots.
+- `V03VisualContract.ts` gives Cocos-side names for Guardian/Tech/Ranger gear, `brute/crawler/hooded` zombies, decal layers, and FAN/BOOM/ARC FX layers.
+- `e2e/v03-cocos-bridge-verify.js` now gates the visual contract alongside runtime config, map data, resource bridge, map runtime, and battle director wiring.
+- This reduces the risk that future Cocos prefab work rebuilds only the gameplay shell and loses the visual direction established in WebGL.
+
+What is still far from the reference:
+
+- The contract does not create Cocos prefabs yet; it only names and verifies the required visual surface.
+- Cocos still cannot be built here because Cocos Creator is not installed in this environment.
+- Final mini-game quality still depends on turning these names into real Cocos nodes, materials, sprite atlases, animation clips, and WeChat-device verification.
+
+Next iteration direction:
+
+1. Start a Cocos prefab/component scaffold that consumes `V03VisualContract.ts` names for hero gear, zombie variants, decal layers, and FX layers.
+2. Keep the WebGL reference evolving visually, but make every new major visual layer translatable to Cocos contract names.
+3. Add FAN-specific bullet/impact card improvements next, because FAN is the default gameplay screenshot and closest to the reference's main phone panel.
