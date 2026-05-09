@@ -10476,6 +10476,44 @@
     var btnY = botY + Math.round(botH * 0.10);
     var labelY = btnY + btnSize + Math.round(12 * _zs);
 
+    function _drawDashIcon(cx, cy, sz) {
+      ctx.save();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(2, sz * 0.075);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx - sz * 0.24, cy + sz * 0.18);
+      ctx.lineTo(cx + sz * 0.18, cy - sz * 0.18);
+      ctx.lineTo(cx + sz * 0.02, cy - sz * 0.2);
+      ctx.moveTo(cx + sz * 0.18, cy - sz * 0.18);
+      ctx.lineTo(cx + sz * 0.18, cy);
+      ctx.stroke();
+      ctx.globalAlpha = 0.65;
+      ctx.beginPath();
+      ctx.moveTo(cx - sz * 0.34, cy - sz * 0.02);
+      ctx.lineTo(cx - sz * 0.08, cy - sz * 0.24);
+      ctx.moveTo(cx - sz * 0.16, cy + sz * 0.30);
+      ctx.lineTo(cx + sz * 0.10, cy + sz * 0.08);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function _drawUltimateIcon(cx, cy, sz) {
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(cx + sz * 0.08, cy - sz * 0.36);
+      ctx.lineTo(cx - sz * 0.20, cy + sz * 0.04);
+      ctx.lineTo(cx + sz * 0.02, cy + sz * 0.02);
+      ctx.lineTo(cx - sz * 0.08, cy + sz * 0.36);
+      ctx.lineTo(cx + sz * 0.26, cy - sz * 0.08);
+      ctx.lineTo(cx + sz * 0.04, cy - sz * 0.06);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     function _drawRoundBtn(bx, by, sz, bgColor, borderColor, iconChar, label, fraction) {
       // Rounded square golden button (reference style)
       var rad = Math.round(sz * 0.22);
@@ -10516,10 +10554,14 @@
         ctx.restore();
       }
       // Icon
-      ctx.fillStyle = '#fff'; ctx.font = Math.round(sz * 0.55) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(iconChar, bx + sz / 2, by + sz / 2);
-      ctx.textBaseline = 'alphabetic';
+      if (typeof iconChar === 'function') {
+        iconChar(bx + sz / 2, by + sz / 2, sz);
+      } else {
+        ctx.fillStyle = '#fff'; ctx.font = Math.round(sz * 0.55) + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(iconChar, bx + sz / 2, by + sz / 2);
+        ctx.textBaseline = 'alphabetic';
+      }
       // Label below
       if (label) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold ' + _fsSmall + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
@@ -10542,7 +10584,7 @@
     // Dodge (leftmost)
     var curX = padX + btnGap;
     var dodgeFraction = dodgeReady ? 1 : (1 - player._dodgeCooldown / dodgeCooldown);
-    _drawRoundBtn(curX, btnY, btnSize, dodgeColors, dodgeReady ? '#88c8ff' : '#555', '💨', '闪避', dodgeFraction);
+    _drawRoundBtn(curX, btnY, btnSize, dodgeColors, dodgeReady ? '#88c8ff' : '#555', _drawDashIcon, '闪避', dodgeFraction);
     var dodgeBtnRect = { x: curX, y: btnY, w: btnSize, h: btnSize };
     curX += btnSize + btnGap;
 
@@ -10563,7 +10605,7 @@
 
     // Ultimate (rightmost)
     var ultFraction = ultReady ? 1 : (ultCharge / ultChargeMax);
-    _drawRoundBtn(curX, btnY, btnSize, ultColors, ultReady ? '#fff' : '#555', '⚡', ultReady ? '大招' : '大招', ultFraction);
+    _drawRoundBtn(curX, btnY, btnSize, ultColors, ultReady ? '#fff' : '#555', _drawUltimateIcon, ultReady ? '大招' : '大招', ultFraction);
     var ultBtnRect = { x: curX, y: btnY, w: btnSize, h: btnSize };
 
     // Store button rects for click handling
