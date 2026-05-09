@@ -36,4 +36,4 @@ python3 dev-server.py 8081
 node e2e/v03-contract-verify.js
 ```
 
-This checks the V03 contract runtime map, the editor standardization gate, and the WebGL engine demo on a mobile viewport.
+This quick-starts the V03 contract runtime map, checks the editor standardization gate, and verifies the WebGL engine demo on a mobile viewport.
