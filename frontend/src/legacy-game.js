@@ -3444,6 +3444,19 @@
     _waveState.wave = 0;
     _waveState.nextSpawnTimer = 0;
     offlineEnemies = [];
+    for (var _og = 0; _og < 5; _og++) {
+      var _oga = -Math.PI * 0.55 + _og * (Math.PI * 1.1 / 4);
+      var _ogr = _og % 2 ? 120 : 84;
+      gems.push({
+        x: Math.max(40, Math.min(WORLD_W - 40, player.x + Math.cos(_oga) * _ogr)),
+        y: Math.max(40, Math.min(WORLD_H - 40, player.y + Math.sin(_oga) * _ogr)),
+        xp: 8,
+        radius: 4,
+        _t: 0,
+        gemTier: 'small',
+        source: 'opening_reward'
+      });
+    }
 
     // === Spawn 7 AI bot players (8 total including local player) ===
     var _botNames = ['铁壁', '雷霆', '幽灵', '寒冰', '烈焰', '疾风', '暗影'];
@@ -9061,12 +9074,11 @@
   var _levelUpQueue = { pending: 0, wait: 0 };
   function triggerLevelUp() {
     if (state === 'levelUp') return;
-    // ldoe-overhaul-02: 静默开局 30s — 让玩家先感受 LDOE 探索氛围。XP 累积
-    // 不丢失，到 t≥30s 后下一次 trigger 时一次性弹出。trade-off: 牺牲首
-    // 30s 内升级反馈节奏，换取 LDOE 末日空地的紧张感建立窗口。
-    if (offlineMode && (gameTime || 0) < 30) {
-      _levelUpQueue.pending++;
-      _levelUpQueue.wait = Math.max(_levelUpQueue.wait, 30 - (gameTime || 0));
+    // Zombie BR pacing: keep a short opening combat beat, then let the first
+    // upgrade arrive quickly. The old 30s delay made the early game feel flat.
+    if (offlineMode && playerLevel <= 1 && (gameTime || 0) < 8) {
+      _levelUpQueue.pending = Math.max(_levelUpQueue.pending, 1);
+      _levelUpQueue.wait = Math.max(_levelUpQueue.wait, 8 - (gameTime || 0));
       return;
     }
     // Round 2: defer level-up if a high-priority banner is showing so the
