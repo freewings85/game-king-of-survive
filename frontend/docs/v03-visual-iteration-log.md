@@ -990,3 +990,37 @@ Next iteration direction:
 1. Sync material blend categories into the Cocos contract if this layer remains mandatory.
 2. Tune blend strength by object type so hero/zombie highlights do not overpower combat readability.
 3. Move toward a consolidated first-playable presentation pass that audits the whole screen instead of single visual layers.
+
+## 2026-05-10 Cocos Material Blend Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `1d28488`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- Material blend layers are now part of the Cocos visual contract, not only the WebGL reference.
+- Cocos runtime stats now report `materialBlendLayers` separately from object rim and global lighting layers.
+- The first-playable checklist now names warm, cool, dark, prop, and unit material blend prefabs.
+- The Cocos bridge verifier now fails if material blend categories disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- The real Cocos material blending and authored prefab art are still not created.
+- The target image uses painted texture transitions; this contract only names the layer family that must exist.
+- No Cocos phone screenshots are available in this environment.
+
+Next iteration direction:
+
+1. Tune blend strength by object type in WebGL if highlights become too bright in dense combat.
+2. Start a consolidated first-playable presentation audit that reviews all required visual layers together.
+3. Replace Cocos placeholder boxes with real authored materials and prefabs when Cocos Creator is available.

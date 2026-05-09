@@ -118,6 +118,18 @@ Required per-object rim/highlight layers:
 
 These layers keep heroes, zombies, weapons, and major props separated from the ground after global lighting is applied.
 
+## Material Blend Layers
+
+Required material blend layers:
+
+- `material-warm-blend`
+- `material-cool-blend`
+- `material-dark-blend`
+- `material-prop-blend`
+- `material-unit-blend`
+
+These layers soften hard object rim strips so hero, zombie, weapon, wall, car, crate, and barrel highlights feel integrated with their base materials.
+
 ## Skill FX
 
 Required FX layers:
@@ -130,4 +142,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, material blend layers, FX layers, and review screenshot names.

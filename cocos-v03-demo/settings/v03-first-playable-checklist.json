@@ -88,7 +88,12 @@
       "prefabs/map/ObjectCoolRim.prefab",
       "prefabs/map/ObjectDarkSide.prefab",
       "prefabs/map/ObjectWeaponRim.prefab",
-      "prefabs/map/ObjectHeadRim.prefab"
+      "prefabs/map/ObjectHeadRim.prefab",
+      "prefabs/map/MaterialWarmBlend.prefab",
+      "prefabs/map/MaterialCoolBlend.prefab",
+      "prefabs/map/MaterialDarkBlend.prefab",
+      "prefabs/map/MaterialPropBlend.prefab",
+      "prefabs/map/MaterialUnitBlend.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -116,6 +121,7 @@
     "propBreakShapes",
     "globalLightLayers",
     "objectRimLayers",
+    "materialBlendLayers",
     "fxLayers",
     "reviewScreenshots"
   ],

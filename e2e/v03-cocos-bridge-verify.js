@@ -98,6 +98,7 @@ assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visu
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_GEAR'), 'Cocos visual runtime must consume hero gear contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_MATERIAL_BLEND_LAYERS'), 'Cocos visual runtime must consume material blend layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_OBJECT_RIM_LAYERS'), 'Cocos visual runtime must consume object rim layer contract');
 assert(visualRuntimeSource.includes('V03_ZOMBIE_VARIANTS'), 'Cocos visual runtime must consume zombie variant contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_UNIT_DECALS'), 'Cocos visual runtime must consume unit decal contract');
@@ -115,6 +116,7 @@ assert(visualRuntimeSource.includes('propShapeBlocks'), 'Cocos visual runtime mu
 assert(visualRuntimeSource.includes('propBreakShapes'), 'Cocos visual runtime must report prop break shape stats');
 assert(visualRuntimeSource.includes('globalLightLayers'), 'Cocos visual runtime must report global light layer stats');
 assert(visualRuntimeSource.includes('objectRimLayers'), 'Cocos visual runtime must report object rim layer stats');
+assert(visualRuntimeSource.includes('materialBlendLayers'), 'Cocos visual runtime must report material blend layer stats');
 assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
 assert(battleDirectorSource.includes('public visualRuntime: V03VisualRuntime'), 'Battle director must expose V03VisualRuntime');
 assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(this.classId, this.skillId)'), 'Battle director must build visual runtime from contract');
@@ -153,6 +155,10 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
 ['object-warm-rim', 'object-cool-rim', 'object-dark-side', 'object-weapon-rim', 'object-head-rim'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include object rim layer ${layer}`);
   assert(visualContractDoc.includes(layer), `Visual contract doc must include object rim layer ${layer}`);
+});
+['material-warm-blend', 'material-cool-blend', 'material-dark-blend', 'material-prop-blend', 'material-unit-blend'].forEach((layer) => {
+  assert(visualContractSource.includes(layer), `Visual contract must include material blend layer ${layer}`);
+  assert(visualContractDoc.includes(layer), `Visual contract doc must include material blend layer ${layer}`);
 });
 ['muzzle-card', 'bullet-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card', 'branch-link', 'glow-link', 'node-ring', 'impact-card'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include FX layer ${layer}`);
@@ -195,7 +201,10 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['ObjectWarmRim.prefab', 'ObjectCoolRim.prefab', 'ObjectDarkSide.prefab', 'ObjectWeaponRim.prefab', 'ObjectHeadRim.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include object rim prefab ${prefab}`);
 });
-['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'globalLightLayers', 'objectRimLayers', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+['MaterialWarmBlend.prefab', 'MaterialCoolBlend.prefab', 'MaterialDarkBlend.prefab', 'MaterialPropBlend.prefab', 'MaterialUnitBlend.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include material blend prefab ${prefab}`);
+});
+['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'globalLightLayers', 'objectRimLayers', 'materialBlendLayers', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
   assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
 });
 ['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {

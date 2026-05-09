@@ -13,6 +13,7 @@ import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_GLOBAL_LIGHT_LAYERS,
   V03_REQUIRED_HERO_GEAR,
+  V03_REQUIRED_MATERIAL_BLEND_LAYERS,
   V03_REQUIRED_OBJECT_RIM_LAYERS,
   V03_REQUIRED_PROP_BREAK_SHAPES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
@@ -34,6 +35,7 @@ export interface V03VisualRuntimeStats {
   propBreakShapes: number;
   globalLightLayers: number;
   objectRimLayers: number;
+  materialBlendLayers: number;
   fxLayers: number;
 }
 
@@ -55,6 +57,7 @@ export class V03VisualRuntime extends Component {
     propBreakShapes: 0,
     globalLightLayers: 0,
     objectRimLayers: 0,
+    materialBlendLayers: 0,
     fxLayers: 0
   };
 
@@ -72,6 +75,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropBreakShapes();
     this.buildGlobalLightLayers();
     this.buildObjectRimLayers();
+    this.buildMaterialBlendLayers();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -93,6 +97,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propBreakShapes = 0;
     this.stats.globalLightLayers = 0;
     this.stats.objectRimLayers = 0;
+    this.stats.materialBlendLayers = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -188,6 +193,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.20 - 0.40, 0.84 + (index % 2) * 0.10, 2.08);
       this.actorRoot!.addChild(node);
       this.stats.objectRimLayers += 1;
+    });
+  }
+
+  private buildMaterialBlendLayers(): void {
+    V03_REQUIRED_MATERIAL_BLEND_LAYERS.forEach((layer, index) => {
+      const color = index === 0 ? '#f2b56d' : index === 1 ? '#8cc8d3' : '#0d120f';
+      const node = this.makeBox(`material-blend-${layer}`, 0.20 + index * 0.04, 0.018, 0.16, color);
+      node.setPosition(index * 0.20 - 0.40, 1.02 + (index % 2) * 0.08, 2.30);
+      this.actorRoot!.addChild(node);
+      this.stats.materialBlendLayers += 1;
     });
   }
 

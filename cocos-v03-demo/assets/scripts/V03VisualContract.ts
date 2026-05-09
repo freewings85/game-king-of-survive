@@ -62,6 +62,14 @@ export const V03_REQUIRED_OBJECT_RIM_LAYERS = [
   'object-head-rim'
 ] as const;
 
+export const V03_REQUIRED_MATERIAL_BLEND_LAYERS = [
+  'material-warm-blend',
+  'material-cool-blend',
+  'material-dark-blend',
+  'material-prop-blend',
+  'material-unit-blend'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],
