@@ -40,6 +40,8 @@ async function verifyContractRuntime(browser) {
       schemaVersion: map && map.schemaVersion,
       visualProfile: map && map.visualProfile,
       gameplayProfile: map && map.gameplayProfile && map.gameplayProfile.mode,
+      cols: map && map.cols,
+      rows: map && map.rows,
       structures: map && map.structures && map.structures.length,
       rewardPoints: map && map.rewardPoints && map.rewardPoints.length,
       zombieEntries: map && map.zombieEntries && map.zombieEntries.length,
@@ -53,7 +55,7 @@ async function verifyContractRuntime(browser) {
     };
   });
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasContract || !info.hasV03Config || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
+  if (errors.length || !info.hasContract || !info.hasV03Config || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.cols !== 26 || info.rows !== 22 || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
     fail('V03 contract runtime verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'runtime-contract-map-mobile.png');
@@ -72,6 +74,7 @@ async function verifyEditor(browser) {
     hasStandardize: typeof window.KOS_MAP_CONTRACT.standardizeMap === 'function',
     qualityRows: document.querySelectorAll('#qualityList .quality').length,
     warnRows: document.querySelectorAll('#qualityList .quality.warn').length,
+    mapSize: document.getElementById('mapSize').value,
     previewUsesMap: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewUsesMap,
     previewTileCount: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewTileCount,
     previewPropCount: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewPropCount,
@@ -80,7 +83,7 @@ async function verifyEditor(browser) {
     status: document.getElementById('statusText').textContent
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasStandardize || info.qualityRows !== 8 || info.warnRows !== 0 || !info.previewUsesMap || info.previewTileCount < 500 || info.previewPropCount < 20 || info.previewZombieEntries < 4 || info.previewRewardPoints < 8) {
+  if (errors.length || !info.hasStandardize || info.qualityRows !== 8 || info.warnRows !== 0 || info.mapSize !== '26x22' || !info.previewUsesMap || info.previewTileCount !== 572 || info.previewPropCount < 20 || info.previewZombieEntries < 4 || info.previewRewardPoints < 8) {
     fail('V03 editor verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'editor-standard-map.png');

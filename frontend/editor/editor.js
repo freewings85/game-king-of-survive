@@ -39,7 +39,7 @@
   ];
 
   var state = {
-    map: createMap(40, 40),
+    map: createMap(26, 22),
     tool: { type: 'tile', id: 4 },
     selected: null,
     zoom: 0.42,
@@ -813,7 +813,7 @@
       loadMap(createMap(Math.max(12, Number(match[1])), Math.max(12, Number(match[2]))));
     });
     qs('newMap').addEventListener('click', function() {
-      loadMap(createMap(40, 40));
+      loadMap(createMap(26, 22));
     });
     qs('loadDefault').addEventListener('click', function() {
       fetch('/demo/maps/default.json').then(function(res) { return res.json(); }).then(loadMap).catch(function(error) {

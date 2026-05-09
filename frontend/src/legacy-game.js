@@ -59,7 +59,7 @@
   function _createContractMapIfRequested() {
     if (_requestedMapId() !== 'v03_contract') return null;
     if (!window.KOS_MAP_CONTRACT || typeof window.KOS_MAP_CONTRACT.standardizeMap !== 'function') return null;
-    var map = window.KOS_MAP_CONTRACT.standardizeMap(window.KOS_MAP_CONTRACT.createMap(40, 40));
+    var map = window.KOS_MAP_CONTRACT.standardizeMap(window.KOS_MAP_CONTRACT.createMap(26, 22));
     map.name = 'V03 Contract Wasteland';
     return map;
   }
