@@ -93,6 +93,8 @@ async function verifyEngineDemo(browser) {
     activeSkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkinColor,
     contractMapName: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractMapName,
     contractPropCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractPropCount,
+    contractZombieEntryCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractZombieEntryCount,
+    contractRewardPointCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractRewardPointCount,
     contractQualityOk: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractQualityOk,
     rivalVisible: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.rivalVisible,
     safeZoneScale: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.safeZoneScale,
@@ -100,7 +102,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
+  if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   await page.close();

@@ -257,6 +257,31 @@ function keepPropForCombatReadability(map, prop) {
   return Math.hypot(x - playerSpawn.x, z - playerSpawn.z) > 2.25;
 }
 
+function contractPointToScene(map, point) {
+  return {
+    x: toSceneX(map, point.x),
+    z: toSceneZ(map, point.y)
+  };
+}
+
+function pointNearArena(map, point, fallbackAngle, fallbackRadius) {
+  if (map && point) {
+    const scenePoint = contractPointToScene(map, point);
+    const dx = scenePoint.x - playerSpawn.x;
+    const dz = scenePoint.z - playerSpawn.z;
+    const dist = Math.hypot(dx, dz) || 1;
+    const radius = Math.min(6.2, Math.max(3.4, dist * 0.82));
+    return {
+      x: playerSpawn.x + dx / dist * radius,
+      z: playerSpawn.z + dz / dist * radius
+    };
+  }
+  return {
+    x: Math.cos(fallbackAngle) * fallbackRadius + 0.8,
+    z: Math.sin(fallbackAngle) * fallbackRadius - 0.1
+  };
+}
+
 function makeCharacter(colorMat, accentMat, scale = 1) {
   const root = new THREE.Group();
   const legs = [
@@ -381,21 +406,37 @@ rivalBeam.castShadow = false;
 scene.add(rivalBeam);
 
 const zombies = [];
-for (let i = 0; i < 13; i++) {
+const zombieEntries = contractMap && contractMap.zombieEntries ? contractMap.zombieEntries : [];
+for (let i = 0; i < 10; i++) {
   const angle = i * 0.62;
   const radius = 4.0 + (i % 4) * 0.9;
-  zombies.push(makeZombie(Math.cos(angle) * radius + 0.8, Math.sin(angle) * radius - 0.1, i % 5 === 0 ? 1.25 : 0.9, i % 3 === 0));
+  const source = zombieEntries.length ? zombieEntries[i % zombieEntries.length] : null;
+  const p = pointNearArena(contractMap, source, angle, radius);
+  const jitter = (i % 4 - 1.5) * 0.55;
+  zombies.push(makeZombie(p.x + Math.cos(angle) * jitter, p.z + Math.sin(angle) * jitter, i % 5 === 0 ? 1.25 : 0.9, i % 3 === 0));
 }
 
 const gems = [];
+const rewardPoints = contractMap && contractMap.rewardPoints ? contractMap.rewardPoints : [];
 for (let i = 0; i < 18; i++) {
   const gem = cyl(0.12, 0.12, 0.08, mats.xp, 4);
   gem.rotation.y = Math.PI / 4;
-  gem.position.set((Math.random() - 0.5) * 11, 0.15, (Math.random() - 0.5) * 9);
+  const source = rewardPoints.length ? rewardPoints[i % rewardPoints.length] : null;
+  const p = source
+    ? contractPointToScene(contractMap, source)
+    : { x: (Math.random() - 0.5) * 11, z: (Math.random() - 0.5) * 9 };
+  gem.position.set(
+    THREE.MathUtils.clamp(p.x + ((i % 3) - 1) * 0.28, -5.6, 5.6),
+    0.15,
+    THREE.MathUtils.clamp(p.z + (Math.floor(i / 3) % 3 - 1) * 0.28, -4.8, 4.8)
+  );
   gem.castShadow = true;
   scene.add(gem);
   gems.push(gem);
 }
+
+window.__V03_ENGINE_DEMO_STATE.contractZombieEntryCount = zombieEntries.length;
+window.__V03_ENGINE_DEMO_STATE.contractRewardPointCount = rewardPoints.length;
 
 const avatarMark = document.getElementById('avatarMark');
 const className = document.getElementById('className');
