@@ -101,3 +101,34 @@ Next iteration direction:
 2. Add live skill-specific FX states: FAN bullet sprites, BOOM ring/explosion on hit, ARC branching lightning in the playable phone view.
 3. Add ground detail decals: crack lines, rubble clusters, grass tufts, oil/rust stains, and tile edge noise around the player area.
 4. Move phone HUD toward the reference: circular minimap, icon-like skill buttons, and a heavier device/frame treatment.
+
+## 2026-05-10 FX And Ground Detail Pass
+
+Related work:
+
+- WebGL reference WIP after `5808717`
+
+Reviewed screenshot:
+
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- FAN now has visible bullet/projectile tips in addition to beam streaks, closer to the reference's readable bullet volley.
+- The playable scene now tracks dedicated FX readiness: `fanRoundCount`, `boomRingReady`, and `arcBranchCount`.
+- Ground tiles now have generated cracks and grass tufts, reducing the overly clean grid feel.
+- The gate now records `groundDetailCount`, so the wasteland detail layer cannot silently disappear.
+
+What is still far from the reference:
+
+- The live phone screenshot still only proves the active FAN view. BOOM explosion and ARC branching need dedicated visual review states or screenshots.
+- Ground detail is present but still procedural and sparse compared with the reference's painterly asphalt, rubble, stains, tufts, and worn object edges.
+- Bullet and muzzle FX remain simple geometry, not sprite-like painted effects with warm cores, glow falloff, and impact sparks.
+- The phone UI and minimap are still much simpler than the reference.
+
+Next iteration direction:
+
+1. Add deterministic review states/screenshots for ARC, BOOM, and FAN so each skill can be compared against the reference panels.
+2. Add live impact effects: hit sparks, BOOM shock ring/explosion core, ARC branching in the active phone screenshot.
+3. Increase prop/ground art density around the player without blocking readability: rubble chips, rust marks, oil stains, grass clumps, and broken asphalt plates.
+4. Start a phone UI pass: circular minimap and icon-based skill buttons matching the reference composition.

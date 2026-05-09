@@ -56,7 +56,10 @@ const mats = {
   xp: new THREE.MeshStandardMaterial({ color: 0x7cff4f, emissive: 0x37ff20, emissiveIntensity: 1.5 }),
   gold: new THREE.MeshStandardMaterial({ color: 0xf4c95a, emissive: 0x6f4c05, emissiveIntensity: 0.45 }),
   orange: new THREE.MeshStandardMaterial({ color: 0xff8b3d, emissive: 0x7a2600, emissiveIntensity: 0.8 }),
-  muzzle: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.9 })
+  muzzle: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.9 }),
+  crack: new THREE.MeshBasicMaterial({ color: 0x101412, transparent: true, opacity: 0.42 }),
+  grass: new THREE.MeshStandardMaterial({ color: 0x3e5f38, roughness: 0.96 }),
+  spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 })
 };
 
 const tileMats = [
@@ -96,6 +99,7 @@ const game = {
 };
 let silhouettePartCount = 0;
 let zombieDetailPartCount = 0;
+let groundDetailCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -312,6 +316,7 @@ function paintContractTiles(map) {
   const tileW = 12 / map.cols;
   const tileD = 10 / map.rows;
   const geom = new THREE.PlaneGeometry(tileW * 0.98, tileD * 0.98);
+  const crackGeom = new THREE.PlaneGeometry(tileW * 0.64, 0.018);
   for (let y = 0; y < map.rows; y++) {
     for (let x = 0; x < map.cols; x++) {
       const id = map.tiles[y * map.cols + x] || 0;
@@ -324,6 +329,21 @@ function paintContractTiles(map) {
       );
       tile.receiveShadow = true;
       tileGroup.add(tile);
+      if ((x * 17 + y * 23) % 9 === 0) {
+        const crack = new THREE.Mesh(crackGeom, mats.crack);
+        crack.rotation.x = -Math.PI / 2;
+        crack.rotation.z = ((x + y) % 5 - 2) * 0.38;
+        crack.position.set(tile.position.x, 0.036, tile.position.z);
+        tileGroup.add(crack);
+        groundDetailCount += 1;
+      }
+      if (id !== 4 && (x * 11 + y * 7) % 17 === 0) {
+        const tuft = cyl(0.025, 0.055, 0.18, mats.grass, 5);
+        tuft.position.set(tile.position.x + tileW * 0.22, 0.09, tile.position.z - tileD * 0.12);
+        tuft.rotation.z = 0.28;
+        tileGroup.add(tuft);
+        groundDetailCount += 1;
+      }
     }
   }
   scene.add(tileGroup);
@@ -720,6 +740,27 @@ for (let i = 0; i < 8; i++) {
   projectileTips.push(tip);
 }
 
+const fanRounds = [];
+for (let i = 0; i < 7; i++) {
+  const round = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.28, 4, 10), mats.spark.clone());
+  round.castShadow = false;
+  scene.add(round);
+  fanRounds.push(round);
+}
+
+const boomRing = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.34, 48), mats.orange.clone());
+boomRing.rotation.x = -Math.PI / 2;
+boomRing.castShadow = false;
+scene.add(boomRing);
+
+const arcBranches = [];
+for (let i = 0; i < 4; i++) {
+  const branch = box(1, 0.035, 0.035, new THREE.MeshBasicMaterial({ color: 0x62e5ff, transparent: true, opacity: 0.65 }));
+  branch.castShadow = false;
+  scene.add(branch);
+  arcBranches.push(branch);
+}
+
 const skillBursts = [];
 for (let i = 0; i < 18; i++) {
   const orb = cyl(0.08, 0.08, 0.08, i % 2 ? mats.orange : mats.playerAccent, 12);
@@ -946,6 +987,45 @@ function animate(now) {
   muzzleFlash.material.opacity = nearestZombies((skillDefs[activeSkill] || skillDefs.arc).range).length ? 0.34 + muzzlePulse * 0.34 : 0;
   muzzleFlash.rotation.y = player.rotation.y - Math.PI / 2;
 
+  const fanAngle = player.rotation.y || 0;
+  fanRounds.forEach((round, i) => {
+    const spread = (i - 3) * 0.22;
+    const travel = 1.25 + ((t * 4.8 + i * 0.17) % 1.9);
+    const a = fanAngle + spread;
+    round.visible = activeSkill === 'fan';
+    round.position.set(
+      player.position.x + Math.sin(a) * travel,
+      0.86,
+      player.position.z + Math.cos(a) * travel
+    );
+    round.rotation.y = -a;
+    round.material.opacity = 0.42 + Math.sin(t * 9 + i) * 0.16;
+  });
+
+  const nearest = nearestZombies((skillDefs[activeSkill] || skillDefs.arc).range);
+  const boomTarget = nearest[0] && nearest[0].z;
+  boomRing.visible = activeSkill === 'boom' && !!boomTarget;
+  if (boomTarget) {
+    const pulse = 1.3 + Math.abs(Math.sin(t * 5.6)) * 1.15;
+    boomRing.position.set(boomTarget.position.x, 0.075, boomTarget.position.z);
+    boomRing.scale.set(pulse, pulse, 1);
+    boomRing.material.opacity = activeSkill === 'boom' ? 0.28 + Math.abs(Math.sin(t * 7)) * 0.35 : 0;
+  }
+
+  arcBranches.forEach((branch, i) => {
+    const a = nearest[i] && nearest[i].z;
+    const b = nearest[i + 1] && nearest[i + 1].z;
+    branch.visible = activeSkill === 'arc' && !!a && !!b;
+    if (!a || !b) return;
+    const mx = (a.position.x + b.position.x) * 0.5;
+    const mz = (a.position.z + b.position.z) * 0.5;
+    const dist = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
+    branch.position.set(mx, 0.96 + Math.sin(t * 14 + i) * 0.05, mz);
+    branch.scale.x = dist;
+    branch.rotation.y = Math.atan2(a.position.x - b.position.x, a.position.z - b.position.z) + Math.PI / 2;
+    branch.material.opacity = 0.22 + Math.abs(Math.sin(t * 12 + i)) * 0.58;
+  });
+
   skillBursts.forEach((orb, i) => {
     const skill = skillDefs[activeSkill] || skillDefs.arc;
     const a = t * (activeSkill === 'boom' ? 1.3 : 2.2) + i * 0.52;
@@ -968,6 +1048,10 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.silhouettePartCount = silhouettePartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieDetailPartCount = zombieDetailPartCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
+  window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.boomRingReady = boomRing.visible || activeSkill !== 'boom';
+  window.__V03_ENGINE_DEMO_STATE.arcBranchCount = arcBranches.filter((branch) => branch.visible).length;
   window.__V03_ENGINE_DEMO_STATE.lastKillAgo = game.lastKillAt ? Number((t - game.lastKillAt).toFixed(2)) : null;
   window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
   window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));
