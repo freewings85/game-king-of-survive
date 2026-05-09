@@ -12199,6 +12199,105 @@
       assassin: '背刺收割',
       healer: '续航支援'
     };
+    function _drawClassGlyph(kind, x, y, s, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(2, s * 0.12);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (kind === 'warrior') {
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.45);
+        ctx.lineTo(s * 0.32, -s * 0.30);
+        ctx.lineTo(s * 0.22, s * 0.34);
+        ctx.lineTo(0, s * 0.48);
+        ctx.lineTo(-s * 0.22, s * 0.34);
+        ctx.lineTo(-s * 0.32, -s * 0.30);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fill();
+      } else if (kind === 'mage') {
+        ctx.beginPath();
+        ctx.arc(0, 0, s * 0.32, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.44, 0);
+        ctx.lineTo(s * 0.44, 0);
+        ctx.moveTo(0, -s * 0.44);
+        ctx.lineTo(0, s * 0.44);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(s * 0.22, -s * 0.22, s * 0.08, 0, Math.PI * 2); ctx.fill();
+      } else if (kind === 'scout') {
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.38, s * 0.32);
+        ctx.lineTo(s * 0.38, -s * 0.32);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(s * 0.42, -s * 0.36);
+        ctx.lineTo(s * 0.12, -s * 0.30);
+        ctx.lineTo(s * 0.34, -s * 0.08);
+        ctx.closePath();
+        ctx.fill();
+      } else if (kind === 'assassin') {
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.22, -s * 0.36);
+        ctx.lineTo(s * 0.22, s * 0.36);
+        ctx.moveTo(s * 0.22, -s * 0.36);
+        ctx.lineTo(-s * 0.22, s * 0.36);
+        ctx.stroke();
+      } else {
+        ctx.fillRect(-s * 0.08, -s * 0.42, s * 0.16, s * 0.84);
+        ctx.fillRect(-s * 0.42, -s * 0.08, s * 0.84, s * 0.16);
+      }
+      ctx.restore();
+    }
+    function _drawSkillChipGlyph(id, x, y, s, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(1.4, s * 0.13);
+      ctx.lineCap = 'round';
+      if (id === 'attack_speed' || id === 'move_speed') {
+        for (var gl = 0; gl < 3; gl++) {
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.42, -s * 0.22 + gl * s * 0.22);
+          ctx.lineTo(s * 0.22, -s * 0.22 + gl * s * 0.22);
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(s * 0.42, 0);
+        ctx.lineTo(s * 0.18, -s * 0.22);
+        ctx.lineTo(s * 0.18, s * 0.22);
+        ctx.closePath();
+        ctx.fill();
+      } else if (id === 'crit') {
+        ctx.beginPath(); ctx.arc(0, 0, s * 0.30, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, s * 0.10, 0, Math.PI * 2); ctx.fill();
+      } else if (id === 'chain_lightning') {
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.30, -s * 0.35);
+        ctx.lineTo(s * 0.02, -s * 0.04);
+        ctx.lineTo(-s * 0.08, s * 0.02);
+        ctx.lineTo(s * 0.30, s * 0.35);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.32, s * 0.28);
+        ctx.lineTo(s * 0.28, -s * 0.32);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(s * 0.32, -s * 0.36);
+        ctx.lineTo(s * 0.08, -s * 0.26);
+        ctx.lineTo(s * 0.24, -s * 0.08);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
     for (var i = 0; i < classKeys.length; i++) {
       var cls = CLASS_DEFS[classKeys[i]];
       var by = 50 + i * 56;
@@ -12209,10 +12308,9 @@
       ctx.strokeStyle = isSelected ? cls.color : '#333'; ctx.lineWidth = 2;
       ctx.strokeRect(DW / 2 - 190, by, 380, 50);
       drawCharacterSprite(DW / 2 - 155, by + 25, 14, classKeys[i], 0, { skinId: isSelected ? equippedSkin : 'default', animState: 'idle' });
-      ctx.font = '14px "Noto Sans SC","PingFang SC",sans-serif'; ctx.textAlign = 'left';
-      ctx.fillStyle = cls.color;
-      ctx.fillText(cls.icon, DW / 2 - 175, by + 14);
+      _drawClassGlyph(classKeys[i], DW / 2 - 175, by + 15, 22, cls.color);
       ctx.font = 'bold 14px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#fff';
+      ctx.textAlign = 'left';
       ctx.fillText(cls.name, DW / 2 - 135, by + 16);
       ctx.font = '9px "Noto Sans SC","PingFang SC",sans-serif'; ctx.fillStyle = '#aaa';
       ctx.fillText('HP:' + cls.hp + '  攻:' + cls.attackDamage + '  速:' + cls.speed, DW / 2 - 135, by + 30);
@@ -12233,10 +12331,7 @@
         ctx.strokeStyle = sd.color || cls.color;
         ctx.lineWidth = 1;
         ctx.strokeRect(chipX + 0.5, chipY + 0.5, 18, 15);
-        ctx.fillStyle = sd.color || cls.color;
-        ctx.font = '11px "Noto Sans SC","PingFang SC",sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(sd.icon || '★', chipX + 9.5, chipY + 12);
+        _drawSkillChipGlyph(sid, chipX + 9.5, chipY + 8, 12, sd.color || cls.color);
       }
       ctx.textAlign = 'right'; ctx.fillStyle = cls.color; ctx.font = 'bold 13px "Noto Sans SC","PingFang SC",sans-serif';
       ctx.fillText('▶', DW / 2 + 170, by + 28);
@@ -12292,7 +12387,7 @@
     ctx.fillStyle = '#1a1a2e'; ctx.fillRect(DW / 2 - 190, skinPanelY, 380, 110);
     ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.strokeRect(DW / 2 - 190, skinPanelY, 380, 110);
     ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('🎨 皮肤选择', DW / 2, skinPanelY + 16);
+    ctx.fillText('皮肤选择', DW / 2, skinPanelY + 16);
     // Get skins applicable to selected class
     var applicableSkins = skinCollection.filter(function(sk) {
       var sd = skinsData[sk.id];
@@ -12324,8 +12419,12 @@
       // Lock icon for unowned
       if (!sk.owned && sk.id !== 'default') {
         ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(skx, sky, skinSize, skinSize);
-        ctx.fillStyle = '#888'; ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('🔒', skx + skinSize / 2, sky + skinSize / 2 + 4);
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(skx + 9, sky + 13, 10, 9);
+        ctx.beginPath();
+        ctx.arc(skx + 14, sky + 13, 5, Math.PI, 0);
+        ctx.stroke();
       }
       // Tier badge
       if (sd.tier && sd.tier !== 'C') {
