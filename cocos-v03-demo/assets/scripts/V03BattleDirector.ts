@@ -101,7 +101,7 @@ export class V03BattleDirector extends Component {
       ? `T${this.mapStats.tiles} P${this.mapStats.props} Z${this.mapStats.zombieEntries} R${this.mapStats.rewardPoints}`
       : 'runtime pending';
     const visualStats = this.visualStats
-      ? `G${this.visualStats.heroGear} V${this.visualStats.zombieVariants} D${this.visualStats.unitDecals} PG${this.visualStats.propGroundLayers} PW${this.visualStats.propWearDecals} PS${this.visualStats.propShapeBlocks} PB${this.visualStats.propBreakShapes} FX${this.visualStats.fxLayers}`
+      ? `G${this.visualStats.heroGear} V${this.visualStats.zombieVariants} D${this.visualStats.unitDecals} PG${this.visualStats.propGroundLayers} PW${this.visualStats.propWearDecals} PS${this.visualStats.propShapeBlocks} PB${this.visualStats.propBreakShapes} GL${this.visualStats.globalLightLayers} FX${this.visualStats.fxLayers}`
       : 'visual pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,

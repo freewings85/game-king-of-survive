@@ -859,3 +859,37 @@ Next iteration direction:
 1. Sync global lighting/value categories into the Cocos contract if this layer remains mandatory.
 2. Add per-object rim/highlight direction to hero, zombies, and major props.
 3. Continue checking screenshots after each pass so lighting does not reduce combat readability.
+
+## 2026-05-10 Cocos Global Lighting Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `a390f48`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- The WebGL global value pass is now represented in the Cocos visual contract.
+- Cocos runtime stats now report `globalLightLayers` separately from prop detail and FX layers.
+- The first-playable checklist now names stage warm focus, cool depth, rim light, edge darkening, and diagonal shadow prefabs.
+- The Cocos bridge verifier now fails if these global lighting categories disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- This pass still does not author real Cocos lighting/prefabs or capture Cocos phone screenshots.
+- The target image needs per-object lighting integration on heroes, zombies, props, and FX, not only global stage layers.
+- Cocos Creator remains unavailable in this environment, so the contract is the strongest enforceable artifact for now.
+
+Next iteration direction:
+
+1. Add per-object rim/highlight direction to hero, zombies, and major props in WebGL.
+2. Keep the lighting contract aligned with any WebGL layers that remain mandatory after screenshot review.
+3. Replace placeholder Cocos lighting nodes with real authored prefabs when Cocos Creator is available.

@@ -11,6 +11,7 @@ import {
 import type { V03ClassId, V03SkillId } from './V03Config';
 import {
   V03_REQUIRED_FX_LAYERS,
+  V03_REQUIRED_GLOBAL_LIGHT_LAYERS,
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_PROP_BREAK_SHAPES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
@@ -30,6 +31,7 @@ export interface V03VisualRuntimeStats {
   propWearDecals: number;
   propShapeBlocks: number;
   propBreakShapes: number;
+  globalLightLayers: number;
   fxLayers: number;
 }
 
@@ -49,6 +51,7 @@ export class V03VisualRuntime extends Component {
     propWearDecals: 0,
     propShapeBlocks: 0,
     propBreakShapes: 0,
+    globalLightLayers: 0,
     fxLayers: 0
   };
 
@@ -64,6 +67,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropWearDecals();
     this.buildPropShapeBlocks();
     this.buildPropBreakShapes();
+    this.buildGlobalLightLayers();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -83,6 +87,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propWearDecals = 0;
     this.stats.propShapeBlocks = 0;
     this.stats.propBreakShapes = 0;
+    this.stats.globalLightLayers = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -158,6 +163,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.24 - 0.36, 0.66 + (index % 3) * 0.08, 1.64);
       this.actorRoot!.addChild(node);
       this.stats.propBreakShapes += 1;
+    });
+  }
+
+  private buildGlobalLightLayers(): void {
+    V03_REQUIRED_GLOBAL_LIGHT_LAYERS.forEach((layer, index) => {
+      const color = index === 0 ? '#ffc66b' : index === 1 ? '#5dbdff' : index === 2 ? '#c6f4ff' : '#020504';
+      const node = this.makeBox(`global-light-${layer}`, 0.46 + index * 0.08, 0.012, 0.24, color);
+      node.setPosition(index * 0.22 - 0.44, 0.018, 1.88);
+      this.actorRoot!.addChild(node);
+      this.stats.globalLightLayers += 1;
     });
   }
 

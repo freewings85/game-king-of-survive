@@ -94,6 +94,18 @@ Required prop break/silhouette layers:
 
 These layers keep wreck cars, walls, crates, and barrels from reverting to clean boxes when the WebGL reference is rebuilt as Cocos prefabs.
 
+## Global Light Layers
+
+Required global lighting/value layers:
+
+- `stage-warm-focus`
+- `stage-cool-depth`
+- `stage-rim-light`
+- `stage-edge-darkening`
+- `stage-diagonal-shadow`
+
+These layers keep the phone battle readable by separating the central fight from the darker wasteland edges and by preserving the WebGL reference's warm/cool depth cues.
+
 ## Skill FX
 
 Required FX layers:
@@ -106,4 +118,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, FX layers, and review screenshot names.

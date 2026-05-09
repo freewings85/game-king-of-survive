@@ -96,6 +96,7 @@ assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battl
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
 assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
+assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_GEAR'), 'Cocos visual runtime must consume hero gear contract');
 assert(visualRuntimeSource.includes('V03_ZOMBIE_VARIANTS'), 'Cocos visual runtime must consume zombie variant contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_UNIT_DECALS'), 'Cocos visual runtime must consume unit decal contract');
@@ -111,6 +112,7 @@ assert(visualRuntimeSource.includes('propGroundLayers'), 'Cocos visual runtime m
 assert(visualRuntimeSource.includes('propWearDecals'), 'Cocos visual runtime must report prop wear decal stats');
 assert(visualRuntimeSource.includes('propShapeBlocks'), 'Cocos visual runtime must report prop shape block stats');
 assert(visualRuntimeSource.includes('propBreakShapes'), 'Cocos visual runtime must report prop break shape stats');
+assert(visualRuntimeSource.includes('globalLightLayers'), 'Cocos visual runtime must report global light layer stats');
 assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
 assert(battleDirectorSource.includes('public visualRuntime: V03VisualRuntime'), 'Battle director must expose V03VisualRuntime');
 assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(this.classId, this.skillId)'), 'Battle director must build visual runtime from contract');
@@ -141,6 +143,10 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
 ['prop-jagged-cap', 'prop-missing-corner', 'prop-broken-hood', 'prop-chipped-side'].forEach((shape) => {
   assert(visualContractSource.includes(shape), `Visual contract must include prop break shape ${shape}`);
   assert(visualContractDoc.includes(shape), `Visual contract doc must include prop break shape ${shape}`);
+});
+['stage-warm-focus', 'stage-cool-depth', 'stage-rim-light', 'stage-edge-darkening', 'stage-diagonal-shadow'].forEach((layer) => {
+  assert(visualContractSource.includes(layer), `Visual contract must include global light layer ${layer}`);
+  assert(visualContractDoc.includes(layer), `Visual contract doc must include global light layer ${layer}`);
 });
 ['muzzle-card', 'bullet-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card', 'branch-link', 'glow-link', 'node-ring', 'impact-card'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include FX layer ${layer}`);
@@ -177,7 +183,10 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['PropJaggedCap.prefab', 'PropMissingCorner.prefab', 'PropBrokenHood.prefab', 'PropChippedSide.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map break prefab ${prefab}`);
 });
-['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+['StageWarmFocus.prefab', 'StageCoolDepth.prefab', 'StageRimLight.prefab', 'StageEdgeDarkening.prefab', 'StageDiagonalShadow.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include global light prefab ${prefab}`);
+});
+['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'globalLightLayers', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
   assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
 });
 ['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {

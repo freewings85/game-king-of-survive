@@ -78,7 +78,12 @@
       "prefabs/map/PropJaggedCap.prefab",
       "prefabs/map/PropMissingCorner.prefab",
       "prefabs/map/PropBrokenHood.prefab",
-      "prefabs/map/PropChippedSide.prefab"
+      "prefabs/map/PropChippedSide.prefab",
+      "prefabs/map/StageWarmFocus.prefab",
+      "prefabs/map/StageCoolDepth.prefab",
+      "prefabs/map/StageRimLight.prefab",
+      "prefabs/map/StageEdgeDarkening.prefab",
+      "prefabs/map/StageDiagonalShadow.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -104,6 +109,7 @@
     "propWearDecals",
     "propShapeBlocks",
     "propBreakShapes",
+    "globalLightLayers",
     "fxLayers",
     "reviewScreenshots"
   ],

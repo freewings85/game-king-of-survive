@@ -46,6 +46,14 @@ export const V03_REQUIRED_PROP_BREAK_SHAPES = [
   'prop-chipped-side'
 ] as const;
 
+export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [
+  'stage-warm-focus',
+  'stage-cool-depth',
+  'stage-rim-light',
+  'stage-edge-darkening',
+  'stage-diagonal-shadow'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

@@ -38,7 +38,7 @@ Required prefab groups:
 
 - Heroes: Guardian, Tech Engineer, Ranger.
 - Zombies: Brute, Crawler, Hooded.
-- Map: wreck car, wall, crate, barrel, barricade, XP shard, prop oil stain, prop rust stain, prop rubble chip, prop shadow blob, prop edge highlight, prop dark panel, prop scratch stack, prop glass card, prop hazard band, prop light block, prop shadow block, prop cool rim, prop rim frame, prop jagged cap, prop missing corner, prop broken hood, prop chipped side.
+- Map: wreck car, wall, crate, barrel, barricade, XP shard, prop oil stain, prop rust stain, prop rubble chip, prop shadow blob, prop edge highlight, prop dark panel, prop scratch stack, prop glass card, prop hazard band, prop light block, prop shadow block, prop cool rim, prop rim frame, prop jagged cap, prop missing corner, prop broken hood, prop chipped side, stage warm focus, stage cool depth, stage rim light, stage edge darkening, stage diagonal shadow.
 - FX: FAN bullet/impact, BOOM shock/debris, ARC branch/node.
 - UI: top HUD, minimap, move stick, skill button, class panel.
 
