@@ -227,10 +227,12 @@ async function verifyEngineClassReview(browser, classId, skinIndex) {
     deviceScaleFactor: 2
   });
   const logs = await collectErrors(page);
-  await page.goto(`${baseUrl}/frontend/engine-demo/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
-  await page.locator(`[data-class="${classId}"]`).click();
-  await page.locator('#skinRow i').nth(skinIndex).click();
-  await page.locator('[data-skill="fan"]').click();
+  await page.goto(`${baseUrl}/frontend/engine-demo/index.html?review=class`, { waitUntil: 'networkidle', timeout: 15000 });
+  await page.evaluate(({ targetClass, targetSkin }) => {
+    document.querySelector(`[data-class="${targetClass}"]`).click();
+    document.querySelectorAll('#skinRow i')[targetSkin].click();
+    document.querySelector('[data-skill="fan"]').click();
+  }, { targetClass: classId, targetSkin: skinIndex });
   await page.waitForTimeout(1800);
   const info = await page.evaluate(() => ({
     className: document.getElementById('className').textContent,
@@ -245,12 +247,16 @@ async function verifyEngineClassReview(browser, classId, skinIndex) {
     activePainterlySkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor,
     heroPainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount,
     painterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.painterlyCardCount,
+    classShowcaseVisible: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible,
+    classShowcaseTitle: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseTitle,
+    classShowcaseSkinCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount,
+    classShowcaseDisplayed: getComputedStyle(document.getElementById('classShowcase')).display === 'grid',
     zombieVariantCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.zombieVariantCount,
     livingZombieCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.livingZombieCount,
     hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || info.activeClass !== classId || info.activeGearClass !== classId || info.activePainterlyClass !== classId || info.activeSkin !== skinIndex || info.activePainterlySkin !== skinIndex || info.activePainterlySkinColor !== info.activeSkinColor || info.activeGearCount < 3 || info.heroPainterlyCardCount < 2 || info.painterlyCardCount < 40 || info.zombieVariantCount < 3 || info.livingZombieCount < 8) {
+  if (errors.length || !info.hasWebgl || info.activeClass !== classId || info.activeGearClass !== classId || info.activePainterlyClass !== classId || info.activeSkin !== skinIndex || info.activePainterlySkin !== skinIndex || info.activePainterlySkinColor !== info.activeSkinColor || info.activeGearCount < 3 || info.heroPainterlyCardCount < 2 || info.painterlyCardCount < 40 || !info.classShowcaseVisible || !info.classShowcaseDisplayed || info.classShowcaseTitle !== info.className || info.classShowcaseSkinCount !== 3 || info.zombieVariantCount < 3 || info.livingZombieCount < 8) {
     fail(`V03 ${classId} class review verification failed`, { info, errors });
   }
   info.screenshot = path.join(artifactDir, `engine-demo-class-${classId}.png`);

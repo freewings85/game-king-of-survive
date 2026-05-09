@@ -3,6 +3,8 @@ import * as THREE from '/node_modules/three/build/three.module.js';
 const { classDefs, demoTuning, skillDefs } = window.KOS_V03_CONFIG;
 
 const canvas = document.getElementById('engineCanvas');
+const reviewMode = new URLSearchParams(window.location.search).get('review');
+if (reviewMode === 'class') document.body.classList.add('class-review');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
@@ -1387,6 +1389,11 @@ const miniRival = document.getElementById('miniRival');
 const miniZone = document.getElementById('miniZone');
 const miniZombies = Array.from(miniMap.querySelectorAll('.zombie'));
 const miniLoot = Array.from(miniMap.querySelectorAll('.loot'));
+const classShowcase = document.getElementById('classShowcase');
+const showcaseMark = document.getElementById('showcaseMark');
+const showcaseTitle = document.getElementById('showcaseTitle');
+const showcaseRole = document.getElementById('showcaseRole');
+const showcaseSkins = document.getElementById('showcaseSkins');
 
 function placeMiniDot(dot, x, z) {
   const px = THREE.MathUtils.clamp(((x + 6) / 12) * 100, 8, 92);
@@ -1422,11 +1429,18 @@ function applyClass(id) {
   accentLight.color.setHex(def.accent);
   avatarMark.querySelector('span').textContent = def.mark;
   avatarMark.style.background = `#${def.accent.toString(16).padStart(6, '0')}`;
+  showcaseMark.textContent = def.mark;
+  showcaseMark.style.background = `#${def.accent.toString(16).padStart(6, '0')}`;
   className.textContent = def.name;
+  showcaseTitle.textContent = def.name;
+  showcaseRole.textContent = def.role;
   activeClassCard.querySelector('strong').textContent = def.name;
   activeClassCard.querySelector('span').textContent = def.role;
   Array.from(skinRow.children).forEach((el, index) => {
     el.dataset.skin = String(index);
+    el.style.background = def.skins[index] || def.skins[0];
+  });
+  Array.from(showcaseSkins.children).forEach((el, index) => {
     el.style.background = def.skins[index] || def.skins[0];
   });
   Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
@@ -1451,6 +1465,9 @@ function applySkin(index) {
   Array.from(skinRow.children).forEach((el, i) => {
     el.classList.toggle('active', i === activeSkin);
   });
+  Array.from(showcaseSkins.children).forEach((el, i) => {
+    el.classList.toggle('active', i === activeSkin);
+  });
   window.__V03_ENGINE_DEMO_STATE = window.__V03_ENGINE_DEMO_STATE || {};
   window.__V03_ENGINE_DEMO_STATE.activeGearCount = activeGearCount;
   window.__V03_ENGINE_DEMO_STATE.activeGearClass = activeClass;
@@ -1459,6 +1476,9 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible = reviewMode === 'class' && !!classShowcase;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseTitle = showcaseTitle.textContent;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount = showcaseSkins.children.length;
 }
 
 function applySkill(id) {

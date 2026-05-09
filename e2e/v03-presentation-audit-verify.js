@@ -88,7 +88,8 @@ requiredText.forEach((text) => {
   'activePainterlyClass: ranger',
   'activePainterlySkin: 2',
   'activePainterlySkinColor: #283746',
-  'class-review painterly state matching Guardian, Tech, and Ranger',
+  'class-review painterly state and class showcase title matching Guardian, Tech, and Ranger',
+  'classShowcaseDisplayed',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',
@@ -119,6 +120,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 11,
   mappedRequirements: 13,
-  gates: 27,
+  gates: 28,
   completionClaim: false
 }, null, 2));

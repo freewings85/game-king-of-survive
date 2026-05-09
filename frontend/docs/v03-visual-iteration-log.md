@@ -201,6 +201,37 @@ Next iteration direction:
 2. Strengthen Guardian shield mass, Tech device glow, and Ranger rifle/hood shape until all three are readable at phone scale without relying on HUD text.
 3. Mirror the same three-class screenshot requirement in Cocos once Cocos Creator is available.
 
+## 2026-05-10 Class Showcase Review Pass
+
+Related work:
+
+- WIP after `3fa601d`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+What moved closer:
+
+- Class review screenshots now use `?review=class`, which shows a dedicated class showcase layer with the active class mark, class name, role, skin swatches, and skill icons.
+- The background battle remains present but is visually reduced, so the class/skin/skill information is easier to compare against the target image's class/skin/skill composition.
+- The gate now checks `classShowcaseDisplayed`, class showcase title, skin count, selected class, selected skin, gear class, and painterly card state together.
+
+What is still far from the reference:
+
+- The showcase is still UI/composition scaffolding. The target image has more authored character art, richer class poses, and production-quality skin/skill panels.
+- The showcase does not yet include full-body isolated class art or individual skin thumbnails.
+- Cocos still needs equivalent class showcase screenshots after the real scene and prefabs exist.
+
+Next iteration direction:
+
+1. Add fuller isolated class art inside the showcase, using the same generated card language but with less combat occlusion.
+2. Add per-skin silhouette accents so the three swatches represent different looks, not only palette choices.
+3. Mirror this class showcase requirement in the Cocos first-playable checklist when real Cocos screenshots become possible.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
