@@ -660,3 +660,37 @@ Next iteration direction:
 1. Mirror prop-wear decal categories into the Cocos visual contract/checklist if they remain mandatory for the final look.
 2. Add stronger silhouette shaping and large readable value blocks to cars/walls so they read more like the target image at phone scale.
 3. Improve scene lighting contrast and rim color without reducing zombie/player readability.
+
+## 2026-05-10 Cocos Prop Wear Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `866159d`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- The prop wear categories added in WebGL are now required by the Cocos visual contract.
+- Cocos runtime stats now distinguish `propWearDecals` from `propGroundLayers`, matching the target's need for both grounded props and authored prop faces.
+- The first-playable checklist now names edge highlight, dark panel, scratch stack, glass card, and hazard band prefabs.
+- The Cocos bridge verifier now fails if prop-wear categories are missing from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- This remains a contract sync, not final authored Cocos art.
+- The target image still has richer hand-painted prop silhouettes, stronger light direction, and better material separation than the current WebGL reference.
+- The real Cocos scene/prefabs have not been opened or captured in this environment.
+
+Next iteration direction:
+
+1. Continue visual work in WebGL by improving large prop silhouettes and value grouping.
+2. Keep Cocos contract/checklist synchronized whenever a WebGL visual layer becomes mandatory.
+3. Capture real Cocos phone screenshots once Cocos Creator is available.

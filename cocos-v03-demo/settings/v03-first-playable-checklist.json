@@ -65,7 +65,12 @@
       "prefabs/map/PropOilStain.prefab",
       "prefabs/map/PropRustStain.prefab",
       "prefabs/map/PropRubbleChip.prefab",
-      "prefabs/map/PropShadowBlob.prefab"
+      "prefabs/map/PropShadowBlob.prefab",
+      "prefabs/map/PropEdgeHighlight.prefab",
+      "prefabs/map/PropDarkPanel.prefab",
+      "prefabs/map/PropScratchStack.prefab",
+      "prefabs/map/PropGlassCard.prefab",
+      "prefabs/map/PropHazardBand.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -88,6 +93,7 @@
     "zombieVariants",
     "unitDecals",
     "propGroundLayers",
+    "propWearDecals",
     "fxLayers",
     "reviewScreenshots"
   ],

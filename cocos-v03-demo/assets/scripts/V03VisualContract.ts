@@ -24,6 +24,14 @@ export const V03_REQUIRED_PROP_GROUND_LAYERS = [
   'prop-shadow-blob'
 ] as const;
 
+export const V03_REQUIRED_PROP_WEAR_DECALS = [
+  'prop-edge-highlight',
+  'prop-dark-panel',
+  'prop-scratch-stack',
+  'prop-glass-card',
+  'prop-hazard-band'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

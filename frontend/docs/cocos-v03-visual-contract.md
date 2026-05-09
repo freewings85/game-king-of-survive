@@ -60,6 +60,18 @@ Required prop-ground integration layers:
 
 These layers keep cars, walls, barrels, crates, tires, and debris from looking pasted onto the tile map.
 
+## Prop Wear Decals
+
+Required prop-wear decal layers:
+
+- `prop-edge-highlight`
+- `prop-dark-panel`
+- `prop-scratch-stack`
+- `prop-glass-card`
+- `prop-hazard-band`
+
+These layers preserve the WebGL reference's authored cover readability: wreck cars need windows, headlights, edge highlights, and scratches; walls and crates need readable cracks and worn corners; barrels need hazard bands.
+
 ## Skill FX
 
 Required FX layers:
@@ -72,4 +84,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, decal layers, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, FX layers, and review screenshot names.

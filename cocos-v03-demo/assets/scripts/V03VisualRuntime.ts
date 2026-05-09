@@ -13,6 +13,7 @@ import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_PROP_GROUND_LAYERS,
+  V03_REQUIRED_PROP_WEAR_DECALS,
   V03_REQUIRED_UNIT_DECALS,
   V03_ZOMBIE_VARIANTS
 } from './V03VisualContract';
@@ -24,6 +25,7 @@ export interface V03VisualRuntimeStats {
   zombieVariants: number;
   unitDecals: number;
   propGroundLayers: number;
+  propWearDecals: number;
   fxLayers: number;
 }
 
@@ -40,6 +42,7 @@ export class V03VisualRuntime extends Component {
     zombieVariants: 0,
     unitDecals: 0,
     propGroundLayers: 0,
+    propWearDecals: 0,
     fxLayers: 0
   };
 
@@ -52,6 +55,7 @@ export class V03VisualRuntime extends Component {
     this.buildZombieVariants();
     this.buildUnitDecals();
     this.buildPropGroundLayers();
+    this.buildPropWearDecals();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -68,6 +72,7 @@ export class V03VisualRuntime extends Component {
     this.stats.zombieVariants = 0;
     this.stats.unitDecals = 0;
     this.stats.propGroundLayers = 0;
+    this.stats.propWearDecals = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -113,6 +118,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.24 - 0.36, 0.035, 0.95);
       this.actorRoot!.addChild(node);
       this.stats.propGroundLayers += 1;
+    });
+  }
+
+  private buildPropWearDecals(): void {
+    V03_REQUIRED_PROP_WEAR_DECALS.forEach((decal, index) => {
+      const color = index % 3 === 0 ? '#f0d189' : index % 3 === 1 ? '#15110d' : '#86d7ff';
+      const node = this.makeBox(`prop-wear-${decal}`, 0.18 + index * 0.035, 0.02, 0.055, color);
+      node.setPosition(index * 0.22 - 0.44, 0.32 + (index % 2) * 0.08, 1.18);
+      this.actorRoot!.addChild(node);
+      this.stats.propWearDecals += 1;
     });
   }
 
