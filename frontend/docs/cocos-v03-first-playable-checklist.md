@@ -6,7 +6,14 @@ Structured source:
 cocos-v03-demo/settings/v03-first-playable-checklist.json
 ```
 
+Scene assembly source:
+
+```text
+cocos-v03-demo/settings/v03-scene-assembly-manifest.json
+```
+
 The checklist defines the minimum Cocos scene structure needed before the Cocos slice can replace the WebGL reference for mobile review.
+The assembly manifest is `source-manifest-only`: it describes the required `V03Battle.scene` layout, bindings, prefab names, screenshots, and runtime gate, but it is not a real Cocos Creator scene asset yet.
 
 ## Scene
 
@@ -61,4 +68,4 @@ Runtime gate:
 - WeChat Mini Game build.
 - Offline config path works.
 
-`e2e/v03-cocos-bridge-verify.js` validates that this checklist covers the scene, nodes, components, prefabs, visual contract coverage, screenshots, and runtime gate.
+`e2e/v03-cocos-bridge-verify.js` validates that this checklist covers the scene, nodes, components, prefabs, visual contract coverage, screenshots, and runtime gate. `e2e/v03-cocos-scene-assembly-verify.js` cross-checks the scene assembly manifest against this checklist and keeps the current Cocos gap explicit.

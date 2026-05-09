@@ -1,0 +1,141 @@
+{
+  "scene": "V03Battle.scene",
+  "purpose": "Cocos Creator assembly manifest for the V03 first-playable phone scene",
+  "status": "source-manifest-only",
+  "creatorRequired": "3.8.x",
+  "targetPlatform": "WeChat Mini Game",
+  "reference": "candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png",
+  "reviewSource": "frontend/engine-demo/index.html",
+  "orientation": "portrait",
+  "viewports": {
+    "portrait": "390x844",
+    "landscapeReview": "844x390"
+  },
+  "rootNodes": [
+    {
+      "path": "Root",
+      "components": ["V03BattleDirector"],
+      "bindings": ["World", "Actors", "FX", "UI", "statusLabel"]
+    },
+    {
+      "path": "CameraRig",
+      "components": [],
+      "children": ["MainCamera", "FollowTarget"]
+    },
+    {
+      "path": "CameraRig/MainCamera",
+      "components": ["Camera"],
+      "bindings": ["FollowTarget"]
+    },
+    {
+      "path": "World",
+      "components": ["V03MapRuntime"],
+      "children": ["GroundTiles", "RoadMarks", "Props", "SpawnPins", "RewardPins"]
+    },
+    {
+      "path": "Actors",
+      "components": ["V03VisualRuntime"],
+      "children": ["Player", "Zombies", "Projectiles", "Pickups", "VisualActors"]
+    },
+    {
+      "path": "FX",
+      "components": [],
+      "children": ["SkillBeams", "SkillBursts", "HitFlashes", "CardLayers", "VisualFX"]
+    },
+    {
+      "path": "UI",
+      "components": [],
+      "children": ["TopHud", "MiniMap", "MoveStick", "SkillButtons", "ClassPanel"]
+    }
+  ],
+  "dataSources": [
+    "assets/resources/config/v03-runtime-config.json",
+    "assets/resources/config/v03-standard-map.json"
+  ],
+  "scripts": [
+    "assets/scripts/V03BattleDirector.ts",
+    "assets/scripts/V03ResourceBridge.ts",
+    "assets/scripts/V03MapRuntime.ts",
+    "assets/scripts/V03VisualRuntime.ts",
+    "assets/scripts/V03VisualContract.ts"
+  ],
+  "prefabGroups": {
+    "hero": ["Guardian.prefab", "TechEngineer.prefab", "Ranger.prefab"],
+    "zombie": ["Brute.prefab", "Crawler.prefab", "Hooded.prefab"],
+    "mapCore": ["WreckCar.prefab", "Wall.prefab", "Crate.prefab", "Barrel.prefab", "Barricade.prefab", "XpShard.prefab"],
+    "mapDetail": [
+      "PropOilStain.prefab",
+      "PropRustStain.prefab",
+      "PropRubbleChip.prefab",
+      "PropShadowBlob.prefab",
+      "PropEdgeHighlight.prefab",
+      "PropDarkPanel.prefab",
+      "PropScratchStack.prefab",
+      "PropGlassCard.prefab",
+      "PropHazardBand.prefab",
+      "PropLightBlock.prefab",
+      "PropShadowBlock.prefab",
+      "PropCoolRim.prefab",
+      "PropRimFrame.prefab",
+      "PropJaggedCap.prefab",
+      "PropMissingCorner.prefab",
+      "PropBrokenHood.prefab",
+      "PropChippedSide.prefab",
+      "StageWarmFocus.prefab",
+      "StageCoolDepth.prefab",
+      "StageRimLight.prefab",
+      "StageEdgeDarkening.prefab",
+      "StageDiagonalShadow.prefab",
+      "ObjectWarmRim.prefab",
+      "ObjectCoolRim.prefab",
+      "ObjectDarkSide.prefab",
+      "ObjectWeaponRim.prefab",
+      "ObjectHeadRim.prefab",
+      "MaterialWarmBlend.prefab",
+      "MaterialCoolBlend.prefab",
+      "MaterialDarkBlend.prefab",
+      "MaterialPropBlend.prefab",
+      "MaterialUnitBlend.prefab"
+    ],
+    "fx": ["FanBulletCard.prefab", "FanImpactMark.prefab", "BoomShockRing.prefab", "BoomDebrisCard.prefab", "ArcBranchLink.prefab", "ArcNodeRing.prefab"],
+    "ui": ["TopHud.prefab", "MiniMap.prefab", "MoveStick.prefab", "SkillButton.prefab", "ClassPanel.prefab"]
+  },
+  "visualLayerCoverage": [
+    "heroGear",
+    "zombieVariants",
+    "unitDecals",
+    "propGroundLayers",
+    "propWearDecals",
+    "propShapeBlocks",
+    "propBreakShapes",
+    "globalLightLayers",
+    "objectRimLayers",
+    "materialBlendLayers",
+    "fxLayers",
+    "reviewScreenshots"
+  ],
+  "runtimeGate": {
+    "durationSeconds": 120,
+    "targetFps": 30,
+    "offlineConfig": true,
+    "wechatMiniGame": true,
+    "earlyCombat": {
+      "shotsFired": 5,
+      "damageDealt": 80,
+      "kills": 1,
+      "xpDropped": 1
+    }
+  },
+  "acceptanceScreenshots": [
+    "cocos-v03-phone-portrait.png",
+    "cocos-v03-phone-landscape.png",
+    "cocos-v03-skill-fan.png",
+    "cocos-v03-skill-boom.png",
+    "cocos-v03-skill-arc.png"
+  ],
+  "knownGaps": [
+    "Cocos Creator scene asset has not been authored in this environment",
+    "WeChat Mini Game build has not been exported",
+    "Real prefab art must replace manifest placeholder names"
+  ]
+}

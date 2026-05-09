@@ -41,7 +41,7 @@ http://localhost:8081/frontend/engine-demo/index.html
 | Zombie/class visual readability | `frontend/engine-demo/app.js` | Gate requires `silhouettePartCount >= 75`, `zombieDetailPartCount >= 285`, `zombieVariantCount >= 3`, `unitDecalCount >= 48`. |
 | Skills and combat FX | `frontend/engine-demo/app.js` | Skill gates require FAN bullet/trail/impact cards, BOOM spark/core readiness, ARC branch/glow layers, and `fxCardCount >= 16`. |
 | Smooth early combat pacing | `frontend/engine-demo/app.js` | Gate requires HP > 0, `shotsFired >= 5`, `damageDealt >= 80`, `kills >= 1`, `xpDropped >= 1`, visible gems, living zombies. |
-| Cocos production path | `cocos-v03-demo/`, `frontend/docs/cocos-v03-visual-contract.md`, `frontend/docs/cocos-v03-first-playable-checklist.md` | `e2e/v03-cocos-bridge-verify.js` checks bridge data, scripts, scene checklist, visual contract layers, and runtime gate fields. |
+| Cocos production path | `cocos-v03-demo/`, `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`, `frontend/docs/cocos-v03-visual-contract.md`, `frontend/docs/cocos-v03-first-playable-checklist.md` | `e2e/v03-cocos-bridge-verify.js` checks bridge data and visual contract layers; `e2e/v03-cocos-scene-assembly-verify.js` checks the `source-manifest-only` V03Battle.scene assembly plan, nodes, scripts, prefabs, screenshots, and runtime gate fields. |
 | Visual iteration discipline | `frontend/docs/v03-visual-iteration-log.md` | `e2e/v03-visual-audit-verify.js` checks reference image, screenshots, current gap, and next direction. |
 | Staged rollback points | Git history | Recent commits separate WebGL visual passes from Cocos contract sync passes. |
 
@@ -57,6 +57,7 @@ That command must include:
 
 - `node e2e/v03-contract-verify.js`
 - `node e2e/v03-cocos-bridge-verify.js`
+- `node e2e/v03-cocos-scene-assembly-verify.js`
 - `node e2e/v03-visual-audit-verify.js`
 - `node e2e/v03-presentation-audit-verify.js`
 
@@ -69,7 +70,7 @@ What is now materially closer to the target image:
 - The phone WebGL reference has readable 2.5D depth, zombie pressure, auto-fire, XP drops, safe-zone shrinking, rival presence, class gear, skins, skill FX, and HUD.
 - The wasteland map has standardized cover, rewards, zombie entries, prop-ground scatter, prop wear, prop shape blocks, broken silhouettes, global lighting, object rims, and material blend layers.
 - The editor and shell both consume shared map/config data instead of drifting away from the playable reference.
-- Cocos now has a bridge, checklist, and visual contract that names the required visual layers for a future WeChat Mini Game slice.
+- Cocos now has a bridge, checklist, visual contract, and `cocos-v03-demo/settings/v03-scene-assembly-manifest.json` that names the required `source-manifest-only` V03Battle.scene nodes, scripts, prefabs, screenshots, and runtime gate for a future WeChat Mini Game slice.
 
 What is still missing before this goal can be called complete:
 

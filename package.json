@@ -1,7 +1,7 @@
 {
   "scripts": {
     "export:cocos-v03": "node tools/export-v03-cocos-config.js",
-    "verify:v03": "node e2e/v03-contract-verify.js && node e2e/v03-cocos-bridge-verify.js && node e2e/v03-visual-audit-verify.js && node e2e/v03-presentation-audit-verify.js"
+    "verify:v03": "node e2e/v03-contract-verify.js && node e2e/v03-cocos-bridge-verify.js && node e2e/v03-cocos-scene-assembly-verify.js && node e2e/v03-visual-audit-verify.js && node e2e/v03-presentation-audit-verify.js"
   },
   "dependencies": {
     "playwright": "^1.58.2",

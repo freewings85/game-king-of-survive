@@ -20,8 +20,11 @@ const requiredText = [
   'npm run verify:v03',
   'node e2e/v03-contract-verify.js',
   'node e2e/v03-cocos-bridge-verify.js',
+  'node e2e/v03-cocos-scene-assembly-verify.js',
   'node e2e/v03-visual-audit-verify.js',
   'node e2e/v03-presentation-audit-verify.js',
+  'cocos-v03-demo/settings/v03-scene-assembly-manifest.json',
+  'source-manifest-only',
   'Art quality: far',
   'No real Cocos Creator scene has been opened',
   'No WeChat Mini Game build or device preview exists',
@@ -92,6 +95,7 @@ assert(verifyScript, 'package.json must define verify:v03');
 [
   'node e2e/v03-contract-verify.js',
   'node e2e/v03-cocos-bridge-verify.js',
+  'node e2e/v03-cocos-scene-assembly-verify.js',
   'node e2e/v03-visual-audit-verify.js',
   'node e2e/v03-presentation-audit-verify.js'
 ].forEach((command) => {

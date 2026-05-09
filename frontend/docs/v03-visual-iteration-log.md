@@ -71,6 +71,39 @@ Next iteration direction:
 4. Improve phone UI composition: circular minimap, skill buttons with icon art, smaller readable HUD clusters, and stronger frame depth.
 5. In parallel, continue turning `cocos-v03-demo/` into a real Cocos scene so the improved target can move into the production engine.
 
+## 2026-05-10 Cocos Scene Assembly Manifest Pass
+
+Related work:
+
+- WIP after `330f1e1`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+
+What moved closer:
+
+- The Cocos production path now has a machine-checkable scene assembly manifest for `V03Battle.scene`, instead of only scattered script/checklist notes.
+- The manifest names the phone viewports, root nodes, runtime scripts, shared JSON data sources, hero/zombie/map/FX/UI prefabs, visual layer coverage, acceptance screenshots, and early combat gate.
+- The verifier cross-checks the manifest against the first-playable checklist, so future Cocos work has a concrete target when authoring the real scene in Cocos Creator 3.8.x.
+- The presentation audit now cites the manifest explicitly, keeping the current Cocos gap visible in each review.
+
+What is still far from the reference:
+
+- This is still `source-manifest-only`; no real Cocos Creator `.scene` file, prefab asset, WeChat build, or device screenshot exists yet.
+- The manifest does not improve the on-screen art by itself. It only reduces production ambiguity before the next implementation pass.
+- The WebGL reference remains procedural and still falls short of the target image's painterly characters, zombie poses, material transitions, and production FX.
+
+Next iteration direction:
+
+1. Use this manifest as the contract for authoring the real Cocos scene when Cocos Creator is available.
+2. Continue whole-screen visual passes against the target image, with each pass updating this log before commit.
+3. Prioritize larger framework-level visual gains next: authored character/zombie silhouettes, richer skill sprite cards, and real Cocos scene assembly over isolated small count increases.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
