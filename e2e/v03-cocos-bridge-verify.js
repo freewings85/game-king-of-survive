@@ -100,6 +100,9 @@ assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos 
 assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_GEAR'), 'Cocos visual runtime must consume hero gear contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_MATERIAL_BLEND_LAYERS'), 'Cocos visual runtime must consume material blend layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_PAINTERLY_CARD_LAYERS'), 'Cocos visual runtime must consume painterly card layer contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_SKIN_SPRITES'), 'Cocos visual runtime must consume hero skin sprite contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_ZOMBIE_CARD_SPRITES'), 'Cocos visual runtime must consume zombie card sprite contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_SKILL_CARD_SPRITES'), 'Cocos visual runtime must consume skill card sprite contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_OBJECT_RIM_LAYERS'), 'Cocos visual runtime must consume object rim layer contract');
 assert(visualRuntimeSource.includes('V03_ZOMBIE_VARIANTS'), 'Cocos visual runtime must consume zombie variant contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_UNIT_DECALS'), 'Cocos visual runtime must consume unit decal contract');
@@ -119,6 +122,9 @@ assert(visualRuntimeSource.includes('globalLightLayers'), 'Cocos visual runtime 
 assert(visualRuntimeSource.includes('objectRimLayers'), 'Cocos visual runtime must report object rim layer stats');
 assert(visualRuntimeSource.includes('materialBlendLayers'), 'Cocos visual runtime must report material blend layer stats');
 assert(visualRuntimeSource.includes('painterlyCardLayers'), 'Cocos visual runtime must report painterly card layer stats');
+assert(visualRuntimeSource.includes('heroSkinSprites'), 'Cocos visual runtime must report hero skin sprite stats');
+assert(visualRuntimeSource.includes('zombieCardSprites'), 'Cocos visual runtime must report zombie card sprite stats');
+assert(visualRuntimeSource.includes('skillCardSprites'), 'Cocos visual runtime must report skill card sprite stats');
 assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
 assert(battleDirectorSource.includes('public visualRuntime: V03VisualRuntime'), 'Battle director must expose V03VisualRuntime');
 assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(this.classId, this.skillId)'), 'Battle director must build visual runtime from contract');
@@ -166,6 +172,28 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
   assert(visualContractSource.includes(layer), `Visual contract must include painterly card layer ${layer}`);
   assert(visualContractDoc.includes(layer), `Visual contract doc must include painterly card layer ${layer}`);
 });
+[
+  'class-skin-guardian-0',
+  'class-skin-guardian-1',
+  'class-skin-guardian-2',
+  'class-skin-tech-0',
+  'class-skin-tech-1',
+  'class-skin-tech-2',
+  'class-skin-ranger-0',
+  'class-skin-ranger-1',
+  'class-skin-ranger-2'
+].forEach((sprite) => {
+  assert(visualContractSource.includes(sprite), `Visual contract must include hero skin sprite ${sprite}`);
+  assert(visualContractDoc.includes(sprite), `Visual contract doc must include hero skin sprite ${sprite}`);
+});
+['zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded'].forEach((sprite) => {
+  assert(visualContractSource.includes(sprite), `Visual contract must include zombie card sprite ${sprite}`);
+  assert(visualContractDoc.includes(sprite), `Visual contract doc must include zombie card sprite ${sprite}`);
+});
+['skill-card-arc', 'skill-card-boom', 'skill-card-fan'].forEach((sprite) => {
+  assert(visualContractSource.includes(sprite), `Visual contract must include skill card sprite ${sprite}`);
+  assert(visualContractDoc.includes(sprite), `Visual contract doc must include skill card sprite ${sprite}`);
+});
 ['muzzle-card', 'bullet-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card', 'branch-link', 'glow-link', 'node-ring', 'impact-card'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include FX layer ${layer}`);
 });
@@ -183,11 +211,20 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['Guardian.prefab', 'TechEngineer.prefab', 'Ranger.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.hero.some((item) => item.endsWith(prefab)), `First playable checklist must include hero prefab ${prefab}`);
 });
+['ClassSkinGuardian0.prefab', 'ClassSkinGuardian1.prefab', 'ClassSkinGuardian2.prefab', 'ClassSkinTech0.prefab', 'ClassSkinTech1.prefab', 'ClassSkinTech2.prefab', 'ClassSkinRanger0.prefab', 'ClassSkinRanger1.prefab', 'ClassSkinRanger2.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.hero.some((item) => item.endsWith(prefab)), `First playable checklist must include hero skin prefab ${prefab}`);
+});
 ['Brute.prefab', 'Crawler.prefab', 'Hooded.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.zombie.some((item) => item.endsWith(prefab)), `First playable checklist must include zombie prefab ${prefab}`);
 });
+['ZombieCardBrute.prefab', 'ZombieCardCrawler.prefab', 'ZombieCardHooded.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.zombie.some((item) => item.endsWith(prefab)), `First playable checklist must include zombie card prefab ${prefab}`);
+});
 ['FanBulletCard.prefab', 'FanImpactMark.prefab', 'BoomShockRing.prefab', 'BoomDebrisCard.prefab', 'ArcBranchLink.prefab', 'ArcNodeRing.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.fx.some((item) => item.endsWith(prefab)), `First playable checklist must include FX prefab ${prefab}`);
+});
+['SkillCardArc.prefab', 'SkillCardBoom.prefab', 'SkillCardFan.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.fx.some((item) => item.endsWith(prefab)), `First playable checklist must include skill card prefab ${prefab}`);
 });
 ['PropOilStain.prefab', 'PropRustStain.prefab', 'PropRubbleChip.prefab', 'PropShadowBlob.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map detail prefab ${prefab}`);
@@ -210,7 +247,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['MaterialWarmBlend.prefab', 'MaterialCoolBlend.prefab', 'MaterialDarkBlend.prefab', 'MaterialPropBlend.prefab', 'MaterialUnitBlend.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include material blend prefab ${prefab}`);
 });
-['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'globalLightLayers', 'objectRimLayers', 'materialBlendLayers', 'painterlyCardLayers', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'globalLightLayers', 'objectRimLayers', 'materialBlendLayers', 'painterlyCardLayers', 'heroSkinSprites', 'zombieCardSprites', 'skillCardSprites', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
   assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
 });
 ['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {

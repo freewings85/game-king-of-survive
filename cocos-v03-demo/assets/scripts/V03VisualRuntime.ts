@@ -13,6 +13,7 @@ import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_GLOBAL_LIGHT_LAYERS,
   V03_REQUIRED_HERO_GEAR,
+  V03_REQUIRED_HERO_SKIN_SPRITES,
   V03_REQUIRED_MATERIAL_BLEND_LAYERS,
   V03_REQUIRED_OBJECT_RIM_LAYERS,
   V03_REQUIRED_PAINTERLY_CARD_LAYERS,
@@ -20,7 +21,9 @@ import {
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
   V03_REQUIRED_PROP_WEAR_DECALS,
+  V03_REQUIRED_SKILL_CARD_SPRITES,
   V03_REQUIRED_UNIT_DECALS,
+  V03_REQUIRED_ZOMBIE_CARD_SPRITES,
   V03_ZOMBIE_VARIANTS
 } from './V03VisualContract';
 
@@ -38,6 +41,9 @@ export interface V03VisualRuntimeStats {
   objectRimLayers: number;
   materialBlendLayers: number;
   painterlyCardLayers: number;
+  heroSkinSprites: number;
+  zombieCardSprites: number;
+  skillCardSprites: number;
   fxLayers: number;
 }
 
@@ -61,6 +67,9 @@ export class V03VisualRuntime extends Component {
     objectRimLayers: 0,
     materialBlendLayers: 0,
     painterlyCardLayers: 0,
+    heroSkinSprites: 0,
+    zombieCardSprites: 0,
+    skillCardSprites: 0,
     fxLayers: 0
   };
 
@@ -80,6 +89,9 @@ export class V03VisualRuntime extends Component {
     this.buildObjectRimLayers();
     this.buildMaterialBlendLayers();
     this.buildPainterlyCardLayers();
+    this.buildHeroSkinSprites();
+    this.buildZombieCardSprites();
+    this.buildSkillCardSprites();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -103,6 +115,9 @@ export class V03VisualRuntime extends Component {
     this.stats.objectRimLayers = 0;
     this.stats.materialBlendLayers = 0;
     this.stats.painterlyCardLayers = 0;
+    this.stats.heroSkinSprites = 0;
+    this.stats.zombieCardSprites = 0;
+    this.stats.skillCardSprites = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -218,6 +233,36 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.22 - 0.44, 1.22 + (index % 2) * 0.08, 2.52);
       this.actorRoot!.addChild(node);
       this.stats.painterlyCardLayers += 1;
+    });
+  }
+
+  private buildHeroSkinSprites(): void {
+    V03_REQUIRED_HERO_SKIN_SPRITES.forEach((sprite, index) => {
+      const color = sprite.includes('guardian') ? '#e95b45' : sprite.includes('tech') ? '#4ec9ff' : '#78d66a';
+      const node = this.makeBox(`hero-skin-sprite-${sprite}`, 0.18 + (index % 3) * 0.025, 0.014, 0.20, color);
+      node.setPosition((index % 3) * 0.22 - 0.22, 1.42 + Math.floor(index / 3) * 0.07, 2.74);
+      this.actorRoot!.addChild(node);
+      this.stats.heroSkinSprites += 1;
+    });
+  }
+
+  private buildZombieCardSprites(): void {
+    V03_REQUIRED_ZOMBIE_CARD_SPRITES.forEach((sprite, index) => {
+      const color = sprite.includes('brute') ? '#a4a66d' : sprite.includes('crawler') ? '#7a8d6a' : '#9a8a70';
+      const node = this.makeBox(`zombie-card-sprite-${sprite}`, 0.20 + index * 0.025, 0.014, 0.18, color);
+      node.setPosition(index * 0.22 - 0.22, 1.68, 2.94);
+      this.actorRoot!.addChild(node);
+      this.stats.zombieCardSprites += 1;
+    });
+  }
+
+  private buildSkillCardSprites(): void {
+    V03_REQUIRED_SKILL_CARD_SPRITES.forEach((sprite, index) => {
+      const color = sprite.includes('arc') ? '#8be9ff' : sprite.includes('boom') ? '#ff8b3d' : '#f4c95a';
+      const node = this.makeBox(`skill-card-sprite-${sprite}`, 0.20 + index * 0.025, 0.018, 0.10, color);
+      node.setPosition(index * 0.24 - 0.24, 0.32, -0.86);
+      this.fxRoot!.addChild(node);
+      this.stats.skillCardSprites += 1;
     });
   }
 

@@ -48,12 +48,24 @@
     "hero": [
       "prefabs/heroes/Guardian.prefab",
       "prefabs/heroes/TechEngineer.prefab",
-      "prefabs/heroes/Ranger.prefab"
+      "prefabs/heroes/Ranger.prefab",
+      "prefabs/heroes/skins/ClassSkinGuardian0.prefab",
+      "prefabs/heroes/skins/ClassSkinGuardian1.prefab",
+      "prefabs/heroes/skins/ClassSkinGuardian2.prefab",
+      "prefabs/heroes/skins/ClassSkinTech0.prefab",
+      "prefabs/heroes/skins/ClassSkinTech1.prefab",
+      "prefabs/heroes/skins/ClassSkinTech2.prefab",
+      "prefabs/heroes/skins/ClassSkinRanger0.prefab",
+      "prefabs/heroes/skins/ClassSkinRanger1.prefab",
+      "prefabs/heroes/skins/ClassSkinRanger2.prefab"
     ],
     "zombie": [
       "prefabs/zombies/Brute.prefab",
       "prefabs/zombies/Crawler.prefab",
-      "prefabs/zombies/Hooded.prefab"
+      "prefabs/zombies/Hooded.prefab",
+      "prefabs/zombies/cards/ZombieCardBrute.prefab",
+      "prefabs/zombies/cards/ZombieCardCrawler.prefab",
+      "prefabs/zombies/cards/ZombieCardHooded.prefab"
     ],
     "map": [
       "prefabs/map/WreckCar.prefab",
@@ -101,7 +113,10 @@
       "prefabs/fx/BoomShockRing.prefab",
       "prefabs/fx/BoomDebrisCard.prefab",
       "prefabs/fx/ArcBranchLink.prefab",
-      "prefabs/fx/ArcNodeRing.prefab"
+      "prefabs/fx/ArcNodeRing.prefab",
+      "prefabs/fx/SkillCardArc.prefab",
+      "prefabs/fx/SkillCardBoom.prefab",
+      "prefabs/fx/SkillCardFan.prefab"
     ],
     "ui": [
       "prefabs/ui/TopHud.prefab",
@@ -123,6 +138,9 @@
     "objectRimLayers",
     "materialBlendLayers",
     "painterlyCardLayers",
+    "heroSkinSprites",
+    "zombieCardSprites",
+    "skillCardSprites",
     "fxLayers",
     "reviewScreenshots"
   ],

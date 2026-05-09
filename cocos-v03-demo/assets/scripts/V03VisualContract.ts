@@ -78,6 +78,30 @@ export const V03_REQUIRED_PAINTERLY_CARD_LAYERS = [
   'hit-feedback-card'
 ] as const;
 
+export const V03_REQUIRED_HERO_SKIN_SPRITES = [
+  'class-skin-guardian-0',
+  'class-skin-guardian-1',
+  'class-skin-guardian-2',
+  'class-skin-tech-0',
+  'class-skin-tech-1',
+  'class-skin-tech-2',
+  'class-skin-ranger-0',
+  'class-skin-ranger-1',
+  'class-skin-ranger-2'
+] as const;
+
+export const V03_REQUIRED_ZOMBIE_CARD_SPRITES = [
+  'zombie-card-brute',
+  'zombie-card-crawler',
+  'zombie-card-hooded'
+] as const;
+
+export const V03_REQUIRED_SKILL_CARD_SPRITES = [
+  'skill-card-arc',
+  'skill-card-boom',
+  'skill-card-fan'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

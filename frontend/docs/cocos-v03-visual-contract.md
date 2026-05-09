@@ -142,6 +142,34 @@ Required sprite/card layers:
 
 These layers preserve the WebGL reference's runtime canvas-texture card pass in Cocos. They should become real sprites or billboard prefabs, not only low-poly boxes.
 
+## Sprite Asset Families
+
+Required hero skin sprites:
+
+- `class-skin-guardian-0`
+- `class-skin-guardian-1`
+- `class-skin-guardian-2`
+- `class-skin-tech-0`
+- `class-skin-tech-1`
+- `class-skin-tech-2`
+- `class-skin-ranger-0`
+- `class-skin-ranger-1`
+- `class-skin-ranger-2`
+
+Required zombie card sprites:
+
+- `zombie-card-brute`
+- `zombie-card-crawler`
+- `zombie-card-hooded`
+
+Required skill card sprites:
+
+- `skill-card-arc`
+- `skill-card-boom`
+- `skill-card-fan`
+
+Cocos must preserve these asset family names when replacing the WebGL PNG placeholders with real sprites, billboards, or prefab-backed renderers. This keeps the class/skin, zombie, and skill art direction from silently collapsing back to procedural boxes.
+
 ## Skill FX
 
 Required FX layers:
@@ -154,4 +182,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, material blend layers, painterly card layers, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, material blend layers, painterly card layers, hero skin sprites, zombie card sprites, skill card sprites, FX layers, and review screenshot names.

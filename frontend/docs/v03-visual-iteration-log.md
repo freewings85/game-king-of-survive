@@ -1600,3 +1600,47 @@ Next iteration direction:
 1. Generate or author truly distinct skin costumes for the highest-priority class, likely Ranger first because the mobile gate uses Ranger skin 2.
 2. Route selected skin state into 3D gear/material differences beyond the painterly card.
 3. Mirror the 9-skin asset contract into the Cocos visual checklist once WebGL review stabilizes.
+
+## 2026-05-10 Cocos sprite asset contract sync
+
+Related work:
+
+- Cocos contract WIP after `6248440`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+- `e2e/v03-cocos-bridge-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-2.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute.png`
+- `frontend/engine-demo/assets/skills/skill-card-arc.png`
+
+Current visual distance:
+
+- Art quality: far for the real mini-game engine because this pass is a Cocos contract/checklist sync, not a true Cocos Creator scene preview.
+- The WebGL reference now has sprite families for skins, zombies, and skills, but the Cocos side still represents them as runtime placeholder boxes until real sprites or prefabs are authored.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The Cocos visual contract now names the 9 hero skin sprite assets, 3 zombie card sprite assets, and 3 skill card sprite assets.
+- `V03VisualRuntime` reports `heroSkinSprites`, `zombieCardSprites`, and `skillCardSprites`, so the Cocos bridge can detect whether those families are still represented.
+- The first playable checklist now requires matching prefab slots, which keeps future Cocos work aligned with the current V03 WebGL visual target.
+
+What is still far from the reference:
+
+- There is still no real Cocos Creator-authored prefab set for the sprite families.
+- There is still no device or WeChat Mini Game screenshot proving Cocos reaches the target image's illustrated depth.
+- The highest-value art gap remains true costume and gear differences for selected skins, especially Ranger skin 2.
+
+Next iteration direction:
+
+1. Author or generate a Ranger-first true skin costume pass with distinct silhouette, gear, and material differences.
+2. Mirror the selected skin into in-match 3D gear/materials, not only portrait cards.
+3. Build a real Cocos preview slice once the WebGL reference has a stronger target-level costume pass.
