@@ -1,0 +1,102 @@
+{
+  "scene": "V03Battle.scene",
+  "orientation": "portrait",
+  "targetViewports": [
+    "390x844",
+    "844x390"
+  ],
+  "requiredNodes": [
+    "CameraRig/MainCamera",
+    "CameraRig/FollowTarget",
+    "World/GroundTiles",
+    "World/RoadMarks",
+    "World/Props",
+    "World/SpawnPins",
+    "World/RewardPins",
+    "Actors/Player",
+    "Actors/Zombies",
+    "Actors/Projectiles",
+    "Actors/Pickups",
+    "FX/SkillBeams",
+    "FX/SkillBursts",
+    "FX/HitFlashes",
+    "FX/CardLayers",
+    "UI/TopHud",
+    "UI/MiniMap",
+    "UI/MoveStick",
+    "UI/SkillButtons",
+    "UI/ClassPanel"
+  ],
+  "componentBindings": [
+    {
+      "component": "V03BattleDirector",
+      "node": "Root",
+      "requires": ["V03MapRuntime", "V03VisualRuntime", "statusLabel"]
+    },
+    {
+      "component": "V03MapRuntime",
+      "node": "World",
+      "requires": ["GroundTiles", "Props", "SpawnPins", "RewardPins"]
+    },
+    {
+      "component": "V03VisualRuntime",
+      "node": "Actors",
+      "requires": ["VisualActors", "VisualFX", "V03VisualContract"]
+    }
+  ],
+  "prefabs": {
+    "hero": [
+      "prefabs/heroes/Guardian.prefab",
+      "prefabs/heroes/TechEngineer.prefab",
+      "prefabs/heroes/Ranger.prefab"
+    ],
+    "zombie": [
+      "prefabs/zombies/Brute.prefab",
+      "prefabs/zombies/Crawler.prefab",
+      "prefabs/zombies/Hooded.prefab"
+    ],
+    "map": [
+      "prefabs/map/WreckCar.prefab",
+      "prefabs/map/Wall.prefab",
+      "prefabs/map/Crate.prefab",
+      "prefabs/map/Barrel.prefab",
+      "prefabs/map/Barricade.prefab",
+      "prefabs/map/XpShard.prefab"
+    ],
+    "fx": [
+      "prefabs/fx/FanBulletCard.prefab",
+      "prefabs/fx/FanImpactMark.prefab",
+      "prefabs/fx/BoomShockRing.prefab",
+      "prefabs/fx/BoomDebrisCard.prefab",
+      "prefabs/fx/ArcBranchLink.prefab",
+      "prefabs/fx/ArcNodeRing.prefab"
+    ],
+    "ui": [
+      "prefabs/ui/TopHud.prefab",
+      "prefabs/ui/MiniMap.prefab",
+      "prefabs/ui/MoveStick.prefab",
+      "prefabs/ui/SkillButton.prefab",
+      "prefabs/ui/ClassPanel.prefab"
+    ]
+  },
+  "visualContractCoverage": [
+    "heroGear",
+    "zombieVariants",
+    "unitDecals",
+    "fxLayers",
+    "reviewScreenshots"
+  ],
+  "acceptanceScreenshots": [
+    "cocos-v03-phone-portrait.png",
+    "cocos-v03-phone-landscape.png",
+    "cocos-v03-skill-fan.png",
+    "cocos-v03-skill-boom.png",
+    "cocos-v03-skill-arc.png"
+  ],
+  "runtimeGate": {
+    "durationSeconds": 120,
+    "targetFps": 30,
+    "offlineConfig": true,
+    "wechatMiniGame": true
+  }
+}

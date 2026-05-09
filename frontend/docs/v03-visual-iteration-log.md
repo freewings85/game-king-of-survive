@@ -498,3 +498,35 @@ Next iteration direction:
 1. Add a Cocos-side first playable checklist for scene setup and prefab asset names.
 2. Improve wasteland ground/prop painterly details around the player so the map surface catches up with units and FX.
 3. When Cocos Creator is available, verify that the visual runtime scaffold can be instantiated in a real scene.
+
+## 2026-05-10 Cocos First Playable Checklist Pass
+
+Related work:
+
+- Cocos planning WIP after `19a000e`
+
+Reviewed artifacts:
+
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+- `e2e/v03-cocos-bridge-verify.js`
+- `cocos-v03-demo/README.md`
+
+What moved closer:
+
+- The Cocos target now has a structured first-playable checklist covering `V03Battle.scene`, phone viewports, required scene nodes, component bindings, prefab names, visual contract coverage, acceptance screenshots, and runtime gates.
+- The checklist explicitly names hero, zombie, map, FX, and UI prefab targets, including FAN bullet/impact, BOOM shock/debris, and ARC branch/node prefabs.
+- The Cocos bridge verifier now gates `firstPlayableChecklist: true`, so scene planning is checked together with map/runtime/visual contract coverage.
+- This makes the next Cocos step concrete: create the scene and replace checklist prefab names with real Cocos assets.
+
+What is still far from the reference:
+
+- The checklist is not a scene file and does not prove Cocos rendering yet.
+- Cocos Creator is still unavailable in this environment, so no `.scene` asset, phone build, or WeChat DevTools run has been produced.
+- The final art gap remains: real sprites/models/materials/animations are still needed.
+
+Next iteration direction:
+
+1. Improve wasteland ground/prop painterly detail in the WebGL reference so the map surface catches up with units and FX.
+2. If Cocos Creator becomes available, instantiate the required scene nodes and bind `V03BattleDirector`, `V03MapRuntime`, and `V03VisualRuntime`.
+3. Keep Cocos checklist and visual contract synchronized whenever the WebGL visual direction changes.

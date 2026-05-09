@@ -65,6 +65,7 @@ V03Battle.scene
 - `assets/resources/config/v03-runtime-config.json`: generated runtime config bridge from `frontend/src/v03-runtime-config.js`.
 - `assets/resources/config/v03-standard-map.json`: generated standard V03 map bridge from `frontend/src/map-contract.js`.
 - `assets/resources/config/v03-vertical-slice.json`: data-only slice target for designers and programmers.
+- `settings/v03-first-playable-checklist.json`: structured first-playable scene, prefab, screenshot, and runtime gate checklist.
 
 Regenerate the bridge files from the repo root:
 

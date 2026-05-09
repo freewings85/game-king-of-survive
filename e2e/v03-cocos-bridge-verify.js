@@ -36,12 +36,14 @@ const sourceConfig = loadBrowserGlobal('frontend/src/v03-runtime-config.js', 'KO
 const sourceContract = loadBrowserGlobal('frontend/src/map-contract.js', 'KOS_MAP_CONTRACT');
 const cocosConfig = readJson('cocos-v03-demo/assets/resources/config/v03-runtime-config.json');
 const cocosMap = readJson('cocos-v03-demo/assets/resources/config/v03-standard-map.json');
+const firstPlayableChecklist = readJson('cocos-v03-demo/settings/v03-first-playable-checklist.json');
 const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
 const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
 const visualRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualRuntime.ts'), 'utf8');
 const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
+const firstPlayableDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-first-playable-checklist.md'), 'utf8');
 
 const sourceClassIds = Object.keys(sourceConfig.classDefs).sort();
 const cocosClassIds = Object.keys(cocosConfig.classes).sort();
@@ -123,6 +125,32 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
   assert(visualContractSource.includes(screenshot), `Visual contract must include review screenshot ${screenshot}`);
   assert(visualContractDoc.includes(screenshot), `Visual contract doc must include review screenshot ${screenshot}`);
 });
+assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable checklist must target V03Battle.scene');
+['CameraRig/MainCamera', 'World/GroundTiles', 'World/Props', 'Actors/Player', 'Actors/Zombies', 'FX/CardLayers', 'UI/MiniMap', 'UI/SkillButtons'].forEach((node) => {
+  assert(firstPlayableChecklist.requiredNodes.includes(node), `First playable checklist must include node ${node}`);
+});
+['V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime'].forEach((component) => {
+  assert(firstPlayableChecklist.componentBindings.some((binding) => binding.component === component), `First playable checklist must bind ${component}`);
+});
+['Guardian.prefab', 'TechEngineer.prefab', 'Ranger.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.hero.some((item) => item.endsWith(prefab)), `First playable checklist must include hero prefab ${prefab}`);
+});
+['Brute.prefab', 'Crawler.prefab', 'Hooded.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.zombie.some((item) => item.endsWith(prefab)), `First playable checklist must include zombie prefab ${prefab}`);
+});
+['FanBulletCard.prefab', 'FanImpactMark.prefab', 'BoomShockRing.prefab', 'BoomDebrisCard.prefab', 'ArcBranchLink.prefab', 'ArcNodeRing.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.fx.some((item) => item.endsWith(prefab)), `First playable checklist must include FX prefab ${prefab}`);
+});
+['heroGear', 'zombieVariants', 'unitDecals', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+  assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
+});
+['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {
+  assert(firstPlayableChecklist.acceptanceScreenshots.includes(screenshot), `First playable checklist must require ${screenshot}`);
+  assert(firstPlayableDoc.includes(screenshot), `First playable doc must mention ${screenshot}`);
+});
+assert(firstPlayableChecklist.runtimeGate.durationSeconds >= 120, 'First playable runtime gate must cover a two minute run');
+assert(firstPlayableChecklist.runtimeGate.targetFps >= 30, 'First playable runtime gate must target 30 FPS');
+assert(firstPlayableChecklist.runtimeGate.wechatMiniGame === true, 'First playable runtime gate must target WeChat Mini Game');
 
 console.log(JSON.stringify({
   classes: cocosClassIds,
@@ -135,5 +163,6 @@ console.log(JSON.stringify({
   mapRuntime: true,
   visualContract: true,
   visualRuntime: true,
+  firstPlayableChecklist: true,
   qualityOk: cocosMap.qualityChecks.every((check) => check.ok)
 }, null, 2));
