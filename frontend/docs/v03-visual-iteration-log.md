@@ -467,3 +467,34 @@ Next iteration direction:
 1. Add a Cocos-side first playable scene/prefab checklist that maps each runtime node group to required prefab assets.
 2. Continue improving FAN bullets and impact marks in the WebGL landscape review, then mirror the named layer in `V03VisualContract.ts` if the structure changes.
 3. When Cocos Creator is available, instantiate `V03BattleDirector`, `V03MapRuntime`, and `V03VisualRuntime` in a scene and verify it visually.
+
+## 2026-05-10 FAN Bullet Card Pass
+
+Related work:
+
+- WebGL reference WIP after `197229e`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+
+What moved closer:
+
+- FAN now has dedicated bullet cards in addition to capsule rounds and warm trails, so the volley reads more like the reference's fan bullet panel.
+- FAN targets now receive impact rings, making the hit points clearer in the main mobile screenshot and the FAN review screenshot.
+- The verifier now gates `fanBulletCardCount >= 6`, `fanImpactMarkCount >= 3`, and a higher `fxCardCount`; the current run reports 7, 7, and 23 in the main FAN state.
+- The landscape phone review remains readable after the extra FAN layers.
+
+What is still far from the reference:
+
+- FAN bullets are still procedural cards, not authored bullet sprites with soft glow and shaded metal.
+- Impact rings need richer spark/debris breakup and better directional marks on zombie bodies.
+- The WebGL reference has improved, but the final Cocos implementation still needs real prefab assets and Cocos-device screenshots.
+
+Next iteration direction:
+
+1. Add a Cocos-side first playable checklist for scene setup and prefab asset names.
+2. Improve wasteland ground/prop painterly details around the player so the map surface catches up with units and FX.
+3. When Cocos Creator is available, verify that the visual runtime scaffold can be instantiated in a real scene.

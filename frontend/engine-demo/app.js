@@ -971,6 +971,23 @@ for (let i = 0; i < 7; i++) {
   scene.add(trail);
   fanTrails.push(trail);
 }
+const fanBulletCards = [];
+for (let i = 0; i < 7; i++) {
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.12), mats.fxCardHot.clone());
+  card.visible = false;
+  card.castShadow = false;
+  scene.add(card);
+  fanBulletCards.push(card);
+}
+const fanImpactMarks = [];
+for (let i = 0; i < 7; i++) {
+  const mark = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.13, 16), mats.fxCardOrange.clone());
+  mark.visible = false;
+  mark.rotation.x = -Math.PI / 2;
+  mark.castShadow = false;
+  scene.add(mark);
+  fanImpactMarks.push(mark);
+}
 
 const boomRing = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.34, 48), mats.orange.clone());
 boomRing.rotation.x = -Math.PI / 2;
@@ -1325,6 +1342,13 @@ function animate(now) {
     );
     round.rotation.y = -a;
     round.material.opacity = 0.42 + Math.sin(t * 9 + i) * 0.16;
+    if (fanBulletCards[i]) {
+      fanBulletCards[i].visible = round.visible;
+      fanBulletCards[i].position.set(round.position.x, 0.88, round.position.z);
+      fanBulletCards[i].rotation.set(-Math.PI / 2, 0, -a + Math.PI / 2);
+      fanBulletCards[i].scale.setScalar(0.82 + Math.abs(Math.sin(t * 10 + i)) * 0.22);
+      fanBulletCards[i].material.opacity = 0.34 + Math.abs(Math.sin(t * 12 + i)) * 0.42;
+    }
     if (fanTrails[i]) {
       fanTrails[i].visible = round.visible;
       fanTrails[i].position.set(
@@ -1334,6 +1358,16 @@ function animate(now) {
       );
       fanTrails[i].rotation.y = -a + Math.PI / 2;
       fanTrails[i].material.opacity = 0.22 + Math.sin(t * 7 + i) * 0.10;
+    }
+    if (fanImpactMarks[i]) {
+      const targets = nearestZombies((skillDefs.fan || skillDefs.arc).range);
+      const target = targets[i % Math.max(1, Math.min(targets.length, skillDefs.fan.targets))]?.z;
+      fanImpactMarks[i].visible = activeSkill === 'fan' && !!target;
+      if (target) {
+        fanImpactMarks[i].position.set(target.position.x, 0.12, target.position.z);
+        fanImpactMarks[i].scale.setScalar(0.7 + Math.abs(Math.sin(t * 9 + i)) * 0.5);
+        fanImpactMarks[i].material.opacity = 0.24 + Math.abs(Math.sin(t * 11 + i)) * 0.42;
+      }
     }
   });
 
@@ -1464,7 +1498,9 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.arcBranchCount = arcBranches.filter((branch) => branch.visible).length;
   window.__V03_ENGINE_DEMO_STATE.arcGlowCount = arcGlowNodes.filter((glow) => glow.visible).length;
   window.__V03_ENGINE_DEMO_STATE.impactSparkCount = impactSparks.filter((spark) => spark.visible).length;
-  window.__V03_ENGINE_DEMO_STATE.fxCardCount = muzzleCards.filter((card) => card.visible).length + impactCards.filter((card) => card.visible).length + boomDebrisCards.filter((card) => card.visible).length + arcNodeCards.filter((node) => node.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.fanBulletCardCount = fanBulletCards.filter((card) => card.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.fanImpactMarkCount = fanImpactMarks.filter((mark) => mark.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.fxCardCount = muzzleCards.filter((card) => card.visible).length + impactCards.filter((card) => card.visible).length + boomDebrisCards.filter((card) => card.visible).length + arcNodeCards.filter((node) => node.visible).length + fanBulletCards.filter((card) => card.visible).length + fanImpactMarks.filter((mark) => mark.visible).length;
   window.__V03_ENGINE_DEMO_STATE.hitPulseCount = livingZombies().filter((z) => z.userData.hitPulse > 0).length;
   window.__V03_ENGINE_DEMO_STATE.hasMiniMap = !!miniMap;
   window.__V03_ENGINE_DEMO_STATE.miniMapZombieDots = miniZombies.length;

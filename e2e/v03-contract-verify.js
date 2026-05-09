@@ -127,6 +127,8 @@ async function verifyEngineDemo(browser) {
     fxTipCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fxTipCount,
     fanRoundCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanRoundCount,
     fanTrailCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanTrailCount,
+    fanBulletCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanBulletCardCount,
+    fanImpactMarkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanImpactMarkCount,
     groundDetailCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.groundDetailCount,
     boomRingReady: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomRingReady,
     boomSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomSparkCount,
@@ -151,7 +153,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 5 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 75 || info.zombieDetailPartCount < 285 || info.zombieVariantCount < 3 || info.unitDecalCount < 48 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.impactSparkCount < 1 || info.fxCardCount < 8 || info.groundDetailCount < 80 || !info.hasMiniMap || info.miniMapZombieDots < 3 || info.iconSkillButtons < 3 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
+  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 5 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 75 || info.zombieDetailPartCount < 285 || info.zombieVariantCount < 3 || info.unitDecalCount < 48 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.fanBulletCardCount < 6 || info.fanImpactMarkCount < 3 || info.impactSparkCount < 1 || info.fxCardCount < 16 || info.groundDetailCount < 80 || !info.hasMiniMap || info.miniMapZombieDots < 3 || info.iconSkillButtons < 3 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'engine-demo-mobile.png');
@@ -178,6 +180,8 @@ async function verifyEngineSkillReview(browser, skill) {
     fxTipCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fxTipCount,
     fanRoundCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanRoundCount,
     fanTrailCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanTrailCount,
+    fanBulletCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanBulletCardCount,
+    fanImpactMarkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanImpactMarkCount,
     boomRingReady: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomRingReady,
     boomSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomSparkCount,
     arcBranchCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcBranchCount,
@@ -189,7 +193,7 @@ async function verifyEngineSkillReview(browser, skill) {
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
   const skillOk = (
-    (skill === 'fan' && info.fanRoundCount >= 6 && info.fanTrailCount >= 6) ||
+    (skill === 'fan' && info.fanRoundCount >= 6 && info.fanTrailCount >= 6 && info.fanBulletCardCount >= 6 && info.fanImpactMarkCount >= 3) ||
     (skill === 'boom' && info.boomRingReady === true && info.fxTipCount >= 1 && info.boomSparkCount >= 6) ||
     (skill === 'arc' && info.arcBranchCount >= 1 && info.arcGlowCount >= 1)
   );
