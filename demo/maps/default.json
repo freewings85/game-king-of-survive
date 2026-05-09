@@ -2224,5 +2224,101 @@
       "x": 1312,
       "y": 2016
     }
+  ],
+  "zombieEntries": [
+    {
+      "kind": "zombie_entry",
+      "name": "北侧尸群入口",
+      "x": 1280,
+      "y": 128
+    },
+    {
+      "kind": "zombie_entry",
+      "name": "南侧尸群入口",
+      "x": 1280,
+      "y": 2432
+    },
+    {
+      "kind": "zombie_entry",
+      "name": "西侧尸群入口",
+      "x": 128,
+      "y": 1280
+    },
+    {
+      "kind": "zombie_entry",
+      "name": "东侧尸群入口",
+      "x": 2432,
+      "y": 1280
+    }
+  ],
+  "rewardPoints": [
+    {
+      "kind": "reward",
+      "x": 672,
+      "y": 672,
+      "xp": 18,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1888,
+      "y": 672,
+      "xp": 18,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 672,
+      "y": 1888,
+      "xp": 18,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1888,
+      "y": 1888,
+      "xp": 18,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1040,
+      "y": 992,
+      "xp": 28,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1520,
+      "y": 992,
+      "xp": 28,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1040,
+      "y": 1568,
+      "xp": 28,
+      "tier": "medium"
+    },
+    {
+      "kind": "reward",
+      "x": 1520,
+      "y": 1568,
+      "xp": 28,
+      "tier": "medium"
+    }
+  ],
+  "rivalPoints": [
+    {
+      "kind": "rival",
+      "x": 896,
+      "y": 1280
+    },
+    {
+      "kind": "rival",
+      "x": 1664,
+      "y": 1280
+    }
   ]
 }
