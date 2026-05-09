@@ -52,6 +52,7 @@ const mats = {
 
 let activeClass = 'tech';
 let activeSkill = 'arc';
+const playerSpawn = { x: -0.8, z: 0.7 };
 
 const game = {
   hp: demoTuning.player.hp,
@@ -135,6 +136,110 @@ function makeWall(x, z, w, d) {
   wall.position.set(x, 0.68, z);
   scene.add(wall);
   wall.castShadow = wall.receiveShadow = true;
+  return wall;
+}
+
+function makeBarrel(x, z, s = 1) {
+  const root = new THREE.Group();
+  const barrel = cyl(0.22 * s, 0.22 * s, 0.54 * s, mats.rust, 18);
+  barrel.position.y = 0.27 * s;
+  root.add(barrel);
+  const cap = cyl(0.23 * s, 0.23 * s, 0.04 * s, mats.orange, 18);
+  cap.position.y = 0.56 * s;
+  root.add(cap);
+  root.position.set(x, 0, z);
+  root.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  scene.add(root);
+  return root;
+}
+
+function makeTires(x, z, s = 1) {
+  const root = new THREE.Group();
+  const tireMat = new THREE.MeshStandardMaterial({ color: 0x090b0a, roughness: 0.96 });
+  for (let i = 0; i < 3; i++) {
+    const tire = cyl(0.22 * s, 0.22 * s, 0.16 * s, tireMat, 20);
+    tire.rotation.z = Math.PI / 2;
+    tire.position.set((i - 1) * 0.28 * s, 0.18 * s, (i % 2) * 0.12 * s);
+    root.add(tire);
+  }
+  root.position.set(x, 0, z);
+  root.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  scene.add(root);
+  return root;
+}
+
+function makeDebris(x, z, s = 1) {
+  const root = new THREE.Group();
+  for (let i = 0; i < 4; i++) {
+    const chunk = box((0.28 + i * 0.04) * s, 0.16 * s, (0.18 + (i % 2) * 0.12) * s, i % 2 ? mats.wall : mats.crate);
+    chunk.position.set((i - 1.5) * 0.22 * s, 0.08 * s, (i % 2 ? -0.14 : 0.16) * s);
+    chunk.rotation.y = i * 0.42;
+    root.add(chunk);
+  }
+  root.position.set(x, 0, z);
+  root.traverse((o) => {
+    if (o.isMesh) {
+      o.castShadow = true;
+      o.receiveShadow = true;
+    }
+  });
+  scene.add(root);
+  return root;
+}
+
+function makeContractMap() {
+  const contract = window.KOS_MAP_CONTRACT;
+  if (!contract || typeof contract.standardizeMap !== 'function') return null;
+  const map = contract.standardizeMap(contract.createMap(40, 40));
+  map.name = 'V03 Contract Wasteland';
+  return map;
+}
+
+function toSceneX(map, x) {
+  return (x / map.width - 0.5) * 12;
+}
+
+function toSceneZ(map, y) {
+  return (y / map.height - 0.5) * 10;
+}
+
+function addContractProp(map, prop, index) {
+  const x = toSceneX(map, prop.x + prop.w / 2);
+  const z = toSceneZ(map, prop.y + prop.h / 2);
+  const sx = Math.max(0.45, prop.w / 96);
+  const sz = Math.max(0.28, prop.h / 96);
+  if (prop.kind === 'wreck_car') return makeWreck(x, z, -0.45 + (index % 5) * 0.18);
+  if (prop.kind === 'crate') return makeCrate(x, z, Math.max(0.42, prop.w / 68));
+  if (prop.kind === 'wall' || prop.kind === 'building' || prop.kind === 'gas_station') return makeWall(x, z, sx, sz);
+  if (prop.kind === 'barricade' || prop.kind === 'fence') return makeWall(x, z, sx, 0.18);
+  if (prop.kind === 'barrel') return makeBarrel(x, z, Math.max(0.72, prop.w / 48));
+  if (prop.kind === 'tires') return makeTires(x, z, Math.max(0.78, prop.w / 90));
+  if (prop.kind === 'debris') return makeDebris(x, z, Math.max(0.72, prop.w / 100));
+  if (prop.kind === 'blood_mark') {
+    const stain = box(Math.max(0.5, sx), 0.012, Math.max(0.26, sz), mats.orange);
+    stain.position.set(x, 0.016, z);
+    stain.castShadow = false;
+    stain.receiveShadow = true;
+    scene.add(stain);
+    return stain;
+  }
+  return makeCrate(x, z, 0.5);
+}
+
+function keepPropForCombatReadability(map, prop) {
+  const x = toSceneX(map, prop.x + prop.w / 2);
+  const z = toSceneZ(map, prop.y + prop.h / 2);
+  return Math.hypot(x - playerSpawn.x, z - playerSpawn.z) > 2.25;
 }
 
 function makeCharacter(colorMat, accentMat, scale = 1) {
@@ -225,16 +330,30 @@ function resetZombie(z, x, zPos) {
   z.visible = true;
 }
 
-makeWreck(-3.3, 2.8, -0.3);
-makeWreck(4.5, -2.6, 0.42);
-makeWall(2.0, 1.6, 2.5, 0.28);
-makeWall(4.2, 1.5, 0.28, 2.7);
-makeCrate(2.9, -0.7, 0.7);
-makeCrate(-4.3, -1.7, 0.55);
-makeCrate(4.7, 2.1, 0.62);
+const contractMap = makeContractMap();
+const contractProps = [];
+if (contractMap && contractMap.structures.length) {
+  contractMap.structures.filter((prop) => keepPropForCombatReadability(contractMap, prop)).slice(0, 28).forEach((prop, index) => {
+    contractProps.push(addContractProp(contractMap, prop, index));
+  });
+} else {
+  makeWreck(-3.3, 2.8, -0.3);
+  makeWreck(4.5, -2.6, 0.42);
+  makeWall(2.0, 1.6, 2.5, 0.28);
+  makeWall(4.2, 1.5, 0.28, 2.7);
+  makeCrate(2.9, -0.7, 0.7);
+  makeCrate(-4.3, -1.7, 0.55);
+  makeCrate(4.7, 2.1, 0.62);
+}
+
+window.__V03_ENGINE_DEMO_STATE = {
+  contractMapName: contractMap && contractMap.name,
+  contractPropCount: contractProps.length,
+  contractQualityOk: !!(contractMap && window.KOS_MAP_CONTRACT.getQualityChecks(contractMap).every((check) => check.ok))
+};
 
 const player = makeCharacter(mats.player, mats.playerAccent, 1);
-player.position.set(-0.8, 0, 0.7);
+player.position.set(playerSpawn.x, 0, playerSpawn.z);
 scene.add(player);
 
 const zombies = [];
