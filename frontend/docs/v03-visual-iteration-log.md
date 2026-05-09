@@ -561,3 +561,34 @@ Next iteration direction:
 1. Add prop-adjacent debris/rust clusters around wreck cars, walls, and barrels in the WebGL reference.
 2. Mirror the ground detail expectations in the Cocos visual/scene checklist if the layer becomes a required runtime surface.
 3. Continue checking that extra map detail does not reduce phone-scale combat readability.
+
+## 2026-05-10 Prop Ground Integration Pass
+
+Related work:
+
+- WebGL reference WIP after `bae0731`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- Wreck cars, walls, crates, barrels, tires, and debris now add local oil/rust stains and rubble chips around their bases.
+- Props feel less pasted onto the tile map and more embedded in the wasteland surface.
+- `groundDetailCount` increased from 160 to 238, and the verifier threshold moved from 145 to 220.
+- The extra prop-edge details do not obscure characters, XP shards, the safe zone, minimap, joystick, or skill buttons in the reviewed screenshots.
+
+What is still far from the reference:
+
+- Prop wear is still procedural. The reference has authored rust streaks, broken asphalt plates, and hand-placed debris clusters.
+- Cocos map runtime does not yet generate prop-adjacent scatter; the Cocos checklist names map prefabs but not this exact detail layer.
+- The WebGL reference still lacks full hand-painted prop textures.
+
+Next iteration direction:
+
+1. Mirror prop-ground scatter in the Cocos first-playable checklist or visual contract if it becomes mandatory for the final look.
+2. Add stronger authored-looking prop wear decals to wreck cars and walls.
+3. Keep phone-scale readability as the constraint for any further map detail.

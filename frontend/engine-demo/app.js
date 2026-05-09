@@ -150,6 +150,29 @@ function addContactShadow(root, sx = 1, sz = 0.7, opacity = 0.22) {
   return shadow;
 }
 
+function addPropGroundScatter(root, radiusX = 1, radiusZ = 0.6, count = 4) {
+  for (let i = 0; i < count; i++) {
+    const a = i * Math.PI * 0.55;
+    const x = Math.cos(a) * radiusX * (0.35 + (i % 3) * 0.18);
+    const z = Math.sin(a) * radiusZ * (0.45 + (i % 2) * 0.22);
+    if (i % 2 === 0) {
+      const stain = new THREE.Mesh(new THREE.CircleGeometry(0.10 + i * 0.012, 14), i % 4 === 0 ? mats.rustStain : mats.oil);
+      stain.rotation.x = -Math.PI / 2;
+      stain.scale.set(1.2, 0.54, 1);
+      stain.position.set(x, 0.026, z);
+      stain.castShadow = false;
+      root.add(stain);
+    } else {
+      const chip = box(0.14 + i * 0.018, 0.025, 0.07 + (i % 3) * 0.018, mats.rubble);
+      chip.position.set(x, 0.045, z);
+      chip.rotation.y = a;
+      chip.castShadow = true;
+      root.add(chip);
+    }
+    groundDetailCount += 1;
+  }
+}
+
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -189,6 +212,7 @@ function makeCrate(x, z, s = 1) {
   plank.position.set(0, s * 0.82, 0);
   plank.rotation.y = Math.PI / 4;
   root.add(plank);
+  addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -209,6 +233,7 @@ function makeWreck(x, z, rot) {
     wheel.position.set(dx, 0.18, 0.58);
     root.add(wheel);
   }
+  addPropGroundScatter(root, 1.25, 0.72, 7);
   root.rotation.y = rot;
   root.position.set(x, 0, z);
   scene.add(root);
@@ -225,6 +250,7 @@ function makeWall(x, z, w, d) {
   const cap = box(w * 1.04, 0.08, d * 1.04, mats.road);
   cap.position.y = 1.39;
   root.add(cap);
+  addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -239,6 +265,7 @@ function makeBarrel(x, z, s = 1) {
   const cap = cyl(0.23 * s, 0.23 * s, 0.04 * s, mats.orange, 18);
   cap.position.y = 0.56 * s;
   root.add(cap);
+  addPropGroundScatter(root, 0.38 * s, 0.32 * s, 4);
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
@@ -260,6 +287,7 @@ function makeTires(x, z, s = 1) {
     tire.position.set((i - 1) * 0.28 * s, 0.18 * s, (i % 2) * 0.12 * s);
     root.add(tire);
   }
+  addPropGroundScatter(root, 0.62 * s, 0.38 * s, 3);
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
@@ -280,6 +308,7 @@ function makeDebris(x, z, s = 1) {
     chunk.rotation.y = i * 0.42;
     root.add(chunk);
   }
+  addPropGroundScatter(root, 0.68 * s, 0.42 * s, 4);
   root.position.set(x, 0, z);
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
