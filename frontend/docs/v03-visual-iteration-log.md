@@ -1500,3 +1500,50 @@ Next iteration direction:
 1. Generate or author skill-card assets for ARC, BOOM, and FAN.
 2. Extend the class sprite set to all 9 class/skin combinations after combat readability stabilizes.
 3. Revisit 3D body visibility and sprite/card blend after hero, zombie, and skill assets share the same style.
+
+## 2026-05-10 Skill sprite card pass
+
+Related work:
+
+- WebGL reference WIP after `264f91a`
+- `frontend/engine-demo/assets/skills/skill-card-arc.png`
+- `frontend/engine-demo/assets/skills/skill-card-boom.png`
+- `frontend/engine-demo/assets/skills/skill-card-fan.png`
+- `frontend/engine-demo/app.js`
+- `frontend/engine-demo/styles.css`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/assets/skills/skill-card-arc.png`
+- `frontend/engine-demo/assets/skills/skill-card-boom.png`
+- `frontend/engine-demo/assets/skills/skill-card-fan.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+
+Current visual distance:
+
+- Art quality: closer for the full hero/zombie/skill visual system, still not target-quality across all skins and map objects.
+- Skill cards now use generated painterly assets, but the moment-to-moment projectile geometry and some UI framing remain procedural.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- ARC, BOOM, and FAN now have transparent PNG skill assets used by in-match painterly skill cards.
+- The bottom skill buttons, combat focus skill strip, and class showcase skill strip reuse the same skill asset family.
+- Runtime gates now require `skillPainterlyUsesSpriteAsset` so skill cards cannot silently fall back to procedural textures.
+
+What is still far from the reference:
+
+- Skill card assets are now painterly, but the actual projectile trails and hit marks are still procedural beams and simple cards.
+- UI placement is improved but still more like a prototype overlay than the target's fully art-directed mobile composition.
+- Class skin variants still reuse class-level portrait assets.
+
+Next iteration direction:
+
+1. Build skin-specific class portraits for all 9 class/skin combinations.
+2. Replace the most visible projectile trails and impact marks with sprite-backed assets.
+3. Audit the full phone screenshot against the V03 reference before widening to Cocos prefab equivalents.

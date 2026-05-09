@@ -24,6 +24,7 @@ assert(text.includes('Mobile combat focus frame'), 'Visual iteration log must re
 assert(text.includes('Class focus sprite asset pass'), 'Visual iteration log must record the latest sprite asset pass');
 assert(text.includes('In-match hero sprite card pass'), 'Visual iteration log must record the latest in-match sprite pass');
 assert(text.includes('Zombie sprite card pass'), 'Visual iteration log must record the latest zombie sprite pass');
+assert(text.includes('Skill sprite card pass'), 'Visual iteration log must record the latest skill sprite pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

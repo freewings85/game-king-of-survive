@@ -841,6 +841,32 @@ body {
 .showcase-skills .boom { color: #ff8b3d; border-radius: 12px; transform: rotate(45deg); }
 .showcase-skills .fan { color: #f4c95a; border-radius: 8px; }
 
+.skill.blue i,
+.focus-skills .arc,
+.showcase-skills .arc {
+  background: url("/frontend/engine-demo/assets/skills/skill-card-arc.png") center / 122% auto no-repeat;
+  box-shadow: 0 0 18px #4ec9ff, inset 0 0 18px rgba(78,201,255,0.36);
+}
+
+.skill.orange i,
+.focus-skills .boom,
+.showcase-skills .boom {
+  border-radius: 10px;
+  background: url("/frontend/engine-demo/assets/skills/skill-card-boom.png") center / 122% auto no-repeat;
+  clip-path: none;
+  transform: none;
+  box-shadow: 0 0 18px #ff8b3d, inset 0 0 18px rgba(255,139,61,0.32);
+}
+
+.skill.gold i,
+.focus-skills .fan,
+.showcase-skills .fan {
+  border-radius: 8px;
+  background: url("/frontend/engine-demo/assets/skills/skill-card-fan.png") center / 122% auto no-repeat;
+  transform: none;
+  box-shadow: 0 0 18px #f4c95a, inset 0 0 18px rgba(244,201,90,0.30);
+}
+
 body.class-review #engineCanvas {
   filter: brightness(0.66) contrast(1.06) saturate(0.92);
 }

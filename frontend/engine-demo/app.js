@@ -158,11 +158,13 @@ let activePainterlySkinColor = '#193743';
 let activePainterlyStyle = 'coil-screen';
 let activePainterlyUsesSpriteAsset = false;
 let zombiePainterlyUsesSpriteAsset = false;
+let skillPainterlyUsesSpriteAsset = false;
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
 const classPortraitTextureCache = new Map();
 const zombieTextureCache = new Map();
+const skillTextureCache = new Map();
 const classThumbStyles = {
   guardian: 'shield-armor',
   tech: 'coil-screen',
@@ -177,6 +179,11 @@ const zombieCardAssets = {
   0: '/frontend/engine-demo/assets/zombies/zombie-card-brute.png',
   1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler.png',
   2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded.png'
+};
+const skillCardAssets = {
+  arc: '/frontend/engine-demo/assets/skills/skill-card-arc.png',
+  boom: '/frontend/engine-demo/assets/skills/skill-card-boom.png',
+  fan: '/frontend/engine-demo/assets/skills/skill-card-fan.png'
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -383,6 +390,18 @@ function getZombieSpriteTexture(variant) {
   return zombieTextureCache.get(variant);
 }
 
+function getSkillSpriteTexture(kind) {
+  const asset = skillCardAssets[kind];
+  if (!asset) return null;
+  if (!skillTextureCache.has(kind)) {
+    const texture = new THREE.TextureLoader().load(asset);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    skillTextureCache.set(kind, texture);
+  }
+  return skillTextureCache.get(kind);
+}
+
 function makeZombieCardTexture(variant = 0) {
   const cloth = variant === 2 ? '#413424' : variant === 1 ? '#2d3828' : '#4b3628';
   const skin = variant === 1 ? '#78906d' : '#8d9a72';
@@ -473,10 +492,11 @@ const painterlyMaterials = {
   zombieBrute: makePainterlyMaterial(getZombieSpriteTexture(0) || makeZombieCardTexture(0), 0.90),
   zombieCrawler: makePainterlyMaterial(getZombieSpriteTexture(1) || makeZombieCardTexture(1), 0.90),
   zombieHooded: makePainterlyMaterial(getZombieSpriteTexture(2) || makeZombieCardTexture(2), 0.90),
-  fan: makePainterlyMaterial(makeFxCardTexture('fan'), 0.96),
-  boom: makePainterlyMaterial(makeFxCardTexture('boom'), 0.94),
-  arc: makePainterlyMaterial(makeFxCardTexture('arc'), 0.94)
+  fan: makePainterlyMaterial(getSkillSpriteTexture('fan') || makeFxCardTexture('fan'), 0.96),
+  boom: makePainterlyMaterial(getSkillSpriteTexture('boom') || makeFxCardTexture('boom'), 0.94),
+  arc: makePainterlyMaterial(getSkillSpriteTexture('arc') || makeFxCardTexture('arc'), 0.94)
 };
+skillPainterlyUsesSpriteAsset = ['arc', 'boom', 'fan'].every((kind) => !!getSkillSpriteTexture(kind));
 
 function addPainterlyCard(root, material, width, height, x, y, z, kind) {
   const card = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material.clone());
@@ -2199,6 +2219,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount = zombiePainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyUsesSpriteAsset = zombiePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.skillPainterlyUsesSpriteAsset = skillPainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
