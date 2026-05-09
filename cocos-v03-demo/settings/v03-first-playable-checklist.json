@@ -74,7 +74,11 @@
       "prefabs/map/PropLightBlock.prefab",
       "prefabs/map/PropShadowBlock.prefab",
       "prefabs/map/PropCoolRim.prefab",
-      "prefabs/map/PropRimFrame.prefab"
+      "prefabs/map/PropRimFrame.prefab",
+      "prefabs/map/PropJaggedCap.prefab",
+      "prefabs/map/PropMissingCorner.prefab",
+      "prefabs/map/PropBrokenHood.prefab",
+      "prefabs/map/PropChippedSide.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -99,6 +103,7 @@
     "propGroundLayers",
     "propWearDecals",
     "propShapeBlocks",
+    "propBreakShapes",
     "fxLayers",
     "reviewScreenshots"
   ],

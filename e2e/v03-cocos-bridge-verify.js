@@ -102,6 +102,7 @@ assert(visualRuntimeSource.includes('V03_REQUIRED_UNIT_DECALS'), 'Cocos visual r
 assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_GROUND_LAYERS'), 'Cocos visual runtime must consume prop ground layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_WEAR_DECALS'), 'Cocos visual runtime must consume prop wear decal contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_SHAPE_BLOCKS'), 'Cocos visual runtime must consume prop shape block contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_BREAK_SHAPES'), 'Cocos visual runtime must consume prop break shape contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_FX_LAYERS'), 'Cocos visual runtime must consume FX layer contract');
 assert(visualRuntimeSource.includes('heroGear'), 'Cocos visual runtime must report hero gear stats');
 assert(visualRuntimeSource.includes('zombieVariants'), 'Cocos visual runtime must report zombie variant stats');
@@ -109,6 +110,7 @@ assert(visualRuntimeSource.includes('unitDecals'), 'Cocos visual runtime must re
 assert(visualRuntimeSource.includes('propGroundLayers'), 'Cocos visual runtime must report prop ground layer stats');
 assert(visualRuntimeSource.includes('propWearDecals'), 'Cocos visual runtime must report prop wear decal stats');
 assert(visualRuntimeSource.includes('propShapeBlocks'), 'Cocos visual runtime must report prop shape block stats');
+assert(visualRuntimeSource.includes('propBreakShapes'), 'Cocos visual runtime must report prop break shape stats');
 assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
 assert(battleDirectorSource.includes('public visualRuntime: V03VisualRuntime'), 'Battle director must expose V03VisualRuntime');
 assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(this.classId, this.skillId)'), 'Battle director must build visual runtime from contract');
@@ -135,6 +137,10 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
 ['prop-light-block', 'prop-shadow-block', 'prop-cool-rim', 'prop-rim-frame'].forEach((block) => {
   assert(visualContractSource.includes(block), `Visual contract must include prop shape block ${block}`);
   assert(visualContractDoc.includes(block), `Visual contract doc must include prop shape block ${block}`);
+});
+['prop-jagged-cap', 'prop-missing-corner', 'prop-broken-hood', 'prop-chipped-side'].forEach((shape) => {
+  assert(visualContractSource.includes(shape), `Visual contract must include prop break shape ${shape}`);
+  assert(visualContractDoc.includes(shape), `Visual contract doc must include prop break shape ${shape}`);
 });
 ['muzzle-card', 'bullet-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card', 'branch-link', 'glow-link', 'node-ring', 'impact-card'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include FX layer ${layer}`);
@@ -168,7 +174,10 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['PropLightBlock.prefab', 'PropShadowBlock.prefab', 'PropCoolRim.prefab', 'PropRimFrame.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map shape prefab ${prefab}`);
 });
-['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+['PropJaggedCap.prefab', 'PropMissingCorner.prefab', 'PropBrokenHood.prefab', 'PropChippedSide.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include map break prefab ${prefab}`);
+});
+['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
   assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
 });
 ['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {

@@ -39,6 +39,13 @@ export const V03_REQUIRED_PROP_SHAPE_BLOCKS = [
   'prop-rim-frame'
 ] as const;
 
+export const V03_REQUIRED_PROP_BREAK_SHAPES = [
+  'prop-jagged-cap',
+  'prop-missing-corner',
+  'prop-broken-hood',
+  'prop-chipped-side'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

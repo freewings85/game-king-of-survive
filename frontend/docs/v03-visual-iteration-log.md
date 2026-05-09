@@ -793,3 +793,37 @@ Next iteration direction:
 1. Sync broken prop silhouette categories into the Cocos contract if this layer remains mandatory.
 2. Add a global lighting/value pass for foreground/background separation and stronger rim direction.
 3. Continue replacing clean primitive shapes with larger authored-looking forms before doing more small details.
+
+## 2026-05-10 Cocos Prop Break Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `a68f3d4`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- Broken prop silhouettes are now a named Cocos visual contract rather than a WebGL-only implementation detail.
+- Cocos runtime stats now separate `propBreakShapes` from prop ground, wear, and value-block layers.
+- The first-playable checklist now names jagged cap, missing corner, broken hood, and chipped side prefabs.
+- The Cocos bridge verifier now fails if broken silhouette categories disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- The real Cocos prefab art still has not been authored or captured.
+- The target image's broken shapes have painterly edges and lighting integration; this pass only locks the required category names.
+- The next WebGL visual gap is global lighting and foreground/background separation.
+
+Next iteration direction:
+
+1. Add a global lighting/value pass in WebGL to separate actors, props, and ground more like the target image.
+2. Keep Cocos contract/checklist synchronized only for layers that survive WebGL review.
+3. Replace placeholder Cocos boxes with authored prefabs when Cocos Creator becomes available.

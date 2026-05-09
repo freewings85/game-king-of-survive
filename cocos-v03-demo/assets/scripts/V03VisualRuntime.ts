@@ -12,6 +12,7 @@ import type { V03ClassId, V03SkillId } from './V03Config';
 import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_HERO_GEAR,
+  V03_REQUIRED_PROP_BREAK_SHAPES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
   V03_REQUIRED_PROP_WEAR_DECALS,
@@ -28,6 +29,7 @@ export interface V03VisualRuntimeStats {
   propGroundLayers: number;
   propWearDecals: number;
   propShapeBlocks: number;
+  propBreakShapes: number;
   fxLayers: number;
 }
 
@@ -46,6 +48,7 @@ export class V03VisualRuntime extends Component {
     propGroundLayers: 0,
     propWearDecals: 0,
     propShapeBlocks: 0,
+    propBreakShapes: 0,
     fxLayers: 0
   };
 
@@ -60,6 +63,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropGroundLayers();
     this.buildPropWearDecals();
     this.buildPropShapeBlocks();
+    this.buildPropBreakShapes();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -78,6 +82,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propGroundLayers = 0;
     this.stats.propWearDecals = 0;
     this.stats.propShapeBlocks = 0;
+    this.stats.propBreakShapes = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -143,6 +148,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.26 - 0.39, 0.48 + (index % 2) * 0.08, 1.42);
       this.actorRoot!.addChild(node);
       this.stats.propShapeBlocks += 1;
+    });
+  }
+
+  private buildPropBreakShapes(): void {
+    V03_REQUIRED_PROP_BREAK_SHAPES.forEach((shape, index) => {
+      const color = index % 2 ? '#20251f' : '#b3bca7';
+      const node = this.makeBox(`prop-break-${shape}`, 0.16 + index * 0.05, 0.08 + (index % 2) * 0.05, 0.10, color);
+      node.setPosition(index * 0.24 - 0.36, 0.66 + (index % 3) * 0.08, 1.64);
+      this.actorRoot!.addChild(node);
+      this.stats.propBreakShapes += 1;
     });
   }
 

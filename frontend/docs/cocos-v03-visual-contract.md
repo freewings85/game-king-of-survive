@@ -83,6 +83,17 @@ Required prop shape/value layers:
 
 These layers are the larger value shapes that make wreck cars, walls, crates, barrels, and debris read as chunky cover on a phone screen instead of flat clean geometry.
 
+## Prop Break Shapes
+
+Required prop break/silhouette layers:
+
+- `prop-jagged-cap`
+- `prop-missing-corner`
+- `prop-broken-hood`
+- `prop-chipped-side`
+
+These layers keep wreck cars, walls, crates, and barrels from reverting to clean boxes when the WebGL reference is rebuilt as Cocos prefabs.
+
 ## Skill FX
 
 Required FX layers:
@@ -95,4 +106,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, FX layers, and review screenshot names.
