@@ -37,6 +37,8 @@ const sourceContract = loadBrowserGlobal('frontend/src/map-contract.js', 'KOS_MA
 const cocosConfig = readJson('cocos-v03-demo/assets/resources/config/v03-runtime-config.json');
 const cocosMap = readJson('cocos-v03-demo/assets/resources/config/v03-standard-map.json');
 const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
+const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
+const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
 
 const sourceClassIds = Object.keys(sourceConfig.classDefs).sort();
 const cocosClassIds = Object.keys(cocosConfig.classes).sort();
@@ -79,6 +81,14 @@ assert(cocosMap.qualityChecks.every((check) => check.ok), 'Cocos map quality gat
 assert(resourceBridgeSource.includes("resources.load(path, JsonAsset"), 'Cocos bridge must load resources JsonAsset files');
 assert(resourceBridgeSource.includes("'config/v03-runtime-config'"), 'Cocos bridge must load runtime config JSON');
 assert(resourceBridgeSource.includes("'config/v03-standard-map'"), 'Cocos bridge must load standard map JSON');
+assert(mapRuntimeSource.includes("@ccclass('V03MapRuntime')"), 'Cocos map runtime component is missing');
+assert(mapRuntimeSource.includes('buildFromMap(map: V03MapData)'), 'Cocos map runtime must build from bridge map data');
+assert(mapRuntimeSource.includes('map.tiles.forEach'), 'Cocos map runtime must instantiate tiles');
+assert(mapRuntimeSource.includes('map.structures.forEach'), 'Cocos map runtime must instantiate props');
+assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must expose zombie entries');
+assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
+assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
+assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
 
 console.log(JSON.stringify({
   classes: cocosClassIds,
@@ -88,5 +98,6 @@ console.log(JSON.stringify({
   rewardPoints: cocosMap.rewardPoints.length,
   rivalPoints: cocosMap.rivalPoints.length,
   resourceBridge: true,
+  mapRuntime: true,
   qualityOk: cocosMap.qualityChecks.every((check) => check.ok)
 }, null, 2));

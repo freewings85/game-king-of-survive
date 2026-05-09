@@ -56,6 +56,7 @@ V03Battle.scene
 ## Source Files
 
 - `assets/scripts/V03BattleDirector.ts`: first-playable component boundary and loop notes.
+- `assets/scripts/V03MapRuntime.ts`: converts exported V03 map data into Cocos tile, prop, and gameplay pin nodes.
 - `assets/scripts/V03Config.ts`: typed class, skill, and tuning defaults ported from the browser reference.
 - `assets/scripts/V03MapContract.ts`: Cocos-side map contract shape.
 - `assets/scripts/V03ResourceBridge.ts`: loads generated JSON from Cocos `resources/config`.

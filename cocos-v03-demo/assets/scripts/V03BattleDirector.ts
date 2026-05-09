@@ -1,6 +1,7 @@
 import { _decorator, Component, Label } from 'cc';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
 import { loadV03BridgeData, type V03BridgeData } from './V03ResourceBridge';
+import { V03MapRuntime, type V03MapRuntimeStats } from './V03MapRuntime';
 
 const { ccclass, property } = _decorator;
 
@@ -8,6 +9,9 @@ const { ccclass, property } = _decorator;
 export class V03BattleDirector extends Component {
   @property(Label)
   public statusLabel: Label | null = null;
+
+  @property(V03MapRuntime)
+  public mapRuntime: V03MapRuntime | null = null;
 
   private classId: V03ClassId = 'ranger';
   private skillId: V03SkillId = 'fan';
@@ -18,9 +22,13 @@ export class V03BattleDirector extends Component {
   private hp = V03_TUNING.playerHp;
   private alive = 32;
   private bridgeData: V03BridgeData | null = null;
+  private mapStats: V03MapRuntimeStats | null = null;
 
   async start(): Promise<void> {
     this.bridgeData = await loadV03BridgeData();
+    if (this.mapRuntime) {
+      this.mapStats = this.mapRuntime.buildFromMap(this.bridgeData.map);
+    }
     this.hp = this.bridgeData.runtime.tuning.player.hp;
     this.alive = Math.max(18, this.bridgeData.map.zombieEntries.length * 8);
     this.renderStatus();
@@ -73,11 +81,14 @@ export class V03BattleDirector extends Component {
     const classDef = V03_CLASSES[this.classId];
     const skillDef = V03_SKILLS[this.skillId];
     const mapName = this.bridgeData ? `${this.bridgeData.map.cols}x${this.bridgeData.map.rows}` : 'loading map';
+    const mapStats = this.mapStats
+      ? `T${this.mapStats.tiles} P${this.mapStats.props} Z${this.mapStats.zombieEntries} R${this.mapStats.rewardPoints}`
+      : 'runtime pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
       `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
-      `MAP ${mapName}`
+      `MAP ${mapName} ${mapStats}`
     ].join('\n');
   }
 }
