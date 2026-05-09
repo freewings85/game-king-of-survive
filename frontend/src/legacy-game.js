@@ -14023,6 +14023,9 @@
     get skillLevels() { return skillLevels; },
     get ownedSkills() { return ownedSkills; },
     get selectedClass() { return selectedClass; },
+    set selectedClass(v) {
+      if (CLASS_DEFS[v]) selectedClass = v;
+    },
     get selectedBuild() { return selectedBuild; },
     get gameMode() { return gameMode; },
     get gameTimer() { return gameTime; },

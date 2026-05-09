@@ -39,6 +39,9 @@ function _enterGame(playerData) {
   document.getElementById('bar-level').textContent = 'Lv.' + (playerData.level || 1);
   // Set gold in game
   if (typeof window._setPlayerGold === 'function') window._setPlayerGold(playerData.gold || 0);
+  if (window.KOS_LOBBY && typeof window.KOS_LOBBY.applyToGame === 'function') {
+    window.KOS_LOBBY.applyToGame(window._gameAPI);
+  }
   if (playerData.offlineGuest) return;
   // Claim daily reward automatically
   _apiRequest('POST', '/api/players/' + playerData.id + '/claim-daily-reward', null, function(err, reward) {

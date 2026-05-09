@@ -2,9 +2,9 @@
   'use strict';
 
   var classes = [
-    { id: 'guardian', name: '重装守卫', role: '护盾 / 近战压线', mark: 'G', color: '#e95b45', skins: ['#1c2526', '#53605d', '#7d4f58'] },
-    { id: 'tech', name: '灵能工程', role: '连锁 / 控场爆发', mark: 'T', color: '#4ec9ff', skins: ['#193743', '#2f6068', '#7b315d'] },
-    { id: 'ranger', name: '废土游侠', role: '步枪 / 机动收割', mark: 'R', color: '#78d66a', skins: ['#314027', '#5a5534', '#283746'] }
+    { id: 'guardian', gameClass: 'warrior', name: '重装守卫', role: '护盾 / 近战压线', mark: 'G', color: '#e95b45', skins: ['#1c2526', '#53605d', '#7d4f58'] },
+    { id: 'tech', gameClass: 'mage', name: '灵能工程', role: '连锁 / 控场爆发', mark: 'T', color: '#4ec9ff', skins: ['#193743', '#2f6068', '#7b315d'] },
+    { id: 'ranger', gameClass: 'scout', name: '废土游侠', role: '步枪 / 机动收割', mark: 'R', color: '#78d66a', skins: ['#314027', '#5a5534', '#283746'] }
   ];
 
   var skills = [
@@ -69,6 +69,16 @@
     v03.drawPhoneScene(phoneCanvas.getContext('2d'), phoneCanvas.width, phoneCanvas.height, classes[active], Date.now() / 1000);
   }
 
+  function getActiveClass() {
+    return classes[active] || classes[0];
+  }
+
+  function applyToGame(api) {
+    var cls = getActiveClass();
+    if (api && cls && cls.gameClass) api.selectedClass = cls.gameClass;
+    return cls;
+  }
+
   function loop() {
     drawPhone();
     window.requestAnimationFrame(loop);
@@ -80,6 +90,11 @@
     renderSkills();
     loop();
   }
+
+  window.KOS_LOBBY = {
+    getActiveClass: getActiveClass,
+    applyToGame: applyToGame
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
