@@ -84,6 +84,9 @@ const mats = {
   stageCool: new THREE.MeshBasicMaterial({ color: 0x5dbdff, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false }),
   stageDark: new THREE.MeshBasicMaterial({ color: 0x020504, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false }),
   stageRim: new THREE.MeshBasicMaterial({ color: 0xc6f4ff, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
+  objectWarmRim: new THREE.MeshBasicMaterial({ color: 0xffd89a, transparent: true, opacity: 0.58, depthWrite: false }),
+  objectCoolRim: new THREE.MeshBasicMaterial({ color: 0xa8eeff, transparent: true, opacity: 0.48, depthWrite: false }),
+  objectDarkSide: new THREE.MeshBasicMaterial({ color: 0x050706, transparent: true, opacity: 0.38, depthWrite: false }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -138,6 +141,7 @@ let propWearCount = 0;
 let propShapeCount = 0;
 let propBreakCount = 0;
 let globalLightCount = 0;
+let objectRimCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -209,6 +213,19 @@ function addScratchStack(root, x, y, z, width, count, mat = mats.propScratch) {
     const scratch = addPropWear(root, width * (0.58 + i * 0.12), 0.018, 0.028, mat, x + i * 0.035, y + i * 0.055, z, (i - 1) * 0.22);
     scratch.rotation.z = (i % 2 ? -0.18 : 0.14);
   }
+}
+
+function addObjectRim(root, w, h, d, mat, x, y, z, ry = 0, rz = 0) {
+  const rim = box(w, h, d, mat);
+  rim.position.set(x, y, z);
+  rim.rotation.y = ry;
+  rim.rotation.z = rz;
+  rim.castShadow = false;
+  rim.receiveShadow = false;
+  rim.userData.objectRim = true;
+  root.add(rim);
+  objectRimCount += 1;
+  return rim;
 }
 
 function addPropShapeBlock(root, w, h, d, mat, x, y, z, ry = 0, rz = 0) {
@@ -325,6 +342,8 @@ function makeCrate(x, z, s = 1) {
   addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, -s * 0.42, s * 0.52, -s * 0.535);
   addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, s * 0.42, s * 0.52, -s * 0.535);
   addScratchStack(root, -s * 0.12, s * 0.36, -s * 0.55, s * 0.30, 3);
+  addObjectRim(root, s * 0.72, s * 0.035, s * 0.055, mats.objectWarmRim, 0, s * 0.92, -s * 0.555);
+  addObjectRim(root, s * 0.055, s * 0.68, s * 0.055, mats.objectCoolRim, s * 0.49, s * 0.52, -s * 0.56);
   addBrokenChunk(root, s * 0.24, s * 0.18, s * 0.12, mats.propBrokenDark, -s * 0.43, s * 0.95, -s * 0.30, 0.22, -0.35);
   addBrokenChunk(root, s * 0.28, s * 0.12, s * 0.10, mats.propBrokenLight, s * 0.34, s * 0.14, -s * 0.48, -0.28, 0.18);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
@@ -356,6 +375,10 @@ function makeWreck(x, z, rot) {
   addPropWear(root, 0.16, 0.12, 0.06, mats.hotCore, 1.02, 0.41, -0.56);
   addScratchStack(root, 0.06, 0.48, -0.57, 0.46, 5);
   addScratchStack(root, -0.54, 0.78, 0.46, 0.30, 3, mats.propDarkWear);
+  addObjectRim(root, 1.92, 0.045, 0.07, mats.objectWarmRim, -0.05, 0.70, -0.61, -0.03);
+  addObjectRim(root, 0.055, 0.46, 0.72, mats.objectCoolRim, 1.12, 0.42, 0.05, 0.08);
+  addObjectRim(root, 0.76, 0.04, 0.08, mats.objectWarmRim, -0.36, 1.08, -0.52, -0.04);
+  addObjectRim(root, 1.72, 0.18, 0.06, mats.objectDarkSide, 0.10, 0.30, 0.56, 0.02);
   addBrokenChunk(root, 0.46, 0.18, 0.42, mats.propBrokenRust, -1.02, 0.68, -0.12, -0.18, 0.22);
   addBrokenChunk(root, 0.38, 0.20, 0.34, mats.propBrokenDark, 1.08, 0.58, 0.20, 0.34, -0.18);
   addBrokenChunk(root, 0.34, 0.18, 0.38, mats.propBrokenLight, -0.78, 1.08, 0.18, -0.36, 0.26);
@@ -392,6 +415,9 @@ function makeWall(x, z, w, d) {
   addPropWear(root, Math.max(0.035, w * 0.025), 0.82, Math.max(0.035, d * 0.16), mats.propDarkWear, -w * 0.25, 0.68, -d * 0.55);
   addPropWear(root, Math.max(0.035, w * 0.025), 0.62, Math.max(0.035, d * 0.16), mats.propDarkWear, w * 0.18, 0.78, -d * 0.55);
   addScratchStack(root, -w * 0.08, 0.52, -d * 0.57, Math.max(0.18, w * 0.18), 4);
+  addObjectRim(root, w * 0.88, 0.045, Math.max(0.035, d * 0.20), mats.objectWarmRim, 0, 1.30, -d * 0.585);
+  addObjectRim(root, Math.max(0.055, w * 0.045), 1.06, Math.max(0.035, d * 0.18), mats.objectCoolRim, w * 0.50, 0.78, -d * 0.59);
+  addObjectRim(root, w * 0.86, 0.20, Math.max(0.035, d * 0.18), mats.objectDarkSide, 0, 0.38, d * 0.53);
   addJaggedCap(root, w * 0.88, Math.max(0.06, d * 0.24), 1.34, -d * 0.54, mats.propBrokenLight, 5);
   addBrokenChunk(root, Math.max(0.16, w * 0.12), 0.34, Math.max(0.06, d * 0.28), mats.propBrokenDark, -w * 0.44, 1.10, -d * 0.53, 0.18, -0.24);
   addBrokenChunk(root, Math.max(0.14, w * 0.10), 0.28, Math.max(0.06, d * 0.28), mats.propBrokenDark, w * 0.37, 0.30, -d * 0.54, -0.22, 0.28);
@@ -416,6 +442,8 @@ function makeBarrel(x, z, s = 1) {
   addPropWear(root, 0.38 * s, 0.055 * s, 0.035 * s, mats.hazard, 0, 0.40 * s, -0.22 * s);
   addPropWear(root, 0.28 * s, 0.035 * s, 0.035 * s, mats.propEdge, 0.02 * s, 0.57 * s, -0.20 * s);
   addScratchStack(root, -0.05 * s, 0.23 * s, -0.225 * s, 0.18 * s, 3);
+  addObjectRim(root, 0.30 * s, 0.035 * s, 0.035 * s, mats.objectWarmRim, 0, 0.57 * s, -0.235 * s);
+  addObjectRim(root, 0.035 * s, 0.40 * s, 0.035 * s, mats.objectCoolRim, 0.21 * s, 0.31 * s, -0.235 * s);
   addBrokenChunk(root, 0.16 * s, 0.08 * s, 0.08 * s, mats.propBrokenRust, -0.15 * s, 0.62 * s, -0.04 * s, 0.34, -0.22);
   addBrokenChunk(root, 0.12 * s, 0.14 * s, 0.05 * s, mats.propBrokenDark, 0.19 * s, 0.23 * s, -0.19 * s, -0.18, 0.25);
   addPropGroundScatter(root, 0.38 * s, 0.32 * s, 4);
@@ -625,6 +653,9 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   stripe.position.y = 1.08 * scale;
   stripe.position.z = -0.01 * scale;
   root.add(stripe);
+  addObjectRim(root, 0.54 * scale, 0.035 * scale, 0.54 * scale, mats.objectWarmRim, -0.02 * scale, 1.58 * scale, -0.04 * scale);
+  addObjectRim(root, 0.045 * scale, 0.86 * scale, 0.50 * scale, mats.objectCoolRim, 0.42 * scale, 1.10 * scale, -0.03 * scale);
+  addObjectRim(root, 0.60 * scale, 0.20 * scale, 0.50 * scale, mats.objectDarkSide, -0.02 * scale, 0.78 * scale, 0.16 * scale);
 
   const head = cyl(0.24 * scale, 0.24 * scale, 0.34 * scale, mats.skin, 24);
   head.position.y = 1.82 * scale;
@@ -657,6 +688,8 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const visor = box(0.44 * scale, 0.09 * scale, 0.50 * scale, accentMat);
   visor.position.y = 1.90 * scale;
   root.add(visor);
+  addObjectRim(root, 0.30 * scale, 0.035 * scale, 0.42 * scale, mats.objectWarmRim, -0.02 * scale, 2.03 * scale, -0.05 * scale);
+  addObjectRim(root, 0.035 * scale, 0.22 * scale, 0.30 * scale, mats.objectCoolRim, 0.22 * scale, 1.86 * scale, -0.19 * scale);
   const chestEdgeA = box(0.52 * scale, 0.035 * scale, 0.54 * scale, mats.armorEdge);
   const chestEdgeB = chestEdgeA.clone();
   chestEdgeA.position.set(0, 1.39 * scale, -0.035 * scale);
@@ -692,6 +725,7 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   gun.position.set(0.52 * scale, 1.12 * scale, -0.28 * scale);
   gun.rotation.y = -0.24;
   root.add(gun);
+  addObjectRim(root, 0.88 * scale, 0.028 * scale, 0.06 * scale, mats.objectWarmRim, 0.56 * scale, 1.20 * scale, -0.38 * scale, -0.24);
   const gunStock = box(0.28 * scale, 0.18 * scale, 0.18 * scale, mats.boot);
   gunStock.position.set(0.06 * scale, 1.05 * scale, -0.15 * scale);
   gunStock.rotation.y = -0.24;
@@ -814,6 +848,9 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const woundGlow = box((fast ? 0.22 : 0.30) * scale, 0.045 * scale, 0.43 * scale, mats.rotPatch);
   woundGlow.position.set(0.06 * scale, 1.12 * scale, -0.04 * scale);
   unitDecalCount += 1;
+  addObjectRim(root, (fast ? 0.42 : 0.54) * scale, 0.032 * scale, 0.40 * scale, mats.objectWarmRim, -0.02 * scale, 1.31 * scale, -0.06 * scale, 0.02, -0.05);
+  addObjectRim(root, 0.035 * scale, 0.66 * scale, 0.38 * scale, mats.objectCoolRim, 0.34 * scale, 0.92 * scale, -0.06 * scale);
+  addObjectRim(root, (fast ? 0.42 : 0.54) * scale, 0.16 * scale, 0.36 * scale, mats.objectDarkSide, 0.00 * scale, 0.64 * scale, 0.13 * scale);
   const head = cyl(0.22 * scale, 0.23 * scale, 0.28 * scale, mats.zombie, 18);
   head.position.set(0, 1.44 * scale, -0.11 * scale);
   head.rotation.x = 0.28;
@@ -835,6 +872,7 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const cheekRot = box(0.13 * scale, 0.045 * scale, 0.03 * scale, mats.rotPatch);
   cheekRot.position.set(0.10 * scale, 1.40 * scale, -0.35 * scale);
   unitDecalCount += 1;
+  addObjectRim(root, 0.20 * scale, 0.030 * scale, 0.16 * scale, mats.objectWarmRim, -0.04 * scale, 1.58 * scale, -0.19 * scale, 0.08);
   const eyeA = cyl(0.035 * scale, 0.035 * scale, 0.02 * scale, mats.eye, 8);
   const eyeB = eyeA.clone();
   eyeA.position.set(-0.08 * scale, 1.48 * scale, -0.31 * scale);
@@ -1696,6 +1734,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;
   window.__V03_ENGINE_DEMO_STATE.propBreakCount = propBreakCount;
   window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
+  window.__V03_ENGINE_DEMO_STATE.objectRimCount = objectRimCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

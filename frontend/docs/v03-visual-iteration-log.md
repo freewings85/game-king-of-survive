@@ -893,3 +893,35 @@ Next iteration direction:
 1. Add per-object rim/highlight direction to hero, zombies, and major props in WebGL.
 2. Keep the lighting contract aligned with any WebGL layers that remain mandatory after screenshot review.
 3. Replace placeholder Cocos lighting nodes with real authored prefabs when Cocos Creator is available.
+
+## 2026-05-10 WebGL Object Rim Highlight Pass
+
+Related work:
+
+- WebGL reference WIP after `0f3ff13`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- Hero, rival, zombies, wreck cars, walls, crates, and barrels now have object-level warm rim, cool rim, or dark-side strips.
+- Characters separate more clearly from the wasteland floor in the phone screenshot, especially around shoulders, heads, weapons, and zombie torsos.
+- Major cover objects now share the same directional lighting language as the global stage pass.
+- The verifier now requires `objectRimCount >= 60`; the current WebGL reference reports `objectRimCount: 97`.
+- Early combat remained stable: HP, shots, damage, kill, XP, minimap, and skill review gates still pass.
+
+What is still far from the reference:
+
+- The target image has painterly per-object light transitions; the current rim pass still uses simple geometry strips.
+- Some highlights are readable but not yet blended into the materials.
+- Player, zombie, and prop lighting is now directionally clearer, but full hand-painted polish still requires authored textures or richer material work.
+
+Next iteration direction:
+
+1. Sync object rim/highlight categories into the Cocos contract if this layer remains mandatory.
+2. Improve material blending so rim/highlight shapes feel less like attached strips.
+3. Start shifting from individual visual layers toward a fuller first-playable presentation pass once Cocos scene authoring is available.
