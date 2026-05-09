@@ -8,6 +8,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1c211f);
@@ -53,6 +55,22 @@ const mats = {
   orange: new THREE.MeshStandardMaterial({ color: 0xff8b3d, emissive: 0x7a2600, emissiveIntensity: 0.8 })
 };
 
+const tileMats = [
+  new THREE.MeshStandardMaterial({ color: 0x5f5b43, roughness: 0.98 }),
+  new THREE.MeshStandardMaterial({ color: 0x5a4e3b, roughness: 0.98 }),
+  new THREE.MeshStandardMaterial({ color: 0x626a64, roughness: 0.94 }),
+  new THREE.MeshStandardMaterial({ color: 0x2e4541, roughness: 0.88 }),
+  new THREE.MeshStandardMaterial({ color: 0x252a29, roughness: 0.96 }),
+  new THREE.MeshStandardMaterial({ color: 0x3e3328, roughness: 0.98 }),
+  new THREE.MeshStandardMaterial({ color: 0x454b46, roughness: 0.96 })
+];
+const blobShadowMat = new THREE.MeshBasicMaterial({
+  color: 0x000000,
+  transparent: true,
+  opacity: 0.22,
+  depthWrite: false
+});
+
 let activeClass = 'tech';
 let activeSkill = 'arc';
 let activeSkin = 0;
@@ -82,6 +100,20 @@ function box(w, h, d, mat) {
 
 function cyl(rTop, rBot, h, mat, seg = 18) {
   return new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, seg), mat);
+}
+
+function addContactShadow(root, sx = 1, sz = 0.7, opacity = 0.22) {
+  const mat = blobShadowMat.clone();
+  mat.opacity = opacity;
+  const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.5, 32), mat);
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.scale.set(sx, sz, 1);
+  shadow.position.y = 0.018;
+  shadow.castShadow = false;
+  shadow.receiveShadow = false;
+  shadow.userData.contactShadow = true;
+  root.add(shadow);
+  return shadow;
 }
 
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
@@ -114,6 +146,7 @@ for (let i = -18; i <= 18; i += 2) {
 
 function makeCrate(x, z, s = 1) {
   const root = new THREE.Group();
+  addContactShadow(root, 1.25 * s, 0.88 * s, 0.20);
   const c = box(s, s, s, mats.crate);
   c.position.y = s * 0.5;
   c.castShadow = c.receiveShadow = true;
@@ -129,6 +162,7 @@ function makeCrate(x, z, s = 1) {
 
 function makeWreck(x, z, rot) {
   const root = new THREE.Group();
+  addContactShadow(root, 2.7, 1.38, 0.26);
   const body = box(2.2, 0.55, 1.05, mats.rust);
   body.position.y = 0.36;
   root.add(body);
@@ -148,15 +182,23 @@ function makeWreck(x, z, rot) {
 }
 
 function makeWall(x, z, w, d) {
+  const root = new THREE.Group();
+  addContactShadow(root, Math.max(0.7, w * 1.2), Math.max(0.34, d * 1.45), 0.22);
   const wall = box(w, 1.35, d, mats.wall);
-  wall.position.set(x, 0.68, z);
-  scene.add(wall);
+  wall.position.y = 0.68;
   wall.castShadow = wall.receiveShadow = true;
-  return wall;
+  root.add(wall);
+  const cap = box(w * 1.04, 0.08, d * 1.04, mats.road);
+  cap.position.y = 1.39;
+  root.add(cap);
+  root.position.set(x, 0, z);
+  scene.add(root);
+  return root;
 }
 
 function makeBarrel(x, z, s = 1) {
   const root = new THREE.Group();
+  addContactShadow(root, 0.72 * s, 0.52 * s, 0.20);
   const barrel = cyl(0.22 * s, 0.22 * s, 0.54 * s, mats.rust, 18);
   barrel.position.y = 0.27 * s;
   root.add(barrel);
@@ -165,7 +207,7 @@ function makeBarrel(x, z, s = 1) {
   root.add(cap);
   root.position.set(x, 0, z);
   root.traverse((o) => {
-    if (o.isMesh) {
+    if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
     }
@@ -176,6 +218,7 @@ function makeBarrel(x, z, s = 1) {
 
 function makeTires(x, z, s = 1) {
   const root = new THREE.Group();
+  addContactShadow(root, 1.12 * s, 0.62 * s, 0.18);
   const tireMat = new THREE.MeshStandardMaterial({ color: 0x090b0a, roughness: 0.96 });
   for (let i = 0; i < 3; i++) {
     const tire = cyl(0.22 * s, 0.22 * s, 0.16 * s, tireMat, 20);
@@ -185,7 +228,7 @@ function makeTires(x, z, s = 1) {
   }
   root.position.set(x, 0, z);
   root.traverse((o) => {
-    if (o.isMesh) {
+    if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
     }
@@ -196,6 +239,7 @@ function makeTires(x, z, s = 1) {
 
 function makeDebris(x, z, s = 1) {
   const root = new THREE.Group();
+  addContactShadow(root, 1.18 * s, 0.72 * s, 0.18);
   for (let i = 0; i < 4; i++) {
     const chunk = box((0.28 + i * 0.04) * s, 0.16 * s, (0.18 + (i % 2) * 0.12) * s, i % 2 ? mats.wall : mats.crate);
     chunk.position.set((i - 1.5) * 0.22 * s, 0.08 * s, (i % 2 ? -0.14 : 0.16) * s);
@@ -204,7 +248,7 @@ function makeDebris(x, z, s = 1) {
   }
   root.position.set(x, 0, z);
   root.traverse((o) => {
-    if (o.isMesh) {
+    if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
     }
@@ -216,7 +260,7 @@ function makeDebris(x, z, s = 1) {
 function makeContractMap() {
   const contract = window.KOS_MAP_CONTRACT;
   if (!contract || typeof contract.standardizeMap !== 'function') return null;
-  const map = contract.standardizeMap(contract.createMap(40, 40));
+  const map = contract.standardizeMap(contract.createMap(26, 22));
   map.name = 'V03 Contract Wasteland';
   return map;
 }
@@ -252,6 +296,29 @@ function addContractProp(map, prop, index) {
   return makeCrate(x, z, 0.5);
 }
 
+function paintContractTiles(map) {
+  const tileGroup = new THREE.Group();
+  const tileW = 12 / map.cols;
+  const tileD = 10 / map.rows;
+  const geom = new THREE.PlaneGeometry(tileW * 0.98, tileD * 0.98);
+  for (let y = 0; y < map.rows; y++) {
+    for (let x = 0; x < map.cols; x++) {
+      const id = map.tiles[y * map.cols + x] || 0;
+      const tile = new THREE.Mesh(geom, tileMats[id] || tileMats[0]);
+      tile.rotation.x = -Math.PI / 2;
+      tile.position.set(
+        (x + 0.5) / map.cols * 12 - 6,
+        0.021 + (id === 4 ? 0.006 : 0),
+        (y + 0.5) / map.rows * 10 - 5
+      );
+      tile.receiveShadow = true;
+      tileGroup.add(tile);
+    }
+  }
+  scene.add(tileGroup);
+  return tileGroup;
+}
+
 function keepPropForCombatReadability(map, prop) {
   const x = toSceneX(map, prop.x + prop.w / 2);
   const z = toSceneZ(map, prop.y + prop.h / 2);
@@ -285,6 +352,7 @@ function pointNearArena(map, point, fallbackAngle, fallbackRadius) {
 
 function makeCharacter(colorMat, accentMat, scale = 1) {
   const root = new THREE.Group();
+  addContactShadow(root, 1.05 * scale, 0.72 * scale, 0.28);
   const legs = [
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road),
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road)
@@ -296,6 +364,9 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const body = box(0.78 * scale, 1.05 * scale, 0.45 * scale, colorMat);
   body.position.y = 1.05 * scale;
   root.add(body);
+  const chestPlate = box(0.62 * scale, 0.36 * scale, 0.51 * scale, accentMat);
+  chestPlate.position.set(0, 1.20 * scale, -0.02 * scale);
+  root.add(chestPlate);
   const stripe = box(0.12 * scale, 0.92 * scale, 0.49 * scale, accentMat);
   stripe.position.y = 1.08 * scale;
   stripe.position.z = -0.01 * scale;
@@ -307,6 +378,14 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const visor = box(0.44 * scale, 0.09 * scale, 0.50 * scale, accentMat);
   visor.position.y = 1.90 * scale;
   root.add(visor);
+  const backpack = box(0.42 * scale, 0.68 * scale, 0.18 * scale, mats.road);
+  backpack.position.set(0, 1.18 * scale, 0.32 * scale);
+  root.add(backpack);
+  const shoulderA = box(0.26 * scale, 0.16 * scale, 0.52 * scale, accentMat);
+  const shoulderB = shoulderA.clone();
+  shoulderA.position.set(-0.52 * scale, 1.46 * scale, 0);
+  shoulderB.position.set(0.52 * scale, 1.46 * scale, 0);
+  root.add(shoulderA, shoulderB);
 
   const gun = box(0.96 * scale, 0.12 * scale, 0.16 * scale, mats.road);
   gun.position.set(0.52 * scale, 1.12 * scale, -0.28 * scale);
@@ -318,7 +397,7 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   root.add(muzzle);
 
   root.traverse((o) => {
-    if (o.isMesh) {
+    if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
     }
@@ -328,12 +407,15 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
 
 function makeZombie(x, z, scale = 1, fast = false) {
   const root = new THREE.Group();
+  addContactShadow(root, 0.88 * scale, 0.58 * scale, 0.25);
   const legA = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   const legB = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   legA.position.set(-0.14 * scale, 0.30 * scale, 0);
   legB.position.set(0.14 * scale, 0.30 * scale, 0);
   const body = box((fast ? 0.48 : 0.62) * scale, 0.82 * scale, 0.38 * scale, mats.zombieCloth);
   body.position.y = 0.92 * scale;
+  const wound = box((fast ? 0.28 : 0.36) * scale, 0.10 * scale, 0.40 * scale, mats.eye);
+  wound.position.set(0.05 * scale, 1.05 * scale, -0.01 * scale);
   const head = cyl(0.22 * scale, 0.23 * scale, 0.28 * scale, mats.zombie, 18);
   head.position.y = 1.50 * scale;
   const eyeA = cyl(0.035 * scale, 0.035 * scale, 0.02 * scale, mats.eye, 8);
@@ -346,7 +428,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
   armB.position.set(0.42 * scale, 0.98 * scale, -0.18 * scale);
   armA.rotation.x = -0.72;
   armB.rotation.x = -0.72;
-  root.add(legA, legB, body, head, eyeA, eyeB, armA, armB);
+  root.add(legA, legB, body, wound, head, eyeA, eyeB, armA, armB);
   root.position.set(x, 0, z);
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;
@@ -355,7 +437,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
   root.userData.hp = root.userData.maxHp;
   root.userData.alive = true;
   root.traverse((o) => {
-    if (o.isMesh) {
+    if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
     }
@@ -373,7 +455,9 @@ function resetZombie(z, x, zPos) {
 
 const contractMap = makeContractMap();
 const contractProps = [];
+let contractTileLayer = null;
 if (contractMap && contractMap.structures.length) {
+  contractTileLayer = paintContractTiles(contractMap);
   contractMap.structures.filter((prop) => keepPropForCombatReadability(contractMap, prop)).slice(0, 28).forEach((prop, index) => {
     contractProps.push(addContractProp(contractMap, prop, index));
   });
@@ -390,6 +474,7 @@ if (contractMap && contractMap.structures.length) {
 window.__V03_ENGINE_DEMO_STATE = {
   contractMapName: contractMap && contractMap.name,
   contractPropCount: contractProps.length,
+  contractTileCount: contractTileLayer ? contractTileLayer.children.length : 0,
   contractQualityOk: !!(contractMap && window.KOS_MAP_CONTRACT.getQualityChecks(contractMap).every((check) => check.ok))
 };
 
