@@ -7124,6 +7124,11 @@
   }
 
   function drawCharacterSprite(cx, cy, radius, classType, facingAngle, options) {
+    if (window.KOS_RENDER && typeof window.KOS_RENDER.drawSurvivorSprite === 'function') {
+      var _survivorOpts = options || {};
+      _survivorOpts.gameTime = gameTime || 0;
+      if (window.KOS_RENDER.drawSurvivorSprite(ctx, cx, cy, radius, classType, facingAngle, _survivorOpts)) return;
+    }
     var opts = options || {};
     var isFury = opts.fury || false;
     var shieldActive = opts.shield || false;
