@@ -237,3 +237,36 @@ Next iteration direction:
 2. Push hit feedback toward painted layers: muzzle burst cards, target flash planes, debris chips, and zombie damage tint.
 3. Improve hero/zombie silhouettes next, especially faces, hair/hood shapes, boots, gloves, weapons, and torn clothing.
 4. Keep the Cocos path active after the WebGL target gets closer, since the final mini-game engine remains Cocos Creator 3.x.
+
+## 2026-05-10 Landscape Phone Review Pass
+
+Related work:
+
+- WebGL reference WIP after `96e7630`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- A deterministic landscape phone screenshot now exists, matching the reference image's main gameplay panel much better than the portrait-only review.
+- Landscape mode adds a rounded phone frame, side notch, right-top circular minimap, right-bottom skill buttons, and left joystick composition.
+- The landscape review hides the class strip so the combat surface reads more like an in-match phone UI.
+- The verifier now gates the landscape frame radius, minimap size, hidden class strip, clear skill button placement, WebGL rendering, combat damage, and visible hit sparks.
+
+What is still far from the reference:
+
+- The main gap is now asset finish rather than layout: heroes and zombies are still primitive low-poly bodies instead of illustrated, readable units.
+- The target has a richer cracked asphalt/painterly prop field; the current map is more modular and tiled.
+- The target phone panel has more polished icon art and dense but clean HUD layering.
+- The landscape review currently proves layout and combat readability, not production WeChat/Cocos build quality.
+
+Next iteration direction:
+
+1. Use `engine-demo-landscape-phone.png` as the primary visual comparison screenshot for the target gameplay panel.
+2. Start a character/zombie asset pass: larger heads, faces, hair/hoods, boots, gloves, weapon silhouettes, torn clothing, and damage-color variation.
+3. Add painted-style impact cards and muzzle flashes in the landscape review so bullets, explosions, and arcs read closer to the reference.
+4. Keep portrait screenshots as small-program ergonomics checks, but judge art direction mainly against the landscape target panel.

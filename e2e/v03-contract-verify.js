@@ -198,6 +198,44 @@ async function verifyEngineSkillReview(browser, skill) {
   return info;
 }
 
+async function verifyEngineLandscapeReview(browser) {
+  const page = await browser.newPage({
+    viewport: { width: 844, height: 390, isMobile: true, hasTouch: true },
+    deviceScaleFactor: 2
+  });
+  const logs = await collectErrors(page);
+  await page.goto(`${baseUrl}/frontend/engine-demo/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
+  await page.locator('[data-skill="fan"]').click();
+  await page.waitForTimeout(3200);
+  const info = await page.evaluate(() => {
+    const shell = document.querySelector('.demo-shell').getBoundingClientRect();
+    const mini = document.getElementById('miniMap').getBoundingClientRect();
+    const skills = Array.from(document.querySelectorAll('#skillPanel .skill')).map((el) => el.getBoundingClientRect());
+    const classStrip = document.querySelector('.class-strip');
+    return {
+      activeSkill: document.querySelector('#skillPanel .active').dataset.skill,
+      shotsFired: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.shotsFired,
+      damageDealt: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.damageDealt,
+      impactSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.impactSparkCount,
+      hasMiniMap: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.hasMiniMap,
+      miniMapSize: Math.round(Math.min(mini.width, mini.height)),
+      classStripHidden: classStrip && getComputedStyle(classStrip).display === 'none',
+      shellRounded: Number(getComputedStyle(document.querySelector('.demo-shell')).borderTopLeftRadius.replace('px', '')),
+      skillButtonsClear: skills.length === 3 && skills.every((rect) => rect.width >= 60 && rect.height >= 60 && rect.left > shell.width * 0.58 && rect.bottom <= shell.bottom - 18),
+      shell: { width: Math.round(shell.width), height: Math.round(shell.height) },
+      hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
+    };
+  });
+  const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
+  if (errors.length || !info.hasWebgl || info.activeSkill !== 'fan' || info.shotsFired < 4 || info.damageDealt < 60 || info.impactSparkCount < 1 || !info.hasMiniMap || info.miniMapSize < 96 || !info.classStripHidden || info.shellRounded < 28 || !info.skillButtonsClear) {
+    fail('V03 landscape engine review verification failed', { info, errors });
+  }
+  info.screenshot = path.join(artifactDir, 'engine-demo-landscape-phone.png');
+  await page.screenshot({ path: info.screenshot, fullPage: true });
+  await page.close();
+  return info;
+}
+
 async function verifyV03Shell(browser) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, deviceScaleFactor: 1 });
   const logs = await collectErrors(page);
@@ -239,6 +277,7 @@ async function verifyV03Shell(browser) {
     skillArc: await verifyEngineSkillReview(browser, 'arc'),
     skillBoom: await verifyEngineSkillReview(browser, 'boom'),
     skillFan: await verifyEngineSkillReview(browser, 'fan'),
+    landscapePhone: await verifyEngineLandscapeReview(browser),
     shell: await verifyV03Shell(browser)
   };
   await browser.close();

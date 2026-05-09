@@ -390,3 +390,72 @@ body {
   color: #101313;
   background: #f4c95a;
 }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  body {
+    display: grid;
+    place-items: center;
+    background: #020303;
+  }
+
+  .demo-shell {
+    width: min(100vw, 920px);
+    height: min(100vh, 430px);
+    border: 8px solid #0a0d0d;
+    border-radius: 36px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.10), 0 18px 46px rgba(0,0,0,0.72);
+  }
+
+  .demo-shell::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    width: 6px;
+    height: 74px;
+    border-radius: 999px;
+    background: #030505;
+    transform: translateY(-50%);
+    z-index: 4;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    pointer-events: none;
+  }
+
+  .top-hud {
+    top: 18px;
+    left: 38px;
+    right: auto;
+    width: 270px;
+  }
+
+  .mini-map {
+    top: 18px;
+    right: 34px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .utility-stack {
+    right: 46px;
+    top: 142px;
+  }
+
+  .move-stick {
+    left: 58px;
+    bottom: 28px;
+  }
+
+  .class-strip {
+    display: none;
+  }
+
+  .skill-panel {
+    right: 46px;
+    bottom: 28px;
+  }
+
+  .skill {
+    width: 66px;
+    height: 66px;
+  }
+}
