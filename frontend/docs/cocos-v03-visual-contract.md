@@ -49,6 +49,17 @@ Required decal layers:
 
 These are the bridge from procedural low-poly shapes toward the reference image's illustrated units.
 
+## Prop Ground Layers
+
+Required prop-ground integration layers:
+
+- `prop-oil-stain`
+- `prop-rust-stain`
+- `prop-rubble-chip`
+- `prop-shadow-blob`
+
+These layers keep cars, walls, barrels, crates, tires, and debris from looking pasted onto the tile map.
+
 ## Skill FX
 
 Required FX layers:

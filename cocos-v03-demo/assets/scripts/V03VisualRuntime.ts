@@ -12,6 +12,7 @@ import type { V03ClassId, V03SkillId } from './V03Config';
 import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_HERO_GEAR,
+  V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_UNIT_DECALS,
   V03_ZOMBIE_VARIANTS
 } from './V03VisualContract';
@@ -22,6 +23,7 @@ export interface V03VisualRuntimeStats {
   heroGear: number;
   zombieVariants: number;
   unitDecals: number;
+  propGroundLayers: number;
   fxLayers: number;
 }
 
@@ -37,6 +39,7 @@ export class V03VisualRuntime extends Component {
     heroGear: 0,
     zombieVariants: 0,
     unitDecals: 0,
+    propGroundLayers: 0,
     fxLayers: 0
   };
 
@@ -48,6 +51,7 @@ export class V03VisualRuntime extends Component {
     this.buildHeroGear(classId);
     this.buildZombieVariants();
     this.buildUnitDecals();
+    this.buildPropGroundLayers();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -63,6 +67,7 @@ export class V03VisualRuntime extends Component {
     this.stats.heroGear = 0;
     this.stats.zombieVariants = 0;
     this.stats.unitDecals = 0;
+    this.stats.propGroundLayers = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -99,6 +104,15 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.18 - 0.45, 0.98, -0.22);
       this.actorRoot!.addChild(node);
       this.stats.unitDecals += 1;
+    });
+  }
+
+  private buildPropGroundLayers(): void {
+    V03_REQUIRED_PROP_GROUND_LAYERS.forEach((layer, index) => {
+      const node = this.makeBox(`prop-ground-${layer}`, 0.22 + index * 0.04, 0.015, 0.12, index % 2 ? '#8b4a25' : '#22201a');
+      node.setPosition(index * 0.24 - 0.36, 0.035, 0.95);
+      this.actorRoot!.addChild(node);
+      this.stats.propGroundLayers += 1;
     });
   }
 

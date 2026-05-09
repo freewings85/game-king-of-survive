@@ -61,7 +61,11 @@
       "prefabs/map/Crate.prefab",
       "prefabs/map/Barrel.prefab",
       "prefabs/map/Barricade.prefab",
-      "prefabs/map/XpShard.prefab"
+      "prefabs/map/XpShard.prefab",
+      "prefabs/map/PropOilStain.prefab",
+      "prefabs/map/PropRustStain.prefab",
+      "prefabs/map/PropRubbleChip.prefab",
+      "prefabs/map/PropShadowBlob.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -83,6 +87,7 @@
     "heroGear",
     "zombieVariants",
     "unitDecals",
+    "propGroundLayers",
     "fxLayers",
     "reviewScreenshots"
   ],

@@ -17,6 +17,13 @@ export const V03_REQUIRED_UNIT_DECALS = [
   'torn-cloth-panel'
 ] as const;
 
+export const V03_REQUIRED_PROP_GROUND_LAYERS = [
+  'prop-oil-stain',
+  'prop-rust-stain',
+  'prop-rubble-chip',
+  'prop-shadow-blob'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

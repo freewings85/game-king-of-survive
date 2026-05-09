@@ -592,3 +592,38 @@ Next iteration direction:
 1. Mirror prop-ground scatter in the Cocos first-playable checklist or visual contract if it becomes mandatory for the final look.
 2. Add stronger authored-looking prop wear decals to wreck cars and walls.
 3. Keep phone-scale readability as the constraint for any further map detail.
+
+## 2026-05-10 Cocos Prop Ground Layer Contract Pass
+
+Related work:
+
+- Cocos bridge/checklist WIP after `8f3bc32`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+
+What moved closer:
+
+- Prop-ground scatter is now a named Cocos visual contract instead of only a WebGL implementation detail.
+- The Cocos runtime placeholder now reports prop-ground layer coverage beside hero gear, zombie variants, unit decals, and FX layers.
+- The first-playable checklist now names oil stain, rust stain, rubble chip, and shadow blob prefabs, which keeps the future Cocos scene aligned with the target's grounded wasteland look.
+- The Cocos bridge verifier now fails if these layers disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- This pass does not produce a real Cocos scene, authored prefab, or phone build.
+- The Cocos runtime still uses placeholder boxes for visual-contract coverage.
+- The reference image's depth comes from authored lighting, painterly textures, contact shadows, and shape language; this pass only locks the required layer names and acceptance gates.
+
+Next iteration direction:
+
+1. Build a stronger authored-looking prop wear/decal pass in the WebGL reference so wreck cars, walls, barrels, crates, and debris move closer to the target image's illustrated depth.
+2. When Cocos Creator is available, replace placeholder prop-ground boxes with actual prefabs and capture `cocos-v03-phone-portrait.png` / `cocos-v03-phone-landscape.png`.
+3. Continue comparing every visual pass against the target image and record the remaining gap before moving to the next pass.
