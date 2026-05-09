@@ -37,3 +37,4 @@ node e2e/v03-contract-verify.js
 ```
 
 This quick-starts the V03 contract runtime map, checks the editor standardization gate, and verifies the WebGL engine demo on a mobile viewport.
+It writes visual review screenshots to `can_delete/v03-gate/`.

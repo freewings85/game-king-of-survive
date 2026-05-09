@@ -1,6 +1,11 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
 
 const baseUrl = process.env.KOS_BASE_URL || 'http://localhost:8081';
+const artifactDir = process.env.KOS_V03_ARTIFACT_DIR || path.join(process.cwd(), 'can_delete', 'v03-gate');
+
+fs.mkdirSync(artifactDir, { recursive: true });
 
 function fail(message, detail) {
   console.error(message);
@@ -50,6 +55,8 @@ async function verifyContractRuntime(browser) {
   if (errors.length || !info.hasContract || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
     fail('V03 contract runtime verification failed', { info, errors });
   }
+  info.screenshot = path.join(artifactDir, 'runtime-contract-map-mobile.png');
+  await page.screenshot({ path: info.screenshot, fullPage: true });
   await page.close();
   return info;
 }
@@ -70,6 +77,8 @@ async function verifyEditor(browser) {
   if (errors.length || !info.hasStandardize || info.qualityRows !== 8 || info.warnRows !== 0) {
     fail('V03 editor verification failed', { info, errors });
   }
+  info.screenshot = path.join(artifactDir, 'editor-standard-map.png');
+  await page.screenshot({ path: info.screenshot, fullPage: true });
   await page.close();
   return info;
 }
@@ -105,6 +114,8 @@ async function verifyEngineDemo(browser) {
   if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
+  info.screenshot = path.join(artifactDir, 'engine-demo-mobile.png');
+  await page.screenshot({ path: info.screenshot, fullPage: true });
   await page.close();
   return info;
 }
