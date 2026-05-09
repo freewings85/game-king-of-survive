@@ -369,3 +369,37 @@ Next iteration direction:
 2. Create a Cocos visual contract document covering required hero gear, zombie variants, decal layers, and FX layers.
 3. Start translating the WebGL reference expectations into Cocos prefab/component names even before final assets exist.
 4. Keep screenshots as the source of truth: counters prevent regression but visual comparison decides direction.
+
+## 2026-05-10 FX Card Layer Pass
+
+Related work:
+
+- WebGL reference WIP after `b14fdb9`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+
+What moved closer:
+
+- Attacks now have a second FX art layer beyond beams and small sparks: muzzle cards, impact cards, BOOM debris/smoke cards, and ARC node rings.
+- BOOM reads closer to the reference's explosion panel because the target area has a visible orange ring, debris shards, and smoke-like cards.
+- ARC reads closer to the reference's electric panel because targets now get blue node rings in addition to branch/glow links.
+- The verifier now records `fxCardCount`; current runs report 9 in the main FAN state, 13 in BOOM review, and 11 in ARC review.
+
+What is still far from the reference:
+
+- The cards are still simple procedural planes. The reference needs authored sprite shapes, soft alpha, impact lighting, dust, and directional debris.
+- FAN still needs stronger bullet body art and impact points like the reference's volley panel.
+- FX timing is readable but not animated with authored anticipation/impact/fade sequences.
+- The Cocos bridge does not yet encode these FX-layer requirements.
+
+Next iteration direction:
+
+1. Add a Cocos visual contract for hero gear, zombie variants, unit decals, and FX card layers so the WebGL reference can be migrated coherently.
+2. Improve FAN specifically with painted bullet cards, warm trails, and target impact marks.
+3. Add stronger dust/smoke layers for BOOM without obscuring the playfield.
+4. Keep landscape screenshot review as the primary visual target for combat readability.

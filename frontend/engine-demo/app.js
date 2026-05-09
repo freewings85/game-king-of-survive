@@ -70,7 +70,11 @@ const mats = {
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
   arcGlow: new THREE.MeshBasicMaterial({ color: 0xbdf7ff, transparent: true, opacity: 0.72 }),
-  hitFlash: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.88 })
+  hitFlash: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.88 }),
+  fxCardHot: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.86, side: THREE.DoubleSide }),
+  fxCardOrange: new THREE.MeshBasicMaterial({ color: 0xff8b3d, transparent: true, opacity: 0.62, side: THREE.DoubleSide }),
+  fxCardBlue: new THREE.MeshBasicMaterial({ color: 0x8be9ff, transparent: true, opacity: 0.70, side: THREE.DoubleSide }),
+  fxCardSmoke: new THREE.MeshBasicMaterial({ color: 0x191513, transparent: true, opacity: 0.24, side: THREE.DoubleSide })
 };
 
 const tileMats = [
@@ -936,6 +940,14 @@ const muzzleFlash = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.44, 18), mats.
 muzzleFlash.rotation.z = -Math.PI / 2;
 muzzleFlash.castShadow = false;
 scene.add(muzzleFlash);
+const muzzleCards = [];
+for (let i = 0; i < 4; i++) {
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.42 - i * 0.05, 0.18 - i * 0.015), (i % 2 ? mats.fxCardOrange : mats.fxCardHot).clone());
+  card.visible = false;
+  card.castShadow = false;
+  scene.add(card);
+  muzzleCards.push(card);
+}
 
 const projectileTips = [];
 for (let i = 0; i < 8; i++) {
@@ -978,6 +990,15 @@ for (let i = 0; i < 10; i++) {
   scene.add(spark);
   boomSparks.push(spark);
 }
+const boomDebrisCards = [];
+for (let i = 0; i < 8; i++) {
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.08), (i % 3 === 0 ? mats.fxCardSmoke : mats.fxCardOrange).clone());
+  card.visible = false;
+  card.rotation.x = -Math.PI / 2;
+  card.castShadow = false;
+  scene.add(card);
+  boomDebrisCards.push(card);
+}
 
 const arcBranches = [];
 for (let i = 0; i < 4; i++) {
@@ -992,6 +1013,15 @@ for (let i = 0; i < 4; i++) {
   glow.castShadow = false;
   scene.add(glow);
   arcGlowNodes.push(glow);
+}
+const arcNodeCards = [];
+for (let i = 0; i < 5; i++) {
+  const node = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.14, 18), mats.fxCardBlue.clone());
+  node.visible = false;
+  node.rotation.x = -Math.PI / 2;
+  node.castShadow = false;
+  scene.add(node);
+  arcNodeCards.push(node);
 }
 
 const skillBursts = [];
@@ -1013,6 +1043,17 @@ for (let i = 0; i < 28; i++) {
   spark.userData.angle = 0;
   scene.add(spark);
   impactSparks.push(spark);
+}
+const impactCards = [];
+for (let i = 0; i < 14; i++) {
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.12), mats.fxCardHot.clone());
+  card.visible = false;
+  card.castShadow = false;
+  card.userData.life = 0;
+  card.userData.maxLife = 0.38;
+  card.userData.angle = 0;
+  scene.add(card);
+  impactCards.push(card);
 }
 
 applyClass(activeClass);
@@ -1095,6 +1136,15 @@ function spawnImpactAt(z, targetIndex) {
   z.userData.hitPulse = 0.46;
   const skill = skillDefs[activeSkill] || skillDefs.arc;
   const sparkCount = activeSkill === 'boom' ? 7 : activeSkill === 'fan' ? 4 : 5;
+  const card = impactCards.find((item) => !item.visible) || impactCards[(game.shotsFired + targetIndex) % impactCards.length];
+  card.visible = true;
+  card.userData.life = card.userData.maxLife;
+  card.userData.angle = targetIndex * 0.7 + Math.PI * 0.25;
+  card.position.set(z.position.x, 0.98, z.position.z - 0.08);
+  card.rotation.set(-Math.PI / 2, 0, card.userData.angle);
+  card.scale.setScalar(activeSkill === 'boom' ? 1.55 : activeSkill === 'arc' ? 1.18 : 1);
+  card.material.color.setHex(activeSkill === 'arc' ? 0xbdf7ff : skill.color);
+  card.material.opacity = 0.72;
   for (let i = 0; i < sparkCount; i++) {
     const spark = impactSparks.find((item) => !item.visible) || impactSparks[(game.shotsFired + targetIndex + i) % impactSparks.length];
     const angle = (i / sparkCount) * Math.PI * 2 + targetIndex * 0.7;
@@ -1253,6 +1303,14 @@ function animate(now) {
   muzzleFlash.scale.setScalar(muzzlePulse);
   muzzleFlash.material.opacity = nearestZombies((skillDefs[activeSkill] || skillDefs.arc).range).length ? 0.34 + muzzlePulse * 0.34 : 0;
   muzzleFlash.rotation.y = player.rotation.y - Math.PI / 2;
+  muzzleCards.forEach((card, i) => {
+    card.visible = muzzleFlash.material.opacity > 0.38;
+    const spread = (i - 1.5) * 0.08;
+    card.position.set(player.position.x + 0.96 + spread, 1.12 + (i % 2) * 0.04, player.position.z - 0.50 - spread);
+    card.rotation.set(-Math.PI / 2, 0, player.rotation.y + i * 0.32);
+    card.scale.setScalar(0.88 + Math.abs(Math.sin(t * 18 + i)) * 0.45);
+    card.material.opacity = card.visible ? 0.30 + Math.abs(Math.sin(t * 20 + i)) * 0.48 : 0;
+  });
 
   const fanAngle = player.rotation.y || 0;
   fanRounds.forEach((round, i) => {
@@ -1305,6 +1363,16 @@ function animate(now) {
     spark.rotation.y = -a;
     spark.material.opacity = 0.28 + Math.abs(Math.sin(t * 10 + i)) * 0.45;
   });
+  boomDebrisCards.forEach((card, i) => {
+    card.visible = activeSkill === 'boom' && !!boomTarget;
+    if (!boomTarget) return;
+    const a = i * Math.PI * 0.25 - t * 0.8;
+    const r = 0.36 + (i % 4) * 0.22;
+    card.position.set(boomTarget.position.x + Math.cos(a) * r, 0.09, boomTarget.position.z + Math.sin(a) * r);
+    card.rotation.z = a;
+    card.scale.setScalar(0.75 + Math.abs(Math.sin(t * 4 + i)) * 0.65);
+    card.material.opacity = i % 3 === 0 ? 0.16 + Math.abs(Math.sin(t * 3 + i)) * 0.16 : 0.32 + Math.abs(Math.sin(t * 8 + i)) * 0.36;
+  });
 
   arcBranches.forEach((branch, i) => {
     const a = nearest[i] && nearest[i].z;
@@ -1326,6 +1394,14 @@ function animate(now) {
       arcGlowNodes[i].rotation.y = branch.rotation.y;
       arcGlowNodes[i].material.opacity = 0.18 + Math.abs(Math.sin(t * 11 + i)) * 0.34;
     }
+  });
+  arcNodeCards.forEach((node, i) => {
+    const target = nearest[i] && nearest[i].z;
+    node.visible = activeSkill === 'arc' && !!target;
+    if (!target) return;
+    node.position.set(target.position.x, 0.10, target.position.z);
+    node.scale.setScalar(0.9 + Math.abs(Math.sin(t * 8 + i)) * 0.42);
+    node.material.opacity = 0.24 + Math.abs(Math.sin(t * 10 + i)) * 0.44;
   });
 
   skillBursts.forEach((orb, i) => {
@@ -1351,6 +1427,19 @@ function animate(now) {
     spark.scale.setScalar(0.65 + fade * 0.9);
     spark.material.opacity = fade * 0.88;
   });
+  impactCards.forEach((card) => {
+    if (!card.visible) return;
+    card.userData.life -= dt;
+    if (card.userData.life <= 0) {
+      card.visible = false;
+      return;
+    }
+    const fade = card.userData.life / card.userData.maxLife;
+    card.position.y += 0.12 * dt;
+    card.rotation.z += 1.8 * dt;
+    card.scale.setScalar(0.68 + fade * 0.72);
+    card.material.opacity = fade * 0.72;
+  });
 
   updateHud();
   window.__V03_ENGINE_DEMO_STATE.hp = Math.round(game.hp);
@@ -1375,6 +1464,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.arcBranchCount = arcBranches.filter((branch) => branch.visible).length;
   window.__V03_ENGINE_DEMO_STATE.arcGlowCount = arcGlowNodes.filter((glow) => glow.visible).length;
   window.__V03_ENGINE_DEMO_STATE.impactSparkCount = impactSparks.filter((spark) => spark.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.fxCardCount = muzzleCards.filter((card) => card.visible).length + impactCards.filter((card) => card.visible).length + boomDebrisCards.filter((card) => card.visible).length + arcNodeCards.filter((node) => node.visible).length;
   window.__V03_ENGINE_DEMO_STATE.hitPulseCount = livingZombies().filter((z) => z.userData.hitPulse > 0).length;
   window.__V03_ENGINE_DEMO_STATE.hasMiniMap = !!miniMap;
   window.__V03_ENGINE_DEMO_STATE.miniMapZombieDots = miniZombies.length;
