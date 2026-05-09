@@ -224,13 +224,13 @@ body {
 .combat-focus {
   position: absolute;
   left: 16px;
-  top: 128px;
-  width: 214px;
+  top: 124px;
+  width: 172px;
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 6px;
   align-items: center;
-  padding: 9px;
+  padding: 7px;
   border: 1px solid rgba(244,201,90,0.46);
   background:
     linear-gradient(135deg, rgba(255,255,255,0.10), transparent 35%),
@@ -242,8 +242,8 @@ body {
 
 .focus-portrait {
   position: relative;
-  width: 76px;
-  height: 92px;
+  width: 58px;
+  height: 70px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.22);
   background:
@@ -387,16 +387,16 @@ body {
 }
 
 .focus-copy strong {
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.05;
   color: #fff;
   text-shadow: 0 2px 4px #000;
 }
 
 .focus-copy span {
-  margin-top: 5px;
+  margin-top: 4px;
   color: #f4c95a;
-  font-size: 10px;
+  font-size: 8.5px;
   font-weight: 900;
   line-height: 1.15;
   text-transform: uppercase;
@@ -406,11 +406,11 @@ body {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
+  gap: 5px;
 }
 
 .focus-skills i {
-  height: 28px;
+  height: 22px;
   border: 1px solid currentColor;
   background: radial-gradient(circle at 42% 34%, rgba(255,255,255,0.30), rgba(7,10,10,0.82) 55%, rgba(0,0,0,0.92));
   box-shadow: inset 0 0 14px currentColor, 0 0 14px rgba(0,0,0,0.34);

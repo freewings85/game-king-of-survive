@@ -1726,3 +1726,41 @@ Next iteration direction:
 1. Tune zombie and hero unit card scale/opacity together from the latest phone screenshot.
 2. Move the biggest map props toward sprite/painterly cover assets or hide their clean-box geometry where overlays are sufficient.
 3. Reduce the mobile focus panel footprint after the combat cluster scale stabilizes.
+
+## 2026-05-10 Compact combat focus pass
+
+Related work:
+
+- WebGL reference WIP after `64d3c3c`
+- `frontend/engine-demo/styles.css`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- Art quality: closer for phone composition because the class/skin/skill focus panel now uses a compact footprint instead of blocking the central combat cluster.
+- The focus panel still exists for review and class/skin readability, but the battle area has more visible map and horde space, closer to the target phone screenshot.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The portrait focus card was reduced from a large card to a compact tactical panel.
+- Runtime gates now require `combatFocusRect <= 180x128`, so the mobile review cannot silently return to the earlier oversized overlay.
+- The same focus data remains visible: class, skin variant, sprite-backed portrait, and three skill chips.
+
+What is still far from the reference:
+
+- The bottom class strip is still a prototype control surface and uses more space than a production mini-game HUD.
+- The minimap and utility stack still look more UI-prototype than final target art.
+- The map props still need a sprite/painterly cover pass to match the new hero/zombie unit direction.
+
+Next iteration direction:
+
+1. Reduce or restyle the bottom class strip during combat so the target phone frame reads as gameplay first.
+2. Start a sprite/painterly pass for major map props, especially wreck cars and tall walls.
+3. Keep the focus panel compact while tuning skill button and minimap polish.
