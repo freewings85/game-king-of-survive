@@ -4660,14 +4660,11 @@
     if (rivalState._pendingAnnounce > 0) {
       rivalState._pendingAnnounce -= dt;
       if (rivalState._pendingAnnounce <= 0 && rivalState.botId >= 0) {
-        bossSlainBanner.active = true;
-        bossSlainBanner.timer = 0;
-        bossSlainBanner.duration = 2.4;
-        bossSlainBanner.name = '⚡ 你的 RIVAL: ' + rivalState._announceName +
-                               (rivalState._announceArch ? ' ('+rivalState._announceArch+')' : '');
-        bossSlainBanner._rivalMode = true;
-        bossSlainBanner._announceMode = true;
-        screenFlash.color = '#ff3030'; screenFlash.alpha = 0.3;
+        killFeed.push({
+          text: '宿敌: ' + rivalState._announceName + (rivalState._announceArch ? ' (' + rivalState._announceArch + ')' : ''),
+          color: '#ff7088',
+          time: 5
+        });
       }
     }
     // Round 2: drain queued level-ups once banners clear
