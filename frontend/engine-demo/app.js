@@ -41,6 +41,8 @@ const mats = {
   wall: new THREE.MeshStandardMaterial({ color: 0x5a5f59, roughness: 0.88 }),
   player: new THREE.MeshStandardMaterial({ color: 0x243436, roughness: 0.58, metalness: 0.12 }),
   playerAccent: new THREE.MeshStandardMaterial({ color: 0x4ec9ff, roughness: 0.35, emissive: 0x0d4d66, emissiveIntensity: 0.65 }),
+  rival: new THREE.MeshStandardMaterial({ color: 0x3b2d28, roughness: 0.62, metalness: 0.10 }),
+  rivalAccent: new THREE.MeshStandardMaterial({ color: 0xff8b3d, roughness: 0.36, emissive: 0x7a2600, emissiveIntensity: 0.7 }),
   skin: new THREE.MeshStandardMaterial({ color: 0xd2a164, roughness: 0.72 }),
   zombie: new THREE.MeshStandardMaterial({ color: 0x83936f, roughness: 0.88 }),
   zombieCloth: new THREE.MeshStandardMaterial({ color: 0x3b3027, roughness: 0.9 }),
@@ -85,6 +87,18 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
+
+const safeZoneMat = new THREE.MeshBasicMaterial({
+  color: 0xb95cff,
+  transparent: true,
+  opacity: 0.18,
+  side: THREE.DoubleSide,
+  depthWrite: false
+});
+const safeZone = new THREE.Mesh(new THREE.RingGeometry(4.35, 4.56, 96), safeZoneMat);
+safeZone.rotation.x = -Math.PI / 2;
+safeZone.position.y = 0.035;
+scene.add(safeZone);
 
 for (let i = -18; i <= 18; i += 2) {
   const lineA = box(0.025, 0.01, 42, mats.road);
@@ -357,6 +371,15 @@ const player = makeCharacter(mats.player, mats.playerAccent, 1);
 player.position.set(playerSpawn.x, 0, playerSpawn.z);
 scene.add(player);
 
+const rival = makeCharacter(mats.rival, mats.rivalAccent, 0.9);
+rival.position.set(3.1, 0, -2.2);
+scene.add(rival);
+
+const rivalBeamMat = new THREE.MeshBasicMaterial({ color: 0xff8b3d, transparent: true, opacity: 0.65 });
+const rivalBeam = box(1.4, 0.05, 0.05, rivalBeamMat);
+rivalBeam.castShadow = false;
+scene.add(rivalBeam);
+
 const zombies = [];
 for (let i = 0; i < 13; i++) {
   const angle = i * 0.62;
@@ -384,6 +407,7 @@ const hpFill = document.getElementById('hpFill');
 const xpFill = document.getElementById('xpFill');
 const aliveText = document.getElementById('aliveText');
 const levelBadge = document.getElementById('levelBadge');
+const stormBadge = document.getElementById('stormBadge');
 const moveStick = document.getElementById('moveStick');
 
 function updateHud() {
@@ -391,6 +415,8 @@ function updateHud() {
   xpFill.style.width = `${Math.min(100, game.xp)}%`;
   levelBadge.textContent = `LV ${game.level}`;
   aliveText.textContent = `ALIVE ${Math.max(demoTuning.progression.minAlive, 18 - Math.floor(game.kills / demoTuning.progression.aliveDropPerKills))}`;
+  const zoneLeft = Math.max(0, Math.round(100 - game.kills * 3 - game.level * 2));
+  stormBadge.textContent = `ZONE 01:${String(zoneLeft).padStart(2, '0')}`;
 }
 
 function applyClass(id) {
@@ -617,6 +643,18 @@ function animate(now) {
   player.position.y = Math.sin(t * 5) * 0.025;
   accentLight.position.x = player.position.x;
   accentLight.position.z = player.position.z + 0.4;
+  const zoneScale = 1 - Math.min(0.24, t * 0.006 + game.kills * 0.002);
+  safeZone.scale.set(zoneScale * 1.08, zoneScale * 0.92, 1);
+  safeZone.rotation.z += dt * 0.08;
+  safeZoneMat.opacity = 0.14 + Math.abs(Math.sin(t * 1.4)) * 0.06;
+  rival.position.x = 3.1 + Math.sin(t * 0.42) * 0.55;
+  rival.position.z = -2.2 + Math.cos(t * 0.35) * 0.45;
+  rival.position.y = Math.sin(t * 4.5) * 0.018;
+  rival.rotation.y = Math.atan2(player.position.x - rival.position.x, player.position.z - rival.position.z);
+  rivalBeam.position.set((rival.position.x + player.position.x) * 0.5, 0.94, (rival.position.z + player.position.z) * 0.5);
+  rivalBeam.scale.x = Math.hypot(player.position.x - rival.position.x, player.position.z - rival.position.z) / 1.4;
+  rivalBeam.rotation.y = Math.atan2(rival.position.x - player.position.x, rival.position.z - player.position.z) + Math.PI / 2;
+  rivalBeamMat.opacity = 0.18 + Math.abs(Math.sin(t * 3.2)) * 0.35;
   fireWeapon(dt);
   collectXp();
 
@@ -674,6 +712,8 @@ function animate(now) {
   });
 
   updateHud();
+  window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
+  window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));
 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);

@@ -98,6 +98,19 @@ body {
   pointer-events: none;
 }
 
+.storm-badge {
+  position: absolute;
+  top: 98px;
+  left: 62px;
+  padding: 4px 8px;
+  border: 1px solid rgba(185,92,255,0.52);
+  background: rgba(0,0,0,0.5);
+  color: #d79bff;
+  font-size: 12px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
 .move-stick {
   position: absolute;
   left: 20px;
