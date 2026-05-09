@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>生存之王 King of Survive</title>
+<base href="../demo/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap">
+<link rel="stylesheet" href="/frontend/styles/base.css">
+</head>
+<body>
+<div id="login-overlay">
+  <h1>生存之王</h1>
+  <div class="subtitle">King of Survive</div>
+  <div id="login-box">
+    <label for="nickname-input">输入昵称</label>
+    <input type="text" id="nickname-input" placeholder="取个霸气的名字..." maxlength="12" autocomplete="off">
+    <button id="btn-register" onclick="doRegister()">注册并进入游戏</button>
+    <button id="btn-login" onclick="doLogin()">已有账号，直接登录</button>
+    <div id="login-msg"></div>
+  </div>
+  <div id="login-info">需要连接服务器 · 数据实时同步</div>
+</div>
+<div id="player-bar">
+  <span class="nickname" id="bar-name">-</span>
+  <span class="gold" id="bar-gold">0 金币</span>
+  <span class="rank" id="bar-rank">青铜</span>
+  <span id="bar-level">Lv.1</span>
+</div>
+<canvas id="c"></canvas>
+<script src="/frontend/src/login.js"></script>
+<script src="rpg-engine.js?v=2"></script>
+<script src="network-client.js?v=2"></script>
+<script src="/frontend/src/theme/zombie-theme.js"></script>
+<script src="/frontend/src/legacy-game.js"></script>
+</body>
+</html>
