@@ -1320,3 +1320,45 @@ Next iteration direction:
 1. Build a larger mobile-first combat presentation frame that gives the player, zombies, skill cards, and class/skin UI the same first-read priority as the V03 reference.
 2. Replace the highest-impact procedural hero/zombie cards with authored or generated sprite sheets before spending more time on minor geometry details.
 3. Keep the comparison gate tied to the reference screenshot, current screenshots, the remaining gap, and the next iteration direction after each visual pass.
+
+## 2026-05-10 Mobile combat focus frame
+
+Related work:
+
+- WebGL reference WIP after `bbdd486`
+- `frontend/engine-demo/index.html`
+- `frontend/engine-demo/styles.css`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+Current visual distance:
+
+- Art quality: far.
+- This pass improves mobile composition and first-read hierarchy, but the reference still has much stronger authored illustration, 2.5D staging, and polished skill/skin presentation.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Portrait mobile now has a combat focus frame with a larger class/skin portrait, current skin label, and three skill icons, so class/skin/skill information is visible without opening a separate review mode.
+- The player character is scaled up slightly and the portrait camera is tighter, increasing character and zombie read size in the phone screenshot.
+- Runtime gates now require `combatFocusDisplayed`, `combatFocusStyle: hood-rifle`, and `combatFocusSkillCount: 3`; class review gates require the focus frame to match Guardian, Tech, and Ranger style state.
+
+What is still far from the reference:
+
+- The combat focus frame still uses CSS/procedural portrait construction instead of real character skin art.
+- The main battle view still lacks target-level foreground depth and authored zombie silhouette variation.
+- Skill icons are clearer, but they are not yet large illustrated skill effect cards like the target concept.
+
+Next iteration direction:
+
+1. Replace the procedural focus portrait with generated or authored class/skin sprites for Guardian, Tech, and Ranger.
+2. Add a foreground combat depth pass so zombies, pickups, and prop silhouettes have the same layered 2.5D read as the V03 reference.
+3. Turn skill icons into larger illustrated skill cards only after the hero/zombie read is strong enough in the phone screenshot.

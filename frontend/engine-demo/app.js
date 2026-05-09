@@ -1354,7 +1354,7 @@ window.__V03_ENGINE_DEMO_STATE = {
   contractQualityOk: !!(contractMap && window.KOS_MAP_CONTRACT.getQualityChecks(contractMap).every((check) => check.ok))
 };
 
-const player = makeCharacter(mats.player, mats.playerAccent, 1);
+const player = makeCharacter(mats.player, mats.playerAccent, 1.12);
 player.position.set(playerSpawn.x, 0, playerSpawn.z);
 playerPainterlyCard = player.userData.painterlyCard;
 scene.add(player);
@@ -1426,6 +1426,11 @@ const showcaseTitle = document.getElementById('showcaseTitle');
 const showcaseRole = document.getElementById('showcaseRole');
 const showcaseSkins = document.getElementById('showcaseSkins');
 const showcaseThumbs = document.getElementById('showcaseThumbs');
+const combatFocus = document.getElementById('combatFocus');
+const focusPortrait = document.getElementById('focusPortrait');
+const focusClassName = document.getElementById('focusClassName');
+const focusSkinLabel = document.getElementById('focusSkinLabel');
+const focusSkills = document.getElementById('focusSkills');
 
 function placeMiniDot(dot, x, z) {
   const px = THREE.MathUtils.clamp(((x + 6) / 12) * 100, 8, 92);
@@ -1466,6 +1471,7 @@ function applyClass(id) {
   className.textContent = def.name;
   showcaseTitle.textContent = def.name;
   showcaseRole.textContent = def.role;
+  focusClassName.textContent = def.name;
   activeClassCard.querySelector('strong').textContent = def.name;
   activeClassCard.querySelector('span').textContent = def.role;
   Array.from(skinRow.children).forEach((el, index) => {
@@ -1502,6 +1508,10 @@ function applySkin(index) {
   activePainterlySkin = activeSkin;
   activePainterlySkinColor = skinColor;
   activePainterlyStyle = classThumbStyles[activeClass] || 'field-kit';
+  focusPortrait.style.setProperty('--skin-color', skinColor);
+  focusPortrait.style.setProperty('--accent-color', accentHex);
+  focusPortrait.dataset.classStyle = activePainterlyStyle;
+  focusSkinLabel.textContent = `SKIN ${String(activeSkin + 1).padStart(2, '0')} / ${activePainterlyStyle}`;
   Array.from(skinRow.children).forEach((el, i) => {
     el.classList.toggle('active', i === activeSkin);
   });
@@ -1520,6 +1530,10 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
+  window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible = reviewMode === 'class' && !!classShowcase;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseTitle = showcaseTitle.textContent;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount = showcaseSkins.children.length;
@@ -1543,6 +1557,10 @@ function applySkill(id) {
   Array.from(skillPanel.querySelectorAll('button')).forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.skill === id);
   });
+  Array.from(focusSkills.querySelectorAll('i')).forEach((icon) => {
+    icon.classList.toggle('active', icon.dataset.focusSkill === id);
+  });
+  window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
 }
 
 classButtons.addEventListener('click', (ev) => {
@@ -1713,7 +1731,7 @@ function resize() {
   const h = window.innerHeight;
   renderer.setSize(w, h, false);
   const aspect = w / h;
-  const viewH = aspect < 0.65 ? 12.6 : 10.4;
+  const viewH = aspect < 0.65 ? 11.4 : 10.0;
   camera.left = -viewH * aspect * 0.5;
   camera.right = viewH * aspect * 0.5;
   camera.top = viewH * 0.5;
@@ -2138,6 +2156,10 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
+  window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
