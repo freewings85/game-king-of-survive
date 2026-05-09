@@ -66,6 +66,9 @@ const mats = {
   muzzle: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.9 }),
   crack: new THREE.MeshBasicMaterial({ color: 0x101412, transparent: true, opacity: 0.42 }),
   grass: new THREE.MeshStandardMaterial({ color: 0x3e5f38, roughness: 0.96 }),
+  oil: new THREE.MeshBasicMaterial({ color: 0x080b0a, transparent: true, opacity: 0.30, side: THREE.DoubleSide }),
+  rustStain: new THREE.MeshBasicMaterial({ color: 0x8b4a25, transparent: true, opacity: 0.34, side: THREE.DoubleSide }),
+  rubble: new THREE.MeshStandardMaterial({ color: 0x777568, roughness: 0.98 }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -358,6 +361,21 @@ function paintContractTiles(map) {
         tuft.position.set(tile.position.x + tileW * 0.22, 0.09, tile.position.z - tileD * 0.12);
         tuft.rotation.z = 0.28;
         tileGroup.add(tuft);
+        groundDetailCount += 1;
+      }
+      if ((x * 19 + y * 13) % 23 === 0) {
+        const stain = new THREE.Mesh(new THREE.CircleGeometry(tileW * 0.28, 18), (id === 4 ? mats.rustStain : mats.oil));
+        stain.rotation.x = -Math.PI / 2;
+        stain.scale.set(1, 0.48 + ((x + y) % 4) * 0.16, 1);
+        stain.position.set(tile.position.x - tileW * 0.16, 0.039, tile.position.z + tileD * 0.10);
+        tileGroup.add(stain);
+        groundDetailCount += 1;
+      }
+      if ((x * 5 + y * 29) % 13 === 0) {
+        const chip = box(tileW * (0.10 + (x % 3) * 0.035), 0.025, tileD * 0.09, mats.rubble);
+        chip.position.set(tile.position.x + tileW * (((x % 5) - 2) * 0.08), 0.048, tile.position.z + tileD * (((y % 5) - 2) * 0.06));
+        chip.rotation.y = ((x * 3 + y) % 6) * 0.28;
+        tileGroup.add(chip);
         groundDetailCount += 1;
       }
     }

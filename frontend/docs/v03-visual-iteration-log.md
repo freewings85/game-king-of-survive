@@ -530,3 +530,34 @@ Next iteration direction:
 1. Improve wasteland ground/prop painterly detail in the WebGL reference so the map surface catches up with units and FX.
 2. If Cocos Creator becomes available, instantiate the required scene nodes and bind `V03BattleDirector`, `V03MapRuntime`, and `V03VisualRuntime`.
 3. Keep Cocos checklist and visual contract synchronized whenever the WebGL visual direction changes.
+
+## 2026-05-10 Wasteland Ground Detail Pass
+
+Related work:
+
+- WebGL reference WIP after `6f8d155`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- Ground tiles now include oil stains, rust stains, and small rubble chips in addition to cracks and grass tufts.
+- The wasteland surface reads less like a clean grid and more like the reference image's cracked, dirty arena floor.
+- `groundDetailCount` increased from 91 to 160, and the verifier threshold moved from 80 to 145.
+- The added detail does not visibly block hero, zombie, pickups, minimap, joystick, or skill buttons in the reviewed screenshots.
+
+What is still far from the reference:
+
+- The surface is still procedural; the reference has authored asphalt plates, painterly wear, and stronger prop-ground integration.
+- Props still need painted edge wear, rust streaks, and debris clusters around cars/walls/barrels.
+- Cocos map runtime still uses placeholder boxes for props and does not yet generate this richer ground detail layer.
+
+Next iteration direction:
+
+1. Add prop-adjacent debris/rust clusters around wreck cars, walls, and barrels in the WebGL reference.
+2. Mirror the ground detail expectations in the Cocos visual/scene checklist if the layer becomes a required runtime surface.
+3. Continue checking that extra map detail does not reduce phone-scale combat readability.
