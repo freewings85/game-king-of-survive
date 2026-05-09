@@ -149,6 +149,42 @@ async function verifyEngineDemo(browser) {
   return info;
 }
 
+async function verifyEngineSkillReview(browser, skill) {
+  const page = await browser.newPage({
+    viewport: { width: 390, height: 844, isMobile: true, hasTouch: true },
+    deviceScaleFactor: 2
+  });
+  const logs = await collectErrors(page);
+  await page.goto(`${baseUrl}/frontend/engine-demo/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
+  await page.locator('[data-class="ranger"]').click();
+  await page.locator('#skinRow i').nth(2).click();
+  await page.locator(`[data-skill="${skill}"]`).click();
+  await page.waitForTimeout(2600);
+  const info = await page.evaluate(() => ({
+    activeSkill: document.querySelector('#skillPanel .active').dataset.skill,
+    shotsFired: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.shotsFired,
+    damageDealt: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.damageDealt,
+    fxTipCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fxTipCount,
+    fanRoundCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanRoundCount,
+    boomRingReady: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomRingReady,
+    arcBranchCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcBranchCount,
+    hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
+  }));
+  const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
+  const skillOk = (
+    (skill === 'fan' && info.fanRoundCount >= 6) ||
+    (skill === 'boom' && info.boomRingReady === true && info.fxTipCount >= 1) ||
+    (skill === 'arc' && info.arcBranchCount >= 1)
+  );
+  if (errors.length || !info.hasWebgl || info.activeSkill !== skill || info.shotsFired < 3 || info.damageDealt < 30 || !skillOk) {
+    fail(`V03 ${skill} review verification failed`, { info, errors });
+  }
+  info.screenshot = path.join(artifactDir, `engine-demo-skill-${skill}.png`);
+  await page.screenshot({ path: info.screenshot, fullPage: true });
+  await page.close();
+  return info;
+}
+
 async function verifyV03Shell(browser) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 760 }, deviceScaleFactor: 1 });
   const logs = await collectErrors(page);
@@ -187,6 +223,9 @@ async function verifyV03Shell(browser) {
     runtime: await verifyContractRuntime(browser),
     editor: await verifyEditor(browser),
     engineDemo: await verifyEngineDemo(browser),
+    skillArc: await verifyEngineSkillReview(browser, 'arc'),
+    skillBoom: await verifyEngineSkillReview(browser, 'boom'),
+    skillFan: await verifyEngineSkillReview(browser, 'fan'),
     shell: await verifyV03Shell(browser)
   };
   await browser.close();

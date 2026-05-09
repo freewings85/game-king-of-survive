@@ -132,3 +132,37 @@ Next iteration direction:
 2. Add live impact effects: hit sparks, BOOM shock ring/explosion core, ARC branching in the active phone screenshot.
 3. Increase prop/ground art density around the player without blocking readability: rubble chips, rust marks, oil stains, grass clumps, and broken asphalt plates.
 4. Start a phone UI pass: circular minimap and icon-based skill buttons matching the reference composition.
+
+## 2026-05-10 Skill Review Screenshot Pass
+
+Related work:
+
+- WebGL reference WIP after `1b3874a`
+
+Reviewed screenshots:
+
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+
+What moved closer:
+
+- ARC, BOOM, and FAN now each have a deterministic review screenshot, matching the reference image's separate skill panels more closely as a review workflow.
+- ARC shows branching blue links between zombies.
+- BOOM shows an orange shock ring around the target area.
+- FAN shows multiple projectile tips in a spread pattern.
+- The verifier now checks each skill independently instead of relying only on the active phone screenshot.
+
+What is still far from the reference:
+
+- FX shapes are still simple geometry. The reference uses painted bullets, warm muzzle cores, explosion debris, electric glow, and richer impact contrast.
+- ARC branches need more jagged lightning shape and brighter glow.
+- BOOM needs an explosion core, sparks, smoke/dust, and radial debris, not only a flat ring.
+- FAN bullets need sprite-like projectile bodies with stronger warm trails and target impact points.
+
+Next iteration direction:
+
+1. Add skill-specific painted-style primitives: bullet capsules with hot cores, BOOM core/spark shards, ARC segmented lightning branches.
+2. Add impact feedback on zombies: hit flashes, brief scale pulse, damage sparks at contact points.
+3. Make the skill review screenshots part of visual comparison after every FX pass.
+4. Start the phone UI pass once FX readability is closer to the reference.
