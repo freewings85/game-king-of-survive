@@ -91,6 +91,9 @@ requiredText.forEach((text) => {
   'class-review painterly state and class showcase title matching Guardian, Tech, and Ranger',
   'classShowcaseDisplayed',
   '3 variant showcase skin thumbnails with 1 active thumbnail',
+  'shield-armor',
+  'coil-screen',
+  'hood-rifle',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',
@@ -121,6 +124,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 11,
   mappedRequirements: 13,
-  gates: 29,
+  gates: 32,
   completionClaim: false
 }, null, 2));

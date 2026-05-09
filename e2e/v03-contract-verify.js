@@ -253,13 +253,16 @@ async function verifyEngineClassReview(browser, classId, skinIndex) {
     classShowcaseThumbCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseThumbCount,
     classShowcaseActiveThumbs: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseActiveThumbs,
     classShowcaseVariantCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseVariantCount,
+    classShowcaseStyle: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle,
+    classShowcaseStyleCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.classShowcaseStyleCount,
     classShowcaseDisplayed: getComputedStyle(document.getElementById('classShowcase')).display === 'grid',
     zombieVariantCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.zombieVariantCount,
     livingZombieCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.livingZombieCount,
     hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || info.activeClass !== classId || info.activeGearClass !== classId || info.activePainterlyClass !== classId || info.activeSkin !== skinIndex || info.activePainterlySkin !== skinIndex || info.activePainterlySkinColor !== info.activeSkinColor || info.activeGearCount < 3 || info.heroPainterlyCardCount < 2 || info.painterlyCardCount < 40 || !info.classShowcaseVisible || !info.classShowcaseDisplayed || info.classShowcaseTitle !== info.className || info.classShowcaseSkinCount !== 3 || info.classShowcaseThumbCount !== 3 || info.classShowcaseActiveThumbs !== 1 || info.classShowcaseVariantCount !== 3 || info.zombieVariantCount < 3 || info.livingZombieCount < 8) {
+  const expectedStyle = { guardian: 'shield-armor', tech: 'coil-screen', ranger: 'hood-rifle' }[classId];
+  if (errors.length || !info.hasWebgl || info.activeClass !== classId || info.activeGearClass !== classId || info.activePainterlyClass !== classId || info.activeSkin !== skinIndex || info.activePainterlySkin !== skinIndex || info.activePainterlySkinColor !== info.activeSkinColor || info.activeGearCount < 3 || info.heroPainterlyCardCount < 2 || info.painterlyCardCount < 40 || !info.classShowcaseVisible || !info.classShowcaseDisplayed || info.classShowcaseTitle !== info.className || info.classShowcaseSkinCount !== 3 || info.classShowcaseThumbCount !== 3 || info.classShowcaseActiveThumbs !== 1 || info.classShowcaseVariantCount !== 3 || info.classShowcaseStyle !== expectedStyle || info.classShowcaseStyleCount !== 1 || info.zombieVariantCount < 3 || info.livingZombieCount < 8) {
     fail(`V03 ${classId} class review verification failed`, { info, errors });
   }
   info.screenshot = path.join(artifactDir, `engine-demo-class-${classId}.png`);

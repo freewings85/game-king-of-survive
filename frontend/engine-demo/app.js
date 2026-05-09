@@ -158,6 +158,11 @@ let activePainterlySkinColor = '#193743';
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
+const classThumbStyles = {
+  guardian: 'shield-armor',
+  tech: 'coil-screen',
+  ranger: 'hood-rifle'
+};
 
 function makeCanvasTexture(width, height, draw) {
   const art = document.createElement('canvas');
@@ -1449,6 +1454,7 @@ function applyClass(id) {
     el.style.setProperty('--accent-color', `#${def.accent.toString(16).padStart(6, '0')}`);
     el.dataset.skin = String(index);
     el.dataset.skinVariant = `${id}-${index}`;
+    el.dataset.classStyle = classThumbStyles[id] || 'field-kit';
   });
   Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.class === id);
@@ -1492,6 +1498,8 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.classShowcaseThumbCount = showcaseThumbs.children.length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseActiveThumbs = showcaseThumbs.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVariantCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.skinVariant)).size;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle = classThumbStyles[activeClass] || 'field-kit';
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseStyleCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.classStyle)).size;
 }
 
 function applySkill(id) {

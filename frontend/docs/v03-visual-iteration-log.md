@@ -294,6 +294,37 @@ Next iteration direction:
 2. Add larger isolated class art to the showcase so the selected skin is readable beyond the thumbnail row.
 3. Mirror the variant requirement in Cocos once the Cocos scene uses authored UI prefabs.
 
+## 2026-05-10 Class-Specific Skin Thumbnail Pass
+
+Related work:
+
+- WIP after `cd2e039`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+What moved closer:
+
+- Showcase skin thumbnails now receive class-specific equipment language: Guardian uses `shield-armor`, Tech uses `coil-screen`, and Ranger uses `hood-rifle`.
+- The verifier checks the expected class style and requires all three thumbnails in a class review to share that class style while still preserving three skin variants.
+- The thumbnail row now communicates both skin variation and class fantasy, closer to the target image's combined class/skin presentation.
+
+What is still far from the reference:
+
+- The equipment language is still CSS-generated and symbolic; it is not final hand-painted class skin art.
+- The full selected hero in the battle view still needs stronger class-specific costume detail.
+- Cocos has not yet imported equivalent UI sprites or prefab variants.
+
+Next iteration direction:
+
+1. Move class-specific skin language from thumbnails into the selected player card and in-match model.
+2. Add authored bitmap placeholders for the three class skin rows once the generated direction stabilizes.
+3. Mirror `shield-armor`, `coil-screen`, and `hood-rifle` in the Cocos visual contract.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
