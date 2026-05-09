@@ -70,6 +70,14 @@ export const V03_REQUIRED_MATERIAL_BLEND_LAYERS = [
   'material-unit-blend'
 ] as const;
 
+export const V03_REQUIRED_PAINTERLY_CARD_LAYERS = [
+  'hero-card',
+  'rival-card',
+  'zombie-variant-card',
+  'skill-fx-card',
+  'hit-feedback-card'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

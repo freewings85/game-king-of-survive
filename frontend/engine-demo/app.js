@@ -146,6 +146,229 @@ let propBreakCount = 0;
 let globalLightCount = 0;
 let objectRimCount = 0;
 let materialBlendCount = 0;
+let painterlyCardCount = 0;
+let heroPainterlyCardCount = 0;
+let zombiePainterlyCardCount = 0;
+let skillPainterlyCardCount = 0;
+const painterlyCards = [];
+
+function makeCanvasTexture(width, height, draw) {
+  const art = document.createElement('canvas');
+  art.width = width;
+  art.height = height;
+  const ctx = art.getContext('2d');
+  draw(ctx, width, height);
+  const texture = new THREE.CanvasTexture(art);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function makePainterlyMaterial(texture, opacity = 0.92) {
+  return new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    depthTest: false,
+    side: THREE.DoubleSide
+  });
+}
+
+function addPaintedStroke(ctx, points, color, width, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach(([x, y], index) => {
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.restore();
+}
+
+function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746') {
+  return makeCanvasTexture(192, 256, (ctx, w, h) => {
+    const glow = ctx.createRadialGradient(w * 0.50, h * 0.46, 8, w * 0.50, h * 0.50, w * 0.46);
+    glow.addColorStop(0, 'rgba(255,236,176,0.70)');
+    glow.addColorStop(0.52, 'rgba(78,201,255,0.20)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = 'rgba(5,7,6,0.44)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.52, h * 0.87, w * 0.29, h * 0.07, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.34, h * 0.34);
+    ctx.lineTo(w * 0.66, h * 0.34);
+    ctx.lineTo(w * 0.73, h * 0.76);
+    ctx.lineTo(w * 0.57, h * 0.88);
+    ctx.lineTo(w * 0.40, h * 0.86);
+    ctx.lineTo(w * 0.27, h * 0.76);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.39, h * 0.43);
+    ctx.lineTo(w * 0.61, h * 0.38);
+    ctx.lineTo(w * 0.66, h * 0.52);
+    ctx.lineTo(w * 0.47, h * 0.58);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#d5a26a';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.50, h * 0.25, w * 0.13, h * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#15110d';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.34, h * 0.16);
+    ctx.lineTo(w * 0.58, h * 0.10);
+    ctx.lineTo(w * 0.70, h * 0.24);
+    ctx.lineTo(w * 0.61, h * 0.33);
+    ctx.lineTo(w * 0.39, h * 0.30);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,239,174,0.95)';
+    ctx.fillRect(w * 0.40, h * 0.245, w * 0.20, h * 0.025);
+    ctx.fillStyle = '#090c0b';
+    ctx.fillRect(w * 0.43, h * 0.255, w * 0.04, h * 0.015);
+    ctx.fillRect(w * 0.54, h * 0.255, w * 0.04, h * 0.015);
+
+    ctx.strokeStyle = 'rgba(255,235,174,0.88)';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(w * 0.36, h * 0.39, w * 0.29, h * 0.28);
+    addPaintedStroke(ctx, [[w * 0.30, h * 0.42], [w * 0.18, h * 0.57], [w * 0.16, h * 0.70]], '#1b2423', 16, 0.94);
+    addPaintedStroke(ctx, [[w * 0.70, h * 0.44], [w * 0.86, h * 0.54], [w * 0.92, h * 0.48]], accent, 14, 0.94);
+    addPaintedStroke(ctx, [[w * 0.63, h * 0.54], [w * 0.98, h * 0.44]], '#101413', 7, 0.92);
+    addPaintedStroke(ctx, [[w * 0.64, h * 0.50], [w * 1.00, h * 0.40]], accent, 4, 0.86);
+    addPaintedStroke(ctx, [[w * 0.37, h * 0.72], [w * 0.31, h * 0.98]], '#0d1110', 14, 1);
+    addPaintedStroke(ctx, [[w * 0.60, h * 0.72], [w * 0.70, h * 0.98]], '#0d1110', 14, 1);
+    addPaintedStroke(ctx, [[w * 0.25, h * 0.36], [w * 0.54, h * 0.18], [w * 0.75, h * 0.29]], 'rgba(255,255,220,0.42)', 4, 1);
+  });
+}
+
+function makeZombieCardTexture(variant = 0) {
+  const cloth = variant === 2 ? '#413424' : variant === 1 ? '#2d3828' : '#4b3628';
+  const skin = variant === 1 ? '#78906d' : '#8d9a72';
+  return makeCanvasTexture(160, 220, (ctx, w, h) => {
+    const glow = ctx.createRadialGradient(w * 0.50, h * 0.42, 8, w * 0.50, h * 0.48, w * 0.48);
+    glow.addColorStop(0, 'rgba(255,103,58,0.42)');
+    glow.addColorStop(0.50, 'rgba(77,94,59,0.20)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(2,3,2,0.44)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.51, h * 0.88, w * 0.30, h * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = cloth;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.36, h * 0.33);
+    ctx.lineTo(w * 0.66, h * 0.37);
+    ctx.lineTo(w * 0.72, h * 0.78);
+    ctx.lineTo(w * 0.43, h * 0.86);
+    ctx.lineTo(w * 0.27, h * 0.68);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.ellipse(w * 0.51, h * 0.25, w * (variant === 1 ? 0.17 : 0.14), h * (variant === 2 ? 0.17 : 0.13), -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = variant === 2 ? '#2b251b' : '#d8d1a3';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.39, h * 0.17);
+    ctx.lineTo(w * 0.64, h * 0.15);
+    ctx.lineTo(w * 0.68, h * 0.28);
+    ctx.lineTo(w * 0.46, h * 0.30);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#ff5a3d';
+    ctx.fillRect(w * 0.43, h * 0.245, w * 0.045, h * 0.025);
+    ctx.fillRect(w * 0.55, h * 0.25, w * 0.045, h * 0.025);
+    ctx.fillStyle = '#d8d1a3';
+    ctx.fillRect(w * 0.45, h * 0.33, w * 0.16, h * 0.025);
+    ctx.fillStyle = 'rgba(255,90,61,0.65)';
+    ctx.fillRect(w * 0.48, h * 0.48, w * 0.20, h * 0.05);
+    ctx.fillStyle = 'rgba(56,82,58,0.82)';
+    ctx.fillRect(w * 0.31, h * 0.58, w * 0.18, h * 0.10);
+    ctx.fillStyle = 'rgba(232,198,128,0.75)';
+    ctx.fillRect(w * 0.39, h * 0.42, w * 0.18, h * 0.025);
+
+    addPaintedStroke(ctx, [[w * 0.33, h * 0.42], [w * 0.13, h * 0.55], [w * 0.08, h * 0.72]], skin, 12, 0.96);
+    addPaintedStroke(ctx, [[w * 0.66, h * 0.43], [w * 0.88, h * 0.57], [w * 0.94, h * 0.72]], skin, 12, 0.96);
+    addPaintedStroke(ctx, [[w * 0.33, h * 0.75], [w * 0.25, h * 0.98]], '#121614', 12, 1);
+    addPaintedStroke(ctx, [[w * 0.62, h * 0.76], [w * 0.70, h * 0.98]], '#121614', 12, 1);
+    addPaintedStroke(ctx, [[w * 0.27, h * 0.36], [w * 0.51, h * 0.18], [w * 0.76, h * 0.34]], 'rgba(255,225,152,0.28)', 4, 1);
+  });
+}
+
+function makeFxCardTexture(kind) {
+  return makeCanvasTexture(192, 96, (ctx, w, h) => {
+    const warm = kind === 'arc' ? '#8be9ff' : '#fff0a3';
+    const core = kind === 'arc' ? '#d4fbff' : '#fff7cb';
+    const outer = kind === 'boom' ? '#ff8b3d' : kind === 'fan' ? '#f4c95a' : '#35c8ff';
+    const glow = ctx.createRadialGradient(w * 0.46, h * 0.50, 3, w * 0.46, h * 0.50, w * 0.48);
+    glow.addColorStop(0, core);
+    glow.addColorStop(0.28, warm);
+    glow.addColorStop(0.62, `${outer}88`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, w, h);
+    if (kind === 'arc') {
+      addPaintedStroke(ctx, [[8, h * 0.55], [w * 0.24, h * 0.30], [w * 0.42, h * 0.56], [w * 0.62, h * 0.34], [w - 8, h * 0.46]], core, 7, 0.95);
+      addPaintedStroke(ctx, [[w * 0.44, h * 0.56], [w * 0.55, h * 0.78], [w * 0.68, h * 0.70]], outer, 4, 0.82);
+    } else {
+      addPaintedStroke(ctx, [[12, h * 0.58], [w * 0.40, h * 0.48], [w - 12, h * 0.42]], core, kind === 'boom' ? 12 : 8, 0.92);
+      addPaintedStroke(ctx, [[w * 0.22, h * 0.72], [w * 0.54, h * 0.54], [w * 0.80, h * 0.60]], outer, kind === 'boom' ? 7 : 5, 0.74);
+      ctx.fillStyle = outer;
+      for (let i = 0; i < 7; i++) {
+        ctx.fillRect(w * (0.18 + i * 0.10), h * (0.22 + (i % 3) * 0.12), 10, 4);
+      }
+    }
+  });
+}
+
+const painterlyMaterials = {
+  hero: makePainterlyMaterial(makeHeroCardTexture('#4ec9ff', '#243436'), 0.98),
+  rival: makePainterlyMaterial(makeHeroCardTexture('#ff8b3d', '#3b2d28'), 0.94),
+  zombieBrute: makePainterlyMaterial(makeZombieCardTexture(0), 0.96),
+  zombieCrawler: makePainterlyMaterial(makeZombieCardTexture(1), 0.96),
+  zombieHooded: makePainterlyMaterial(makeZombieCardTexture(2), 0.96),
+  fan: makePainterlyMaterial(makeFxCardTexture('fan'), 0.96),
+  boom: makePainterlyMaterial(makeFxCardTexture('boom'), 0.94),
+  arc: makePainterlyMaterial(makeFxCardTexture('arc'), 0.94)
+};
+
+function addPainterlyCard(root, material, width, height, x, y, z, kind) {
+  const card = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material.clone());
+  card.position.set(x, y, z);
+  card.castShadow = false;
+  card.receiveShadow = false;
+  card.renderOrder = 20;
+  card.userData.painterlyCard = kind;
+  root.add(card);
+  painterlyCards.push(card);
+  painterlyCardCount += 1;
+  if (kind === 'hero' || kind === 'rival') heroPainterlyCardCount += 1;
+  if (kind === 'zombie') zombiePainterlyCardCount += 1;
+  if (kind === 'skill') skillPainterlyCardCount += 1;
+  return card;
+}
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -658,6 +881,7 @@ function pointNearArena(map, point, fallbackAngle, fallbackRadius) {
 function makeCharacter(colorMat, accentMat, scale = 1) {
   const root = new THREE.Group();
   addContactShadow(root, 1.05 * scale, 0.72 * scale, 0.28);
+  addPainterlyCard(root, accentMat === mats.rivalAccent ? painterlyMaterials.rival : painterlyMaterials.hero, 1.34 * scale, 2.08 * scale, 0.04 * scale, 1.12 * scale, -0.58 * scale, accentMat === mats.rivalAccent ? 'rival' : 'hero');
   const legs = [
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road),
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road)
@@ -852,7 +1076,7 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   root.add(rangerCapeStripe);
 
   root.traverse((o) => {
-    if (o.isMesh && !o.userData.contactShadow) {
+    if (o.isMesh && !o.userData.contactShadow && !o.userData.painterlyCard) {
       o.castShadow = true;
       o.receiveShadow = true;
       silhouettePartCount += 1;
@@ -864,6 +1088,8 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
 function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const root = new THREE.Group();
   addContactShadow(root, 0.88 * scale, 0.58 * scale, 0.25);
+  const zombieCardMaterial = variant === 1 ? painterlyMaterials.zombieCrawler : variant === 2 ? painterlyMaterials.zombieHooded : painterlyMaterials.zombieBrute;
+  addPainterlyCard(root, zombieCardMaterial, 1.06 * scale, 1.74 * scale, 0.02 * scale, 0.88 * scale, -0.54 * scale, 'zombie');
   const legA = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   const legB = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   legA.position.set(-0.14 * scale, 0.30 * scale, 0);
@@ -987,7 +1213,7 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   root.userData.alive = true;
   root.userData.hitPulse = 0;
   root.traverse((o) => {
-    if (o.isMesh && !o.userData.contactShadow) {
+    if (o.isMesh && !o.userData.contactShadow && !o.userData.painterlyCard) {
       o.castShadow = true;
       o.receiveShadow = true;
       zombieDetailPartCount += 1;
@@ -1217,10 +1443,9 @@ muzzleFlash.castShadow = false;
 scene.add(muzzleFlash);
 const muzzleCards = [];
 for (let i = 0; i < 4; i++) {
-  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.42 - i * 0.05, 0.18 - i * 0.015), (i % 2 ? mats.fxCardOrange : mats.fxCardHot).clone());
+  const card = addPainterlyCard(scene, painterlyMaterials.fan, 0.42 - i * 0.05, 0.18 - i * 0.015, 0, -20, 0, 'skill');
   card.visible = false;
   card.castShadow = false;
-  scene.add(card);
   muzzleCards.push(card);
 }
 
@@ -1248,10 +1473,9 @@ for (let i = 0; i < 7; i++) {
 }
 const fanBulletCards = [];
 for (let i = 0; i < 7; i++) {
-  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.12), mats.fxCardHot.clone());
+  const card = addPainterlyCard(scene, painterlyMaterials.fan, 0.34, 0.12, 0, -20, 0, 'skill');
   card.visible = false;
   card.castShadow = false;
-  scene.add(card);
   fanBulletCards.push(card);
 }
 const fanImpactMarks = [];
@@ -1284,11 +1508,10 @@ for (let i = 0; i < 10; i++) {
 }
 const boomDebrisCards = [];
 for (let i = 0; i < 8; i++) {
-  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.08), (i % 3 === 0 ? mats.fxCardSmoke : mats.fxCardOrange).clone());
+  const card = addPainterlyCard(scene, painterlyMaterials.boom, 0.24, 0.08, 0, -20, 0, 'skill');
   card.visible = false;
   card.rotation.x = -Math.PI / 2;
   card.castShadow = false;
-  scene.add(card);
   boomDebrisCards.push(card);
 }
 
@@ -1308,11 +1531,10 @@ for (let i = 0; i < 4; i++) {
 }
 const arcNodeCards = [];
 for (let i = 0; i < 5; i++) {
-  const node = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.14, 18), mats.fxCardBlue.clone());
+  const node = addPainterlyCard(scene, painterlyMaterials.arc, 0.18, 0.10, 0, -20, 0, 'skill');
   node.visible = false;
   node.rotation.x = -Math.PI / 2;
   node.castShadow = false;
-  scene.add(node);
   arcNodeCards.push(node);
 }
 
@@ -1338,13 +1560,12 @@ for (let i = 0; i < 28; i++) {
 }
 const impactCards = [];
 for (let i = 0; i < 14; i++) {
-  const card = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.12), mats.fxCardHot.clone());
+  const card = addPainterlyCard(scene, painterlyMaterials.boom, 0.26, 0.12, 0, -20, 0, 'skill');
   card.visible = false;
   card.castShadow = false;
   card.userData.life = 0;
   card.userData.maxLife = 0.38;
   card.userData.angle = 0;
-  scene.add(card);
   impactCards.push(card);
 }
 
@@ -1749,6 +1970,9 @@ function animate(now) {
     card.scale.setScalar(0.68 + fade * 0.72);
     card.material.opacity = fade * 0.72;
   });
+  painterlyCards.forEach((card) => {
+    if (card.visible) card.lookAt(camera.position);
+  });
 
   updateHud();
   window.__V03_ENGINE_DEMO_STATE.hp = Math.round(game.hp);
@@ -1770,6 +1994,10 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
   window.__V03_ENGINE_DEMO_STATE.objectRimCount = objectRimCount;
   window.__V03_ENGINE_DEMO_STATE.materialBlendCount = materialBlendCount;
+  window.__V03_ENGINE_DEMO_STATE.painterlyCardCount = painterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount = heroPainterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount = zombiePainterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

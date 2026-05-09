@@ -15,6 +15,7 @@ import {
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_MATERIAL_BLEND_LAYERS,
   V03_REQUIRED_OBJECT_RIM_LAYERS,
+  V03_REQUIRED_PAINTERLY_CARD_LAYERS,
   V03_REQUIRED_PROP_BREAK_SHAPES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
@@ -36,6 +37,7 @@ export interface V03VisualRuntimeStats {
   globalLightLayers: number;
   objectRimLayers: number;
   materialBlendLayers: number;
+  painterlyCardLayers: number;
   fxLayers: number;
 }
 
@@ -58,6 +60,7 @@ export class V03VisualRuntime extends Component {
     globalLightLayers: 0,
     objectRimLayers: 0,
     materialBlendLayers: 0,
+    painterlyCardLayers: 0,
     fxLayers: 0
   };
 
@@ -76,6 +79,7 @@ export class V03VisualRuntime extends Component {
     this.buildGlobalLightLayers();
     this.buildObjectRimLayers();
     this.buildMaterialBlendLayers();
+    this.buildPainterlyCardLayers();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -98,6 +102,7 @@ export class V03VisualRuntime extends Component {
     this.stats.globalLightLayers = 0;
     this.stats.objectRimLayers = 0;
     this.stats.materialBlendLayers = 0;
+    this.stats.painterlyCardLayers = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -203,6 +208,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.20 - 0.40, 1.02 + (index % 2) * 0.08, 2.30);
       this.actorRoot!.addChild(node);
       this.stats.materialBlendLayers += 1;
+    });
+  }
+
+  private buildPainterlyCardLayers(): void {
+    V03_REQUIRED_PAINTERLY_CARD_LAYERS.forEach((layer, index) => {
+      const color = index < 2 ? '#fff0a3' : index === 2 ? '#8d9a72' : index === 3 ? '#f4c95a' : '#ff8b3d';
+      const node = this.makeBox(`painterly-card-${layer}`, 0.26 + index * 0.035, 0.016, 0.18, color);
+      node.setPosition(index * 0.22 - 0.44, 1.22 + (index % 2) * 0.08, 2.52);
+      this.actorRoot!.addChild(node);
+      this.stats.painterlyCardLayers += 1;
     });
   }
 

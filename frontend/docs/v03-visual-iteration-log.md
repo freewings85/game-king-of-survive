@@ -104,6 +104,40 @@ Next iteration direction:
 2. Continue whole-screen visual passes against the target image, with each pass updating this log before commit.
 3. Prioritize larger framework-level visual gains next: authored character/zombie silhouettes, richer skill sprite cards, and real Cocos scene assembly over isolated small count increases.
 
+## 2026-05-10 Painterly Card Layer Pass
+
+Related work:
+
+- WIP after `1eefaa5`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+
+What moved closer:
+
+- The WebGL demo now adds runtime canvas-texture billboard cards over heroes, the rival, zombies, muzzle flashes, projectile cards, explosion debris, arc nodes, and hit cards.
+- This starts moving the presentation away from pure low-poly blocks and toward the target image's phone-scale illustrated sprite/card treatment.
+- The verifier now gates `painterlyCardCount`, `heroPainterlyCardCount`, `zombiePainterlyCardCount`, and `skillPainterlyCardCount`, so this layer is a required part of the V03 visual framework.
+- The Cocos visual contract now names `painterlyCardLayers`, so the layer has to become real sprite/prefab work in the mini-game path instead of staying WebGL-only.
+
+What is still far from the reference:
+
+- The card art is generated at runtime and still rough; it is not final hand-painted character, zombie, weapon, skin, or skill art.
+- The cards sit on top of procedural geometry, so animation, pose language, and material transitions are still weaker than the target image.
+- Cocos still needs real sprite/prefab equivalents for this card layer before the WeChat Mini Game path can be considered visually proven.
+
+Next iteration direction:
+
+1. Improve the card art silhouettes for each class/skin and zombie variant, especially heads, hands, weapons, clothing tears, and edge lighting.
+2. Replace runtime generated cards with authored sprite assets once the shape language is approved.
+3. Add screenshot comparison discipline after each card pass, focusing on the whole phone frame rather than isolated object counts.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:

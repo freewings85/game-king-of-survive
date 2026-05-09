@@ -56,6 +56,7 @@ requiredText.forEach((text) => {
   'Wasteland map and prop layer',
   'Prop authored-depth layers',
   'Lighting and material integration',
+  'Painterly card depth layer',
   'Zombie/class visual readability',
   'Skills and combat FX',
   'Smooth early combat pacing',
@@ -77,6 +78,10 @@ requiredText.forEach((text) => {
   'globalLightCount >= 8',
   'objectRimCount >= 60',
   'materialBlendCount >= 70',
+  'painterlyCardCount >= 40',
+  'heroPainterlyCardCount >= 2',
+  'zombiePainterlyCardCount >= 10',
+  'skillPainterlyCardCount >= 30',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',
@@ -106,7 +111,7 @@ console.log(JSON.stringify({
   presentationAudit: true,
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 8,
-  mappedRequirements: 12,
-  gates: 19,
+  mappedRequirements: 13,
+  gates: 23,
   completionClaim: false
 }, null, 2));

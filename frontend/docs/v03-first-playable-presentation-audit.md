@@ -38,10 +38,11 @@ http://localhost:8081/frontend/engine-demo/index.html
 | Wasteland map and prop layer | `frontend/src/map-contract.js`, `frontend/engine-demo/app.js` | Gate requires `contractPropCount >= 18`, `contractTileCount >= 500`, `groundDetailCount >= 220`. |
 | Prop authored-depth layers | `frontend/engine-demo/app.js` | Gate requires `propWearCount >= 80`, `propShapeCount >= 85`, `propBreakCount >= 80`. |
 | Lighting and material integration | `frontend/engine-demo/app.js` | Gate requires `globalLightCount >= 8`, `objectRimCount >= 60`, `materialBlendCount >= 70`. |
+| Painterly card depth layer | `frontend/engine-demo/app.js` | Gate requires `painterlyCardCount >= 40`, `heroPainterlyCardCount >= 2`, `zombiePainterlyCardCount >= 10`, `skillPainterlyCardCount >= 30`. |
 | Zombie/class visual readability | `frontend/engine-demo/app.js` | Gate requires `silhouettePartCount >= 75`, `zombieDetailPartCount >= 285`, `zombieVariantCount >= 3`, `unitDecalCount >= 48`. |
 | Skills and combat FX | `frontend/engine-demo/app.js` | Skill gates require FAN bullet/trail/impact cards, BOOM spark/core readiness, ARC branch/glow layers, and `fxCardCount >= 16`. |
 | Smooth early combat pacing | `frontend/engine-demo/app.js` | Gate requires HP > 0, `shotsFired >= 5`, `damageDealt >= 80`, `kills >= 1`, `xpDropped >= 1`, visible gems, living zombies. |
-| Cocos production path | `cocos-v03-demo/`, `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`, `frontend/docs/cocos-v03-visual-contract.md`, `frontend/docs/cocos-v03-first-playable-checklist.md` | `e2e/v03-cocos-bridge-verify.js` checks bridge data and visual contract layers; `e2e/v03-cocos-scene-assembly-verify.js` checks the `source-manifest-only` V03Battle.scene assembly plan, nodes, scripts, prefabs, screenshots, and runtime gate fields. |
+| Cocos production path | `cocos-v03-demo/`, `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`, `frontend/docs/cocos-v03-visual-contract.md`, `frontend/docs/cocos-v03-first-playable-checklist.md` | `e2e/v03-cocos-bridge-verify.js` checks bridge data, visual contract layers, and painterly card layers; `e2e/v03-cocos-scene-assembly-verify.js` checks the `source-manifest-only` V03Battle.scene assembly plan, nodes, scripts, prefabs, screenshots, and runtime gate fields. |
 | Visual iteration discipline | `frontend/docs/v03-visual-iteration-log.md` | `e2e/v03-visual-audit-verify.js` checks reference image, screenshots, current gap, and next direction. |
 | Staged rollback points | Git history | Recent commits separate WebGL visual passes from Cocos contract sync passes. |
 
@@ -69,14 +70,15 @@ What is now materially closer to the target image:
 
 - The phone WebGL reference has readable 2.5D depth, zombie pressure, auto-fire, XP drops, safe-zone shrinking, rival presence, class gear, skins, skill FX, and HUD.
 - The wasteland map has standardized cover, rewards, zombie entries, prop-ground scatter, prop wear, prop shape blocks, broken silhouettes, global lighting, object rims, and material blend layers.
+- The WebGL reference now has generated painterly unit/skill cards layered over the 3D primitives, moving the phone view closer to the target image's illustrated sprites and FX cards.
 - The editor and shell both consume shared map/config data instead of drifting away from the playable reference.
-- Cocos now has a bridge, checklist, visual contract, and `cocos-v03-demo/settings/v03-scene-assembly-manifest.json` that names the required `source-manifest-only` V03Battle.scene nodes, scripts, prefabs, screenshots, and runtime gate for a future WeChat Mini Game slice.
+- Cocos now has a bridge, checklist, visual contract, painterly card layer requirement, and `cocos-v03-demo/settings/v03-scene-assembly-manifest.json` that names the required `source-manifest-only` V03Battle.scene nodes, scripts, prefabs, screenshots, and runtime gate for a future WeChat Mini Game slice.
 
 What is still missing before this goal can be called complete:
 
 - No real Cocos Creator scene has been opened, built, or captured in this environment.
 - No WeChat Mini Game build or device preview exists.
-- The WebGL art is still procedural geometry, not hand-painted or production sprite/model assets.
+- The WebGL art is still generated/procedural geometry plus runtime cards, not final hand-painted production sprite/model assets.
 - The target image's painterly material transitions, authored silhouettes, animation polish, and production-quality effects are not fully achieved.
 - The automated gate checks structure and presentation counts, not pixel-level similarity to the candidate image.
 

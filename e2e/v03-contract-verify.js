@@ -130,6 +130,10 @@ async function verifyEngineDemo(browser) {
     globalLightCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.globalLightCount,
     objectRimCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.objectRimCount,
     materialBlendCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.materialBlendCount,
+    painterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.painterlyCardCount,
+    heroPainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount,
+    zombiePainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount,
+    skillPainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount,
     fxTipCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fxTipCount,
     fanRoundCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanRoundCount,
     fanTrailCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fanTrailCount,
@@ -159,7 +163,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 5 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 75 || info.zombieDetailPartCount < 285 || info.zombieVariantCount < 3 || info.unitDecalCount < 48 || info.propWearCount < 80 || info.propShapeCount < 85 || info.propBreakCount < 80 || info.globalLightCount < 8 || info.objectRimCount < 60 || info.materialBlendCount < 70 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.fanBulletCardCount < 6 || info.fanImpactMarkCount < 3 || info.impactSparkCount < 1 || info.fxCardCount < 16 || info.groundDetailCount < 220 || !info.hasMiniMap || info.miniMapZombieDots < 3 || info.iconSkillButtons < 3 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
+  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 5 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 75 || info.zombieDetailPartCount < 285 || info.zombieVariantCount < 3 || info.unitDecalCount < 48 || info.propWearCount < 80 || info.propShapeCount < 85 || info.propBreakCount < 80 || info.globalLightCount < 8 || info.objectRimCount < 60 || info.materialBlendCount < 70 || info.painterlyCardCount < 40 || info.heroPainterlyCardCount < 2 || info.zombiePainterlyCardCount < 10 || info.skillPainterlyCardCount < 30 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.fanBulletCardCount < 6 || info.fanImpactMarkCount < 3 || info.impactSparkCount < 1 || info.fxCardCount < 16 || info.groundDetailCount < 220 || !info.hasMiniMap || info.miniMapZombieDots < 3 || info.iconSkillButtons < 3 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'engine-demo-mobile.png');
@@ -195,6 +199,8 @@ async function verifyEngineSkillReview(browser, skill) {
     impactSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.impactSparkCount,
     fxCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.fxCardCount,
     hitPulseCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.hitPulseCount,
+    painterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.painterlyCardCount,
+    skillPainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount,
     hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
@@ -203,7 +209,7 @@ async function verifyEngineSkillReview(browser, skill) {
     (skill === 'boom' && info.boomRingReady === true && info.fxTipCount >= 1 && info.boomSparkCount >= 6) ||
     (skill === 'arc' && info.arcBranchCount >= 1 && info.arcGlowCount >= 1)
   );
-  if (errors.length || !info.hasWebgl || info.activeSkill !== skill || info.shotsFired < 3 || info.damageDealt < 30 || info.impactSparkCount < 1 || info.fxCardCount < 3 || !skillOk) {
+  if (errors.length || !info.hasWebgl || info.activeSkill !== skill || info.shotsFired < 3 || info.damageDealt < 30 || info.impactSparkCount < 1 || info.fxCardCount < 3 || info.painterlyCardCount < 40 || info.skillPainterlyCardCount < 30 || !skillOk) {
     fail(`V03 ${skill} review verification failed`, { info, errors });
   }
   info.screenshot = path.join(artifactDir, `engine-demo-skill-${skill}.png`);

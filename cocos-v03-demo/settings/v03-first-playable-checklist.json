@@ -122,6 +122,7 @@
     "globalLightLayers",
     "objectRimLayers",
     "materialBlendLayers",
+    "painterlyCardLayers",
     "fxLayers",
     "reviewScreenshots"
   ],
