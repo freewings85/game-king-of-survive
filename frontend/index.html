@@ -12,15 +12,44 @@
 </head>
 <body>
 <div id="login-overlay">
-  <h1>生存之王</h1>
-  <div class="subtitle">King of Survive</div>
-  <div id="login-box">
-    <label for="nickname-input">输入昵称</label>
-    <input type="text" id="nickname-input" placeholder="Player 1" maxlength="12" autocomplete="off">
-    <button id="btn-register" onclick="doRegister()">注册并进入游戏</button>
-    <button id="btn-login" onclick="doLogin()">已有账号，直接登录</button>
-    <button id="btn-guest" onclick="doGuestPlay()">离线试玩</button>
-    <div id="login-msg"></div>
+  <div class="lobby-shell">
+    <section class="lobby-hero">
+      <div class="brand-lockup">
+        <h1>生存之王</h1>
+        <div class="subtitle">King of Survive</div>
+      </div>
+      <div class="phone-stage">
+        <canvas id="lobby-phone-preview" width="760" height="404" aria-label="战斗预览"></canvas>
+        <div class="phone-frame-ui">
+          <span class="zone-chip">缩圈 02:14</span>
+          <span class="alive-chip">剩余 18</span>
+        </div>
+      </div>
+      <div id="login-box">
+        <label for="nickname-input">输入昵称</label>
+        <input type="text" id="nickname-input" placeholder="Player 1" maxlength="12" autocomplete="off">
+        <button id="btn-guest" onclick="doGuestPlay()">离线试玩</button>
+        <button id="btn-register" onclick="doRegister()">注册并进入游戏</button>
+        <button id="btn-login" onclick="doLogin()">已有账号，直接登录</button>
+        <div id="login-msg"></div>
+      </div>
+    </section>
+
+    <section class="lobby-panel class-panel">
+      <div class="lobby-section-head">
+        <span>职业 / 皮肤</span>
+        <strong>战前选择</strong>
+      </div>
+      <div id="lobby-class-grid" class="lobby-class-grid"></div>
+    </section>
+
+    <section class="lobby-panel skill-panel">
+      <div class="lobby-section-head">
+        <span>技能效果</span>
+        <strong>升级构筑</strong>
+      </div>
+      <div id="lobby-skill-grid" class="lobby-skill-grid"></div>
+    </section>
   </div>
   <div id="login-info">联网可同步数据 · 离线可直接试玩</div>
 </div>
@@ -41,7 +70,9 @@
 <script src="/frontend/src/render/fx.js"></script>
 <script src="/frontend/src/render/props.js"></script>
 <script src="/frontend/src/render/cards.js"></script>
+<script src="/frontend/src/render/v03-scene.js"></script>
 <script src="/frontend/src/ui/hud.js"></script>
+<script src="/frontend/src/ui/lobby.js"></script>
 <script src="/frontend/src/legacy-game.js"></script>
 </body>
 </html>
