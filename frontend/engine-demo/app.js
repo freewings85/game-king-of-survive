@@ -63,9 +63,9 @@ const classDefs = {
 };
 
 const skillDefs = {
-  arc: { color: 0x4ec9ff, pulse: 4.5, spread: 0.85 },
-  boom: { color: 0xff8b3d, pulse: 2.4, spread: 1.15 },
-  fan: { color: 0xf4c95a, pulse: 6.0, spread: 1.8 }
+  arc: { color: 0x4ec9ff, pulse: 4.5, spread: 0.85, damage: 8, targets: 2, range: 6.2 },
+  boom: { color: 0xff8b3d, pulse: 2.4, spread: 1.15, damage: 13, targets: 1, range: 5.4 },
+  fan: { color: 0xf4c95a, pulse: 6.0, spread: 1.8, damage: 4, targets: 5, range: 5.8 }
 };
 
 const mats = {
@@ -87,6 +87,16 @@ const mats = {
 
 let activeClass = 'tech';
 let activeSkill = 'arc';
+
+const game = {
+  hp: 100,
+  xp: 0,
+  level: 1,
+  kills: 0,
+  fireTimer: 0,
+  hitTimer: 0,
+  input: { active: false, id: null, startX: 0, startY: 0, x: 0, y: 0 }
+};
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -230,6 +240,9 @@ function makeZombie(x, z, scale = 1, fast = false) {
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;
   root.userData.fast = fast;
+  root.userData.maxHp = fast ? 42 : 58;
+  root.userData.hp = root.userData.maxHp;
+  root.userData.alive = true;
   root.traverse((o) => {
     if (o.isMesh) {
       o.castShadow = true;
@@ -238,6 +251,13 @@ function makeZombie(x, z, scale = 1, fast = false) {
   });
   scene.add(root);
   return root;
+}
+
+function resetZombie(z, x, zPos) {
+  z.position.set(x, 0, zPos);
+  z.userData.hp = z.userData.maxHp + game.level * 6;
+  z.userData.alive = true;
+  z.visible = true;
 }
 
 makeWreck(-3.3, 2.8, -0.3);
@@ -275,6 +295,18 @@ const activeClassCard = document.getElementById('activeClassCard');
 const skinRow = document.getElementById('skinRow');
 const classButtons = document.getElementById('classButtons');
 const skillPanel = document.getElementById('skillPanel');
+const hpFill = document.getElementById('hpFill');
+const xpFill = document.getElementById('xpFill');
+const aliveText = document.getElementById('aliveText');
+const levelBadge = document.getElementById('levelBadge');
+const moveStick = document.getElementById('moveStick');
+
+function updateHud() {
+  hpFill.style.width = `${Math.max(0, game.hp)}%`;
+  xpFill.style.width = `${Math.min(100, game.xp)}%`;
+  levelBadge.textContent = `LV ${game.level}`;
+  aliveText.textContent = `ALIVE ${Math.max(2, 18 - Math.floor(game.kills / 4))}`;
+}
 
 function applyClass(id) {
   const def = classDefs[id] || classDefs.tech;
@@ -359,32 +391,148 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-let pointerX = 0;
-let pointerZ = 0;
-canvas.addEventListener('pointermove', (ev) => {
-  pointerX = (ev.clientX / window.innerWidth - 0.5) * 2;
-  pointerZ = (ev.clientY / window.innerHeight - 0.5) * 2;
+function setInputFromPointer(ev) {
+  const dx = ev.clientX - game.input.startX;
+  const dy = ev.clientY - game.input.startY;
+  const len = Math.hypot(dx, dy);
+  const max = 38;
+  const k = len > max ? max / len : 1;
+  game.input.x = (dx * k) / max;
+  game.input.y = (dy * k) / max;
+  moveStick.style.setProperty('--stick-x', `${dx * k}px`);
+  moveStick.style.setProperty('--stick-y', `${dy * k}px`);
+}
+
+canvas.addEventListener('pointerdown', (ev) => {
+  game.input.active = true;
+  game.input.id = ev.pointerId;
+  game.input.startX = ev.clientX;
+  game.input.startY = ev.clientY;
+  canvas.setPointerCapture(ev.pointerId);
+  setInputFromPointer(ev);
 });
 
+canvas.addEventListener('pointermove', (ev) => {
+  if (game.input.active && ev.pointerId === game.input.id) setInputFromPointer(ev);
+});
+
+function releaseInput(ev) {
+  if (ev.pointerId !== game.input.id) return;
+  game.input.active = false;
+  game.input.id = null;
+  game.input.x = 0;
+  game.input.y = 0;
+  moveStick.style.setProperty('--stick-x', '0px');
+  moveStick.style.setProperty('--stick-y', '0px');
+}
+
+canvas.addEventListener('pointerup', releaseInput);
+canvas.addEventListener('pointercancel', releaseInput);
+
+function livingZombies() {
+  return zombies.filter((z) => z.userData.alive);
+}
+
+function nearestZombies(range) {
+  return livingZombies()
+    .map((z) => ({
+      z,
+      d: Math.hypot(z.position.x - player.position.x, z.position.z - player.position.z)
+    }))
+    .filter((item) => item.d <= range)
+    .sort((a, b) => a.d - b.d);
+}
+
+function dropXpAt(x, z) {
+  const gem = gems.find((g) => !g.visible) || gems[game.kills % gems.length];
+  gem.visible = true;
+  gem.position.set(x, 0.18, z);
+}
+
+function defeatZombie(z) {
+  z.userData.alive = false;
+  z.visible = false;
+  game.kills += 1;
+  game.xp += 10;
+  dropXpAt(z.position.x, z.position.z);
+  if (game.xp >= 100) {
+    game.xp -= 100;
+    game.level += 1;
+    game.hp = Math.min(100, game.hp + 12);
+  }
+  const angle = Math.random() * Math.PI * 2;
+  resetZombie(z, Math.cos(angle) * 7.2, Math.sin(angle) * 6.2);
+}
+
+function fireWeapon(dt) {
+  game.fireTimer -= dt;
+  if (game.fireTimer > 0) return;
+  const skill = skillDefs[activeSkill] || skillDefs.arc;
+  const targets = nearestZombies(skill.range).slice(0, skill.targets);
+  if (!targets.length) return;
+  game.fireTimer = activeClass === 'ranger' ? 0.34 : 0.42;
+  targets.forEach(({ z }, index) => {
+    const splash = activeSkill === 'boom' && index === 0 ? 1.35 : 1;
+    z.userData.hp -= (skill.damage + game.level * 1.1) * splash;
+    z.scale.setScalar(1.08);
+    if (z.userData.hp <= 0) defeatZombie(z);
+  });
+}
+
+function collectXp() {
+  gems.forEach((g) => {
+    if (!g.visible) return;
+    const dx = player.position.x - g.position.x;
+    const dz = player.position.z - g.position.z;
+    const d = Math.hypot(dx, dz);
+    if (d < 1.25) {
+      g.position.x += dx * 0.08;
+      g.position.z += dz * 0.08;
+    }
+    if (d < 0.34) {
+      g.visible = false;
+      game.xp += 4;
+      if (game.xp >= 100) {
+        game.xp -= 100;
+        game.level += 1;
+        game.hp = Math.min(100, game.hp + 10);
+      }
+    }
+  });
+}
+
+let lastNow = 0;
 function animate(now) {
   const t = now * 0.001;
-  player.position.x = -0.8 + Math.sin(t * 0.7) * 0.28 + pointerX * 0.12;
-  player.position.z = 0.7 + Math.cos(t * 0.6) * 0.18 + pointerZ * 0.12;
-  player.rotation.y = Math.sin(t * 0.9) * 0.18;
+  const dt = Math.min(0.05, lastNow ? (now - lastNow) * 0.001 : 0.016);
+  lastNow = now;
+  const speed = activeClass === 'ranger' ? 3.1 : activeClass === 'guardian' ? 2.45 : 2.75;
+  player.position.x = THREE.MathUtils.clamp(player.position.x + game.input.x * speed * dt, -5.6, 5.6);
+  player.position.z = THREE.MathUtils.clamp(player.position.z + game.input.y * speed * dt, -4.9, 4.9);
+  player.rotation.y = game.input.active ? Math.atan2(game.input.x, game.input.y) : Math.sin(t * 0.9) * 0.18;
   player.position.y = Math.sin(t * 5) * 0.025;
   accentLight.position.x = player.position.x;
   accentLight.position.z = player.position.z + 0.4;
+  fireWeapon(dt);
+  collectXp();
 
   zombies.forEach((z, i) => {
+    if (!z.userData.alive) return;
     const dx = player.position.x - z.position.x;
     const dz = player.position.z - z.position.z;
+    const dist = Math.hypot(dx, dz);
     const ang = Math.atan2(dx, dz);
     z.rotation.y = ang;
-    z.position.x += Math.sin(ang) * (z.userData.fast ? 0.006 : 0.003);
-    z.position.z += Math.cos(ang) * (z.userData.fast ? 0.006 : 0.003);
+    z.position.x += Math.sin(ang) * (z.userData.fast ? 0.88 : 0.48) * dt;
+    z.position.z += Math.cos(ang) * (z.userData.fast ? 0.88 : 0.48) * dt;
     z.position.y = Math.abs(Math.sin(t * (z.userData.fast ? 9 : 4) + z.userData.phase)) * 0.045;
     z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025);
+    if (dist < 0.75 && game.hitTimer <= 0) {
+      game.hp = Math.max(0, game.hp - (activeClass === 'guardian' ? 5 : 8));
+      game.hitTimer = 0.42;
+    }
   });
+  game.hitTimer = Math.max(0, game.hitTimer - dt);
 
   gems.forEach((g, i) => {
     g.rotation.y += 0.035;
@@ -393,7 +541,13 @@ function animate(now) {
 
   tracers.forEach((tr, i) => {
     const skill = skillDefs[activeSkill] || skillDefs.arc;
-    const target = zombies[(i + Math.floor(t * 2)) % zombies.length];
+    const targets = nearestZombies(skill.range);
+    const target = targets[i % Math.max(1, Math.min(targets.length, skill.targets))]?.z;
+    if (!target) {
+      tr.beam.visible = false;
+      return;
+    }
+    tr.beam.visible = i < skill.targets + 3;
     const px = player.position.x + 0.6;
     const pz = player.position.z - 0.35;
     const tx = target.position.x;
@@ -414,6 +568,8 @@ function animate(now) {
     orb.scale.setScalar(activeSkill === 'boom' ? 1.35 + Math.sin(t * 5 + i) * 0.22 : 1);
     orb.rotation.y += 0.05;
   });
+
+  updateHud();
 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);

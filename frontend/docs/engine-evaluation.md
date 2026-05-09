@@ -44,6 +44,7 @@ This demo uses Three.js/WebGL only as a local proof of the target visual languag
 - XP pickups
 - skill beams and orbiting effects
 - mobile portrait HUD composition
+- first playable loop: drag movement, zombie chase, auto-fire, XP collection, level feedback, and class/skill switching
 
 It is not the final engine choice. The final implementation should be rebuilt in Cocos Creator after this visual direction is accepted.
 
