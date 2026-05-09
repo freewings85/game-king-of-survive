@@ -827,3 +827,35 @@ Next iteration direction:
 1. Add a global lighting/value pass in WebGL to separate actors, props, and ground more like the target image.
 2. Keep Cocos contract/checklist synchronized only for layers that survive WebGL review.
 3. Replace placeholder Cocos boxes with authored prefabs when Cocos Creator becomes available.
+
+## 2026-05-10 WebGL Global Lighting Value Pass
+
+Related work:
+
+- WebGL reference WIP after `3d93402`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- The arena now has a warm combat focus, cool enemy-depth wash, safe-zone rim light, four edge darkening layers, and two diagonal shadow bands.
+- The added value layers push the background down and make the central fight read more clearly on the phone screenshot.
+- The verifier now requires `globalLightCount >= 8`; the current WebGL reference reports `globalLightCount: 9`.
+- Player, zombies, pickups, minimap, joystick, and skill buttons remain readable in the reviewed phone screenshot.
+
+What is still far from the reference:
+
+- The target image has more integrated hand-painted lighting on every unit and prop; this pass is still a ground/value overlay.
+- Props and actors need stronger per-object rim direction to fully match the target's depth.
+- The lighting is improved but still does not create the reference image's painterly material transitions.
+- Cocos contract/checklist does not yet require these global value layers.
+
+Next iteration direction:
+
+1. Sync global lighting/value categories into the Cocos contract if this layer remains mandatory.
+2. Add per-object rim/highlight direction to hero, zombies, and major props.
+3. Continue checking screenshots after each pass so lighting does not reduce combat readability.

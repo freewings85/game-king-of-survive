@@ -80,6 +80,10 @@ const mats = {
   propBrokenLight: new THREE.MeshStandardMaterial({ color: 0xb3bca7, roughness: 0.92 }),
   propBrokenDark: new THREE.MeshStandardMaterial({ color: 0x20251f, roughness: 0.96 }),
   propBrokenRust: new THREE.MeshStandardMaterial({ color: 0x7b3f1f, roughness: 0.9, metalness: 0.05 }),
+  stageWarm: new THREE.MeshBasicMaterial({ color: 0xffc66b, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false }),
+  stageCool: new THREE.MeshBasicMaterial({ color: 0x5dbdff, transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false }),
+  stageDark: new THREE.MeshBasicMaterial({ color: 0x020504, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false }),
+  stageRim: new THREE.MeshBasicMaterial({ color: 0xc6f4ff, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -133,6 +137,7 @@ let unitDecalCount = 0;
 let propWearCount = 0;
 let propShapeCount = 0;
 let propBreakCount = 0;
+let globalLightCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -248,6 +253,22 @@ function addJaggedCap(root, w, d, y, z, mat, count = 4) {
   }
 }
 
+function addGroundLight(name, x, z, sx, sz, mat, opacity = mat.opacity, rot = 0) {
+  const light = new THREE.Mesh(new THREE.CircleGeometry(1, 48), mat.clone());
+  light.name = name;
+  light.rotation.x = -Math.PI / 2;
+  light.rotation.z = rot;
+  light.scale.set(sx, sz, 1);
+  light.position.set(x, 0.046, z);
+  light.material.opacity = opacity;
+  light.castShadow = false;
+  light.receiveShadow = false;
+  light.userData.globalLight = true;
+  scene.add(light);
+  globalLightCount += 1;
+  return light;
+}
+
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -264,6 +285,16 @@ const safeZone = new THREE.Mesh(new THREE.RingGeometry(4.35, 4.56, 96), safeZone
 safeZone.rotation.x = -Math.PI / 2;
 safeZone.position.y = 0.035;
 scene.add(safeZone);
+
+addGroundLight('stage-warm-combat-focus', playerSpawn.x + 0.35, playerSpawn.z - 0.15, 3.35, 2.35, mats.stageWarm, 0.14, -0.22);
+addGroundLight('stage-cool-enemy-depth', 1.95, -1.65, 3.6, 2.15, mats.stageCool, 0.09, 0.42);
+addGroundLight('stage-rim-safe-zone', -0.1, -0.15, 4.65, 3.35, mats.stageRim, 0.08, 0.08);
+addGroundLight('stage-dark-north', -0.5, -4.6, 7.0, 1.6, mats.stageDark, 0.18, 0.02);
+addGroundLight('stage-dark-south', 0.5, 4.85, 7.2, 1.7, mats.stageDark, 0.19, -0.05);
+addGroundLight('stage-dark-west', -5.9, 0.1, 1.5, 5.3, mats.stageDark, 0.17, 0.15);
+addGroundLight('stage-dark-east', 5.9, -0.3, 1.5, 5.5, mats.stageDark, 0.17, -0.08);
+addGroundLight('stage-diagonal-shadow-a', -2.6, 1.9, 3.2, 0.72, mats.stageDark, 0.13, -0.78);
+addGroundLight('stage-diagonal-shadow-b', 2.4, -2.2, 3.0, 0.68, mats.stageDark, 0.12, -0.78);
 
 for (let i = -18; i <= 18; i += 2) {
   const lineA = box(0.025, 0.01, 42, mats.road);
@@ -1664,6 +1695,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
   window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;
   window.__V03_ENGINE_DEMO_STATE.propBreakCount = propBreakCount;
+  window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
