@@ -10,27 +10,32 @@
 <main class="demo-shell">
   <canvas id="engineCanvas"></canvas>
   <div class="top-hud">
-    <div class="avatar">
+    <div class="avatar" id="avatarMark">
       <span>T</span>
     </div>
     <div class="bars">
-      <div class="name">Tech Engineer</div>
+      <div class="name" id="className">Tech Engineer</div>
       <div class="hp"><i></i></div>
       <div class="xp"><i></i></div>
     </div>
     <div class="survive">ALIVE 18</div>
   </div>
-  <div class="skill-panel">
-    <button class="skill blue">ARC</button>
-    <button class="skill orange">BOOM</button>
-    <button class="skill gold">FAN</button>
+  <div class="skill-panel" id="skillPanel">
+    <button class="skill blue active" data-skill="arc">ARC</button>
+    <button class="skill orange" data-skill="boom">BOOM</button>
+    <button class="skill gold" data-skill="fan">FAN</button>
   </div>
   <div class="class-strip">
-    <div class="class-card active">
+    <div class="class-card active" id="activeClassCard">
       <strong>Tech Engineer</strong>
       <span>Chain / burst control</span>
     </div>
-    <div class="skin-row"><i></i><i></i><i></i></div>
+    <div class="skin-row" id="skinRow"><i></i><i></i><i></i></div>
+    <div class="class-buttons" id="classButtons">
+      <button data-class="guardian">G</button>
+      <button data-class="tech" class="active">T</button>
+      <button data-class="ranger">R</button>
+    </div>
   </div>
 </main>
 <script type="module" src="/frontend/engine-demo/app.js"></script>

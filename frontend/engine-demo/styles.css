@@ -104,6 +104,11 @@ body {
   box-shadow: inset 0 0 18px rgba(255,255,255,0.10), 0 10px 30px rgba(0,0,0,0.42);
 }
 
+.skill.active {
+  background: rgba(244,201,90,0.16);
+  box-shadow: inset 0 0 22px currentColor, 0 0 24px currentColor, 0 10px 30px rgba(0,0,0,0.42);
+}
+
 .skill.blue { border-color: #4ec9ff; color: #8be9ff; }
 .skill.orange { border-color: #ff8b3d; color: #ffb37b; }
 .skill.gold { border-color: #f4c95a; color: #ffe28a; }
@@ -150,3 +155,24 @@ body {
 
 .skin-row i:nth-child(2) { background: #2f6068; }
 .skin-row i:nth-child(3) { background: #7b315d; }
+
+.class-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.class-buttons button {
+  height: 30px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.38);
+  color: #dce4df;
+  font-weight: 900;
+}
+
+.class-buttons button.active {
+  border-color: #f4c95a;
+  color: #101313;
+  background: #f4c95a;
+}

@@ -32,6 +32,42 @@ const accentLight = new THREE.PointLight(0x4ec9ff, 3.2, 14);
 accentLight.position.set(-2, 3.5, 2);
 scene.add(accentLight);
 
+const classDefs = {
+  guardian: {
+    mark: 'G',
+    name: 'Guardian',
+    role: 'Shield / lane holder',
+    body: 0x3c3430,
+    accent: 0xe95b45,
+    emissive: 0x5a1109,
+    skins: ['#332d2a', '#62645e', '#7d4f58']
+  },
+  tech: {
+    mark: 'T',
+    name: 'Tech Engineer',
+    role: 'Chain / burst control',
+    body: 0x243436,
+    accent: 0x4ec9ff,
+    emissive: 0x0d4d66,
+    skins: ['#193743', '#2f6068', '#7b315d']
+  },
+  ranger: {
+    mark: 'R',
+    name: 'Ranger',
+    role: 'Rifle / mobile cleanup',
+    body: 0x2f3b2f,
+    accent: 0x78d66a,
+    emissive: 0x184a15,
+    skins: ['#314027', '#5a5534', '#283746']
+  }
+};
+
+const skillDefs = {
+  arc: { color: 0x4ec9ff, pulse: 4.5, spread: 0.85 },
+  boom: { color: 0xff8b3d, pulse: 2.4, spread: 1.15 },
+  fan: { color: 0xf4c95a, pulse: 6.0, spread: 1.8 }
+};
+
 const mats = {
   ground: new THREE.MeshStandardMaterial({ color: 0x343b36, roughness: 0.92 }),
   road: new THREE.MeshStandardMaterial({ color: 0x252a29, roughness: 0.96 }),
@@ -48,6 +84,9 @@ const mats = {
   gold: new THREE.MeshStandardMaterial({ color: 0xf4c95a, emissive: 0x6f4c05, emissiveIntensity: 0.45 }),
   orange: new THREE.MeshStandardMaterial({ color: 0xff8b3d, emissive: 0x7a2600, emissiveIntensity: 0.8 })
 };
+
+let activeClass = 'tech';
+let activeSkill = 'arc';
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -230,6 +269,60 @@ for (let i = 0; i < 18; i++) {
   gems.push(gem);
 }
 
+const avatarMark = document.getElementById('avatarMark');
+const className = document.getElementById('className');
+const activeClassCard = document.getElementById('activeClassCard');
+const skinRow = document.getElementById('skinRow');
+const classButtons = document.getElementById('classButtons');
+const skillPanel = document.getElementById('skillPanel');
+
+function applyClass(id) {
+  const def = classDefs[id] || classDefs.tech;
+  activeClass = id;
+  mats.player.color.setHex(def.body);
+  mats.playerAccent.color.setHex(def.accent);
+  mats.playerAccent.emissive.setHex(def.emissive);
+  accentLight.color.setHex(def.accent);
+  avatarMark.querySelector('span').textContent = def.mark;
+  avatarMark.style.background = `#${def.accent.toString(16).padStart(6, '0')}`;
+  className.textContent = def.name;
+  activeClassCard.querySelector('strong').textContent = def.name;
+  activeClassCard.querySelector('span').textContent = def.role;
+  Array.from(skinRow.children).forEach((el, index) => {
+    el.style.background = def.skins[index] || def.skins[0];
+  });
+  Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.class === id);
+  });
+}
+
+function applySkill(id) {
+  const def = skillDefs[id] || skillDefs.arc;
+  activeSkill = id;
+  tracers.forEach((tr, index) => {
+    tr.mat.color.setHex(index % 3 === 0 ? def.color : (activeClass === 'guardian' ? 0xe95b45 : 0xf4c95a));
+  });
+  skillBursts.forEach((orb, index) => {
+    orb.material = index % 2 ? mats.orange : mats.playerAccent;
+  });
+  Array.from(skillPanel.querySelectorAll('button')).forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.skill === id);
+  });
+}
+
+classButtons.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-class]');
+  if (btn) {
+    applyClass(btn.dataset.class);
+    applySkill(activeSkill);
+  }
+});
+
+skillPanel.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-skill]');
+  if (btn) applySkill(btn.dataset.skill);
+});
+
 const tracers = [];
 function makeTracer(i) {
   const mat = new THREE.MeshBasicMaterial({ color: i % 3 === 0 ? 0x4ec9ff : 0xf4c95a, transparent: true, opacity: 0.88 });
@@ -247,6 +340,9 @@ for (let i = 0; i < 18; i++) {
   scene.add(orb);
   skillBursts.push(orb);
 }
+
+applyClass(activeClass);
+applySkill(activeSkill);
 
 function resize() {
   const w = window.innerWidth;
@@ -296,22 +392,26 @@ function animate(now) {
   });
 
   tracers.forEach((tr, i) => {
+    const skill = skillDefs[activeSkill] || skillDefs.arc;
     const target = zombies[(i + Math.floor(t * 2)) % zombies.length];
     const px = player.position.x + 0.6;
     const pz = player.position.z - 0.35;
     const tx = target.position.x;
     const tz = target.position.z;
-    tr.beam.position.set((px + tx) * 0.5, 0.78, (pz + tz) * 0.5);
+    const spread = (i - 3.5) * 0.08 * skill.spread;
+    tr.beam.position.set((px + tx) * 0.5 + spread, 0.78, (pz + tz) * 0.5 - spread);
     const dist = Math.hypot(tx - px, tz - pz);
     tr.beam.scale.x = dist / 1.6;
     tr.beam.rotation.y = Math.atan2(px - tx, pz - tz) + Math.PI / 2;
-    tr.mat.opacity = 0.28 + Math.abs(Math.sin(t * 4 + tr.phase)) * 0.55;
+    tr.mat.opacity = 0.22 + Math.abs(Math.sin(t * skill.pulse + tr.phase)) * 0.62;
   });
 
   skillBursts.forEach((orb, i) => {
-    const a = t * 2.2 + i * 0.52;
-    const r = 1.5 + (i % 6) * 0.18;
+    const skill = skillDefs[activeSkill] || skillDefs.arc;
+    const a = t * (activeSkill === 'boom' ? 1.3 : 2.2) + i * 0.52;
+    const r = (activeSkill === 'fan' ? 1.15 : 1.5) + (i % 6) * 0.18 * skill.spread;
     orb.position.set(player.position.x + Math.cos(a) * r, 0.22 + (i % 3) * 0.10, player.position.z + Math.sin(a) * r);
+    orb.scale.setScalar(activeSkill === 'boom' ? 1.35 + Math.sin(t * 5 + i) * 0.22 : 1);
     orb.rotation.y += 0.05;
   });
 
