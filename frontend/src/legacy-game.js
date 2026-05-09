@@ -12195,7 +12195,7 @@
   function drawLevelUp() {
     var useWave2 = !!(WAVE2_CARDS && skillChoices && skillChoices.length > 0
                       && typeof skillChoices[0] === 'object');
-    ctx.fillStyle = useWave2 ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.75)';
+    ctx.fillStyle = useWave2 ? 'rgba(0,0,0,0.86)' : 'rgba(0,0,0,0.75)';
     ctx.fillRect(0, 0, W, H);
     // skillCardAnim (US-303): update slide-in timer
     if (skillCardAnim.active) {
@@ -12204,12 +12204,29 @@
     }
     var cardProgress = skillCardAnim.active ? Math.min(1, skillCardAnim.timer / skillCardAnim.duration) : 1;
     var cardEase = cardProgress < 1 ? 1 - Math.pow(1 - cardProgress, 3) : 1;
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.globalAlpha = cardEase;
-    ctx.fillText('⬆ LEVEL UP — 选择升级', W / 2, 80);
-    ctx.globalAlpha = 1;
+    var _newCardRenderer = useWave2 && window.KOS_RENDER && typeof window.KOS_RENDER.drawLevelUpCards === 'function';
+    if (!_newCardRenderer) {
+      ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.globalAlpha = cardEase;
+      ctx.fillText('⬆ LEVEL UP — 选择升级', W / 2, 80);
+      ctx.globalAlpha = 1;
+    }
 
     if (useWave2) {
+      if (_newCardRenderer) {
+        var _newRects = window.KOS_RENDER.drawLevelUpCards(ctx, {
+          W: W,
+          H: H,
+          cards: skillChoices,
+          rarities: WAVE2_CARDS.rarities || {},
+          skillLevels: skillLevels,
+          anim: skillCardAnim
+        });
+        if (_newRects && _newRects.length) {
+          WAVE2_CARD_RECTS = _newRects;
+          return;
+        }
+      }
       // ---- Wave 2: 3 landscape cards, rarity-colored, keyboard 1/2/3 hints ----
       WAVE2_CARD_RECTS.length = 0;
       var cardW = 280, cardH = 360, gap = 24;
