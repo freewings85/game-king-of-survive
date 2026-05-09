@@ -959,3 +959,34 @@ Next iteration direction:
 1. Improve material blending in WebGL so rim/highlight strips feel less attached.
 2. Move toward a consolidated first-playable presentation pass once Cocos scene authoring is possible.
 3. Keep every mandatory visual layer represented in the Cocos contract until real prefabs replace placeholders.
+
+## 2026-05-10 WebGL Material Blend Pass
+
+Related work:
+
+- WebGL reference WIP after `a7c35cb`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- Hero, zombies, wreck cars, walls, crates, and barrels now have low-opacity warm/cool/dark material transition bands.
+- The transition bands soften the previous rim/highlight strips and make the lighting feel less detached from the base geometry.
+- The verifier now requires `materialBlendCount >= 70`; the current WebGL reference reports `materialBlendCount: 80`.
+- The phone screenshot still keeps player, zombies, pickups, minimap, joystick, and skill buttons readable.
+
+What is still far from the reference:
+
+- The target image's material transitions are painted into the forms; the current pass still uses flat transparent geometry.
+- Some character highlights are improved but can become too bright in dense combat clusters.
+- The scene is closer in directional lighting, but it still lacks true brush texture and material-specific shading.
+
+Next iteration direction:
+
+1. Sync material blend categories into the Cocos contract if this layer remains mandatory.
+2. Tune blend strength by object type so hero/zombie highlights do not overpower combat readability.
+3. Move toward a consolidated first-playable presentation pass that audits the whole screen instead of single visual layers.
