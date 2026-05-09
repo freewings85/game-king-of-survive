@@ -2258,7 +2258,7 @@
       ctx.save();
       // Wide glow layer
       ctx.globalAlpha = alpha * 0.15;
-      ctx.strokeStyle = '#88f';
+      ctx.strokeStyle = a.glowColor || a.color || '#88f';
       ctx.lineWidth = 12;
       ctx.beginPath(); ctx.moveTo(a.x1, a.y1);
       var dx = a.x2 - a.x1, dy = a.y2 - a.y1;
@@ -2290,7 +2290,7 @@
       ctx.stroke();
       // Impact flash at endpoints
       ctx.globalAlpha = alpha * 0.4;
-      ctx.fillStyle = '#88f';
+      ctx.fillStyle = a.impactColor || a.color || '#88f';
       ctx.beginPath(); ctx.arc(a.x2, a.y2, 8 * alpha, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
       a.life -= 0.016;
@@ -5123,6 +5123,25 @@
         var _pColor = selectedClass === 'warrior' ? '#dd2020' : (selectedClass === 'mage' ? '#a080ff' : '#ffaa33');
         emit(closest.x, closest.y, _pType, { color: _pColor });
         floatText(closest.x, closest.y - 20, _dmgValue + (_isCrit ? '!' : (_wasBackstab ? '✦' : '')), _wasBackstab ? { color: '#c48cff', size: 16, crit: true } : { type: _isCrit ? 'crit' : 'normal' });
+        if (_dmgValue > 0 && _isCrit) {
+          if (!window._aoeSweep) window._aoeSweep = [];
+          window._aoeSweep.push({ x: closest.x, y: closest.y, radius: 0, maxRadius: 58, life: 0.22, maxLife: 0.22, color: '#ffd84a' });
+          emit(closest.x, closest.y, '#ffd84a', 6, 60);
+        }
+        if (_dmgValue > 0 && player.lifesteal > 0) {
+          var _lifeHeal = Math.max(1, Math.ceil(_dmgValue * player.lifesteal));
+          player.hp = Math.min(player.maxHp, player.hp + _lifeHeal);
+          if (!window._chainArcs) window._chainArcs = [];
+          window._chainArcs.push({
+            x1: closest.x, y1: closest.y,
+            x2: player.x, y2: player.y,
+            life: 0.20, maxLife: 0.20,
+            color: '#c66bff',
+            glowColor: '#7cff9d',
+            impactColor: '#7cff9d'
+          });
+          if (_lifeHeal >= 2) floatText(player.x, player.y - 34, '+' + _lifeHeal, { color: '#7cff9d', size: 11 });
+        }
         playSound('hit');
         applyKnockback(closest, _dmgValue, player.x, player.y);
         if (closest.hp <= 0) {
