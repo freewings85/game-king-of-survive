@@ -69,23 +69,23 @@
     <rect width="300" height="210" rx="8" fill="url(#t3Card)" stroke="#ffd700" stroke-width="3"/>
     <rect x="6" y="6" width="288" height="198" rx="5" fill="none" stroke="#8a5e18" stroke-width="1"/>
     <rect x="14" y="14" width="60" height="22" rx="3" fill="#ffd700"/>
-    <text x="44" y="30" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" font-weight="bold" fill="#1a0e02" text-anchor="middle">STEP 3/3</text>
-    <text x="150" y="68" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="22" font-weight="900" fill="#ffd700" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:4px;">BREAK THE ALTAR</text>
+    <text x="44" y="30" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" font-weight="bold" fill="#1a0e02" text-anchor="middle">3/3</text>
+    <text x="150" y="68" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="22" font-weight="900" fill="#ffd700" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:4px;">击破祭坛</text>
     <text x="150" y="96" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="18" font-weight="bold" fill="#fff6a8" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:3px;">击破中央祭坛</text>
     <!-- reward list -->
     <g transform="translate(30,118)">
       <circle cx="0" cy="0" r="3" fill="#ffd700"/>
-      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">3× Legendary skills · 3 张传说技能</text>
+      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">获得 3 张传说技能</text>
     </g>
     <g transform="translate(30,140)">
       <circle cx="0" cy="0" r="3" fill="#ffd700"/>
-      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">Crown · 圣堂之主光环 5 min</text>
+      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">获得圣堂光环</text>
     </g>
     <g transform="translate(30,162)">
       <circle cx="0" cy="0" r="3" fill="#ffd700"/>
-      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">Enemies slowed 30% · 全场减速 3 min</text>
+      <text x="10" y="4" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" fill="#e8dcbc">压制敌人，准备决战</text>
     </g>
-    <text x="150" y="196" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="11" fill="#a89878" text-anchor="middle">Tap to start · 点击开始</text>
+    <text x="150" y="196" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="11" fill="#a89878" text-anchor="middle">点击开始</text>
   </g>
 
   <!-- progress dots -->

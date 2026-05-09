@@ -71,12 +71,12 @@
     <rect width="300" height="180" rx="8" fill="url(#t2Card)" stroke="#ffd700" stroke-width="3"/>
     <rect x="6" y="6" width="288" height="168" rx="5" fill="none" stroke="#8a5e18" stroke-width="1"/>
     <rect x="14" y="14" width="60" height="22" rx="3" fill="#ffd700"/>
-    <text x="44" y="30" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" font-weight="bold" fill="#1a0e02" text-anchor="middle">STEP 2/3</text>
-    <text x="150" y="68" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="22" font-weight="900" fill="#ffd700" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:4px;">AUTO-ATTACK</text>
+    <text x="44" y="30" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="12" font-weight="bold" fill="#1a0e02" text-anchor="middle">2/3</text>
+    <text x="150" y="68" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="22" font-weight="900" fill="#ffd700" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:4px;">自动攻击</text>
     <text x="150" y="96" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="18" font-weight="bold" fill="#fff6a8" text-anchor="middle" style="paint-order:stroke;stroke:#1a0e02;stroke-width:3px;">靠近敌人自动攻击</text>
-    <text x="150" y="128" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="13" fill="#e8dcbc" text-anchor="middle">Your hero auto-fires at the nearest</text>
-    <text x="150" y="146" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="13" fill="#e8dcbc" text-anchor="middle">enemy inside the gold ring.</text>
-    <text x="150" y="168" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="11" fill="#a89878" text-anchor="middle">Tap anywhere to continue · 点击继续</text>
+    <text x="150" y="128" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="13" fill="#e8dcbc" text-anchor="middle">进入射程后自动开火</text>
+    <text x="150" y="146" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="13" fill="#e8dcbc" text-anchor="middle">走位比站桩更重要</text>
+    <text x="150" y="168" font-family='"PingFang SC","Noto Sans CJK SC",Arial,system-ui,sans-serif' font-size="11" fill="#a89878" text-anchor="middle">点击继续</text>
   </g>
 
   <!-- progress dots -->

@@ -10993,11 +10993,62 @@
         var _tutS = _tutSlides[_tutSlide];
         ctx.save();
         // Dark backdrop
-        ctx.fillStyle = 'rgba(0,0,0,0.78)';
+        ctx.fillStyle = 'rgba(0,0,0,0.52)';
         ctx.fillRect(0, 0, W, H);
-        // Slide image fills full viewport (SVG is 640×360 — stretch)
+        // Keep the 16:9 tutorial art compact on portrait phones instead of stretching it.
         if (_tutS && _tutS.ready) {
-          ctx.drawImage(_tutS.img, 0, 0, W, H);
+          var _tutMaxW = W * (W < H ? 0.84 : 0.92);
+          var _tutMaxH = H * (W < H ? 0.28 : 0.58);
+          var _tutPanelW = _tutMaxW;
+          var _tutPanelH = _tutPanelW * 360 / 640;
+          if (_tutPanelH > _tutMaxH) {
+            _tutPanelH = _tutMaxH;
+            _tutPanelW = _tutPanelH * 640 / 360;
+          }
+          var _tutPanelX = (W - _tutPanelW) / 2;
+          var _tutPanelY = W < H ? Math.max(H * 0.16, H / 2 - _tutPanelH * 0.72) : (H - _tutPanelH) / 2;
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(_tutPanelX + 8, _tutPanelY + 10, _tutPanelW, _tutPanelH);
+          ctx.drawImage(_tutS.img, 0, 0, 320, 360, _tutPanelX, _tutPanelY, _tutPanelW * 0.48, _tutPanelH);
+          var _tutText = [
+            { step: '1/3', title: '拖动摇杆移动', sub: '左下摇杆控制方向', body: '先拉开距离，再清掉尸群。' },
+            { step: '2/3', title: '靠近自动攻击', sub: '进入射程后自动开火', body: '保持走位，别被小怪围住。' },
+            { step: '3/3', title: '击破中央祭坛', sub: '拿传说技能和光环', body: '强化后去处理最后的对手。' }
+          ][_tutSlide] || { step: '', title: '', sub: '', body: '' };
+          var _txtX = _tutPanelX + _tutPanelW * 0.50;
+          var _txtY = _tutPanelY + _tutPanelH * 0.16;
+          var _txtW = _tutPanelW * 0.44;
+          ctx.fillStyle = 'rgba(38,23,10,0.92)';
+          ctx.beginPath();
+          ctx.roundRect(_txtX, _tutPanelY + _tutPanelH * 0.12, _txtW, _tutPanelH * 0.64, 10);
+          ctx.fill();
+          ctx.strokeStyle = '#ffd060';
+          ctx.lineWidth = Math.max(2, Math.round(Math.min(W, H) * 0.003));
+          ctx.stroke();
+          ctx.fillStyle = '#ffd214';
+          ctx.beginPath();
+          ctx.roundRect(_txtX + 16, _txtY, Math.max(58, _txtW * 0.24), 34, 6);
+          ctx.fill();
+          ctx.fillStyle = '#1a1204';
+          ctx.font = 'bold ' + Math.max(17, Math.round(_tutPanelH * 0.045)) + 'px ' + _HUD_CJK;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(_tutText.step, _txtX + 16 + Math.max(58, _txtW * 0.24) / 2, _txtY + 17);
+          ctx.fillStyle = '#ffd214';
+          ctx.font = 'bold ' + Math.max(28, Math.round(_tutPanelH * 0.078)) + 'px ' + _HUD_CJK;
+          ctx.fillText(_tutText.title, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.18);
+          ctx.fillStyle = '#fff2b8';
+          ctx.font = 'bold ' + Math.max(20, Math.round(_tutPanelH * 0.055)) + 'px ' + _HUD_CJK;
+          ctx.fillText(_tutText.sub, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.31);
+          ctx.fillStyle = '#e9dcc3';
+          ctx.font = Math.max(17, Math.round(_tutPanelH * 0.045)) + 'px ' + _HUD_CJK;
+          ctx.fillText(_tutText.body, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.46);
+          ctx.fillStyle = '#a99670';
+          ctx.font = Math.max(14, Math.round(_tutPanelH * 0.036)) + 'px ' + _HUD_CJK;
+          ctx.fillText(_tutSlide === _tutSlides.length - 1 ? '点击开始' : '点击继续', _txtX + _txtW / 2, _txtY + _tutPanelH * 0.58);
+          ctx.strokeStyle = 'rgba(255,208,96,0.85)';
+          ctx.lineWidth = Math.max(2, Math.round(Math.min(W, H) * 0.003));
+          ctx.strokeRect(_tutPanelX + 0.5, _tutPanelY + 0.5, _tutPanelW - 1, _tutPanelH - 1);
         } else {
           // Fallback text if svg not yet loaded
           ctx.font = 'bold ' + Math.round(Math.min(W, H) * 0.05) + 'px ' + _HUD_CJK;
