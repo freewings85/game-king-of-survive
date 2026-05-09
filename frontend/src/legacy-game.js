@@ -10714,8 +10714,43 @@
           ctx.globalAlpha = 0.95;
           ctx.fillStyle = '#fff';
           ctx.textAlign = 'center';
-          ctx.font = 'bold ' + Math.round(_abR * 0.42) + 'px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
-          ctx.fillText(_abLabel, _abX, _abY + _abR * 0.15);
+          ctx.save();
+          ctx.translate(_abX, _abY - _abR * 0.08);
+          ctx.strokeStyle = '#fff';
+          ctx.fillStyle = '#fff';
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          if (_abCls === 'mage') {
+            ctx.lineWidth = Math.max(3, _abR * 0.08);
+            for (var _snow = 0; _snow < 3; _snow++) {
+              ctx.save();
+              ctx.rotate(_snow * Math.PI / 3);
+              ctx.beginPath();
+              ctx.moveTo(-_abR * 0.34, 0);
+              ctx.lineTo(_abR * 0.34, 0);
+              ctx.moveTo(_abR * 0.18, -_abR * 0.12);
+              ctx.lineTo(_abR * 0.34, 0);
+              ctx.lineTo(_abR * 0.18, _abR * 0.12);
+              ctx.stroke();
+              ctx.restore();
+            }
+          } else if (_abCls === 'healer') {
+            ctx.fillRect(-_abR * 0.10, -_abR * 0.36, _abR * 0.20, _abR * 0.72);
+            ctx.fillRect(-_abR * 0.36, -_abR * 0.10, _abR * 0.72, _abR * 0.20);
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(_abR * 0.08, -_abR * 0.36);
+            ctx.lineTo(-_abR * 0.30, _abR * 0.08);
+            ctx.lineTo(-_abR * 0.04, _abR * 0.04);
+            ctx.lineTo(-_abR * 0.16, _abR * 0.38);
+            ctx.lineTo(_abR * 0.34, -_abR * 0.10);
+            ctx.lineTo(_abR * 0.06, -_abR * 0.06);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+          ctx.font = 'bold ' + Math.round(_abR * 0.24) + 'px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+          ctx.fillText(_abLabel, _abX, _abY + _abR * 0.48);
         }
         ctx.restore();
       } else {
