@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>King of Survive Map Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" />
+<link rel="stylesheet" href="/frontend/editor/styles.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">地图编辑器</div>
+    <button id="newMap" class="cmd">新建</button>
+    <button id="loadDefault" class="cmd">加载 default</button>
+    <button id="loadFile" class="cmd">加载 JSON</button>
+    <input id="fileInput" type="file" accept=".json,application/json" />
+    <button id="downloadMap" class="cmd primary">导出 JSON</button>
+    <div class="status" id="statusText">ready</div>
+  </header>
+
+  <aside class="palette">
+    <section>
+      <h2>地表</h2>
+      <div id="tileTools" class="toolGrid"></div>
+    </section>
+    <section>
+      <h2>场景</h2>
+      <div id="propTools" class="toolGrid"></div>
+    </section>
+    <section>
+      <h2>玩法点</h2>
+      <div id="pinTools" class="toolGrid"></div>
+    </section>
+  </aside>
+
+  <main class="stage">
+    <canvas id="mapCanvas"></canvas>
+  </main>
+
+  <aside class="inspector">
+    <section>
+      <h2>地图</h2>
+      <label>名称<input id="mapName" /></label>
+      <label>尺寸<input id="mapSize" /></label>
+      <label>缩放<input id="zoomReadout" disabled /></label>
+    </section>
+    <section>
+      <h2>标准检查</h2>
+      <div id="qualityList" class="qualityList"></div>
+    </section>
+    <section>
+      <h2>选中</h2>
+      <div id="selectionPanel" class="selectionPanel">无</div>
+    </section>
+  </aside>
+</div>
+
+<script src="/frontend/src/theme/zombie-theme.js"></script>
+<script src="/frontend/src/render/map.js"></script>
+<script src="/frontend/editor/editor.js"></script>
+</body>
+</html>
