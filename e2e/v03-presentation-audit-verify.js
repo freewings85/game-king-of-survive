@@ -39,6 +39,9 @@ requiredText.forEach((text) => {
 [
   'can_delete/v03-gate/engine-demo-mobile.png',
   'can_delete/v03-gate/engine-demo-landscape-phone.png',
+  'can_delete/v03-gate/engine-demo-class-guardian.png',
+  'can_delete/v03-gate/engine-demo-class-tech.png',
+  'can_delete/v03-gate/engine-demo-class-ranger.png',
   'can_delete/v03-gate/engine-demo-skill-fan.png',
   'can_delete/v03-gate/engine-demo-skill-boom.png',
   'can_delete/v03-gate/engine-demo-skill-arc.png',
@@ -85,6 +88,7 @@ requiredText.forEach((text) => {
   'activePainterlyClass: ranger',
   'activePainterlySkin: 2',
   'activePainterlySkinColor: #283746',
+  'class-review painterly state matching Guardian, Tech, and Ranger',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',
@@ -113,8 +117,8 @@ assert(verifyScript, 'package.json must define verify:v03');
 console.log(JSON.stringify({
   presentationAudit: true,
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
-  screenshots: 8,
+  screenshots: 11,
   mappedRequirements: 13,
-  gates: 26,
+  gates: 27,
   completionClaim: false
 }, null, 2));

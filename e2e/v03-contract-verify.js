@@ -221,6 +221,44 @@ async function verifyEngineSkillReview(browser, skill) {
   return info;
 }
 
+async function verifyEngineClassReview(browser, classId, skinIndex) {
+  const page = await browser.newPage({
+    viewport: { width: 390, height: 844, isMobile: true, hasTouch: true },
+    deviceScaleFactor: 2
+  });
+  const logs = await collectErrors(page);
+  await page.goto(`${baseUrl}/frontend/engine-demo/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
+  await page.locator(`[data-class="${classId}"]`).click();
+  await page.locator('#skinRow i').nth(skinIndex).click();
+  await page.locator('[data-skill="fan"]').click();
+  await page.waitForTimeout(1800);
+  const info = await page.evaluate(() => ({
+    className: document.getElementById('className').textContent,
+    activeClass: document.querySelector('#classButtons .active').dataset.class,
+    activeSkill: document.querySelector('#skillPanel .active').dataset.skill,
+    activeSkin: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkin,
+    activeSkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkinColor,
+    activeGearClass: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeGearClass,
+    activeGearCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeGearCount,
+    activePainterlyClass: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activePainterlyClass,
+    activePainterlySkin: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activePainterlySkin,
+    activePainterlySkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor,
+    heroPainterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount,
+    painterlyCardCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.painterlyCardCount,
+    zombieVariantCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.zombieVariantCount,
+    livingZombieCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.livingZombieCount,
+    hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
+  }));
+  const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
+  if (errors.length || !info.hasWebgl || info.activeClass !== classId || info.activeGearClass !== classId || info.activePainterlyClass !== classId || info.activeSkin !== skinIndex || info.activePainterlySkin !== skinIndex || info.activePainterlySkinColor !== info.activeSkinColor || info.activeGearCount < 3 || info.heroPainterlyCardCount < 2 || info.painterlyCardCount < 40 || info.zombieVariantCount < 3 || info.livingZombieCount < 8) {
+    fail(`V03 ${classId} class review verification failed`, { info, errors });
+  }
+  info.screenshot = path.join(artifactDir, `engine-demo-class-${classId}.png`);
+  await page.screenshot({ path: info.screenshot, fullPage: true });
+  await page.close();
+  return info;
+}
+
 async function verifyEngineLandscapeReview(browser) {
   const page = await browser.newPage({
     viewport: { width: 844, height: 390, isMobile: true, hasTouch: true },
@@ -304,6 +342,9 @@ async function verifyV03Shell(browser) {
     runtime: await verifyContractRuntime(browser),
     editor: await verifyEditor(browser),
     engineDemo: await verifyEngineDemo(browser),
+    classGuardian: await verifyEngineClassReview(browser, 'guardian', 0),
+    classTech: await verifyEngineClassReview(browser, 'tech', 1),
+    classRanger: await verifyEngineClassReview(browser, 'ranger', 2),
     skillArc: await verifyEngineSkillReview(browser, 'arc'),
     skillBoom: await verifyEngineSkillReview(browser, 'boom'),
     skillFan: await verifyEngineSkillReview(browser, 'fan'),
