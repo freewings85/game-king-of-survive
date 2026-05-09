@@ -17,6 +17,7 @@ python3 dev-server.py 8081
   - Current modularized game entry.
   - Still contains the legacy gameplay core under `frontend/src/legacy-game.js`.
   - Loads `frontend/src/map-contract.js` before the legacy core so editor-exported maps normalize to the same V03 schema at runtime.
+  - Open `/frontend/index.html?map=v03_contract` to run the standard map generated directly from the shared contract.
 
 - `/frontend/editor/index.html`
   - Current map editor entry.

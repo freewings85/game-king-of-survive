@@ -49,18 +49,33 @@
     }
     return map;
   }
-  function _resolveMapPath() {
-    var requested = 'default';
+  function _requestedMapId() {
     try {
       var p = new URLSearchParams(window.location.search).get('map');
-      if (p && /^[a-z0-9_]+$/i.test(p)) requested = p;
+      if (p && /^[a-z0-9_]+$/i.test(p)) return p;
     } catch (e) {}
+    return 'default';
+  }
+  function _createContractMapIfRequested() {
+    if (_requestedMapId() !== 'v03_contract') return null;
+    if (!window.KOS_MAP_CONTRACT || typeof window.KOS_MAP_CONTRACT.standardizeMap !== 'function') return null;
+    var map = window.KOS_MAP_CONTRACT.standardizeMap(window.KOS_MAP_CONTRACT.createMap(40, 40));
+    map.name = 'V03 Contract Wasteland';
+    return map;
+  }
+  function _resolveMapPath() {
+    var requested = _requestedMapId();
     return 'maps/' + requested + '.json';
   }
   function loadMapLayout(jsonPath) {
     // Synchronous primary fetch so startOfflineDemo never races the network.
     // Async fallback retained for environments that block sync XHR.
     MAP_DATA = null;
+    MAP_DATA = _createContractMapIfRequested();
+    if (MAP_DATA) {
+      console.log('[map] active:', MAP_DATA.name, '(contract)');
+      return MAP_DATA;
+    }
     var url = jsonPath || _resolveMapPath();
     try {
       var xhr = new XMLHttpRequest();
