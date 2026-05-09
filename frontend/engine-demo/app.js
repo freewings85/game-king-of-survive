@@ -1,4 +1,5 @@
 import * as THREE from '/node_modules/three/build/three.module.js';
+import { classDefs, demoTuning, skillDefs } from './v03-config.js';
 
 const canvas = document.getElementById('engineCanvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -32,42 +33,6 @@ const accentLight = new THREE.PointLight(0x4ec9ff, 3.2, 14);
 accentLight.position.set(-2, 3.5, 2);
 scene.add(accentLight);
 
-const classDefs = {
-  guardian: {
-    mark: 'G',
-    name: 'Guardian',
-    role: 'Shield / lane holder',
-    body: 0x3c3430,
-    accent: 0xe95b45,
-    emissive: 0x5a1109,
-    skins: ['#332d2a', '#62645e', '#7d4f58']
-  },
-  tech: {
-    mark: 'T',
-    name: 'Tech Engineer',
-    role: 'Chain / burst control',
-    body: 0x243436,
-    accent: 0x4ec9ff,
-    emissive: 0x0d4d66,
-    skins: ['#193743', '#2f6068', '#7b315d']
-  },
-  ranger: {
-    mark: 'R',
-    name: 'Ranger',
-    role: 'Rifle / mobile cleanup',
-    body: 0x2f3b2f,
-    accent: 0x78d66a,
-    emissive: 0x184a15,
-    skins: ['#314027', '#5a5534', '#283746']
-  }
-};
-
-const skillDefs = {
-  arc: { color: 0x4ec9ff, pulse: 4.5, spread: 0.85, damage: 8, targets: 2, range: 6.2 },
-  boom: { color: 0xff8b3d, pulse: 2.4, spread: 1.15, damage: 13, targets: 1, range: 5.4 },
-  fan: { color: 0xf4c95a, pulse: 6.0, spread: 1.8, damage: 4, targets: 5, range: 5.8 }
-};
-
 const mats = {
   ground: new THREE.MeshStandardMaterial({ color: 0x343b36, roughness: 0.92 }),
   road: new THREE.MeshStandardMaterial({ color: 0x252a29, roughness: 0.96 }),
@@ -89,7 +54,7 @@ let activeClass = 'tech';
 let activeSkill = 'arc';
 
 const game = {
-  hp: 100,
+  hp: demoTuning.player.hp,
   xp: 0,
   level: 1,
   kills: 0,
@@ -240,7 +205,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;
   root.userData.fast = fast;
-  root.userData.maxHp = fast ? 42 : 58;
+  root.userData.maxHp = fast ? demoTuning.zombie.fastHp : demoTuning.zombie.normalHp;
   root.userData.hp = root.userData.maxHp;
   root.userData.alive = true;
   root.traverse((o) => {
@@ -255,7 +220,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
 
 function resetZombie(z, x, zPos) {
   z.position.set(x, 0, zPos);
-  z.userData.hp = z.userData.maxHp + game.level * 6;
+  z.userData.hp = z.userData.maxHp + game.level * demoTuning.zombie.levelHpGrowth;
   z.userData.alive = true;
   z.visible = true;
 }
@@ -305,7 +270,7 @@ function updateHud() {
   hpFill.style.width = `${Math.max(0, game.hp)}%`;
   xpFill.style.width = `${Math.min(100, game.xp)}%`;
   levelBadge.textContent = `LV ${game.level}`;
-  aliveText.textContent = `ALIVE ${Math.max(2, 18 - Math.floor(game.kills / 4))}`;
+  aliveText.textContent = `ALIVE ${Math.max(demoTuning.progression.minAlive, 18 - Math.floor(game.kills / demoTuning.progression.aliveDropPerKills))}`;
 }
 
 function applyClass(id) {
@@ -453,15 +418,15 @@ function defeatZombie(z) {
   z.userData.alive = false;
   z.visible = false;
   game.kills += 1;
-  game.xp += 10;
+  game.xp += demoTuning.progression.killXp;
   dropXpAt(z.position.x, z.position.z);
   if (game.xp >= 100) {
     game.xp -= 100;
     game.level += 1;
-    game.hp = Math.min(100, game.hp + 12);
+    game.hp = Math.min(demoTuning.player.hp, game.hp + demoTuning.progression.levelHealOnKill);
   }
   const angle = Math.random() * Math.PI * 2;
-  resetZombie(z, Math.cos(angle) * 7.2, Math.sin(angle) * 6.2);
+  resetZombie(z, Math.cos(angle) * demoTuning.zombie.respawnRadiusX, Math.sin(angle) * demoTuning.zombie.respawnRadiusZ);
 }
 
 function fireWeapon(dt) {
@@ -470,7 +435,7 @@ function fireWeapon(dt) {
   const skill = skillDefs[activeSkill] || skillDefs.arc;
   const targets = nearestZombies(skill.range).slice(0, skill.targets);
   if (!targets.length) return;
-  game.fireTimer = activeClass === 'ranger' ? 0.34 : 0.42;
+  game.fireTimer = activeClass === 'ranger' ? demoTuning.player.rangerFireCooldown : demoTuning.player.defaultFireCooldown;
   targets.forEach(({ z }, index) => {
     const splash = activeSkill === 'boom' && index === 0 ? 1.35 : 1;
     z.userData.hp -= (skill.damage + game.level * 1.1) * splash;
@@ -491,11 +456,11 @@ function collectXp() {
     }
     if (d < 0.34) {
       g.visible = false;
-      game.xp += 4;
+      game.xp += demoTuning.progression.pickupXp;
       if (game.xp >= 100) {
         game.xp -= 100;
         game.level += 1;
-        game.hp = Math.min(100, game.hp + 10);
+        game.hp = Math.min(demoTuning.player.hp, game.hp + demoTuning.progression.levelHealOnPickup);
       }
     }
   });
@@ -506,7 +471,7 @@ function animate(now) {
   const t = now * 0.001;
   const dt = Math.min(0.05, lastNow ? (now - lastNow) * 0.001 : 0.016);
   lastNow = now;
-  const speed = activeClass === 'ranger' ? 3.1 : activeClass === 'guardian' ? 2.45 : 2.75;
+  const speed = (classDefs[activeClass] || classDefs.tech).moveSpeed;
   player.position.x = THREE.MathUtils.clamp(player.position.x + game.input.x * speed * dt, -5.6, 5.6);
   player.position.z = THREE.MathUtils.clamp(player.position.z + game.input.y * speed * dt, -4.9, 4.9);
   player.rotation.y = game.input.active ? Math.atan2(game.input.x, game.input.y) : Math.sin(t * 0.9) * 0.18;
@@ -523,13 +488,13 @@ function animate(now) {
     const dist = Math.hypot(dx, dz);
     const ang = Math.atan2(dx, dz);
     z.rotation.y = ang;
-    z.position.x += Math.sin(ang) * (z.userData.fast ? 0.88 : 0.48) * dt;
-    z.position.z += Math.cos(ang) * (z.userData.fast ? 0.88 : 0.48) * dt;
+    z.position.x += Math.sin(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
+    z.position.z += Math.cos(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
     z.position.y = Math.abs(Math.sin(t * (z.userData.fast ? 9 : 4) + z.userData.phase)) * 0.045;
     z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025);
     if (dist < 0.75 && game.hitTimer <= 0) {
-      game.hp = Math.max(0, game.hp - (activeClass === 'guardian' ? 5 : 8));
-      game.hitTimer = 0.42;
+      game.hp = Math.max(0, game.hp - (classDefs[activeClass] || classDefs.tech).contactDamage);
+      game.hitTimer = demoTuning.player.hitCooldown;
     }
   });
   game.hitTimer = Math.max(0, game.hitTimer - dt);
