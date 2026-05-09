@@ -2093,16 +2093,28 @@
     if (waveBanner.timer > maxDur) waveBanner.timer = maxDur;
     var t = waveBanner.timer;
     var _wbs = Math.min(W / 400, H / 700);
-    var fontPx = Math.round(44 * _wbs);
+    var _compactWaveBanner = !!((window.KOS_UI && window.KOS_UI.hud) || {}).compactWaveBanner;
+    var fontPx = _compactWaveBanner ? Math.max(13, Math.min(18, Math.round(15 * _wbs))) : Math.round(44 * _wbs);
     // Fade out in last 0.3s
     var alpha = t < 0.3 ? t / 0.3 : 1;
     // Center vertically in middle game zone
-    var centerY = H / 2;
+    var centerY = _compactWaveBanner ? Math.round(H * 0.135) : H / 2;
     ctx.save();
     ctx.globalAlpha = alpha;
+    if (_compactWaveBanner) {
+      var _wbW = Math.min(W * 0.46, 280);
+      var _wbH = Math.max(24, fontPx * 1.8);
+      ctx.fillStyle = 'rgba(8,12,14,0.62)';
+      ctx.strokeStyle = 'rgba(244,201,90,0.72)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(W / 2 - _wbW / 2, centerY - _wbH / 2, _wbW, _wbH, 4);
+      ctx.fill();
+      ctx.stroke();
+    }
     ctx.fillStyle = waveBanner.color;
     ctx.font = 'bold ' + fontPx + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = Math.max(4, 5 * _wbs);
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)'; ctx.lineWidth = _compactWaveBanner ? Math.max(1.5, 1.6 * _wbs) : Math.max(4, 5 * _wbs);
     ctx.strokeText(waveBanner.text, W / 2, centerY);
     ctx.fillText(waveBanner.text, W / 2, centerY);
     ctx.textBaseline = 'alphabetic';
@@ -9364,6 +9376,7 @@
     while (gems.length > 60) gems.shift();
     for (var i = 0; i < gems.length; i++) {
       var g = gems[i]; g._t += 0.05;
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawXpGem === 'function' && window.KOS_RENDER.drawXpGem(ctx, g)) continue;
       var gemPulse = 1 + Math.sin(g._t * 2) * 0.25;
       // gemSizeVariety: use gemTier for different sizes (small=4px, medium=7px, large=10px)
       var gemTierSize = g.gemTier === 'large' ? 10 : (g.gemTier === 'medium' ? 7 : 4);
@@ -9412,6 +9425,15 @@
     for (var _fri = 0; _fri < offlineSkillFx.length; _fri++) {
       var _frfx = offlineSkillFx[_fri];
       var _frAlpha = Math.min(1, _frfx.life / _frfx.maxLife);
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawBulletTracer === 'function' && window.KOS_RENDER.drawBulletTracer(ctx, _frfx)) {
+        var _newTa = _frfx.angle || 0;
+        window.__lastTracerSegment = {
+          x1: _frfx.x - 42 * Math.cos(_newTa), y1: _frfx.y - 42 * Math.sin(_newTa),
+          x2: _frfx.x + 12 * Math.cos(_newTa), y2: _frfx.y + 12 * Math.sin(_newTa),
+          angle: _newTa, t: (typeof gameTime !== 'undefined' ? gameTime : 0)
+        };
+        continue;
+      }
       ctx.save();
       ctx.translate(_frfx.x, _frfx.y);
       ctx.rotate(_frfx.angle || 0);
@@ -10540,7 +10562,15 @@
       var _fxR = Math.min(1, _abilityFx.t / Math.max(0.001, _abilityFx.dur));
       var _fxA = 1 - _fxR;
       ctx.save();
-      if (_abilityFx.kind === 'mage') {
+      var _abilityOverlayDrawn = window.KOS_RENDER && typeof window.KOS_RENDER.drawAbilityOverlay === 'function' && window.KOS_RENDER.drawAbilityOverlay(ctx, {
+        fx: _abilityFx,
+        W: W,
+        H: H,
+        player: player,
+        cameraX: cameraX,
+        cameraY: cameraY
+      });
+      if (!_abilityOverlayDrawn && _abilityFx.kind === 'mage') {
         // Cyan tint + ice-shard streaks
         ctx.globalAlpha = 0.45 * _fxA;
         ctx.fillStyle = '#a8e6ff';
@@ -10565,7 +10595,7 @@
         _g.addColorStop(1, 'rgba(80,180,255,0.7)');
         ctx.fillStyle = _g;
         ctx.fillRect(0, 0, W, H);
-      } else if (_abilityFx.kind === 'healer') {
+      } else if (!_abilityOverlayDrawn && _abilityFx.kind === 'healer') {
         // Gold expanding ring centered on player screen pos
         if (player) {
           var _hx = player.x - cameraX, _hy = player.y - cameraY;
@@ -10585,7 +10615,7 @@
           ctx.fillStyle = _hg;
           ctx.beginPath(); ctx.arc(_hx, _hy, _maxR, 0, Math.PI * 2); ctx.fill();
         }
-      } else if (_abilityFx.kind === 'atkspd') {
+      } else if (!_abilityOverlayDrawn && _abilityFx.kind === 'atkspd') {
         // Red glow halo around player
         if (player) {
           var _wx = player.x - cameraX, _wy = player.y - cameraY;

@@ -6,6 +6,7 @@
     bottomHeightRatio: 0.082,
     minimapScale: 0.78,
     compactBanners: true,
+    compactWaveBanner: true,
     suppressHeroCrown: true
   };
 })();
