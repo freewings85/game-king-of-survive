@@ -32,7 +32,7 @@ function _enterGame(playerData) {
   // Hide login, show player bar
   document.getElementById('login-overlay').classList.add('hidden');
   var bar = document.getElementById('player-bar');
-  bar.style.display = 'block';
+  bar.style.display = playerData.offlineGuest ? 'none' : 'block';
   document.getElementById('bar-name').textContent = playerData.nickname;
   document.getElementById('bar-gold').textContent = (playerData.gold || 0) + ' 金币';
   document.getElementById('bar-rank').textContent = playerData.rank || '青铜';

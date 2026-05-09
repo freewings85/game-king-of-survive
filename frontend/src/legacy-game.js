@@ -11955,31 +11955,42 @@
     var offsetY = (H - baseH * menuScale) / 2;
 
     // Full-screen background (drawn in real coords before transform)
-    var bgGrad = ctx.createRadialGradient(W / 2, H * 0.35, 40, W / 2, H * 0.5, Math.max(W, H) * 0.8);
-    bgGrad.addColorStop(0, '#1a1a4e');
-    bgGrad.addColorStop(0.4, '#0c0c2a');
-    bgGrad.addColorStop(1, '#04040e');
+    var bgGrad = ctx.createRadialGradient(W / 2, H * 0.34, 40, W / 2, H * 0.5, Math.max(W, H) * 0.82);
+    bgGrad.addColorStop(0, '#37271f');
+    bgGrad.addColorStop(0.48, '#111615');
+    bgGrad.addColorStop(1, '#050707');
     ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
-    // Nebula rings
-    var ringT = Date.now() * 0.0003;
+    // Safe-zone scan rings and ruined road silhouettes.
+    var ringT = Date.now() * 0.00025;
     ctx.save();
-    ctx.translate(W / 2, H * 0.38);
-    for (var ri = 0; ri < 4; ri++) {
-      ctx.globalAlpha = 0.08 + 0.04 * Math.sin(ringT * 2 + ri);
-      ctx.strokeStyle = ri % 2 === 0 ? '#4488ff' : '#8844ff';
-      ctx.lineWidth = 1.5;
-      var rr = (100 + ri * 50) * menuScale + Math.sin(ringT * 3 + ri) * 8;
+    ctx.translate(W / 2, H * 0.40);
+    for (var ri = 0; ri < 3; ri++) {
+      ctx.globalAlpha = 0.08 + 0.04 * Math.sin(ringT * 4 + ri);
+      ctx.strokeStyle = ri === 0 ? '#f4c95a' : '#e6533f';
+      ctx.lineWidth = 1.2;
+      var rr = (120 + ri * 62) * menuScale + Math.sin(ringT * 5 + ri) * 8;
       ctx.beginPath();
-      ctx.ellipse(0, 0, rr, rr * 0.45, ringT * (0.4 + ri * 0.1), 0, Math.PI * 2);
+      ctx.ellipse(0, 0, rr, rr * 0.52, ringT * (0.2 + ri * 0.08), 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();
     ctx.globalAlpha = 1;
     drawMenuParticles();
-    // Mountains
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = '#0a0a1e';
-    ctx.beginPath(); ctx.moveTo(0, H * 0.72);
-    for (var mx = 0; mx <= W; mx += 60) ctx.lineTo(mx, H * 0.62 + Math.sin(mx * 0.013 + 0.7) * 20 + Math.cos(mx * 0.005) * 10);
+    ctx.save();
+    ctx.globalAlpha = 0.34;
+    ctx.fillStyle = '#171a18';
+    ctx.fillRect(0, H * 0.66, W, H * 0.16);
+    ctx.strokeStyle = 'rgba(244,201,90,0.18)';
+    ctx.lineWidth = 2;
+    for (var lx = -W; lx < W * 2; lx += 120) {
+      ctx.beginPath();
+      ctx.moveTo(lx, H * 0.82);
+      ctx.lineTo(lx + W * 0.36, H * 0.66);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#090b0b';
+    ctx.beginPath(); ctx.moveTo(0, H * 0.76);
+    for (var mx = 0; mx <= W; mx += 70) ctx.lineTo(mx, H * 0.70 + Math.sin(mx * 0.013 + 0.7) * 12);
     ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
     ctx.restore();
 
@@ -12014,7 +12025,7 @@
     ctx.shadowBlur = 0;
     ctx.restore();
     ctx.font = '13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#ffd966'; ctx.textAlign = 'center';
-    ctx.fillText('— King of Survive —', 200, frameY + frameH + 16);
+    ctx.fillText('僵尸围城 · 最后生还', 200, frameY + frameH + 16);
 
     // --- Character portrait (y: 140-320) ---
     var cls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior;
@@ -12048,7 +12059,7 @@
     ctx.strokeStyle = cls.color; ctx.lineWidth = 1.5;
     ctx.strokeRect(100, tgY, 200, 28);
     ctx.fillStyle = cls.color; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(cls.icon + '  ' + cls.name, 200, tgY + 18);
+    ctx.fillText(cls.name, 200, tgY + 18);
     ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
     ctx.fillText(cls.passive, 200, tgY + 40);
     // Best record
@@ -12065,18 +12076,18 @@
     var bXl = 200 - bW - bGap / 2, bXr = 200 + bGap / 2;
     var bY0 = 430;
     ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    _drawMenuButton(bXl, bY0, bW, bH, '单排模式', '#4a8a4a', '#1e4a1e', '#6fd66f');
-    _drawMenuButton(bXr, bY0, bW, bH, '组队模式', '#4a6a9a', '#1e2e5e', '#6fa6ff');
+    _drawMenuButton(bXl, bY0, bW, bH, '单排吃鸡', '#586a45', '#243020', '#8da082');
+    _drawMenuButton(bXr, bY0, bW, bH, '组队求生', '#445f66', '#1e3438', '#42d9ff');
     var bY1 = bY0 + bH + bGap;
     ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    _drawMenuButton(bXr, bY1, bW, bH, '⚔ 强化', '#9a7a2a', '#4a3612', '#ffd700');
+    _drawMenuButton(bXr, bY1, bW, bH, '强化', '#8a682a', '#3f2f16', '#f4c95a');
     var bY2 = bY1 + bH + bGap;
-    _drawMenuButton(bXl, bY2, bW, bH, '👥 双人', '#6a3a9a', '#2a1a4e', '#c090ff');
-    _drawMenuButton(bXr, bY2, bW, bH, '⏱ 限时', '#9a3a3a', '#4a1a1a', '#ff9080');
+    _drawMenuButton(bXl, bY2, bW, bH, '双人协作', '#5d4b63', '#292330', '#bc8cff');
+    _drawMenuButton(bXr, bY2, bW, bH, '限时围城', '#7b3c32', '#351b18', '#e6533f');
 
     // Tutorial hint
     ctx.font = '12px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = 'rgba(170,170,200,0.7)'; ctx.textAlign = 'center';
-    ctx.fillText('鼠标 / 触屏移动角色，自动攻击最近敌人', 200, 680);
+    ctx.fillText('触屏移动，自动开火，活到最后', 200, 680);
 
     ctx.restore(); // exit design-space transform
 
