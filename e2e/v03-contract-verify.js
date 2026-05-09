@@ -23,6 +23,8 @@ async function verifyContractRuntime(browser) {
   const logs = await collectErrors(page);
   await page.goto(`${baseUrl}/frontend/index.html?map=v03_contract`, { waitUntil: 'networkidle', timeout: 15000 });
   await page.waitForTimeout(700);
+  await page.locator('#btn-guest').click();
+  await page.waitForFunction(() => window._gameAPI && window._gameAPI.state === 'playing' && window._gameAPI.offlineMode, null, { timeout: 8000 });
   const info = await page.evaluate(() => {
     const map = window.__MAP_DATA && window.__MAP_DATA();
     const checks = window.KOS_MAP_CONTRACT && map ? window.KOS_MAP_CONTRACT.getQualityChecks(map) : [];
@@ -36,11 +38,16 @@ async function verifyContractRuntime(browser) {
       rewardPoints: map && map.rewardPoints && map.rewardPoints.length,
       zombieEntries: map && map.zombieEntries && map.zombieEntries.length,
       allQualityOk: checks.length > 0 && checks.every((check) => check.ok),
+      gameState: window._gameAPI && window._gameAPI.state,
+      offlineMode: window._gameAPI && window._gameAPI.offlineMode,
+      playerSpawn: window._gameAPI && window._gameAPI.player && { x: window._gameAPI.player.x, y: window._gameAPI.player.y },
+      waveSpawnPoints: window._gameAPI && window._gameAPI.waveSpawnPoints && window._gameAPI.waveSpawnPoints.length,
+      brStructures: window._gameAPI && window._gameAPI.brStructures && window._gameAPI.brStructures.length,
       canvas: { width: c.width, height: c.height }
     };
   });
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasContract || !info.allQualityOk || info.schemaVersion !== 'v03-map-1') {
+  if (errors.length || !info.hasContract || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
     fail('V03 contract runtime verification failed', { info, errors });
   }
   await page.close();
