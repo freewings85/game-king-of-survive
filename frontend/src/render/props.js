@@ -177,6 +177,111 @@
     return true;
   }
 
+  function drawBridge(ctx, x, y, w, h) {
+    shadow(ctx, x, y, w, h, 0.20);
+    ctx.fillStyle = '#7b5230';
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(30,18,10,0.22)';
+    var planks = Math.max(4, Math.floor((w > h ? w : h) / 26));
+    for (var i = 0; i < planks; i++) {
+      if (w >= h) ctx.fillRect(x + i * w / planks, y, 3, h);
+      else ctx.fillRect(x, y + i * h / planks, w, 3);
+    }
+    ctx.strokeStyle = '#3b2417';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 1.5, y + 1.5, w - 3, h - 3);
+    return true;
+  }
+
+  function drawMountain(ctx, x, y, w, h) {
+    shadow(ctx, x, y, w, h, 0.34);
+    var g = ctx.createLinearGradient(x, y, x, y + h);
+    g.addColorStop(0, '#7a6164');
+    g.addColorStop(1, '#3a2b32');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.08, y + h * 0.88);
+    ctx.lineTo(x + w * 0.36, y + h * 0.15);
+    ctx.lineTo(x + w * 0.52, y + h * 0.46);
+    ctx.lineTo(x + w * 0.68, y + h * 0.10);
+    ctx.lineTo(x + w * 0.95, y + h * 0.88);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.34, y + h * 0.18);
+    ctx.lineTo(x + w * 0.43, y + h * 0.40);
+    ctx.lineTo(x + w * 0.28, y + h * 0.38);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#2b2025';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    return true;
+  }
+
+  function drawGasStation(ctx, x, y, w, h) {
+    shadow(ctx, x, y, w, h, 0.36);
+    ctx.fillStyle = '#3e3330';
+    ctx.fillRect(x + w * 0.18, y + h * 0.38, w * 0.62, h * 0.50);
+    ctx.fillStyle = palette.rust || '#9a5830';
+    ctx.fillRect(x + w * 0.10, y + h * 0.22, w * 0.80, h * 0.18);
+    ctx.fillStyle = '#1b1f1d';
+    ctx.fillRect(x + w * 0.26, y + h * 0.50, w * 0.18, h * 0.30);
+    ctx.fillRect(x + w * 0.56, y + h * 0.50, w * 0.18, h * 0.30);
+    ctx.strokeStyle = '#2a1510';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.18, y + h * 0.28);
+    ctx.lineTo(x + w * 0.82, y + h * 0.28);
+    ctx.moveTo(x + w * 0.33, y + h * 0.80);
+    ctx.lineTo(x + w * 0.26, y + h * 0.96);
+    ctx.moveTo(x + w * 0.63, y + h * 0.80);
+    ctx.lineTo(x + w * 0.74, y + h * 0.96);
+    ctx.stroke();
+    return true;
+  }
+
+  function drawBarrel(ctx, x, y, w, h) {
+    shadow(ctx, x, y, w, h, 0.24);
+    var cx = x + w / 2;
+    var top = y + h * 0.18;
+    ctx.fillStyle = '#6a2f24';
+    ctx.fillRect(x + w * 0.22, top, w * 0.56, h * 0.62);
+    ctx.fillStyle = '#9a5830';
+    ctx.beginPath(); ctx.ellipse(cx, top, w * 0.28, h * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx, top + h * 0.62, w * 0.28, h * 0.10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#2a1510';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x + w * 0.22, top + h * 0.08, w * 0.56, h * 0.50);
+    return true;
+  }
+
+  function drawTires(ctx, x, y, w, h) {
+    shadow(ctx, x, y, w, h, 0.30);
+    var count = 3;
+    for (var i = 0; i < count; i++) {
+      var cx = x + w * (0.28 + i * 0.22);
+      var cy = y + h * (0.58 - (i % 2) * 0.16);
+      ctx.fillStyle = '#111514';
+      ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.17, h * 0.22, -0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#38403c';
+      ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.08, h * 0.10, -0.2, 0, Math.PI * 2); ctx.fill();
+    }
+    return true;
+  }
+
+  function drawBloodMark(ctx, x, y, w, h) {
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#5e1514';
+    ctx.beginPath(); ctx.ellipse(x + w * 0.52, y + h * 0.54, w * 0.34, h * 0.22, -0.25, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + w * 0.30, y + h * 0.62, w * 0.12, h * 0.08, 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x + w * 0.76, y + h * 0.40, w * 0.10, h * 0.07, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    return true;
+  }
+
   function drawWorldProp(ctx, x, y, w, h, kind, data) {
     var k = kind || (data && (data.sprite || data.type || data.kind));
     if (k === 'wreck_car') return drawWreckCar(ctx, x, y, w, h);
@@ -186,6 +291,12 @@
     if (k === 'debris') return drawDebris(ctx, x, y, w, h);
     if (k === 'building') return drawBuilding(ctx, x, y, w, h, data && data.color);
     if (k === 'wall') return drawWall(ctx, x, y, w, h, data && data.color);
+    if (k === 'bridge') return drawBridge(ctx, x, y, w, h);
+    if (k === 'mountain') return drawMountain(ctx, x, y, w, h);
+    if (k === 'gas_station') return drawGasStation(ctx, x, y, w, h);
+    if (k === 'barrel' || k === 'toxic_barrel') return drawBarrel(ctx, x, y, w, h);
+    if (k === 'tires') return drawTires(ctx, x, y, w, h);
+    if (k === 'blood_mark') return drawBloodMark(ctx, x, y, w, h);
     return false;
   }
 

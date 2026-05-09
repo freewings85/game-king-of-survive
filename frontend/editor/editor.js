@@ -21,7 +21,11 @@
     { kind: 'debris', name: '碎片', w: 88, h: 58, color: '#656963' },
     { kind: 'fence', name: '铁网', w: 128, h: 24, color: '#6f7773' },
     { kind: 'wall', name: '破墙', w: 32, h: 128, color: '#656963' },
-    { kind: 'building', name: '房体', w: 112, h: 92, color: '#5a454a' }
+    { kind: 'building', name: '房体', w: 112, h: 92, color: '#5a454a' },
+    { kind: 'gas_station', name: '油站', w: 132, h: 86, color: '#7b4a32' },
+    { kind: 'barrel', name: '油桶', w: 40, h: 54, color: '#9a5830' },
+    { kind: 'tires', name: '轮胎', w: 80, h: 48, color: '#202422' },
+    { kind: 'blood_mark', name: '血迹', w: 70, h: 42, color: '#5e1514' }
   ];
 
   var pinDefs = [
