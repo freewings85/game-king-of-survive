@@ -49,6 +49,8 @@ const mats = {
   skin: new THREE.MeshStandardMaterial({ color: 0xd2a164, roughness: 0.72 }),
   hair: new THREE.MeshStandardMaterial({ color: 0x1a1612, roughness: 0.86 }),
   hand: new THREE.MeshStandardMaterial({ color: 0xc28a55, roughness: 0.76 }),
+  boot: new THREE.MeshStandardMaterial({ color: 0x0d1110, roughness: 0.84 }),
+  bone: new THREE.MeshStandardMaterial({ color: 0xd8d1a3, roughness: 0.8 }),
   zombie: new THREE.MeshStandardMaterial({ color: 0x83936f, roughness: 0.88 }),
   zombieCloth: new THREE.MeshStandardMaterial({ color: 0x3b3027, roughness: 0.9 }),
   zombieRag: new THREE.MeshStandardMaterial({ color: 0x6c5838, roughness: 0.92 }),
@@ -394,7 +396,11 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   ];
   legs[0].position.set(-0.17 * scale, 0.36 * scale, 0);
   legs[1].position.set(0.17 * scale, 0.36 * scale, 0);
-  root.add(legs[0], legs[1]);
+  const bootA = box(0.28 * scale, 0.16 * scale, 0.34 * scale, mats.boot);
+  const bootB = bootA.clone();
+  bootA.position.set(-0.17 * scale, 0.08 * scale, -0.06 * scale);
+  bootB.position.set(0.17 * scale, 0.08 * scale, -0.06 * scale);
+  root.add(legs[0], legs[1], bootA, bootB);
 
   const body = box(0.78 * scale, 1.05 * scale, 0.45 * scale, colorMat);
   body.position.y = 1.05 * scale;
@@ -410,10 +416,24 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const head = cyl(0.24 * scale, 0.24 * scale, 0.34 * scale, mats.skin, 24);
   head.position.y = 1.82 * scale;
   root.add(head);
+  const faceShadow = box(0.34 * scale, 0.05 * scale, 0.28 * scale, mats.hair);
+  faceShadow.position.set(0, 1.77 * scale, -0.22 * scale);
+  root.add(faceShadow);
+  const eyeA = box(0.05 * scale, 0.035 * scale, 0.022 * scale, mats.boot);
+  const eyeB = eyeA.clone();
+  eyeA.position.set(-0.08 * scale, 1.86 * scale, -0.25 * scale);
+  eyeB.position.set(0.08 * scale, 1.86 * scale, -0.25 * scale);
+  root.add(eyeA, eyeB);
   const hair = box(0.42 * scale, 0.16 * scale, 0.38 * scale, mats.hair);
   hair.position.set(-0.03 * scale, 2.04 * scale, -0.03 * scale);
   hair.rotation.z = -0.18;
   root.add(hair);
+  for (let i = 0; i < 3; i++) {
+    const spike = box(0.10 * scale, 0.20 * scale, 0.14 * scale, mats.hair);
+    spike.position.set((-0.16 + i * 0.15) * scale, 2.13 * scale, (-0.10 - i * 0.02) * scale);
+    spike.rotation.z = (-0.35 + i * 0.18);
+    root.add(spike);
+  }
   const eyeBand = box(0.34 * scale, 0.045 * scale, 0.51 * scale, mats.road);
   eyeBand.position.set(0, 1.88 * scale, -0.02 * scale);
   root.add(eyeBand);
@@ -439,12 +459,20 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const handB = handA.clone();
   handA.position.set(-0.58 * scale, 0.78 * scale, -0.42 * scale);
   handB.position.set(0.64 * scale, 0.84 * scale, -0.44 * scale);
-  root.add(handA, handB);
+  const gloveA = box(0.16 * scale, 0.08 * scale, 0.18 * scale, mats.boot);
+  const gloveB = gloveA.clone();
+  gloveA.position.set(-0.58 * scale, 0.82 * scale, -0.42 * scale);
+  gloveB.position.set(0.64 * scale, 0.88 * scale, -0.44 * scale);
+  root.add(handA, handB, gloveA, gloveB);
 
   const gun = box(0.96 * scale, 0.12 * scale, 0.16 * scale, mats.road);
   gun.position.set(0.52 * scale, 1.12 * scale, -0.28 * scale);
   gun.rotation.y = -0.24;
   root.add(gun);
+  const gunStock = box(0.28 * scale, 0.18 * scale, 0.18 * scale, mats.boot);
+  gunStock.position.set(0.06 * scale, 1.05 * scale, -0.15 * scale);
+  gunStock.rotation.y = -0.24;
+  root.add(gunStock);
   const muzzle = cyl(0.08 * scale, 0.08 * scale, 0.16 * scale, accentMat);
   muzzle.position.set(1.05 * scale, 1.12 * scale, -0.42 * scale);
   muzzle.rotation.z = Math.PI / 2;
@@ -507,10 +535,19 @@ function makeZombie(x, z, scale = 1, fast = false) {
   head.rotation.x = 0.28;
   const jaw = box(0.22 * scale, 0.08 * scale, 0.18 * scale, mats.zombie);
   jaw.position.set(0.03 * scale, 1.32 * scale, -0.24 * scale);
+  const teeth = box(0.16 * scale, 0.035 * scale, 0.05 * scale, mats.bone);
+  teeth.position.set(0.03 * scale, 1.29 * scale, -0.34 * scale);
+  const skullPatch = box(0.18 * scale, 0.08 * scale, 0.15 * scale, mats.bone);
+  skullPatch.position.set(-0.08 * scale, 1.54 * scale, -0.17 * scale);
+  skullPatch.rotation.z = -0.22;
   const eyeA = cyl(0.035 * scale, 0.035 * scale, 0.02 * scale, mats.eye, 8);
   const eyeB = eyeA.clone();
   eyeA.position.set(-0.08 * scale, 1.48 * scale, -0.31 * scale);
   eyeB.position.set(0.09 * scale, 1.48 * scale, -0.31 * scale);
+  const bootA = box(0.22 * scale, 0.10 * scale, 0.28 * scale, mats.boot);
+  const bootB = bootA.clone();
+  bootA.position.set(-0.14 * scale, 0.08 * scale, -0.07 * scale);
+  bootB.position.set(0.14 * scale, 0.08 * scale, -0.07 * scale);
   const armA = box(0.12 * scale, 0.58 * scale, 0.14 * scale, mats.zombie);
   const armB = armA.clone();
   armA.position.set(-0.43 * scale, 1.02 * scale, -0.34 * scale);
@@ -521,7 +558,21 @@ function makeZombie(x, z, scale = 1, fast = false) {
   const clawB = clawA.clone();
   clawA.position.set(-0.48 * scale, 0.74 * scale, -0.66 * scale);
   clawB.position.set(0.48 * scale, 0.74 * scale, -0.66 * scale);
-  root.add(legA, legB, body, rag, wound, head, jaw, eyeA, eyeB, armA, armB, clawA, clawB);
+  const fingerA = box(0.04 * scale, 0.14 * scale, 0.035 * scale, mats.bone);
+  const fingerB = fingerA.clone();
+  const fingerC = fingerA.clone();
+  const fingerD = fingerA.clone();
+  fingerA.position.set(-0.54 * scale, 0.68 * scale, -0.72 * scale);
+  fingerB.position.set(-0.45 * scale, 0.68 * scale, -0.73 * scale);
+  fingerC.position.set(0.45 * scale, 0.68 * scale, -0.73 * scale);
+  fingerD.position.set(0.54 * scale, 0.68 * scale, -0.72 * scale);
+  const tornA = box(0.12 * scale, 0.42 * scale, 0.44 * scale, mats.zombieRag);
+  const tornB = tornA.clone();
+  tornA.position.set(-0.34 * scale, 0.82 * scale, -0.06 * scale);
+  tornB.position.set(0.34 * scale, 0.72 * scale, -0.04 * scale);
+  tornA.rotation.z = 0.18;
+  tornB.rotation.z = -0.15;
+  root.add(legA, legB, bootA, bootB, body, rag, wound, head, jaw, teeth, skullPatch, eyeA, eyeB, armA, armB, clawA, clawB, fingerA, fingerB, fingerC, fingerD, tornA, tornB);
   root.position.set(x, 0, z);
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;

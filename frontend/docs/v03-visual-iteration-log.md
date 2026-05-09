@@ -270,3 +270,36 @@ Next iteration direction:
 2. Start a character/zombie asset pass: larger heads, faces, hair/hoods, boots, gloves, weapon silhouettes, torn clothing, and damage-color variation.
 3. Add painted-style impact cards and muzzle flashes in the landscape review so bullets, explosions, and arcs read closer to the reference.
 4. Keep portrait screenshots as small-program ergonomics checks, but judge art direction mainly against the landscape target panel.
+
+## 2026-05-10 Unit Readability Pass
+
+Related work:
+
+- WebGL reference WIP after `4df5a63`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- Player/rival silhouettes gained more readable unit details: boots, face shadow, eyes, hair spikes, gloves, and a stronger weapon stock.
+- Zombies gained undead-specific details: boots, teeth, skull patches, fingers, and torn hanging cloth.
+- The verifier threshold moved from `silhouettePartCount >= 35` to `>= 60` and from `zombieDetailPartCount >= 120` to `>= 200`; the current run reports 68 and 230.
+- In the landscape review, the unit field now reads a little closer to the reference's crowd of distinct zombies surrounding a hero.
+
+What is still far from the reference:
+
+- The target still has hand-authored illustrated characters with expression, clothing folds, armor design, weapons, and strong color grouping; this pass is still procedural geometry.
+- Zombie posture needs more variety: crawlers, bent backs, different heads, torn shirts, backpacks, exposed bones, and skin-color variation.
+- The hero needs class-specific silhouettes to be much stronger: Guardian shield mass, Tech device glow, Ranger rifle/hood profile.
+- Unit animation is still basic movement and scale pulse, not real attack/recoil/hit/death animation.
+
+Next iteration direction:
+
+1. Add class-specific hero silhouettes that are visible in the landscape gameplay panel, not only in the class strip.
+2. Add zombie variants with different heads, cloth colors, hunched angles, and threat poses.
+3. Push weapon/fire animation with muzzle cards and brief recoil so the hero action reads like the reference.
+4. After another WebGL visual pass, start mapping these unit requirements into Cocos prefab/component expectations.
