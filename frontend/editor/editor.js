@@ -235,6 +235,18 @@
   function drawProp(prop, selected) {
     ctx.save();
     ctx.translate(prop.x, prop.y);
+    if (window.KOS_RENDER && typeof window.KOS_RENDER.drawWorldProp === 'function') {
+      ctx.restore();
+      window.KOS_RENDER.drawWorldProp(ctx, prop.x, prop.y, prop.w, prop.h, prop.kind, prop);
+      if (selected) {
+        ctx.save();
+        ctx.strokeStyle = '#f4c95a';
+        ctx.lineWidth = 4 / state.zoom;
+        ctx.strokeRect(prop.x - 4, prop.y - 4, prop.w + 8, prop.h + 8);
+        ctx.restore();
+      }
+      return;
+    }
     ctx.fillStyle = 'rgba(0,0,0,0.32)';
     ctx.fillRect(6, 8, prop.w, prop.h);
     if (prop.kind === 'wreck_car') {
