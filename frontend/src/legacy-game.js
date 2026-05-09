@@ -471,23 +471,71 @@
     // Design space: 400x700 (called inside _applyUIScale)
     var DW = 400, DH = 700;
     ctx.fillStyle = '#0a0a12'; ctx.fillRect(0, 0, DW, DH);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 24px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('选择地图', DW/2, 40);
+    var bg = ctx.createRadialGradient(DW / 2, 170, 20, DW / 2, 210, 360);
+    bg.addColorStop(0, '#25281f');
+    bg.addColorStop(0.55, '#111615');
+    bg.addColorStop(1, '#060808');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, DW, DH);
+    ctx.fillStyle = '#f4c95a'; ctx.font = 'bold 28px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('选择战区', DW/2, 42);
+    ctx.fillStyle = '#9da8a2'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+    ctx.fillText('不同战区影响出生路线、尸群密度和掩体节奏', DW / 2, 62);
     var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
     for (var i = 0; i < mapsForLevel.length; i++) {
-      var my = 70 + i * 55; var sel = i === mapSelect.selectedIndex;
-      ctx.fillStyle = sel ? '#3a5a3a' : '#1a2a3a'; ctx.fillRect(DW/2-120, my, 240, 48);
-      ctx.fillStyle = sel ? '#fff' : '#aaa'; ctx.font = (sel ? 'bold ' : '') + '16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.fillText(mapsForLevel[i].name + ' (Lv.' + mapsForLevel[i].level + ')', DW/2, my + 30);
-      ctx.strokeStyle = '#555'; ctx.lineWidth = 1;
-      ctx.strokeRect(DW/2+90, my+8, 30, 30);
+      var m = mapsForLevel[i];
+      var my = 86 + i * 92; var sel = i === mapSelect.selectedIndex;
+      var cardX = 28, cardW = 344, cardH = 76;
+      ctx.fillStyle = sel ? 'rgba(47,63,41,0.92)' : 'rgba(18,24,25,0.88)';
+      ctx.fillRect(cardX, my, cardW, cardH);
+      ctx.strokeStyle = sel ? '#f4c95a' : 'rgba(157,168,162,0.32)';
+      ctx.lineWidth = sel ? 2 : 1;
+      ctx.strokeRect(cardX + 0.5, my + 0.5, cardW - 1, cardH - 1);
+      var thumbX = cardX + 12, thumbY = my + 10, thumbW = 74, thumbH = 56;
+      ctx.fillStyle = m.color || '#2f3432';
+      ctx.fillRect(thumbX, thumbY, thumbW, thumbH);
+      ctx.fillStyle = 'rgba(88,96,88,0.65)';
+      ctx.fillRect(thumbX + thumbW * 0.43, thumbY, thumbW * 0.16, thumbH);
+      ctx.fillRect(thumbX, thumbY + thumbH * 0.43, thumbW, thumbH * 0.16);
+      ctx.strokeStyle = 'rgba(244,201,90,0.45)';
+      ctx.beginPath();
+      if (m.shape === 'circle') ctx.arc(thumbX + thumbW / 2, thumbY + thumbH / 2, thumbH * 0.36, 0, Math.PI * 2);
+      else if (m.shape === 'hex') {
+        for (var hp = 0; hp < 6; hp++) {
+          var ha = Math.PI / 6 + hp * Math.PI / 3;
+          var hx = thumbX + thumbW / 2 + Math.cos(ha) * thumbH * 0.38;
+          var hy = thumbY + thumbH / 2 + Math.sin(ha) * thumbH * 0.38;
+          if (hp === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+        }
+        ctx.closePath();
+      } else ctx.rect(thumbX + 8, thumbY + 7, thumbW - 16, thumbH - 14);
+      ctx.stroke();
+      ctx.fillStyle = '#8da082';
+      for (var pi = 0; pi < 5; pi++) {
+        ctx.beginPath();
+        ctx.arc(thumbX + 16 + ((pi * 17) % 50), thumbY + 12 + ((pi * 23) % 36), 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = sel ? '#ffffff' : '#d6dbd2';
+      ctx.font = (sel ? 'bold ' : '') + '18px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(m.name, cardX + 102, my + 30);
+      ctx.fillStyle = '#9da8a2'; ctx.font = '11px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      var pace = m.shape === 'hex' ? '侧翼入口多' : (m.shape === 'circle' ? '中心交火快' : '路线清晰');
+      ctx.fillText('Lv.' + m.level + ' · ' + pace + ' · 掩体密度 ' + (m.initialDensity || 7), cardX + 102, my + 52);
+      ctx.fillStyle = sel ? '#f4c95a' : 'rgba(255,255,255,0.22)';
+      ctx.beginPath();
+      ctx.moveTo(cardX + cardW - 32, my + cardH / 2);
+      ctx.lineTo(cardX + cardW - 48, my + cardH / 2 - 12);
+      ctx.lineTo(cardX + cardW - 48, my + cardH / 2 + 12);
+      ctx.closePath(); ctx.fill();
     }
-    ctx.fillStyle = '#4a4'; ctx.fillRect(DW/2-60, DH-60, 120, 40);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 16px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillText('开始', DW/2, DH-35);
-    ctx.fillStyle = '#333'; ctx.fillRect(DW/2-60, DH-110, 120, 36);
-    ctx.fillStyle = '#888'; ctx.fillRect(DW/2-58, DH-108, 116, 32);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-    ctx.fillText('← 返回', DW/2, DH-88);
+    ctx.fillStyle = '#5a3f1a'; ctx.fillRect(226, DH-60, 100, 40);
+    ctx.fillStyle = '#f4c95a'; ctx.fillRect(228, DH-58, 96, 36);
+    ctx.fillStyle = '#1a1204'; ctx.font = 'bold 17px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('开始', 276, DH-34);
+    ctx.fillStyle = '#333'; ctx.fillRect(74, DH-60, 100, 40);
+    ctx.fillStyle = '#888'; ctx.fillRect(76, DH-58, 96, 36);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 15px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+    ctx.fillText('返回', 124, DH-34);
   }
 
   function drawBuildSelect() {
@@ -13672,11 +13720,11 @@
       // Map selection click handling
       var mapsForLevel = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
       for (var mi = 0; mi < mapsForLevel.length; mi++) {
-        var my = 70 + mi * 55;
-        if (dcx > 200-120 && dcx < 200+120 && dcy > my && dcy < my + 48) { mapSelect.selectedIndex = mi; }
+        var my = 86 + mi * 92;
+        if (dcx > 28 && dcx < 372 && dcy > my && dcy < my + 76) { mapSelect.selectedIndex = mi; }
       }
       // Start button
-      if (dcx > 200-60 && dcx < 200+60 && dcy > 700-60 && dcy < 700-20) {
+      if (dcx > 226 && dcx < 326 && dcy > 640 && dcy < 680) {
         var selMaps = mapConfig.filter(function(m) { return m.level <= mapSelect.mapLevel; });
         currentMap = selMaps[mapSelect.selectedIndex] || mapConfig[0];
         mapBoundary = currentMap.boundary;
@@ -13684,7 +13732,7 @@
         selectedBuild = []; // reset build
       }
       // Back button
-      if (dcx > 200-60 && dcx < 200+60 && dcy > 700-110 && dcy < 700-74) { state = 'charSelect'; }
+      if (dcx > 74 && dcx < 174 && dcy > 640 && dcy < 680) { state = 'charSelect'; }
     } else if (state === 'charSelect') {
       // Convert screen coords to design space (400x700)
       var _dc2 = _toDesignCoords(cx, cy); var dcx2 = _dc2.x, dcy2 = _dc2.y;
