@@ -39,6 +39,7 @@ function _enterGame(playerData) {
   document.getElementById('bar-level').textContent = 'Lv.' + (playerData.level || 1);
   // Set gold in game
   if (typeof window._setPlayerGold === 'function') window._setPlayerGold(playerData.gold || 0);
+  if (playerData.offlineGuest) return;
   // Claim daily reward automatically
   _apiRequest('POST', '/api/players/' + playerData.id + '/claim-daily-reward', null, function(err, reward) {
     if (!err && reward && reward.description) {
@@ -54,6 +55,19 @@ function _enterGame(playerData) {
         });
       }, 2000);
     }
+  });
+}
+
+function doGuestPlay() {
+  var nickname = document.getElementById('nickname-input').value.trim() || 'Player 1';
+  _showMsg('离线模式已准备', false);
+  _enterGame({
+    id: 'offline_' + Date.now(),
+    nickname: nickname,
+    gold: 0,
+    level: 1,
+    rank: '离线',
+    offlineGuest: true
   });
 }
 
