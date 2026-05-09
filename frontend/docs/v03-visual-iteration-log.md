@@ -70,3 +70,34 @@ Next iteration direction:
 3. Push ground art closer to the reference: cracked asphalt chunks, non-uniform tile edges, debris clusters, grass tufts, rust stains, and darker vignette.
 4. Improve phone UI composition: circular minimap, skill buttons with icon art, smaller readable HUD clusters, and stronger frame depth.
 5. In parallel, continue turning `cocos-v03-demo/` into a real Cocos scene so the improved target can move into the production engine.
+
+## 2026-05-10 Character Silhouette Pass
+
+Related work:
+
+- WebGL reference WIP after `290a7d5`
+
+Reviewed screenshot:
+
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- The Ranger now has a more readable silhouette: hair block, eye band, hands, shoulder armor, backpack, cloak, and longer weapon profile.
+- Zombies now read less like plain boxes: hunched torso, rag layer, forward arms, jaw block, claws, brighter eyes, and varied scale.
+- Skill FX now has visible projectile tips and muzzle flash, so FAN/weapon fire reads more like active combat instead of static tan beams.
+- The gate now records `silhouettePartCount`, `zombieDetailPartCount`, and `fxTipCount`, which prevents future visual passes from accidentally dropping these details.
+
+What is still far from the reference:
+
+- The assets are still procedural low-poly blocks. The reference has illustrated characters with expressive faces, hair shapes, cloth folds, gloves, boots, and deliberate weapon silhouettes.
+- Zombies still lack strong undead personality: no torn clothing shapes beyond simple blocks, no curved spine, no hands/fingers, no readable bite/skin damage.
+- FX is brighter but still not art-directed enough: no fan bullet sprites, no impact sparks, no electric branching for ARC in the main phone shot, no BOOM shock ring in live combat.
+- The ground still looks like a uniform grid. The reference has painterly asphalt variation, rubble, grass tufts, rust stains, and debris clusters that break the tile pattern.
+
+Next iteration direction:
+
+1. Replace more box geometry with silhouette-focused primitives: wedge shoulders, hood/hair shapes, boots, gloves, curved zombie arms, and larger asymmetric zombie heads.
+2. Add live skill-specific FX states: FAN bullet sprites, BOOM ring/explosion on hit, ARC branching lightning in the playable phone view.
+3. Add ground detail decals: crack lines, rubble clusters, grass tufts, oil/rust stains, and tile edge noise around the player area.
+4. Move phone HUD toward the reference: circular minimap, icon-like skill buttons, and a heavier device/frame treatment.

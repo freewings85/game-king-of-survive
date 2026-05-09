@@ -47,12 +47,16 @@ const mats = {
   rival: new THREE.MeshStandardMaterial({ color: 0x3b2d28, roughness: 0.62, metalness: 0.10 }),
   rivalAccent: new THREE.MeshStandardMaterial({ color: 0xff8b3d, roughness: 0.36, emissive: 0x7a2600, emissiveIntensity: 0.7 }),
   skin: new THREE.MeshStandardMaterial({ color: 0xd2a164, roughness: 0.72 }),
+  hair: new THREE.MeshStandardMaterial({ color: 0x1a1612, roughness: 0.86 }),
+  hand: new THREE.MeshStandardMaterial({ color: 0xc28a55, roughness: 0.76 }),
   zombie: new THREE.MeshStandardMaterial({ color: 0x83936f, roughness: 0.88 }),
   zombieCloth: new THREE.MeshStandardMaterial({ color: 0x3b3027, roughness: 0.9 }),
+  zombieRag: new THREE.MeshStandardMaterial({ color: 0x6c5838, roughness: 0.92 }),
   eye: new THREE.MeshStandardMaterial({ color: 0xff5a3d, emissive: 0xff2510, emissiveIntensity: 1.8 }),
   xp: new THREE.MeshStandardMaterial({ color: 0x7cff4f, emissive: 0x37ff20, emissiveIntensity: 1.5 }),
   gold: new THREE.MeshStandardMaterial({ color: 0xf4c95a, emissive: 0x6f4c05, emissiveIntensity: 0.45 }),
-  orange: new THREE.MeshStandardMaterial({ color: 0xff8b3d, emissive: 0x7a2600, emissiveIntensity: 0.8 })
+  orange: new THREE.MeshStandardMaterial({ color: 0xff8b3d, emissive: 0x7a2600, emissiveIntensity: 0.8 }),
+  muzzle: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.9 })
 };
 
 const tileMats = [
@@ -90,6 +94,8 @@ const game = {
   hitTimer: 0,
   input: { active: false, id: null, startX: 0, startY: 0, x: 0, y: 0 }
 };
+let silhouettePartCount = 0;
+let zombieDetailPartCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -380,6 +386,13 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const head = cyl(0.24 * scale, 0.24 * scale, 0.34 * scale, mats.skin, 24);
   head.position.y = 1.82 * scale;
   root.add(head);
+  const hair = box(0.42 * scale, 0.16 * scale, 0.38 * scale, mats.hair);
+  hair.position.set(-0.03 * scale, 2.04 * scale, -0.03 * scale);
+  hair.rotation.z = -0.18;
+  root.add(hair);
+  const eyeBand = box(0.34 * scale, 0.045 * scale, 0.51 * scale, mats.road);
+  eyeBand.position.set(0, 1.88 * scale, -0.02 * scale);
+  root.add(eyeBand);
   const visor = box(0.44 * scale, 0.09 * scale, 0.50 * scale, accentMat);
   visor.position.y = 1.90 * scale;
   root.add(visor);
@@ -391,6 +404,18 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   shoulderA.position.set(-0.52 * scale, 1.46 * scale, 0);
   shoulderB.position.set(0.52 * scale, 1.46 * scale, 0);
   root.add(shoulderA, shoulderB);
+  const elbowA = cyl(0.075 * scale, 0.075 * scale, 0.58 * scale, colorMat, 10);
+  const elbowB = elbowA.clone();
+  elbowA.position.set(-0.54 * scale, 1.02 * scale, -0.18 * scale);
+  elbowB.position.set(0.54 * scale, 1.02 * scale, -0.18 * scale);
+  elbowA.rotation.x = -0.55;
+  elbowB.rotation.x = -0.55;
+  root.add(elbowA, elbowB);
+  const handA = cyl(0.085 * scale, 0.085 * scale, 0.10 * scale, mats.hand, 12);
+  const handB = handA.clone();
+  handA.position.set(-0.58 * scale, 0.78 * scale, -0.42 * scale);
+  handB.position.set(0.64 * scale, 0.84 * scale, -0.44 * scale);
+  root.add(handA, handB);
 
   const gun = box(0.96 * scale, 0.12 * scale, 0.16 * scale, mats.road);
   gun.position.set(0.52 * scale, 1.12 * scale, -0.28 * scale);
@@ -432,6 +457,7 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
     if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
+      silhouettePartCount += 1;
     }
   });
   return root;
@@ -446,21 +472,32 @@ function makeZombie(x, z, scale = 1, fast = false) {
   legB.position.set(0.14 * scale, 0.30 * scale, 0);
   const body = box((fast ? 0.48 : 0.62) * scale, 0.82 * scale, 0.38 * scale, mats.zombieCloth);
   body.position.y = 0.92 * scale;
+  body.rotation.x = -0.18;
+  const rag = box((fast ? 0.54 : 0.68) * scale, 0.34 * scale, 0.42 * scale, mats.zombieRag);
+  rag.position.set(0.02 * scale, 1.03 * scale, -0.04 * scale);
+  rag.rotation.x = -0.2;
   const wound = box((fast ? 0.28 : 0.36) * scale, 0.10 * scale, 0.40 * scale, mats.eye);
   wound.position.set(0.05 * scale, 1.05 * scale, -0.01 * scale);
   const head = cyl(0.22 * scale, 0.23 * scale, 0.28 * scale, mats.zombie, 18);
-  head.position.y = 1.50 * scale;
+  head.position.set(0, 1.44 * scale, -0.11 * scale);
+  head.rotation.x = 0.28;
+  const jaw = box(0.22 * scale, 0.08 * scale, 0.18 * scale, mats.zombie);
+  jaw.position.set(0.03 * scale, 1.32 * scale, -0.24 * scale);
   const eyeA = cyl(0.035 * scale, 0.035 * scale, 0.02 * scale, mats.eye, 8);
   const eyeB = eyeA.clone();
-  eyeA.position.set(-0.07 * scale, 1.54 * scale, -0.21 * scale);
-  eyeB.position.set(0.08 * scale, 1.54 * scale, -0.21 * scale);
+  eyeA.position.set(-0.08 * scale, 1.48 * scale, -0.31 * scale);
+  eyeB.position.set(0.09 * scale, 1.48 * scale, -0.31 * scale);
   const armA = box(0.12 * scale, 0.58 * scale, 0.14 * scale, mats.zombie);
   const armB = armA.clone();
-  armA.position.set(-0.42 * scale, 0.98 * scale, -0.18 * scale);
-  armB.position.set(0.42 * scale, 0.98 * scale, -0.18 * scale);
-  armA.rotation.x = -0.72;
-  armB.rotation.x = -0.72;
-  root.add(legA, legB, body, wound, head, eyeA, eyeB, armA, armB);
+  armA.position.set(-0.43 * scale, 1.02 * scale, -0.34 * scale);
+  armB.position.set(0.43 * scale, 1.02 * scale, -0.34 * scale);
+  armA.rotation.x = -1.08;
+  armB.rotation.x = -1.08;
+  const clawA = cyl(0.055 * scale, 0.055 * scale, 0.12 * scale, mats.zombie, 8);
+  const clawB = clawA.clone();
+  clawA.position.set(-0.48 * scale, 0.74 * scale, -0.66 * scale);
+  clawB.position.set(0.48 * scale, 0.74 * scale, -0.66 * scale);
+  root.add(legA, legB, body, rag, wound, head, jaw, eyeA, eyeB, armA, armB, clawA, clawB);
   root.position.set(x, 0, z);
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;
@@ -472,6 +509,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
     if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
       o.receiveShadow = true;
+      zombieDetailPartCount += 1;
     }
   });
   scene.add(root);
@@ -668,6 +706,19 @@ function makeTracer(i) {
   tracers.push({ beam, phase: i * 0.75, mat });
 }
 for (let i = 0; i < 8; i++) makeTracer(i);
+
+const muzzleFlash = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.44, 18), mats.muzzle);
+muzzleFlash.rotation.z = -Math.PI / 2;
+muzzleFlash.castShadow = false;
+scene.add(muzzleFlash);
+
+const projectileTips = [];
+for (let i = 0; i < 8; i++) {
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 8), mats.muzzle.clone());
+  tip.castShadow = false;
+  scene.add(tip);
+  projectileTips.push(tip);
+}
 
 const skillBursts = [];
 for (let i = 0; i < 18; i++) {
@@ -866,6 +917,7 @@ function animate(now) {
     const target = targets[i % Math.max(1, Math.min(targets.length, skill.targets))]?.z;
     if (!target) {
       tr.beam.visible = false;
+      if (projectileTips[i]) projectileTips[i].visible = false;
       return;
     }
     tr.beam.visible = i < skill.targets + 3;
@@ -879,7 +931,20 @@ function animate(now) {
     tr.beam.scale.x = dist / 1.6;
     tr.beam.rotation.y = Math.atan2(px - tx, pz - tz) + Math.PI / 2;
     tr.mat.opacity = 0.22 + Math.abs(Math.sin(t * skill.pulse + tr.phase)) * 0.62;
+    if (projectileTips[i]) {
+      projectileTips[i].visible = tr.beam.visible;
+      projectileTips[i].position.set(tx, 0.82 + Math.sin(t * 18 + i) * 0.04, tz);
+      projectileTips[i].scale.setScalar(activeSkill === 'boom' ? 1.8 : 1 + Math.sin(t * 12 + i) * 0.18);
+      projectileTips[i].material.color.setHex(skill.color);
+      projectileTips[i].material.opacity = tr.mat.opacity;
+    }
   });
+
+  const muzzlePulse = 0.45 + Math.abs(Math.sin(t * 18)) * 0.8;
+  muzzleFlash.position.set(player.position.x + 0.82, 1.12, player.position.z - 0.48);
+  muzzleFlash.scale.setScalar(muzzlePulse);
+  muzzleFlash.material.opacity = nearestZombies((skillDefs[activeSkill] || skillDefs.arc).range).length ? 0.34 + muzzlePulse * 0.34 : 0;
+  muzzleFlash.rotation.y = player.rotation.y - Math.PI / 2;
 
   skillBursts.forEach((orb, i) => {
     const skill = skillDefs[activeSkill] || skillDefs.arc;
@@ -900,6 +965,9 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.xpDropped = game.xpDropped;
   window.__V03_ENGINE_DEMO_STATE.livingZombieCount = livingZombies().length;
   window.__V03_ENGINE_DEMO_STATE.visibleGemCount = gems.filter((gem) => gem.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.silhouettePartCount = silhouettePartCount;
+  window.__V03_ENGINE_DEMO_STATE.zombieDetailPartCount = zombieDetailPartCount;
+  window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.lastKillAgo = game.lastKillAt ? Number((t - game.lastKillAt).toFixed(2)) : null;
   window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
   window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));
