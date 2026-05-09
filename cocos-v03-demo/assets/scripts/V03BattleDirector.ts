@@ -26,7 +26,9 @@ export class V03BattleDirector extends Component {
     this.fireTimer -= dt;
 
     if (this.fireTimer <= 0) {
-      this.fireTimer = V03_TUNING.fireCooldown;
+      this.fireTimer = this.classId === 'ranger'
+        ? V03_TUNING.rangerFireCooldown
+        : V03_TUNING.defaultFireCooldown;
       this.simulateAutoFire();
     }
 
@@ -47,7 +49,7 @@ export class V03BattleDirector extends Component {
     const skill = V03_SKILLS[this.skillId];
     this.xp += Math.max(1, Math.round(skill.damage / 10));
 
-    const needed = V03_TUNING.levelXp[Math.min(this.level - 1, V03_TUNING.levelXp.length - 1)];
+    const needed = 10 + this.level * 6;
     if (this.xp >= needed) {
       this.xp -= needed;
       this.level += 1;

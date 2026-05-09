@@ -36,12 +36,14 @@ python3 dev-server.py 8081
 - `cocos-v03-demo/`
   - Cocos Creator 3.x vertical slice scaffold.
   - Use this as the production-engine starting point after installing Cocos Creator.
+  - Runtime bridge files are generated with `npm run export:cocos-v03`.
   - The first Cocos demo should match `/frontend/engine-demo/index.html` before replacing the current browser runtime.
 
 ## Verification
 
 ```text
 node e2e/v03-contract-verify.js
+npm run verify:v03
 ```
 
 This quick-starts the V03 contract runtime map, checks the editor standardization gate, and verifies the WebGL engine demo on a mobile viewport.

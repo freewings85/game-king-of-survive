@@ -56,9 +56,23 @@ V03Battle.scene
 ## Source Files
 
 - `assets/scripts/V03BattleDirector.ts`: first-playable component boundary and loop notes.
-- `assets/scripts/V03Config.ts`: class, skill, and tuning data ported from the browser reference.
+- `assets/scripts/V03Config.ts`: typed class, skill, and tuning defaults ported from the browser reference.
 - `assets/scripts/V03MapContract.ts`: Cocos-side map contract shape.
+- `assets/resources/config/v03-runtime-config.json`: generated runtime config bridge from `frontend/src/v03-runtime-config.js`.
+- `assets/resources/config/v03-standard-map.json`: generated standard V03 map bridge from `frontend/src/map-contract.js`.
 - `assets/resources/config/v03-vertical-slice.json`: data-only slice target for designers and programmers.
+
+Regenerate the bridge files from the repo root:
+
+```text
+npm run export:cocos-v03
+```
+
+Verify the browser reference and Cocos bridge stay in sync:
+
+```text
+npm run verify:v03
+```
 
 ## Acceptance
 

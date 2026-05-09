@@ -1,4 +1,4 @@
-export type V03ClassId = 'guardian' | 'engineer' | 'ranger';
+export type V03ClassId = 'guardian' | 'tech' | 'ranger';
 export type V03SkillId = 'arc' | 'boom' | 'fan';
 
 export interface V03ClassDef {
@@ -29,34 +29,34 @@ export const V03_CLASSES: Record<V03ClassId, V03ClassDef> = {
     id: 'guardian',
     name: 'Guardian',
     mark: 'G',
-    body: '#2f4050',
-    accent: '#f0b35a',
-    emissive: '#ffd166',
-    moveSpeed: 112,
-    contactDamage: 0.78,
-    skins: ['#2f4050', '#6b4b3e', '#243447']
+    body: '#3c3430',
+    accent: '#e95b45',
+    emissive: '#5a1109',
+    moveSpeed: 2.45,
+    contactDamage: 5,
+    skins: ['#332d2a', '#62645e', '#7d4f58']
   },
-  engineer: {
-    id: 'engineer',
-    name: 'Engineer',
-    mark: 'E',
-    body: '#303644',
-    accent: '#44d7b6',
-    emissive: '#5fffe1',
-    moveSpeed: 104,
-    contactDamage: 0.88,
-    skins: ['#303644', '#2f5f56', '#503f58']
+  tech: {
+    id: 'tech',
+    name: 'Tech Engineer',
+    mark: 'T',
+    body: '#243436',
+    accent: '#4ec9ff',
+    emissive: '#0d4d66',
+    moveSpeed: 2.75,
+    contactDamage: 8,
+    skins: ['#193743', '#2f6068', '#7b315d']
   },
   ranger: {
     id: 'ranger',
     name: 'Ranger',
     mark: 'R',
     body: '#2e3b2f',
-    accent: '#ff6b6b',
-    emissive: '#ff8f70',
-    moveSpeed: 126,
-    contactDamage: 1,
-    skins: ['#2e3b2f', '#5b3a33', '#283746']
+    accent: '#78d66a',
+    emissive: '#184a15',
+    moveSpeed: 3.1,
+    contactDamage: 8,
+    skins: ['#314027', '#5a5534', '#283746']
   }
 };
 
@@ -64,41 +64,48 @@ export const V03_SKILLS: Record<V03SkillId, V03SkillDef> = {
   arc: {
     id: 'arc',
     name: 'ARC',
-    color: '#62e5ff',
-    pulse: '#c9fbff',
-    range: 5.8,
-    damage: 16,
-    targets: 3,
-    spread: 0.18
+    color: '#4ec9ff',
+    pulse: 4.5,
+    range: 6.2,
+    damage: 8,
+    targets: 2,
+    spread: 0.85
   },
   boom: {
     id: 'boom',
     name: 'BOOM',
-    color: '#ffbd58',
-    pulse: '#fff0a6',
-    range: 4.8,
-    damage: 28,
+    color: '#ff8b3d',
+    pulse: 2.4,
+    range: 5.4,
+    damage: 13,
     targets: 1,
-    spread: 0.42
+    spread: 1.15
   },
   fan: {
     id: 'fan',
     name: 'FAN',
-    color: '#c084fc',
-    pulse: '#f0d6ff',
-    range: 5.2,
-    damage: 11,
+    color: '#f4c95a',
+    pulse: 6,
+    range: 5.8,
+    damage: 4,
     targets: 5,
-    spread: 0.75
+    spread: 1.8
   }
 };
 
 export const V03_TUNING = {
-  playerHp: 120,
-  fireCooldown: 0.44,
+  playerHp: 100,
+  rangerFireCooldown: 0.34,
+  defaultFireCooldown: 0.42,
+  hitCooldown: 0.42,
   pickupMagnetRange: 2.4,
   pickupCollectRange: 0.42,
-  levelXp: [6, 14, 24, 38],
+  killXp: 10,
+  pickupXp: 4,
+  levelHealOnKill: 12,
+  levelHealOnPickup: 10,
+  aliveDropPerKills: 4,
+  minAlive: 2,
   safeZoneStartRadius: 11.5,
   safeZoneShrinkPerSecond: 0.015
 };
