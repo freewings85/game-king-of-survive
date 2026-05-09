@@ -5458,14 +5458,14 @@
   var mapZones = []; // loaded from map JSON: { id, type, shape, center, radius, bounds, ... }
   var mapTerrainFeatures = []; // loaded from map JSON: { type, shape, ... }
   var zoneTypeColors = {
-    spawn: 'rgba(100,200,100,0.15)',
-    outer: 'rgba(80,150,80,0.12)',
-    middle: 'rgba(200,180,60,0.12)',
-    inner: 'rgba(200,60,60,0.12)',
-    boss_lair: 'rgba(160,0,0,0.18)',
-    resource: 'rgba(60,60,200,0.12)',
-    safe: 'rgba(100,200,100,0.1)',
-    normal: 'rgba(150,150,100,0.08)'
+    spawn: 'rgba(100,200,100,0.04)',
+    outer: 'rgba(80,150,80,0.025)',
+    middle: 'rgba(200,180,60,0.035)',
+    inner: 'rgba(200,60,60,0.045)',
+    boss_lair: 'rgba(160,0,0,0.06)',
+    resource: 'rgba(60,60,200,0.035)',
+    safe: 'rgba(100,200,100,0.025)',
+    normal: 'rgba(150,150,100,0.02)'
   };
   var zoneTypeLabels = {
     spawn: '出生点', outer: '外围区', middle: '中间区', inner: '核心区',
@@ -5533,28 +5533,19 @@
       var z = mapZones[i];
       var color = zoneTypeColors[z.type] || 'rgba(100,100,100,0.1)';
       ctx.fillStyle = color;
+      var borderColor = z.type === 'boss_lair' ? 'rgba(255,72,56,0.16)' : (z.type === 'spawn' ? 'rgba(120,255,130,0.12)' : 'rgba(255,230,120,0.08)');
       if (z.shape === 'circle' && z.center) {
         ctx.beginPath();
         ctx.arc(z.center.x, z.center.y, z.radius, 0, Math.PI * 2);
         ctx.fill();
-        // Border
-        ctx.strokeStyle = color.replace(/[\d.]+\)$/, '0.4)');
+        ctx.strokeStyle = borderColor;
         ctx.lineWidth = 1;
         ctx.stroke();
-        // Label
-        ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
-        ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(z.name, z.center.x, z.center.y - z.radius - 5);
       } else if (z.bounds) {
         ctx.fillRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
-        // Border
-        ctx.strokeStyle = color.replace(/[\d.]+\)$/, '0.4)');
+        ctx.strokeStyle = borderColor;
         ctx.lineWidth = 1;
         ctx.strokeRect(z.bounds.x, z.bounds.y, z.bounds.width, z.bounds.height);
-        // Label
-        ctx.fillStyle = color.replace(/[\d.]+\)$/, '0.6)');
-        ctx.font = '11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(z.name, z.bounds.x + z.bounds.width / 2, z.bounds.y - 5);
       }
     }
     // Draw speed pads
