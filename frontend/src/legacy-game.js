@@ -6562,6 +6562,9 @@
   //   5 (swamp) → mud (暗棕 + puddle)
   //   6 (snow)  → gravel (暗灰 + 颗粒)
   function drawLdoeTile(ctx, x, y, sz, biomeId, h) {
+    if (window.KOS_RENDER && typeof window.KOS_RENDER.drawMapTile === 'function') {
+      if (window.KOS_RENDER.drawMapTile(ctx, x, y, sz, biomeId, h)) return;
+    }
     var hr = (h * 2654435761) >>> 0;
     if (biomeId === 1) { // dirt
       ctx.fillStyle = '#5a4a32'; ctx.fillRect(x, y, sz, sz);
