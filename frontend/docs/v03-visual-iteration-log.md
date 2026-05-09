@@ -627,3 +627,36 @@ Next iteration direction:
 1. Build a stronger authored-looking prop wear/decal pass in the WebGL reference so wreck cars, walls, barrels, crates, and debris move closer to the target image's illustrated depth.
 2. When Cocos Creator is available, replace placeholder prop-ground boxes with actual prefabs and capture `cocos-v03-phone-portrait.png` / `cocos-v03-phone-landscape.png`.
 3. Continue comparing every visual pass against the target image and record the remaining gap before moving to the next pass.
+
+## 2026-05-10 WebGL Prop Wear Decal Pass
+
+Related work:
+
+- WebGL reference WIP after `2be9c22`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- Wreck cars now have dark hood panels, glass cards, headlights, edge highlights, and scratch stacks.
+- Walls now have front edge highlights, dark vertical cracks, and lighter scratch marks.
+- Crates, barrels, tires, and debris now carry readable wear decals instead of relying only on clean box/cylinder materials.
+- The verifier now requires `propWearCount >= 80`; the current WebGL reference reports `propWearCount: 133`.
+- This makes the prop layer feel more like authored battle-royale cover instead of placeholder geometry.
+
+What is still far from the reference:
+
+- These are still geometry decals, not hand-painted textures with brush variation.
+- The target image has stronger global value grouping, rim lighting, and chunkier prop silhouettes.
+- Cocos visual contract does not yet require the new prop-wear decal categories.
+- The mobile screenshot is closer in prop density, but the overall illustration quality still depends on stronger lighting/material treatment.
+
+Next iteration direction:
+
+1. Mirror prop-wear decal categories into the Cocos visual contract/checklist if they remain mandatory for the final look.
+2. Add stronger silhouette shaping and large readable value blocks to cars/walls so they read more like the target image at phone scale.
+3. Improve scene lighting contrast and rim color without reducing zombie/player readability.

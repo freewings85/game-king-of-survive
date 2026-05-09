@@ -69,6 +69,11 @@ const mats = {
   oil: new THREE.MeshBasicMaterial({ color: 0x080b0a, transparent: true, opacity: 0.30, side: THREE.DoubleSide }),
   rustStain: new THREE.MeshBasicMaterial({ color: 0x8b4a25, transparent: true, opacity: 0.34, side: THREE.DoubleSide }),
   rubble: new THREE.MeshStandardMaterial({ color: 0x777568, roughness: 0.98 }),
+  propEdge: new THREE.MeshBasicMaterial({ color: 0xf0d189, transparent: true, opacity: 0.72 }),
+  propDarkWear: new THREE.MeshBasicMaterial({ color: 0x15110d, transparent: true, opacity: 0.68 }),
+  propScratch: new THREE.MeshBasicMaterial({ color: 0xffd79a, transparent: true, opacity: 0.76 }),
+  propGlass: new THREE.MeshBasicMaterial({ color: 0x86d7ff, transparent: true, opacity: 0.42 }),
+  hazard: new THREE.MeshBasicMaterial({ color: 0xf6c84f, transparent: true, opacity: 0.84 }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -119,6 +124,7 @@ let silhouettePartCount = 0;
 let zombieDetailPartCount = 0;
 let groundDetailCount = 0;
 let unitDecalCount = 0;
+let propWearCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -173,6 +179,25 @@ function addPropGroundScatter(root, radiusX = 1, radiusZ = 0.6, count = 4) {
   }
 }
 
+function addPropWear(root, w, h, d, mat, x, y, z, ry = 0) {
+  const decal = box(w, h, d, mat);
+  decal.position.set(x, y, z);
+  decal.rotation.y = ry;
+  decal.castShadow = false;
+  decal.receiveShadow = false;
+  decal.userData.propWear = true;
+  root.add(decal);
+  propWearCount += 1;
+  return decal;
+}
+
+function addScratchStack(root, x, y, z, width, count, mat = mats.propScratch) {
+  for (let i = 0; i < count; i++) {
+    const scratch = addPropWear(root, width * (0.58 + i * 0.12), 0.018, 0.028, mat, x + i * 0.035, y + i * 0.055, z, (i - 1) * 0.22);
+    scratch.rotation.z = (i % 2 ? -0.18 : 0.14);
+  }
+}
+
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -212,6 +237,10 @@ function makeCrate(x, z, s = 1) {
   plank.position.set(0, s * 0.82, 0);
   plank.rotation.y = Math.PI / 4;
   root.add(plank);
+  addPropWear(root, s * 0.78, s * 0.055, s * 0.05, mats.propDarkWear, 0, s * 0.58, -s * 0.53);
+  addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, -s * 0.42, s * 0.52, -s * 0.535);
+  addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, s * 0.42, s * 0.52, -s * 0.535);
+  addScratchStack(root, -s * 0.12, s * 0.36, -s * 0.55, s * 0.30, 3);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
   root.position.set(x, 0, z);
   scene.add(root);
@@ -227,6 +256,14 @@ function makeWreck(x, z, rot) {
   const cabin = box(0.8, 0.45, 0.82, mats.wall);
   cabin.position.set(-0.25, 0.85, -0.05);
   root.add(cabin);
+  addPropWear(root, 0.95, 0.05, 0.78, mats.propDarkWear, 0.42, 0.66, -0.02);
+  addPropWear(root, 0.76, 0.035, 0.08, mats.propEdge, -0.72, 0.66, -0.56);
+  addPropWear(root, 0.62, 0.035, 0.08, mats.propEdge, 0.66, 0.67, -0.56);
+  addPropWear(root, 0.36, 0.25, 0.055, mats.propGlass, -0.32, 0.94, -0.48);
+  addPropWear(root, 0.16, 0.12, 0.06, mats.hotCore, -1.06, 0.41, -0.56);
+  addPropWear(root, 0.16, 0.12, 0.06, mats.hotCore, 1.02, 0.41, -0.56);
+  addScratchStack(root, 0.06, 0.48, -0.57, 0.46, 5);
+  addScratchStack(root, -0.54, 0.78, 0.46, 0.30, 3, mats.propDarkWear);
   for (const dx of [-0.7, 0.75]) {
     const wheel = cyl(0.18, 0.18, 0.18, new THREE.MeshStandardMaterial({ color: 0x070908 }));
     wheel.rotation.z = Math.PI / 2;
@@ -250,6 +287,10 @@ function makeWall(x, z, w, d) {
   const cap = box(w * 1.04, 0.08, d * 1.04, mats.road);
   cap.position.y = 1.39;
   root.add(cap);
+  addPropWear(root, w * 0.86, 0.04, Math.max(0.035, d * 0.18), mats.propEdge, 0, 1.12, -d * 0.54);
+  addPropWear(root, Math.max(0.035, w * 0.025), 0.82, Math.max(0.035, d * 0.16), mats.propDarkWear, -w * 0.25, 0.68, -d * 0.55);
+  addPropWear(root, Math.max(0.035, w * 0.025), 0.62, Math.max(0.035, d * 0.16), mats.propDarkWear, w * 0.18, 0.78, -d * 0.55);
+  addScratchStack(root, -w * 0.08, 0.52, -d * 0.57, Math.max(0.18, w * 0.18), 4);
   addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
   root.position.set(x, 0, z);
   scene.add(root);
@@ -265,6 +306,9 @@ function makeBarrel(x, z, s = 1) {
   const cap = cyl(0.23 * s, 0.23 * s, 0.04 * s, mats.orange, 18);
   cap.position.y = 0.56 * s;
   root.add(cap);
+  addPropWear(root, 0.38 * s, 0.055 * s, 0.035 * s, mats.hazard, 0, 0.40 * s, -0.22 * s);
+  addPropWear(root, 0.28 * s, 0.035 * s, 0.035 * s, mats.propEdge, 0.02 * s, 0.57 * s, -0.20 * s);
+  addScratchStack(root, -0.05 * s, 0.23 * s, -0.225 * s, 0.18 * s, 3);
   addPropGroundScatter(root, 0.38 * s, 0.32 * s, 4);
   root.position.set(x, 0, z);
   root.traverse((o) => {
@@ -286,6 +330,7 @@ function makeTires(x, z, s = 1) {
     tire.rotation.z = Math.PI / 2;
     tire.position.set((i - 1) * 0.28 * s, 0.18 * s, (i % 2) * 0.12 * s);
     root.add(tire);
+    addPropWear(root, 0.20 * s, 0.025 * s, 0.035 * s, mats.propEdge, (i - 1) * 0.28 * s, 0.32 * s, (i % 2) * 0.12 * s - 0.18 * s, i * 0.35);
   }
   addPropGroundScatter(root, 0.62 * s, 0.38 * s, 3);
   root.position.set(x, 0, z);
@@ -307,6 +352,7 @@ function makeDebris(x, z, s = 1) {
     chunk.position.set((i - 1.5) * 0.22 * s, 0.08 * s, (i % 2 ? -0.14 : 0.16) * s);
     chunk.rotation.y = i * 0.42;
     root.add(chunk);
+    addPropWear(root, (0.16 + i * 0.025) * s, 0.025 * s, 0.035 * s, i % 2 ? mats.propEdge : mats.propDarkWear, chunk.position.x, 0.18 * s, chunk.position.z - 0.13 * s, i * 0.38);
   }
   addPropGroundScatter(root, 0.68 * s, 0.42 * s, 4);
   root.position.set(x, 0, z);
@@ -1536,6 +1582,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.zombieDetailPartCount = zombieDetailPartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieVariantCount = new Set(zombies.map((z) => z.userData.variantName)).size;
   window.__V03_ENGINE_DEMO_STATE.unitDecalCount = unitDecalCount;
+  window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
