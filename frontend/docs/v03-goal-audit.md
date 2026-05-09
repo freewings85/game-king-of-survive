@@ -30,6 +30,7 @@ This audit is not a completion claim. It lists the current evidence and the rema
 - The WebGL reference uses procedural primitives. It communicates depth, layout, skills, classes, and pacing, but it does not yet provide production-ready animated character/zombie assets.
 - The V03 shell and editor are landscape desktop review surfaces. The phone-oriented playable reference is `frontend/engine-demo/`; the final phone client should be the Cocos vertical slice.
 - Current automated visual gates verify structure and screenshots, but do not perform pixel-level art-direction comparison against the candidate image.
+- Visual progress must be reviewed against `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png` after every meaningful iteration and recorded in `frontend/docs/v03-visual-iteration-log.md`.
 
 ## Next Recommended Work
 
