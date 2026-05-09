@@ -72,10 +72,15 @@ async function verifyEditor(browser) {
     hasStandardize: typeof window.KOS_MAP_CONTRACT.standardizeMap === 'function',
     qualityRows: document.querySelectorAll('#qualityList .quality').length,
     warnRows: document.querySelectorAll('#qualityList .quality.warn').length,
+    previewUsesMap: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewUsesMap,
+    previewTileCount: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewTileCount,
+    previewPropCount: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewPropCount,
+    previewZombieEntries: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewZombieEntries,
+    previewRewardPoints: window.__V03_EDITOR_STATE && window.__V03_EDITOR_STATE.previewRewardPoints,
     status: document.getElementById('statusText').textContent
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasStandardize || info.qualityRows !== 8 || info.warnRows !== 0) {
+  if (errors.length || !info.hasStandardize || info.qualityRows !== 8 || info.warnRows !== 0 || !info.previewUsesMap || info.previewTileCount < 500 || info.previewPropCount < 20 || info.previewZombieEntries < 4 || info.previewRewardPoints < 8) {
     fail('V03 editor verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'editor-standard-map.png');

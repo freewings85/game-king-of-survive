@@ -234,6 +234,73 @@
     drawPhoneHud(ctx, w, h, cls, t);
   }
 
+  function drawMapPreview(ctx, w, h, map, cls, time) {
+    cls = cls || { color: '#4ec9ff', id: 'tech', mark: 'T' };
+    var t = time || 0;
+    if (!map) {
+      drawPhoneScene(ctx, w, h, cls, t);
+      return { tileCount: 0, propCount: 0, zombieEntries: 0, rewardPoints: 0 };
+    }
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#111514';
+    ctx.fillRect(0, 0, w, h);
+
+    var tileSize = map.tileSize || 64;
+    var scale = Math.min(w / map.width, h / map.height) * 1.22;
+    var ox = (w - map.width * scale) / 2;
+    var oy = (h - map.height * scale) / 2 + h * 0.03;
+
+    ctx.save();
+    ctx.translate(ox, oy);
+    ctx.scale(scale, scale);
+    for (var y = 0; y < map.rows; y++) {
+      for (var x = 0; x < map.cols; x++) {
+        var id = map.tiles[y * map.cols + x] | 0;
+        if (window.KOS_RENDER && window.KOS_RENDER.drawMapTile) {
+          window.KOS_RENDER.drawMapTile(ctx, x * tileSize, y * tileSize, tileSize, id, ((x * 73856093) ^ (y * 19349663)) >>> 0);
+        }
+      }
+    }
+
+    var props = (map.structures || []).slice().sort(function(a, b) {
+      return (a.y + a.h) - (b.y + b.h);
+    });
+    props.forEach(function(prop) {
+      if (window.KOS_RENDER && window.KOS_RENDER.drawWorldProp) {
+        window.KOS_RENDER.drawWorldProp(ctx, prop.x, prop.y, prop.w, prop.h, prop.kind, prop);
+      }
+    });
+
+    var center = map.stormCenter || { x: map.width / 2, y: map.height / 2 };
+    ctx.strokeStyle = 'rgba(185,92,255,0.65)';
+    ctx.lineWidth = 5 / scale;
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, Math.min(map.width, map.height) * 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+
+    var spawn = (map.spawnPoints && map.spawnPoints[0]) || { x: map.width * 0.48, y: map.height * 0.56 };
+    drawSurvivor(ctx, spawn.x, spawn.y, 46 / scale, cls.color, cls.id);
+    (map.zombieEntries || []).slice(0, 8).forEach(function(entry, i) {
+      var zx = entry.x + Math.sin(t + i) * 18;
+      var zy = entry.y + Math.cos(t * 0.8 + i) * 14;
+      drawZombie(ctx, zx, zy, (i % 3 === 0 ? 38 : 30) / scale, i % 3 === 0 ? '#6f7b4d' : '#92986e');
+      drawBullet(ctx, spawn.x + 30 / scale, spawn.y - 12 / scale, zx, zy, '#ffd36a', 5 / scale);
+    });
+    (map.rewardPoints || []).slice(0, 8).forEach(function(point) {
+      drawGem(ctx, point.x, point.y, 10 / scale);
+    });
+    ctx.restore();
+
+    drawPhoneHud(ctx, w, h, cls, t);
+    return {
+      tileCount: (map.tiles || []).length,
+      propCount: (map.structures || []).length,
+      zombieEntries: (map.zombieEntries || []).length,
+      rewardPoints: (map.rewardPoints || []).length
+    };
+  }
+
   function drawPhoneHud(ctx, w, h, cls, t) {
     ctx.save();
     ctx.fillStyle = 'rgba(7,9,9,0.62)';
@@ -285,6 +352,7 @@
     drawSkillArt: drawSkillArt,
     drawCombatShot: drawCombatShot,
     drawPhoneScene: drawPhoneScene,
+    drawMapPreview: drawMapPreview,
     drawPhoneHud: drawPhoneHud
   };
 })();

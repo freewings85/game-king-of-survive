@@ -564,11 +564,18 @@
     var canvas = qs('v03Preview');
     if (!canvas || !window.KOS_RENDER || !window.KOS_RENDER.v03) return;
     var ctx2 = canvas.getContext('2d');
-    window.KOS_RENDER.v03.drawPhoneScene(ctx2, canvas.width, canvas.height, {
+    var meta = window.KOS_RENDER.v03.drawMapPreview(ctx2, canvas.width, canvas.height, state.map, {
       id: 'tech',
       mark: 'T',
       color: '#4ec9ff'
     }, Date.now() / 1000);
+    window.__V03_EDITOR_STATE = {
+      previewUsesMap: !!meta && meta.tileCount === state.map.tiles.length,
+      previewTileCount: meta && meta.tileCount,
+      previewPropCount: meta && meta.propCount,
+      previewZombieEntries: meta && meta.zombieEntries,
+      previewRewardPoints: meta && meta.rewardPoints
+    };
   }
 
   function addMissingPoints(listName, points) {
