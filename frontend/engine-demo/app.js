@@ -62,7 +62,8 @@ const mats = {
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
-  arcGlow: new THREE.MeshBasicMaterial({ color: 0xbdf7ff, transparent: true, opacity: 0.72 })
+  arcGlow: new THREE.MeshBasicMaterial({ color: 0xbdf7ff, transparent: true, opacity: 0.72 }),
+  hitFlash: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.88 })
 };
 
 const tileMats = [
@@ -528,6 +529,7 @@ function makeZombie(x, z, scale = 1, fast = false) {
   root.userData.maxHp = fast ? demoTuning.zombie.fastHp : demoTuning.zombie.normalHp;
   root.userData.hp = root.userData.maxHp;
   root.userData.alive = true;
+  root.userData.hitPulse = 0;
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
@@ -543,6 +545,7 @@ function resetZombie(z, x, zPos) {
   z.position.set(x, 0, zPos);
   z.userData.hp = z.userData.maxHp + game.level * demoTuning.zombie.levelHpGrowth;
   z.userData.alive = true;
+  z.userData.hitPulse = 0;
   z.visible = true;
 }
 
@@ -641,6 +644,19 @@ const aliveText = document.getElementById('aliveText');
 const levelBadge = document.getElementById('levelBadge');
 const stormBadge = document.getElementById('stormBadge');
 const moveStick = document.getElementById('moveStick');
+const miniMap = document.getElementById('miniMap');
+const miniPlayer = document.getElementById('miniPlayer');
+const miniRival = document.getElementById('miniRival');
+const miniZone = document.getElementById('miniZone');
+const miniZombies = Array.from(miniMap.querySelectorAll('.zombie'));
+const miniLoot = Array.from(miniMap.querySelectorAll('.loot'));
+
+function placeMiniDot(dot, x, z) {
+  const px = THREE.MathUtils.clamp(((x + 6) / 12) * 100, 8, 92);
+  const py = THREE.MathUtils.clamp(((z + 5.2) / 10.4) * 100, 8, 92);
+  dot.style.left = `${px}%`;
+  dot.style.top = `${py}%`;
+}
 
 function updateHud() {
   hpFill.style.width = `${Math.max(0, game.hp)}%`;
@@ -649,6 +665,15 @@ function updateHud() {
   aliveText.textContent = `ALIVE ${Math.max(demoTuning.progression.minAlive, 18 - Math.floor(game.kills / demoTuning.progression.aliveDropPerKills))}`;
   const zoneLeft = Math.max(0, Math.round(100 - game.kills * 3 - game.level * 2));
   stormBadge.textContent = `ZONE 01:${String(zoneLeft).padStart(2, '0')}`;
+  placeMiniDot(miniPlayer, player.position.x, player.position.z);
+  placeMiniDot(miniRival, rival.position.x, rival.position.z);
+  livingZombies().slice(0, miniZombies.length).forEach((z, i) => placeMiniDot(miniZombies[i], z.position.x, z.position.z));
+  gems.filter((gem) => gem.visible).slice(0, miniLoot.length).forEach((gem, i) => placeMiniDot(miniLoot[i], gem.position.x, gem.position.z));
+  const zoneSize = `${Math.round(70 * (window.__V03_ENGINE_DEMO_STATE.safeZoneScale || 1))}%`;
+  miniZone.style.width = zoneSize;
+  miniZone.style.height = zoneSize;
+  miniZone.style.left = `calc(50% - ${zoneSize} / 2)`;
+  miniZone.style.top = `calc(50% - ${zoneSize} / 2)`;
 }
 
 function applyClass(id) {
@@ -800,6 +825,19 @@ for (let i = 0; i < 18; i++) {
   skillBursts.push(orb);
 }
 
+const impactSparks = [];
+for (let i = 0; i < 28; i++) {
+  const spark = box(0.16, 0.035, 0.035, mats.hitFlash.clone());
+  spark.visible = false;
+  spark.castShadow = false;
+  spark.userData.life = 0;
+  spark.userData.maxLife = 0.72;
+  spark.userData.speed = 1;
+  spark.userData.angle = 0;
+  scene.add(spark);
+  impactSparks.push(spark);
+}
+
 applyClass(activeClass);
 applySkill(activeSkill);
 
@@ -808,7 +846,7 @@ function resize() {
   const h = window.innerHeight;
   renderer.setSize(w, h, false);
   const aspect = w / h;
-  const viewH = 10.4;
+  const viewH = aspect < 0.65 ? 12.6 : 10.4;
   camera.left = -viewH * aspect * 0.5;
   camera.right = viewH * aspect * 0.5;
   camera.top = viewH * 0.5;
@@ -876,6 +914,25 @@ function dropXpAt(x, z) {
   gem.position.set(x, 0.18, z);
 }
 
+function spawnImpactAt(z, targetIndex) {
+  z.userData.hitPulse = 0.46;
+  const skill = skillDefs[activeSkill] || skillDefs.arc;
+  const sparkCount = activeSkill === 'boom' ? 7 : activeSkill === 'fan' ? 4 : 5;
+  for (let i = 0; i < sparkCount; i++) {
+    const spark = impactSparks.find((item) => !item.visible) || impactSparks[(game.shotsFired + targetIndex + i) % impactSparks.length];
+    const angle = (i / sparkCount) * Math.PI * 2 + targetIndex * 0.7;
+    spark.visible = true;
+    spark.userData.life = spark.userData.maxLife;
+    spark.userData.angle = angle;
+    spark.userData.speed = activeSkill === 'boom' ? 2.6 : 1.5 + i * 0.16;
+    spark.position.set(z.position.x + Math.cos(angle) * 0.18, 0.88 + (i % 3) * 0.08, z.position.z + Math.sin(angle) * 0.18);
+    spark.rotation.y = -angle;
+    spark.scale.setScalar(activeSkill === 'boom' ? 1.35 : 1);
+    spark.material.color.setHex(activeSkill === 'arc' ? 0xbdf7ff : skill.color);
+    spark.material.opacity = 0.88;
+  }
+}
+
 function defeatZombie(z) {
   z.userData.alive = false;
   z.visible = false;
@@ -906,7 +963,7 @@ function fireWeapon(dt) {
     const damage = (skill.damage + game.level * 1.1) * splash;
     z.userData.hp -= damage;
     game.damageDealt += damage;
-    z.scale.setScalar(1.08);
+    spawnImpactAt(z, index);
     if (z.userData.hp <= 0) defeatZombie(z);
   });
 }
@@ -970,7 +1027,9 @@ function animate(now) {
     z.position.x += Math.sin(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
     z.position.z += Math.cos(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
     z.position.y = Math.abs(Math.sin(t * (z.userData.fast ? 9 : 4) + z.userData.phase)) * 0.045;
-    z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025);
+    z.userData.hitPulse = Math.max(0, (z.userData.hitPulse || 0) - dt);
+    const hitScale = z.userData.hitPulse > 0 ? 0.18 * (z.userData.hitPulse / 0.46) : 0;
+    z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025 + hitScale);
     if (dist < 0.75 && game.hitTimer <= 0) {
       game.hp = Math.max(0, game.hp - (classDefs[activeClass] || classDefs.tech).contactDamage);
       game.hitTimer = demoTuning.player.hitCooldown;
@@ -1101,6 +1160,21 @@ function animate(now) {
     orb.rotation.y += 0.05;
   });
 
+  impactSparks.forEach((spark) => {
+    if (!spark.visible) return;
+    spark.userData.life -= dt;
+    if (spark.userData.life <= 0) {
+      spark.visible = false;
+      return;
+    }
+    const fade = spark.userData.life / spark.userData.maxLife;
+    spark.position.x += Math.cos(spark.userData.angle) * spark.userData.speed * dt;
+    spark.position.z += Math.sin(spark.userData.angle) * spark.userData.speed * dt;
+    spark.position.y += 0.35 * dt;
+    spark.scale.setScalar(0.65 + fade * 0.9);
+    spark.material.opacity = fade * 0.88;
+  });
+
   updateHud();
   window.__V03_ENGINE_DEMO_STATE.hp = Math.round(game.hp);
   window.__V03_ENGINE_DEMO_STATE.xp = Math.round(game.xp);
@@ -1121,6 +1195,11 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.boomSparkCount = boomSparks.filter((spark) => spark.visible).length;
   window.__V03_ENGINE_DEMO_STATE.arcBranchCount = arcBranches.filter((branch) => branch.visible).length;
   window.__V03_ENGINE_DEMO_STATE.arcGlowCount = arcGlowNodes.filter((glow) => glow.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.impactSparkCount = impactSparks.filter((spark) => spark.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.hitPulseCount = livingZombies().filter((z) => z.userData.hitPulse > 0).length;
+  window.__V03_ENGINE_DEMO_STATE.hasMiniMap = !!miniMap;
+  window.__V03_ENGINE_DEMO_STATE.miniMapZombieDots = miniZombies.length;
+  window.__V03_ENGINE_DEMO_STATE.iconSkillButtons = Array.from(skillPanel.querySelectorAll('.skill i')).length;
   window.__V03_ENGINE_DEMO_STATE.lastKillAgo = game.lastKillAt ? Number((t - game.lastKillAt).toFixed(2)) : null;
   window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
   window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));

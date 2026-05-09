@@ -130,6 +130,11 @@ async function verifyEngineDemo(browser) {
     boomSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomSparkCount,
     arcBranchCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcBranchCount,
     arcGlowCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcGlowCount,
+    impactSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.impactSparkCount,
+    hitPulseCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.hitPulseCount,
+    hasMiniMap: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.hasMiniMap,
+    miniMapZombieDots: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.miniMapZombieDots,
+    iconSkillButtons: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.iconSkillButtons,
     hasV03Config: !!window.KOS_V03_CONFIG,
     contractMapName: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractMapName,
     contractPropCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractPropCount,
@@ -143,7 +148,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 2 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 35 || info.zombieDetailPartCount < 120 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.groundDetailCount < 80 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
+  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeGearClass !== 'ranger' || info.activeGearCount < 2 || info.activeSkill !== 'fan' || info.activeSkin !== 2 || info.hp <= 0 || info.shotsFired < 5 || info.damageDealt < 80 || info.kills < 1 || info.xpDropped < 1 || info.livingZombieCount < 8 || info.visibleGemCount < 8 || info.silhouettePartCount < 35 || info.zombieDetailPartCount < 120 || info.fxTipCount < 3 || info.fanRoundCount < 6 || info.fanTrailCount < 6 || info.impactSparkCount < 1 || info.groundDetailCount < 80 || !info.hasMiniMap || info.miniMapZombieDots < 3 || info.iconSkillButtons < 3 || !info.boomRingReady || !info.contractQualityOk || info.contractPropCount < 18 || info.contractTileCount < 500 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'engine-demo-mobile.png');
@@ -174,6 +179,8 @@ async function verifyEngineSkillReview(browser, skill) {
     boomSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.boomSparkCount,
     arcBranchCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcBranchCount,
     arcGlowCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.arcGlowCount,
+    impactSparkCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.impactSparkCount,
+    hitPulseCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.hitPulseCount,
     hasWebgl: !!engineCanvas.getContext('webgl2') || !!engineCanvas.getContext('webgl')
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
@@ -182,7 +189,7 @@ async function verifyEngineSkillReview(browser, skill) {
     (skill === 'boom' && info.boomRingReady === true && info.fxTipCount >= 1 && info.boomSparkCount >= 6) ||
     (skill === 'arc' && info.arcBranchCount >= 1 && info.arcGlowCount >= 1)
   );
-  if (errors.length || !info.hasWebgl || info.activeSkill !== skill || info.shotsFired < 3 || info.damageDealt < 30 || !skillOk) {
+  if (errors.length || !info.hasWebgl || info.activeSkill !== skill || info.shotsFired < 3 || info.damageDealt < 30 || info.impactSparkCount < 1 || !skillOk) {
     fail(`V03 ${skill} review verification failed`, { info, errors });
   }
   info.screenshot = path.join(artifactDir, `engine-demo-skill-${skill}.png`);

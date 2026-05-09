@@ -27,26 +27,27 @@ body {
 
 .top-hud {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 16px;
+  left: 16px;
+  right: 124px;
   display: grid;
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 50px minmax(94px, 1fr) 68px;
   gap: 8px;
   align-items: center;
   pointer-events: none;
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: #4ec9ff;
   color: #061014;
-  border: 3px solid rgba(255,255,255,0.42);
-  box-shadow: 0 0 18px rgba(78,201,255,0.46);
+  border: 3px solid rgba(11,13,13,0.72);
+  outline: 2px solid rgba(255,255,255,0.34);
+  box-shadow: 0 0 18px rgba(78,201,255,0.36), inset 0 0 14px rgba(255,255,255,0.22);
   font-weight: 900;
 }
 
@@ -55,17 +56,19 @@ body {
 }
 
 .name {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
   text-shadow: 0 2px 3px #000;
 }
 
 .hp,
 .xp {
-  height: 9px;
+  height: 8px;
   margin-top: 4px;
-  background: rgba(0,0,0,0.58);
-  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(5,7,7,0.72);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 999px;
+  overflow: hidden;
 }
 
 .hp i,
@@ -78,37 +81,144 @@ body {
 .xp i { width: 52%; background: #4ec9ff; }
 
 .survive {
-  padding: 6px 9px;
+  padding: 5px 8px;
   border: 1px solid rgba(244,201,90,0.5);
-  background: rgba(0,0,0,0.54);
+  background: rgba(5,7,7,0.66);
   color: #f4c95a;
+  font-size: 12px;
   font-weight: 900;
+  line-height: 1.05;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
 
 .level-badge {
   position: absolute;
-  top: 64px;
-  left: 62px;
-  padding: 4px 8px;
-  border: 1px solid rgba(78,201,255,0.48);
-  background: rgba(0,0,0,0.5);
+  top: 74px;
+  left: 68px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgba(244,201,90,0.62);
+  background: rgba(5,7,7,0.72);
   color: #8be9ff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+  box-shadow: 0 0 14px rgba(244,201,90,0.18);
   pointer-events: none;
 }
 
 .storm-badge {
   position: absolute;
-  top: 98px;
-  left: 62px;
-  padding: 4px 8px;
+  top: 78px;
+  left: 112px;
+  padding: 5px 8px;
   border: 1px solid rgba(185,92,255,0.52);
-  background: rgba(0,0,0,0.5);
+  background: rgba(5,7,7,0.64);
   color: #d79bff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
   pointer-events: none;
+}
+
+.mini-map {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 4px solid rgba(9,12,12,0.86);
+  outline: 2px solid rgba(255,255,255,0.16);
+  overflow: hidden;
+  background:
+    linear-gradient(32deg, transparent 47%, rgba(255,255,255,0.12) 48%, rgba(255,255,255,0.12) 51%, transparent 52%),
+    linear-gradient(122deg, transparent 45%, rgba(255,255,255,0.08) 46%, rgba(255,255,255,0.08) 49%, transparent 50%),
+    linear-gradient(90deg, rgba(107,99,63,0.35), rgba(37,58,54,0.78)),
+    #18201d;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.82), 0 10px 28px rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+
+.mini-map::before,
+.mini-map::after {
+  content: "";
+  position: absolute;
+  inset: 20px 10px auto;
+  height: 10px;
+  background: rgba(79,88,73,0.74);
+  transform: rotate(-26deg);
+}
+
+.mini-map::after {
+  inset: auto 14px 26px;
+  height: 9px;
+  transform: rotate(33deg);
+}
+
+.mini-map .zone {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(244,201,90,0.42);
+}
+
+.mini-map .dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #7cff4f;
+  box-shadow: 0 0 8px currentColor;
+  color: #7cff4f;
+}
+
+.mini-map .player {
+  width: 9px;
+  height: 9px;
+  color: #4ec9ff;
+  background: #4ec9ff;
+  z-index: 3;
+}
+
+.mini-map .rival {
+  color: #ff8b3d;
+  background: #ff8b3d;
+  z-index: 3;
+}
+
+.mini-map .zombie {
+  color: #dce9a0;
+  background: #dce9a0;
+}
+
+.mini-map .loot {
+  width: 6px;
+  height: 6px;
+  color: #7cff4f;
+  background: #7cff4f;
+}
+
+.utility-stack {
+  position: absolute;
+  right: 16px;
+  top: 128px;
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.utility-stack i {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.20);
+  background: rgba(5,7,7,0.62);
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.08), 0 8px 16px rgba(0,0,0,0.36);
 }
 
 .move-stick {
@@ -139,25 +249,44 @@ body {
 
 .skill-panel {
   position: absolute;
-  right: 14px;
-  bottom: 24px;
+  right: 18px;
+  bottom: 18px;
   display: flex;
-  gap: 10px;
+  align-items: end;
+  gap: 8px;
 }
 
 .skill {
-  width: 64px;
-  height: 64px;
+  position: relative;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   color: #fff;
   border: 2px solid rgba(255,255,255,0.48);
-  background: rgba(12,16,18,0.74);
+  background: radial-gradient(circle at 38% 28%, rgba(255,255,255,0.22), rgba(12,16,18,0.84) 48%, rgba(2,3,3,0.92));
   font-weight: 900;
   box-shadow: inset 0 0 18px rgba(255,255,255,0.10), 0 10px 30px rgba(0,0,0,0.42);
+  text-shadow: 0 2px 2px #000;
+}
+
+.skill i {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 7px auto 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.skill span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  pointer-events: none;
 }
 
 .skill.active {
-  background: rgba(244,201,90,0.16);
+  transform: translateY(-8px) scale(1.06);
   box-shadow: inset 0 0 22px currentColor, 0 0 24px currentColor, 0 10px 30px rgba(0,0,0,0.42);
 }
 
@@ -165,14 +294,41 @@ body {
 .skill.orange { border-color: #ff8b3d; color: #ffb37b; }
 .skill.gold { border-color: #f4c95a; color: #ffe28a; }
 
+.skill.blue i {
+  background:
+    radial-gradient(circle at 50% 50%, #e7fbff 0 12%, transparent 14%),
+    linear-gradient(35deg, transparent 32%, #62e5ff 33% 40%, transparent 41%),
+    linear-gradient(145deg, transparent 32%, #62e5ff 33% 40%, transparent 41%);
+  box-shadow: 0 0 18px #4ec9ff;
+}
+
+.skill.orange i {
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 50%, #fff0a3 0 12%, transparent 13%),
+    conic-gradient(from 0.08turn, #ff8b3d, #fff0a3, #ff8b3d, #783018, #ff8b3d);
+  clip-path: polygon(50% 0, 72% 26%, 100% 50%, 72% 74%, 50% 100%, 28% 74%, 0 50%, 28% 26%);
+  box-shadow: 0 0 18px #ff8b3d;
+}
+
+.skill.gold i {
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, transparent 0 18%, #fff0a3 19% 26%, transparent 27% 36%, #ffe28a 37% 44%, transparent 45% 55%, #fff0a3 56% 63%, transparent 64% 73%, #ffe28a 74% 81%, transparent 82%),
+    linear-gradient(#8a4e22, #ffd36a);
+  transform: rotate(-22deg);
+  box-shadow: 0 0 18px #f4c95a;
+}
+
 .class-strip {
   position: absolute;
   left: 12px;
   bottom: 18px;
-  width: 160px;
+  width: 132px;
   padding: 10px;
   border: 1px solid rgba(244,201,90,0.4);
   background: rgba(7,10,10,0.64);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
 }
 
 .class-card strong,
@@ -182,13 +338,13 @@ body {
 
 .class-card strong {
   color: #fff;
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .class-card span {
   margin-top: 2px;
   color: #aab5ae;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .skin-row {

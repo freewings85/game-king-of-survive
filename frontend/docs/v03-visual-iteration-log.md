@@ -201,3 +201,39 @@ Next iteration direction:
 2. Replace more FX primitives with layered sprite-like planes so the look moves toward painted game art.
 3. Start the phone UI pass: circular minimap, icon-like skill buttons, tighter HUD, and stronger device frame.
 4. Keep comparing the review screenshots against the target image after each visual pass before moving on.
+
+## 2026-05-10 Mobile HUD And Hit Feedback Pass
+
+Related work:
+
+- WebGL reference WIP after `f6ba52d`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+
+What moved closer:
+
+- The phone HUD now has a circular minimap, player/rival/zombie/loot dots, a safe-zone ring, smaller utility buttons, and more target-like circular skill buttons.
+- Skill buttons now carry icon-like visual marks instead of plain text-only circles.
+- The portrait camera is pulled back so the combat scene reads less oversized and shows more arena context.
+- Weapon hits now spawn short-lived impact sparks and apply a hit pulse to zombies, so combat has contact feedback instead of only beams passing through targets.
+- The verifier now gates `impactSparkCount`, `hitPulseCount`, `hasMiniMap`, `miniMapZombieDots`, and `iconSkillButtons`.
+
+What is still far from the reference:
+
+- The UI is structurally closer, but the reference has a polished phone frame, compact landscape composition, better icon art, and layered HUD shadows.
+- Characters and zombies are still low-poly procedural shapes rather than illustrated sprites/models with expressive faces, clothing, gear, and pose language.
+- Impact effects are visible but still geometric; the reference needs painted flashes, debris chips, smoke, and stronger color falloff.
+- The scene still lacks enough hand-authored ground/prop art variation around the player compared with the target.
+
+Next iteration direction:
+
+1. Build a stronger phone/device frame and landscape-oriented review state, because the target image's main gameplay panel is landscape.
+2. Push hit feedback toward painted layers: muzzle burst cards, target flash planes, debris chips, and zombie damage tint.
+3. Improve hero/zombie silhouettes next, especially faces, hair/hood shapes, boots, gloves, weapons, and torn clothing.
+4. Keep the Cocos path active after the WebGL target gets closer, since the final mini-game engine remains Cocos Creator 3.x.

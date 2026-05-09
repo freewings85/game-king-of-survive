@@ -22,11 +22,26 @@
   </div>
   <div class="level-badge" id="levelBadge">LV 1</div>
   <div class="storm-badge" id="stormBadge">ZONE 01:40</div>
+  <div class="mini-map" id="miniMap" aria-hidden="true">
+    <i class="zone" id="miniZone"></i>
+    <i class="dot player" id="miniPlayer"></i>
+    <i class="dot rival" id="miniRival"></i>
+    <i class="dot zombie z1"></i>
+    <i class="dot zombie z2"></i>
+    <i class="dot zombie z3"></i>
+    <i class="dot loot l1"></i>
+    <i class="dot loot l2"></i>
+  </div>
+  <div class="utility-stack" aria-hidden="true">
+    <i class="gear-dot"></i>
+    <i class="team-dot"></i>
+    <i class="bag-dot"></i>
+  </div>
   <div class="move-stick" id="moveStick"><i></i></div>
   <div class="skill-panel" id="skillPanel">
-    <button class="skill blue active" data-skill="arc">ARC</button>
-    <button class="skill orange" data-skill="boom">BOOM</button>
-    <button class="skill gold" data-skill="fan">FAN</button>
+    <button class="skill blue active" data-skill="arc"><i></i><span>ARC</span></button>
+    <button class="skill orange" data-skill="boom"><i></i><span>BOOM</span></button>
+    <button class="skill gold" data-skill="fan"><i></i><span>FAN</span></button>
   </div>
   <div class="class-strip">
     <div class="class-card active" id="activeClassCard">
