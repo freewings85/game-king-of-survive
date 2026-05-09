@@ -1644,3 +1644,44 @@ Next iteration direction:
 1. Author or generate a Ranger-first true skin costume pass with distinct silhouette, gear, and material differences.
 2. Mirror the selected skin into in-match 3D gear/materials, not only portrait cards.
 3. Build a real Cocos preview slice once the WebGL reference has a stronger target-level costume pass.
+
+## 2026-05-10 Ranger unit sprite separation pass
+
+Related work:
+
+- WebGL reference WIP after `692c237`
+- `frontend/engine-demo/assets/units/hero-ranger-2-isometric.png`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-2.png`
+- `frontend/engine-demo/assets/units/hero-ranger-2-isometric.png`
+
+Current visual distance:
+
+- Art quality: closer for the main in-match Ranger read because the battlefield no longer uses the large half-body portrait as the combat unit.
+- The phone screenshot now separates HUD/focus portrait art from the in-world unit sprite, which is closer to the target image's phone battle composition.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Ranger skin 2 now has a dedicated transparent in-match unit sprite asset.
+- The old low-poly player body is hidden when a unit sprite is active, removing doubled blocky geometry from the hero read.
+- Runtime gates now require `activePainterlyUsesUnitSpriteAsset` and `activePainterlyUnitSpriteVariant: ranger-2`, so the battlefield cannot silently fall back to the portrait-only card.
+
+What is still far from the reference:
+
+- The Ranger unit is still closer to a high-detail character card than a fully camera-matched top-down Cocos unit.
+- Zombies and props still mix painterly cards with low-poly geometry, so the whole scene has not reached the target image's unified illustrated depth.
+- The phone HUD and class panel still occupy more visual weight than the target battle screenshot.
+
+Next iteration direction:
+
+1. Create matching in-match unit sprites for the highest-visibility zombie variants or shrink/simplify hero/zombie cards together for consistent phone-scale composition.
+2. Tune the mobile HUD/focus frame so the battle area has more room and reads closer to the target phone screenshot.
+3. Start Cocos prefab authoring once the WebGL unit/card scale is stable.

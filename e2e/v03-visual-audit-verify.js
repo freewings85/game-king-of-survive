@@ -27,6 +27,7 @@ assert(text.includes('Zombie sprite card pass'), 'Visual iteration log must reco
 assert(text.includes('Skill sprite card pass'), 'Visual iteration log must record the latest skill sprite pass');
 assert(text.includes('Class skin sprite variant pass'), 'Visual iteration log must record the latest skin sprite pass');
 assert(text.includes('Cocos sprite asset contract sync'), 'Visual iteration log must record the latest Cocos sprite contract sync');
+assert(text.includes('Ranger unit sprite separation pass'), 'Visual iteration log must record the latest Ranger unit sprite pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

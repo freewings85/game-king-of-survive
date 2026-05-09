@@ -92,6 +92,8 @@ requiredText.forEach((text) => {
   'activePainterlySkinColor: #283746',
   'activePainterlyStyle: hood-rifle',
   'activePainterlyUsesSpriteAsset',
+  'activePainterlyUsesUnitSpriteAsset',
+  'activePainterlyUnitSpriteVariant: ranger-2',
   'combatFocusDisplayed',
   'combatFocusStyle: hood-rifle',
   'combatFocusClassId: ranger',

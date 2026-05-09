@@ -157,12 +157,14 @@ let activePainterlySkin = 0;
 let activePainterlySkinColor = '#193743';
 let activePainterlyStyle = 'coil-screen';
 let activePainterlyUsesSpriteAsset = false;
+let activePainterlyUsesUnitSpriteAsset = false;
 let zombiePainterlyUsesSpriteAsset = false;
 let skillPainterlyUsesSpriteAsset = false;
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
 const classPortraitTextureCache = new Map();
+const classUnitTextureCache = new Map();
 const zombieTextureCache = new Map();
 const skillTextureCache = new Map();
 const classThumbStyles = {
@@ -196,6 +198,11 @@ const skillCardAssets = {
   arc: '/frontend/engine-demo/assets/skills/skill-card-arc.png',
   boom: '/frontend/engine-demo/assets/skills/skill-card-boom.png',
   fan: '/frontend/engine-demo/assets/skills/skill-card-fan.png'
+};
+const classUnitAssets = {
+  ranger: {
+    2: '/frontend/engine-demo/assets/units/hero-ranger-2-isometric.png'
+  }
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -394,6 +401,24 @@ function getClassPortraitTexture(classId, skinIndex = 0) {
     classPortraitTextureCache.set(key, texture);
   }
   return classPortraitTextureCache.get(key);
+}
+
+function getClassUnitAsset(classId, skinIndex = 0) {
+  const classAssets = classUnitAssets[classId];
+  return classAssets && classAssets[skinIndex];
+}
+
+function getClassUnitTexture(classId, skinIndex = 0) {
+  const asset = getClassUnitAsset(classId, skinIndex);
+  if (!asset) return null;
+  const key = `${classId}:${skinIndex}:unit`;
+  if (!classUnitTextureCache.has(key)) {
+    const texture = new THREE.TextureLoader().load(asset);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    classUnitTextureCache.set(key, texture);
+  }
+  return classUnitTextureCache.get(key);
 }
 
 function getZombieSpriteTexture(variant) {
@@ -1043,7 +1068,8 @@ function pointNearArena(map, point, fallbackAngle, fallbackRadius) {
 function makeCharacter(colorMat, accentMat, scale = 1) {
   const root = new THREE.Group();
   addContactShadow(root, 1.05 * scale, 0.72 * scale, 0.28);
-  const characterCard = addPainterlyCard(root, accentMat === mats.rivalAccent ? painterlyMaterials.rival : painterlyMaterials.hero, 1.34 * scale, 2.08 * scale, 0.04 * scale, 1.12 * scale, -0.58 * scale, accentMat === mats.rivalAccent ? 'rival' : 'hero');
+  const isRival = accentMat === mats.rivalAccent;
+  const characterCard = addPainterlyCard(root, isRival ? painterlyMaterials.rival : painterlyMaterials.hero, 0.82 * scale, 1.43 * scale, 0.04 * scale, 0.90 * scale, -0.58 * scale, isRival ? 'rival' : 'hero');
   root.userData.painterlyCard = characterCard;
   const legs = [
     box(0.18 * scale, 0.65 * scale, 0.20 * scale, mats.road),
@@ -1405,6 +1431,25 @@ function setCharacterGear(root, id) {
   return visibleCount;
 }
 
+function markSpriteReplaceableBody(root) {
+  root.traverse((part) => {
+    if (part.isMesh && !part.userData.contactShadow && !part.userData.painterlyCard) {
+      part.userData.spriteReplaceableBody = true;
+    }
+  });
+}
+
+function setSpriteReplaceableBodyVisible(root, visible, classId) {
+  root.traverse((part) => {
+    if (part.userData && part.userData.spriteReplaceableBody) {
+      part.visible = visible;
+    }
+    if (part.userData && part.userData.classGear) {
+      part.visible = visible && part.userData.classGear === classId;
+    }
+  });
+}
+
 const contractMap = makeContractMap();
 const contractProps = [];
 let contractTileLayer = null;
@@ -1433,6 +1478,7 @@ window.__V03_ENGINE_DEMO_STATE = {
 const player = makeCharacter(mats.player, mats.playerAccent, 1.12);
 player.position.set(playerSpawn.x, 0, playerSpawn.z);
 playerPainterlyCard = player.userData.painterlyCard;
+markSpriteReplaceableBody(player);
 scene.add(player);
 
 const rival = makeCharacter(mats.rival, mats.rivalAccent, 0.9);
@@ -1578,10 +1624,13 @@ function applySkin(index) {
   const accentHex = `#${def.accent.toString(16).padStart(6, '0')}`;
   mats.player.color.set(skinColor);
   if (playerPainterlyCard) {
-    const spriteTexture = getClassPortraitTexture(activeClass, activeSkin);
-    playerPainterlyCard.material.map = spriteTexture || getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
+    const unitTexture = getClassUnitTexture(activeClass, activeSkin);
+    const portraitTexture = getClassPortraitTexture(activeClass, activeSkin);
+    playerPainterlyCard.material.map = unitTexture || portraitTexture || getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
     playerPainterlyCard.material.needsUpdate = true;
-    activePainterlyUsesSpriteAsset = !!spriteTexture;
+    activePainterlyUsesSpriteAsset = !!(unitTexture || portraitTexture);
+    activePainterlyUsesUnitSpriteAsset = !!unitTexture;
+    setSpriteReplaceableBodyVisible(player, !unitTexture, activeClass);
   }
   activePainterlyClass = activeClass;
   activePainterlySkin = activeSkin;
@@ -1615,7 +1664,9 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesUnitSpriteAsset = activePainterlyUsesUnitSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activeClass}-${activeSkin}`;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitSpriteVariant = getClassUnitAsset(activeClass, activeSkin) ? `${activeClass}-${activeSkin}` : '';
   window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
