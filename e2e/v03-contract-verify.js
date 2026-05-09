@@ -35,6 +35,7 @@ async function verifyContractRuntime(browser) {
     const checks = window.KOS_MAP_CONTRACT && map ? window.KOS_MAP_CONTRACT.getQualityChecks(map) : [];
     return {
       hasContract: !!window.KOS_MAP_CONTRACT,
+      hasV03Config: !!window.KOS_V03_CONFIG,
       mapName: map && map.name,
       schemaVersion: map && map.schemaVersion,
       visualProfile: map && map.visualProfile,
@@ -52,7 +53,7 @@ async function verifyContractRuntime(browser) {
     };
   });
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasContract || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
+  if (errors.length || !info.hasContract || !info.hasV03Config || !info.allQualityOk || info.schemaVersion !== 'v03-map-1' || info.gameState !== 'playing' || !info.offlineMode || info.waveSpawnPoints < 4 || info.brStructures < 18) {
     fail('V03 contract runtime verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'runtime-contract-map-mobile.png');
@@ -100,6 +101,7 @@ async function verifyEngineDemo(browser) {
     activeSkill: document.querySelector('#skillPanel .active').dataset.skill,
     activeSkin: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkin,
     activeSkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkinColor,
+    hasV03Config: !!window.KOS_V03_CONFIG,
     contractMapName: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractMapName,
     contractPropCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractPropCount,
     contractZombieEntryCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractZombieEntryCount,
@@ -111,7 +113,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
+  if (errors.length || !info.hasWebgl || !info.hasV03Config || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18 || info.contractZombieEntryCount < 4 || info.contractRewardPointCount < 8 || !info.rivalVisible || !(info.safeZoneScale > 0.7 && info.safeZoneScale <= 1)) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   info.screenshot = path.join(artifactDir, 'engine-demo-mobile.png');

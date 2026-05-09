@@ -55,7 +55,7 @@ V03Battle.scene
 
 Current reference config lives in:
 
-- `frontend/engine-demo/v03-config.js`
+- `frontend/src/v03-runtime-config.js`
 - `frontend/src/map-contract.js`
 
 Cocos should port these fields first:

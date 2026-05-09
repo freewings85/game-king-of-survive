@@ -1,5 +1,6 @@
 import * as THREE from '/node_modules/three/build/three.module.js';
-import { classDefs, demoTuning, skillDefs } from './v03-config.js';
+
+const { classDefs, demoTuning, skillDefs } = window.KOS_V03_CONFIG;
 
 const canvas = document.getElementById('engineCanvas');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });

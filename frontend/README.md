@@ -28,7 +28,7 @@ python3 dev-server.py 8081
 
 - Engine decision: `frontend/docs/engine-evaluation.md`
 - Cocos vertical slice gate: `frontend/docs/cocos-vertical-slice.md`
-- WebGL demo config: `frontend/engine-demo/v03-config.js`
+- V03 class/skill/tuning config: `frontend/src/v03-runtime-config.js`
 
 ## Verification
 
