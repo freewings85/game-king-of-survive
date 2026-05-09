@@ -145,6 +145,7 @@ let unitDecalCount = 0;
 let propWearCount = 0;
 let propShapeCount = 0;
 let propBreakCount = 0;
+let propSpriteCoverCount = 0;
 let globalLightCount = 0;
 let objectRimCount = 0;
 let materialBlendCount = 0;
@@ -168,6 +169,7 @@ const classPortraitTextureCache = new Map();
 const classUnitTextureCache = new Map();
 const zombieTextureCache = new Map();
 const skillTextureCache = new Map();
+const propTextureCache = new Map();
 const classThumbStyles = {
   guardian: 'shield-armor',
   tech: 'coil-screen',
@@ -530,6 +532,82 @@ function makeFxCardTexture(kind) {
   });
 }
 
+function makePropCoverTexture(kind) {
+  return makeCanvasTexture(256, 176, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.50, h * 0.88, w * 0.38, h * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (kind === 'wreck') {
+      ctx.fillStyle = '#7b3f1f';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.08, h * 0.58);
+      ctx.lineTo(w * 0.26, h * 0.34);
+      ctx.lineTo(w * 0.72, h * 0.30);
+      ctx.lineTo(w * 0.93, h * 0.53);
+      ctx.lineTo(w * 0.78, h * 0.76);
+      ctx.lineTo(w * 0.22, h * 0.78);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#5f655d';
+      ctx.fillRect(w * 0.34, h * 0.23, w * 0.28, h * 0.23);
+      ctx.fillStyle = 'rgba(134,215,255,0.45)';
+      ctx.fillRect(w * 0.38, h * 0.27, w * 0.20, h * 0.12);
+      ctx.fillStyle = '#15110d';
+      ctx.fillRect(w * 0.18, h * 0.70, w * 0.18, h * 0.12);
+      ctx.fillRect(w * 0.66, h * 0.69, w * 0.18, h * 0.12);
+      addPaintedStroke(ctx, [[w * 0.13, h * 0.50], [w * 0.46, h * 0.36], [w * 0.88, h * 0.47]], '#ffd58b', 5, 0.75);
+      addPaintedStroke(ctx, [[w * 0.20, h * 0.65], [w * 0.76, h * 0.66]], '#0b0c0a', 10, 0.54);
+      addPaintedStroke(ctx, [[w * 0.52, h * 0.50], [w * 0.66, h * 0.45], [w * 0.78, h * 0.58]], '#f0d189', 3, 0.82);
+      for (let i = 0; i < 7; i++) {
+        ctx.fillStyle = i % 2 ? '#20251f' : '#b3bca7';
+        ctx.fillRect(w * (0.18 + i * 0.09), h * (0.22 + (i % 3) * 0.18), w * 0.035, h * 0.018);
+      }
+    } else if (kind === 'wall') {
+      ctx.fillStyle = '#5a5f59';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.18, h * 0.22);
+      ctx.lineTo(w * 0.86, h * 0.16);
+      ctx.lineTo(w * 0.88, h * 0.78);
+      ctx.lineTo(w * 0.14, h * 0.84);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#0b0c0a';
+      ctx.fillRect(w * 0.20, h * 0.54, w * 0.62, h * 0.18);
+      addPaintedStroke(ctx, [[w * 0.22, h * 0.30], [w * 0.82, h * 0.23]], '#ffd58b', 5, 0.72);
+      addPaintedStroke(ctx, [[w * 0.82, h * 0.22], [w * 0.84, h * 0.78]], '#91e7ff', 4, 0.48);
+      addPaintedStroke(ctx, [[w * 0.33, h * 0.34], [w * 0.42, h * 0.47], [w * 0.38, h * 0.63]], '#15110d', 5, 0.65);
+      addPaintedStroke(ctx, [[w * 0.56, h * 0.28], [w * 0.52, h * 0.42], [w * 0.61, h * 0.52]], '#15110d', 4, 0.58);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = i % 2 ? '#b3bca7' : '#20251f';
+        ctx.fillRect(w * (0.20 + i * 0.11), h * (0.78 + (i % 2) * 0.03), w * 0.055, h * 0.025);
+      }
+    } else {
+      ctx.fillStyle = '#7d552d';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.24, h * 0.28);
+      ctx.lineTo(w * 0.74, h * 0.22);
+      ctx.lineTo(w * 0.82, h * 0.70);
+      ctx.lineTo(w * 0.30, h * 0.80);
+      ctx.closePath();
+      ctx.fill();
+      addPaintedStroke(ctx, [[w * 0.27, h * 0.38], [w * 0.76, h * 0.32]], '#ffd58b', 5, 0.65);
+      addPaintedStroke(ctx, [[w * 0.34, h * 0.66], [w * 0.78, h * 0.58]], '#15110d', 6, 0.55);
+      addPaintedStroke(ctx, [[w * 0.40, h * 0.30], [w * 0.46, h * 0.76]], '#f0d189', 4, 0.74);
+      addPaintedStroke(ctx, [[w * 0.64, h * 0.26], [w * 0.68, h * 0.68]], '#20251f', 4, 0.62);
+    }
+  });
+}
+
+function getPropCoverMaterial(kind) {
+  if (!propTextureCache.has(kind)) {
+    propTextureCache.set(kind, makePainterlyMaterial(makePropCoverTexture(kind), 0.74));
+  }
+  return propTextureCache.get(kind);
+}
+
 const painterlyMaterials = {
   hero: makePainterlyMaterial(getClassPortraitTexture('tech', 0) || getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
   rival: makePainterlyMaterial(getClassPortraitTexture('guardian', 0) || getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
@@ -556,6 +634,14 @@ function addPainterlyCard(root, material, width, height, x, y, z, kind) {
   if (kind === 'zombie') zombiePainterlyCardCount += 1;
   if (kind === 'skill') skillPainterlyCardCount += 1;
   return card;
+}
+
+function addPropSpriteCover(root, kind, width, height, x, y, z) {
+  const cover = addPainterlyCard(root, getPropCoverMaterial(kind), width, height, x, y, z, 'prop');
+  cover.userData.propSpriteCover = kind;
+  cover.renderOrder = 9;
+  propSpriteCoverCount += 1;
+  return cover;
 }
 
 function add(mesh, x, z, y = 0) {
@@ -777,6 +863,7 @@ function makeCrate(x, z, s = 1) {
   addBrokenChunk(root, s * 0.24, s * 0.18, s * 0.12, mats.propBrokenDark, -s * 0.43, s * 0.95, -s * 0.30, 0.22, -0.35);
   addBrokenChunk(root, s * 0.28, s * 0.12, s * 0.10, mats.propBrokenLight, s * 0.34, s * 0.14, -s * 0.48, -0.28, 0.18);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
+  addPropSpriteCover(root, 'crate', s * 0.94, s * 0.82, 0, s * 0.54, -s * 0.61);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -824,6 +911,7 @@ function makeWreck(x, z, rot) {
     root.add(wheel);
   }
   addPropGroundScatter(root, 1.25, 0.72, 7);
+  addPropSpriteCover(root, 'wreck', 2.18, 0.98, 0, 0.62, -0.70);
   root.rotation.y = rot;
   root.position.set(x, 0, z);
   scene.add(root);
@@ -858,6 +946,7 @@ function makeWall(x, z, w, d) {
   addBrokenChunk(root, Math.max(0.16, w * 0.12), 0.34, Math.max(0.06, d * 0.28), mats.propBrokenDark, -w * 0.44, 1.10, -d * 0.53, 0.18, -0.24);
   addBrokenChunk(root, Math.max(0.14, w * 0.10), 0.28, Math.max(0.06, d * 0.28), mats.propBrokenDark, w * 0.37, 0.30, -d * 0.54, -0.22, 0.28);
   addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
+  addPropSpriteCover(root, 'wall', Math.max(0.76, w * 0.96), 1.12, 0, 0.70, -d * 0.66);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -2285,7 +2374,7 @@ function animate(now) {
     card.material.opacity = fade * 0.72;
   });
   painterlyCards.forEach((card) => {
-    if (card.visible) card.lookAt(camera.position);
+    if (card.visible && !card.userData.propSpriteCover) card.lookAt(camera.position);
   });
 
   updateHud();
@@ -2307,6 +2396,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
   window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;
   window.__V03_ENGINE_DEMO_STATE.propBreakCount = propBreakCount;
+  window.__V03_ENGINE_DEMO_STATE.propSpriteCoverCount = propSpriteCoverCount;
+  window.__V03_ENGINE_DEMO_STATE.propSpriteCoverKinds = new Set(painterlyCards.filter((card) => card.userData.propSpriteCover).map((card) => card.userData.propSpriteCover)).size;
   window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
   window.__V03_ENGINE_DEMO_STATE.objectRimCount = objectRimCount;
   window.__V03_ENGINE_DEMO_STATE.materialBlendCount = materialBlendCount;

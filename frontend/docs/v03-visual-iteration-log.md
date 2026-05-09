@@ -1802,3 +1802,41 @@ Next iteration direction:
 1. Start the major map prop sprite/painterly cover pass, focusing on wreck cars and tall wall silhouettes.
 2. Keep gameplay controls compact and move class switching out of the main combat surface later.
 3. Mirror prop sprite-cover requirements into the Cocos visual contract after WebGL review stabilizes.
+
+## 2026-05-10 Prop sprite cover pass
+
+Related work:
+
+- WebGL reference WIP after `749bd3a`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- Art quality: closer for the wasteland layer because wreck cars, tall walls, and crates now receive painterly sprite cover cards on top of their functional low-poly roots.
+- The approach keeps cover/collision structure intact while moving the visible read toward the target image's illustrated props.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Major map prop families now use transparent painterly cover cards: `wreck`, `wall`, and `crate`.
+- Runtime gates now require `propSpriteCoverCount >= 12` and `propSpriteCoverKinds >= 3`, so the cover pass cannot disappear silently.
+- The prop cover cards reuse the same billboard/painterly rendering path as heroes, zombies, and skills.
+
+What is still far from the reference:
+
+- The prop cards are procedural painterly covers, not final authored bitmap assets.
+- Some lower-priority props, barrels, tires, and debris still rely mostly on low-poly geometry.
+- Cocos visual contract does not yet include prop sprite cover families.
+
+Next iteration direction:
+
+1. Review phone screenshot scale for prop covers and tune opacity/size so they support combat instead of creating noise.
+2. Extend cover cards or generated bitmap assets to barrels, tires, and debris if they remain visibly geometric.
+3. Mirror prop sprite cover coverage into the Cocos visual contract/checklist after WebGL scale stabilizes.

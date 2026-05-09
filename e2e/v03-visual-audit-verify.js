@@ -31,6 +31,7 @@ assert(text.includes('Ranger unit sprite separation pass'), 'Visual iteration lo
 assert(text.includes('Zombie sprite body cleanup pass'), 'Visual iteration log must record the latest zombie sprite body cleanup pass');
 assert(text.includes('Compact combat focus pass'), 'Visual iteration log must record the latest compact combat focus pass');
 assert(text.includes('Compact class dock pass'), 'Visual iteration log must record the latest compact class dock pass');
+assert(text.includes('Prop sprite cover pass'), 'Visual iteration log must record the latest prop sprite cover pass');
 
 console.log(JSON.stringify({
   reference: referencePath,
