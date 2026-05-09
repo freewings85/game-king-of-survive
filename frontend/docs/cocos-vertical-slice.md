@@ -56,6 +56,7 @@ V03Battle.scene
 Current reference config lives in:
 
 - `frontend/engine-demo/v03-config.js`
+- `frontend/src/map-contract.js`
 
 Cocos should port these fields first:
 
@@ -63,6 +64,19 @@ Cocos should port these fields first:
 - class gameplay identity: `moveSpeed`, `contactDamage`
 - skill identity: `color`, `pulse`, `spread`, `damage`, `targets`, `range`
 - early tuning: player HP, fire cooldown, zombie HP/speed, XP rewards, alive count pacing
+- map runtime contract: tile definitions, wasteland prop definitions, gameplay pins, quality gates, `schemaVersion`, `visualProfile`, and `gameplayProfile`
+
+## Map Contract
+
+The editor and future runtime must consume the same map contract. The current browser contract is exposed as `window.KOS_MAP_CONTRACT` and provides:
+
+- `createMap(cols, rows)`
+- `normalizeMap(input)`
+- `getQualityChecks(map)`
+- `stampExport(map)`
+- `tileDefs`, `propDefs`, `pinDefs`
+
+The editor uses this contract before drawing, standardizing, and exporting maps. Cocos should mirror this shape instead of inventing a second map schema.
 
 ## First Commit Gate
 

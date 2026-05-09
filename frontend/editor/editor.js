@@ -3,8 +3,9 @@
 
   var TS = 64;
   var DPR = window.devicePixelRatio || 1;
+  var mapContract = window.KOS_MAP_CONTRACT || {};
 
-  var tileDefs = [
+  var tileDefs = mapContract.tileDefs || [
     { id: 0, name: '荒草', color: '#6b6248' },
     { id: 1, name: '泥地', color: '#655842' },
     { id: 2, name: '混凝土', color: '#687069' },
@@ -14,7 +15,7 @@
     { id: 6, name: '碎石', color: '#4b504b' }
   ];
 
-  var propDefs = [
+  var propDefs = mapContract.propDefs || [
     { kind: 'wreck_car', name: '废车', w: 128, h: 72, color: '#6b4032' },
     { kind: 'crate', name: '箱体', w: 44, h: 44, color: '#765538' },
     { kind: 'barricade', name: '路障', w: 112, h: 32, color: '#8a6a42' },
@@ -28,7 +29,7 @@
     { kind: 'blood_mark', name: '血迹', w: 70, h: 42, color: '#5e1514' }
   ];
 
-  var pinDefs = [
+  var pinDefs = mapContract.pinDefs || [
     { kind: 'spawn', name: '出生', color: '#42d9ff', list: 'spawnPoints' },
     { kind: 'zombie_entry', name: '尸群入口', color: '#8da082', list: 'zombieEntries' },
     { kind: 'reward', name: '奖励', color: '#7cff4f', list: 'rewardPoints' },
@@ -56,6 +57,7 @@
   var statusText = document.getElementById('statusText');
 
   function createMap(cols, rows) {
+    if (mapContract.createMap) return mapContract.createMap(cols, rows);
     var tiles = new Array(cols * rows).fill(0);
     paintRoadCross(tiles, cols, rows);
     return {
@@ -526,6 +528,7 @@
   }
 
   function getQualityChecks() {
+    if (mapContract.getQualityChecks) return mapContract.getQualityChecks(state.map);
     var m = state.map;
     var roadTiles = m.tiles.filter(function(id) { return id === 4 || id === 2; }).length;
     var roadRatio = roadTiles / Math.max(1, m.tiles.length);
@@ -679,6 +682,7 @@
   }
 
   function normalizeMap(input) {
+    if (mapContract.normalizeMap) return mapContract.normalizeMap(input);
     var cols = input.cols || Math.round((input.width || 2560) / TS);
     var rows = input.rows || Math.round((input.height || 2560) / TS);
     var base = createMap(cols, rows);
@@ -711,7 +715,8 @@
 
   function downloadMap() {
     state.map.name = qs('mapName').value || state.map.name;
-    var blob = new Blob([JSON.stringify(state.map, null, 2)], { type: 'application/json' });
+    var payload = mapContract.stampExport ? mapContract.stampExport(state.map) : state.map;
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
