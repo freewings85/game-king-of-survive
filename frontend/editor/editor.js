@@ -507,6 +507,7 @@
     renderQuality();
     renderLegend();
     renderSelection();
+    renderV03Preview();
   }
 
   function renderQuality() {
@@ -554,6 +555,17 @@
       row.querySelector('span:last-child').textContent = pinGlyph(def.kind) + ' · ' + def.name;
       root.appendChild(row);
     });
+  }
+
+  function renderV03Preview() {
+    var canvas = qs('v03Preview');
+    if (!canvas || !window.KOS_RENDER || !window.KOS_RENDER.v03) return;
+    var ctx2 = canvas.getContext('2d');
+    window.KOS_RENDER.v03.drawPhoneScene(ctx2, canvas.width, canvas.height, {
+      id: 'tech',
+      mark: 'T',
+      color: '#4ec9ff'
+    }, Date.now() / 1000);
   }
 
   function addMissingPoints(listName, points) {
@@ -793,6 +805,7 @@
       state.showGameplayOverlay = !state.showGameplayOverlay;
       qs('toggleOverlay').classList.toggle('active', state.showGameplayOverlay);
       draw();
+      renderV03Preview();
     });
     qs('loadFile').addEventListener('click', function() { qs('fileInput').click(); });
     qs('fileInput').addEventListener('change', function(event) {
