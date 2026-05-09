@@ -1362,3 +1362,50 @@ Next iteration direction:
 1. Replace the procedural focus portrait with generated or authored class/skin sprites for Guardian, Tech, and Ranger.
 2. Add a foreground combat depth pass so zombies, pickups, and prop silhouettes have the same layered 2.5D read as the V03 reference.
 3. Turn skill icons into larger illustrated skill cards only after the hero/zombie read is strong enough in the phone screenshot.
+
+## 2026-05-10 Class focus sprite asset pass
+
+Related work:
+
+- WebGL reference WIP after `783b5b1`
+- `frontend/engine-demo/assets/portraits/class-focus-guardian.png`
+- `frontend/engine-demo/assets/portraits/class-focus-tech.png`
+- `frontend/engine-demo/assets/portraits/class-focus-ranger.png`
+- `frontend/engine-demo/styles.css`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/assets/portraits/class-focus-guardian.png`
+- `frontend/engine-demo/assets/portraits/class-focus-tech.png`
+- `frontend/engine-demo/assets/portraits/class-focus-ranger.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+Current visual distance:
+
+- Art quality: closer for the focus portrait, still far for the full combat screen.
+- The focus portrait now uses generated painterly class art, but the world characters, zombies, and skill cards remain procedural.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The mobile combat focus portrait now uses real transparent PNG sprite assets instead of CSS-only silhouette construction.
+- Guardian, Tech, and Ranger each have a distinct bust read: shield armor, blue tech coil/screen gear, and hood/rifle scout gear.
+- Runtime gates now require `combatFocusClassId: ranger` and `combatFocusUsesSpriteAsset`, and class review gates require the sprite-backed focus frame to follow Guardian, Tech, and Ranger state.
+
+What is still far from the reference:
+
+- Only the UI focus portrait has painterly class art; the playable 3D character and zombies still look like low-poly procedural units.
+- The sprite sheet covers classes, not all skin variants yet.
+- Skill icons are still simple UI shapes rather than high-impact illustrated skill effect cards.
+
+Next iteration direction:
+
+1. Split or extend the sprite asset strategy into skin-specific portraits so all 9 class/skin combinations have authored reads.
+2. Bring the same sprite-backed visual quality into the main player card and zombie cards.
+3. Start a skill-card art pass after the class/skin portrait set is complete.

@@ -225,9 +225,9 @@ body {
   position: absolute;
   left: 16px;
   top: 128px;
-  width: 178px;
+  width: 214px;
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   padding: 9px;
@@ -242,8 +242,8 @@ body {
 
 .focus-portrait {
   position: relative;
-  width: 58px;
-  height: 76px;
+  width: 76px;
+  height: 92px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.22);
   background:
@@ -252,6 +252,53 @@ body {
     linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0.46)),
     var(--skin-color, #2f6068);
   box-shadow: inset 0 0 20px rgba(0,0,0,0.54), 0 8px 20px rgba(0,0,0,0.35);
+}
+
+.focus-portrait.sprite {
+  background-color: var(--skin-color, #2f6068);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
+    linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%;
+  background-position: center, center;
+}
+
+.focus-portrait.sprite[data-class-id="guardian"] {
+  background-color: var(--skin-color, #332d2a);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
+    url("/frontend/engine-demo/assets/portraits/class-focus-guardian.png"),
+    linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
+  background-size: 100% 100%, 115% auto, 100% 100%;
+  background-position: center, center bottom, center;
+}
+
+.focus-portrait.sprite[data-class-id="tech"] {
+  background-color: var(--skin-color, #2f6068);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
+    url("/frontend/engine-demo/assets/portraits/class-focus-tech.png"),
+    linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
+  background-size: 100% 100%, 112% auto, 100% 100%;
+  background-position: center, center bottom, center;
+}
+
+.focus-portrait.sprite[data-class-id="ranger"] {
+  background-color: var(--skin-color, #283746);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
+    url("/frontend/engine-demo/assets/portraits/class-focus-ranger.png"),
+    linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
+  background-size: 100% 100%, 118% auto, 100% 100%;
+  background-position: center, center bottom, center;
+}
+
+.focus-portrait.sprite::before,
+.focus-portrait.sprite::after,
+.focus-portrait.sprite b,
+.focus-portrait.sprite i {
+  display: none;
 }
 
 .focus-portrait::before {

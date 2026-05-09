@@ -1508,6 +1508,8 @@ function applySkin(index) {
   activePainterlySkin = activeSkin;
   activePainterlySkinColor = skinColor;
   activePainterlyStyle = classThumbStyles[activeClass] || 'field-kit';
+  focusPortrait.classList.add('sprite');
+  focusPortrait.dataset.classId = activeClass;
   focusPortrait.style.setProperty('--skin-color', skinColor);
   focusPortrait.style.setProperty('--accent-color', accentHex);
   focusPortrait.dataset.classStyle = activePainterlyStyle;
@@ -1532,6 +1534,8 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusUsesSpriteAsset = focusPortrait.classList.contains('sprite');
   window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
   window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible = reviewMode === 'class' && !!classShowcase;
@@ -2158,6 +2162,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusUsesSpriteAsset = focusPortrait.classList.contains('sprite');
   window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
   window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
