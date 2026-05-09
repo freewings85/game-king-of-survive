@@ -59,7 +59,10 @@ const mats = {
   muzzle: new THREE.MeshBasicMaterial({ color: 0xfff0a3, transparent: true, opacity: 0.9 }),
   crack: new THREE.MeshBasicMaterial({ color: 0x101412, transparent: true, opacity: 0.42 }),
   grass: new THREE.MeshStandardMaterial({ color: 0x3e5f38, roughness: 0.96 }),
-  spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 })
+  spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
+  hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
+  smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
+  arcGlow: new THREE.MeshBasicMaterial({ color: 0xbdf7ff, transparent: true, opacity: 0.72 })
 };
 
 const tileMats = [
@@ -747,11 +750,32 @@ for (let i = 0; i < 7; i++) {
   scene.add(round);
   fanRounds.push(round);
 }
+const fanTrails = [];
+for (let i = 0; i < 7; i++) {
+  const trail = box(0.52, 0.028, 0.028, new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.38 }));
+  trail.castShadow = false;
+  scene.add(trail);
+  fanTrails.push(trail);
+}
 
 const boomRing = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.34, 48), mats.orange.clone());
 boomRing.rotation.x = -Math.PI / 2;
 boomRing.castShadow = false;
 scene.add(boomRing);
+const boomCore = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 12), mats.hotCore.clone());
+boomCore.castShadow = false;
+scene.add(boomCore);
+const boomSmoke = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.62, 36), mats.smoke.clone());
+boomSmoke.rotation.x = -Math.PI / 2;
+boomSmoke.castShadow = false;
+scene.add(boomSmoke);
+const boomSparks = [];
+for (let i = 0; i < 10; i++) {
+  const spark = box(0.18, 0.035, 0.035, mats.spark.clone());
+  spark.castShadow = false;
+  scene.add(spark);
+  boomSparks.push(spark);
+}
 
 const arcBranches = [];
 for (let i = 0; i < 4; i++) {
@@ -759,6 +783,13 @@ for (let i = 0; i < 4; i++) {
   branch.castShadow = false;
   scene.add(branch);
   arcBranches.push(branch);
+}
+const arcGlowNodes = [];
+for (let i = 0; i < 4; i++) {
+  const glow = box(1, 0.07, 0.07, mats.arcGlow.clone());
+  glow.castShadow = false;
+  scene.add(glow);
+  arcGlowNodes.push(glow);
 }
 
 const skillBursts = [];
@@ -1000,30 +1031,65 @@ function animate(now) {
     );
     round.rotation.y = -a;
     round.material.opacity = 0.42 + Math.sin(t * 9 + i) * 0.16;
+    if (fanTrails[i]) {
+      fanTrails[i].visible = round.visible;
+      fanTrails[i].position.set(
+        player.position.x + Math.sin(a) * (travel - 0.28),
+        0.84,
+        player.position.z + Math.cos(a) * (travel - 0.28)
+      );
+      fanTrails[i].rotation.y = -a + Math.PI / 2;
+      fanTrails[i].material.opacity = 0.22 + Math.sin(t * 7 + i) * 0.10;
+    }
   });
 
   const nearest = nearestZombies((skillDefs[activeSkill] || skillDefs.arc).range);
   const boomTarget = nearest[0] && nearest[0].z;
   boomRing.visible = activeSkill === 'boom' && !!boomTarget;
+  boomCore.visible = boomRing.visible;
+  boomSmoke.visible = boomRing.visible;
   if (boomTarget) {
     const pulse = 1.3 + Math.abs(Math.sin(t * 5.6)) * 1.15;
     boomRing.position.set(boomTarget.position.x, 0.075, boomTarget.position.z);
     boomRing.scale.set(pulse, pulse, 1);
     boomRing.material.opacity = activeSkill === 'boom' ? 0.28 + Math.abs(Math.sin(t * 7)) * 0.35 : 0;
+    boomCore.position.set(boomTarget.position.x, 0.44, boomTarget.position.z);
+    boomCore.scale.setScalar(activeSkill === 'boom' ? 0.75 + Math.abs(Math.sin(t * 8)) * 0.55 : 0.01);
+    boomCore.material.opacity = activeSkill === 'boom' ? 0.36 + Math.abs(Math.sin(t * 9)) * 0.45 : 0;
+    boomSmoke.position.set(boomTarget.position.x, 0.06, boomTarget.position.z);
+    boomSmoke.scale.set(pulse * 1.18, pulse * 0.9, 1);
+    boomSmoke.material.opacity = activeSkill === 'boom' ? 0.16 + Math.abs(Math.sin(t * 4)) * 0.16 : 0;
   }
+  boomSparks.forEach((spark, i) => {
+    spark.visible = activeSkill === 'boom' && !!boomTarget;
+    if (!boomTarget) return;
+    const a = i * Math.PI * 0.2 + t * 1.8;
+    const r = 0.45 + (i % 4) * 0.18;
+    spark.position.set(boomTarget.position.x + Math.cos(a) * r, 0.42 + (i % 3) * 0.07, boomTarget.position.z + Math.sin(a) * r);
+    spark.rotation.y = -a;
+    spark.material.opacity = 0.28 + Math.abs(Math.sin(t * 10 + i)) * 0.45;
+  });
 
   arcBranches.forEach((branch, i) => {
     const a = nearest[i] && nearest[i].z;
     const b = nearest[i + 1] && nearest[i + 1].z;
     branch.visible = activeSkill === 'arc' && !!a && !!b;
+    if (arcGlowNodes[i]) arcGlowNodes[i].visible = branch.visible;
     if (!a || !b) return;
     const mx = (a.position.x + b.position.x) * 0.5;
     const mz = (a.position.z + b.position.z) * 0.5;
     const dist = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
-    branch.position.set(mx, 0.96 + Math.sin(t * 14 + i) * 0.05, mz);
+    const jitter = Math.sin(t * 18 + i) * 0.10;
+    branch.position.set(mx + jitter, 0.96 + Math.sin(t * 14 + i) * 0.05, mz - jitter);
     branch.scale.x = dist;
     branch.rotation.y = Math.atan2(a.position.x - b.position.x, a.position.z - b.position.z) + Math.PI / 2;
-    branch.material.opacity = 0.22 + Math.abs(Math.sin(t * 12 + i)) * 0.58;
+    branch.material.opacity = 0.38 + Math.abs(Math.sin(t * 12 + i)) * 0.58;
+    if (arcGlowNodes[i]) {
+      arcGlowNodes[i].position.copy(branch.position);
+      arcGlowNodes[i].scale.x = dist;
+      arcGlowNodes[i].rotation.y = branch.rotation.y;
+      arcGlowNodes[i].material.opacity = 0.18 + Math.abs(Math.sin(t * 11 + i)) * 0.34;
+    }
   });
 
   skillBursts.forEach((orb, i) => {
@@ -1050,8 +1116,11 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.fanTrailCount = fanTrails.filter((trail) => trail.visible).length;
   window.__V03_ENGINE_DEMO_STATE.boomRingReady = boomRing.visible || activeSkill !== 'boom';
+  window.__V03_ENGINE_DEMO_STATE.boomSparkCount = boomSparks.filter((spark) => spark.visible).length;
   window.__V03_ENGINE_DEMO_STATE.arcBranchCount = arcBranches.filter((branch) => branch.visible).length;
+  window.__V03_ENGINE_DEMO_STATE.arcGlowCount = arcGlowNodes.filter((glow) => glow.visible).length;
   window.__V03_ENGINE_DEMO_STATE.lastKillAgo = game.lastKillAt ? Number((t - game.lastKillAt).toFixed(2)) : null;
   window.__V03_ENGINE_DEMO_STATE.rivalVisible = rival.visible;
   window.__V03_ENGINE_DEMO_STATE.safeZoneScale = Number(zoneScale.toFixed(3));

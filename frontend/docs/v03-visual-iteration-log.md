@@ -166,3 +166,38 @@ Next iteration direction:
 2. Add impact feedback on zombies: hit flashes, brief scale pulse, damage sparks at contact points.
 3. Make the skill review screenshots part of visual comparison after every FX pass.
 4. Start the phone UI pass once FX readability is closer to the reference.
+
+## 2026-05-10 FX Art Direction Pass
+
+Related work:
+
+- WebGL reference WIP after `4400c59`
+
+Reviewed screenshots:
+
+- `can_delete/v03-gate/engine-demo-skill-arc.png`
+- `can_delete/v03-gate/engine-demo-skill-boom.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- FAN now has warm projectile trails behind the bullet bodies, so the spread reads more like a skill volley instead of isolated dots.
+- BOOM now has a hot center, smoke ring, and radial sparks around the target, closer to the reference's explosive impact panel.
+- ARC now has a secondary glow layer behind the branch links, making the electric skill more readable in the review shot.
+- The verifier now records and gates `fanTrailCount`, `boomSparkCount`, and `arcGlowCount`, so the richer FX layers are treated as required progress.
+
+What is still far from the reference:
+
+- The effects are still procedural primitives, not painted sprite sheets with soft alpha, debris silhouettes, impact flashes, and color falloff.
+- FAN lacks target impact sparks and muzzle flare shape variation.
+- BOOM needs stronger dust/debris, screen-space heat, and an expanding ring that feels less flat.
+- ARC needs jagged segmented lightning, branching forks, and hit flashes on multiple zombies.
+- The phone UI, character art, and zombie art still lag far behind the target image's illustrated finish.
+
+Next iteration direction:
+
+1. Add hit feedback on zombies for all skills: flash material, small impact sparks, and brief scale/knockback pulse.
+2. Replace more FX primitives with layered sprite-like planes so the look moves toward painted game art.
+3. Start the phone UI pass: circular minimap, icon-like skill buttons, tighter HUD, and stronger device frame.
+4. Keep comparing the review screenshots against the target image after each visual pass before moving on.
