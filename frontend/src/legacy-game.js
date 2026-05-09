@@ -9203,6 +9203,32 @@
   //   1→2:30, 2→3:50, 3→4:70, 4→5:90, 5→6:110, 6→7:130, 7→8:150, 8→9:170.
   // A 5–8 min match averages 15–25 XP drops → 3–5 level-ups.
   var _levelUpQueue = { pending: 0, wait: 0 };
+  function grantBuildSkillPointLevelUp() {
+    playerLevel++;
+    playerXP = Math.max(0, playerXP - xpToNextLevel);
+    xpToNextLevel = 30 + (playerLevel - 1) * 20;
+    pendingSkillPoints++;
+    if (!_skillHintShown) {
+      _skillHintShown = true;
+      _skillHintTimer = 6;
+    }
+    if (playerLevel === 5 && player && !player._ultimateUnlocked) {
+      grantClassUltimate();
+    }
+    if (player) {
+      floatText(player.x, player.y - 50, 'LEVEL UP!', { color: '#ffd700', size: 22 });
+      floatText(player.x, player.y - 28, '技能点 +' + pendingSkillPoints, { color: '#ffe080', size: 15 });
+      emit(player.x, player.y, '#ffd700', 35, 160);
+      emit(player.x, player.y, '#fff', 12, 120);
+      levelUpFlash.active = true;
+      levelUpFlash.timer = 0.6;
+      levelUpFlash.ringRadius = 0;
+      screenFlash.color = '#ffd700'; screenFlash.alpha = 0.35;
+      if (typeof screenShake === 'function') screenShake(5, 300);
+    }
+    if (typeof playSound === 'function') playSound('levelup');
+  }
+
   function triggerLevelUp() {
     if (state === 'levelUp') return;
     // Zombie BR pacing: keep a short opening combat beat, then let the first
@@ -9219,6 +9245,10 @@
     if (_bannerActive) {
       _levelUpQueue.pending++;
       _levelUpQueue.wait = Math.max(_levelUpQueue.wait, 1.2);
+      return;
+    }
+    if (selectedBuild && selectedBuild.length > 0) {
+      grantBuildSkillPointLevelUp();
       return;
     }
     playerLevel++;
