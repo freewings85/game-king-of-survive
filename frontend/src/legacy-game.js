@@ -9882,8 +9882,8 @@
     if (_invisActive) ctx.globalAlpha = 1;
     player._spriteAnimState = _pAnimState; // exposed for __spriteDebug
 
-    // HERO CROWN — floating golden chevron above player head (clear friendly marker)
-    (function(){
+    // HERO CROWN — old friendly marker. Disabled by the compact mobile HUD theme.
+    if (!(window.KOS_UI && window.KOS_UI.hud && window.KOS_UI.hud.suppressHeroCrown)) (function(){
       var _crownY = player.y - player.radius * 1.9 + Math.sin(gameTime * 2.2) * 1.5;
       var _crownW = player.radius * 0.6;
       var _crownH = player.radius * 0.45;
@@ -10167,12 +10167,13 @@
     if (screenshotMode) { /* skip all HUD text in screenshot mode */ } else {
 
     // === 3-ZONE HUD (reference: capsule-style top + big rounded buttons bottom) ===
-    var _zs = Math.min(W / 400, H / 700);
+    var _hudCfg = (window.KOS_UI && window.KOS_UI.hud) || {};
+    var _zs = Math.min(W / 400, H / 700) * (_hudCfg.scale || 1);
     var _fs = Math.max(11, Math.round(15 * _zs));
     var _fsSmall = Math.max(9, Math.round(12 * _zs));
     var _fsBold = Math.max(13, Math.round(17 * _zs));
-    var topH = Math.round(H * 0.105);
-    var botH = Math.round(H * 0.10);
+    var topH = Math.round(H * (_hudCfg.topHeightRatio || 0.105));
+    var botH = Math.round(H * (_hudCfg.bottomHeightRatio || 0.10));
     var botY = H - botH;
     var hudCls = CLASS_DEFS[selectedClass] || CLASS_DEFS.warrior || { color: '#4af', icon: '★' };
     var padX = Math.round(8 * _zs);
@@ -10227,7 +10228,7 @@
     ctx.textBaseline = 'alphabetic';
 
     // Measure right side reserved space: minimap
-    var _miniW = Math.min(Math.round(80 * _zs), topH - Math.round(8 * _zs));
+    var _miniW = Math.min(Math.round(80 * _zs * (_hudCfg.minimapScale || 1)), topH - Math.round(8 * _zs));
     // Measure the width of the name+level+gold block to start center after it
     ctx.font = 'bold ' + _fs + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
     var nameW = ctx.measureText(playerName).width;
@@ -10848,19 +10849,23 @@
       if (bossDropBanner.timer <= 0) { bossDropBanner.active = false; }
       else {
         var _bbAlpha = Math.min(1, bossDropBanner.timer / 0.4); // fade out last 0.4s
-        var _bbFS = Math.round(Math.min(W, H) * 0.045);
-        var _bbY = Math.round(H * 0.18);
+        var _compactBanner = !!((window.KOS_UI && window.KOS_UI.hud) || {}).compactBanners;
+        var _bbFS = _compactBanner ? Math.round(Math.min(W, H) * 0.020) : Math.round(Math.min(W, H) * 0.045);
+        var _bbY = _compactBanner ? Math.round(H * 0.118) : Math.round(H * 0.18);
         ctx.save();
         ctx.globalAlpha = _bbAlpha;
-        ctx.fillStyle = 'rgba(15,5,5,0.75)';
-        var _bbW = W; ctx.fillRect(0, _bbY - _bbFS, _bbW, _bbFS * 2.2);
+        ctx.fillStyle = _compactBanner ? 'rgba(10,14,16,0.58)' : 'rgba(15,5,5,0.75)';
+        var _bbW = _compactBanner ? Math.min(W * 0.76, 520) : W;
+        var _bbX = _compactBanner ? (W - _bbW) / 2 : 0;
+        ctx.fillRect(_bbX, _bbY - _bbFS, _bbW, _bbFS * 2.2);
         ctx.fillStyle = '#ffd040';
         ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-        ctx.lineWidth = Math.max(3, _bbFS * 0.09);
+        ctx.lineWidth = _compactBanner ? Math.max(1.5, _bbFS * 0.06) : Math.max(3, _bbFS * 0.09);
         ctx.font = 'bold ' + _bbFS + 'px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.strokeText(bossDropBanner.text, W / 2, _bbY + _bbFS * 0.1);
-        ctx.fillText(bossDropBanner.text, W / 2, _bbY + _bbFS * 0.1);
+        var _bbText = _compactBanner && bossDropBanner.zoneName ? bossDropBanner.zoneName + ' 事件' : bossDropBanner.text;
+        ctx.strokeText(_bbText, W / 2, _bbY + _bbFS * 0.1);
+        ctx.fillText(_bbText, W / 2, _bbY + _bbFS * 0.1);
         ctx.textBaseline = 'alphabetic';
         ctx.restore();
       }
