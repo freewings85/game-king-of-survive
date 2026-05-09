@@ -52,6 +52,7 @@ const mats = {
 
 let activeClass = 'tech';
 let activeSkill = 'arc';
+let activeSkin = 0;
 const playerSpawn = { x: -0.8, z: 0.7 };
 
 const game = {
@@ -395,7 +396,6 @@ function updateHud() {
 function applyClass(id) {
   const def = classDefs[id] || classDefs.tech;
   activeClass = id;
-  mats.player.color.setHex(def.body);
   mats.playerAccent.color.setHex(def.accent);
   mats.playerAccent.emissive.setHex(def.emissive);
   accentLight.color.setHex(def.accent);
@@ -405,11 +405,26 @@ function applyClass(id) {
   activeClassCard.querySelector('strong').textContent = def.name;
   activeClassCard.querySelector('span').textContent = def.role;
   Array.from(skinRow.children).forEach((el, index) => {
+    el.dataset.skin = String(index);
     el.style.background = def.skins[index] || def.skins[0];
   });
   Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.class === id);
   });
+  applySkin(Math.min(activeSkin, def.skins.length - 1));
+}
+
+function applySkin(index) {
+  const def = classDefs[activeClass] || classDefs.tech;
+  activeSkin = Math.max(0, Math.min(index, def.skins.length - 1));
+  const skinColor = def.skins[activeSkin] || `#${def.body.toString(16).padStart(6, '0')}`;
+  mats.player.color.set(skinColor);
+  Array.from(skinRow.children).forEach((el, i) => {
+    el.classList.toggle('active', i === activeSkin);
+  });
+  window.__V03_ENGINE_DEMO_STATE = window.__V03_ENGINE_DEMO_STATE || {};
+  window.__V03_ENGINE_DEMO_STATE.activeSkin = activeSkin;
+  window.__V03_ENGINE_DEMO_STATE.activeSkinColor = skinColor;
 }
 
 function applySkill(id) {
@@ -432,6 +447,11 @@ classButtons.addEventListener('click', (ev) => {
     applyClass(btn.dataset.class);
     applySkill(activeSkill);
   }
+});
+
+skinRow.addEventListener('click', (ev) => {
+  const swatch = ev.target.closest('i[data-skin]');
+  if (swatch) applySkin(Number(swatch.dataset.skin));
 });
 
 skillPanel.addEventListener('click', (ev) => {

@@ -75,12 +75,15 @@ async function verifyEngineDemo(browser) {
   const logs = await collectErrors(page);
   await page.goto(`${baseUrl}/frontend/engine-demo/index.html`, { waitUntil: 'networkidle', timeout: 15000 });
   await page.locator('[data-class="ranger"]').click();
+  await page.locator('#skinRow i').nth(2).click();
   await page.locator('[data-skill="fan"]').click();
   await page.waitForTimeout(500);
   const info = await page.evaluate(() => ({
     className: document.getElementById('className').textContent,
     activeClass: document.querySelector('#classButtons .active').dataset.class,
     activeSkill: document.querySelector('#skillPanel .active').dataset.skill,
+    activeSkin: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkin,
+    activeSkinColor: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.activeSkinColor,
     contractMapName: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractMapName,
     contractPropCount: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractPropCount,
     contractQualityOk: window.__V03_ENGINE_DEMO_STATE && window.__V03_ENGINE_DEMO_STATE.contractQualityOk,
@@ -88,7 +91,7 @@ async function verifyEngineDemo(browser) {
     canvas: { width: engineCanvas.width, height: engineCanvas.height }
   }));
   const errors = logs.filter((log) => log.type === 'pageerror' || log.type === 'error');
-  if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || !info.contractQualityOk || info.contractPropCount < 18) {
+  if (errors.length || !info.hasWebgl || info.activeClass !== 'ranger' || info.activeSkill !== 'fan' || info.activeSkin !== 2 || !info.contractQualityOk || info.contractPropCount < 18) {
     fail('V03 engine demo verification failed', { info, errors });
   }
   await page.close();

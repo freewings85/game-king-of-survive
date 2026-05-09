@@ -190,10 +190,16 @@ body {
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.42);
   background: #193743;
+  cursor: pointer;
 }
 
 .skin-row i:nth-child(2) { background: #2f6068; }
 .skin-row i:nth-child(3) { background: #7b315d; }
+
+.skin-row i.active {
+  border-color: #f4c95a;
+  box-shadow: 0 0 0 2px rgba(244,201,90,0.22), 0 0 14px rgba(244,201,90,0.38);
+}
 
 .class-buttons {
   display: grid;
