@@ -42,6 +42,13 @@
   // Three layouts shipped today: default (王冠之岛), arena_a (FFA 圆形竞技场),
   // lane_b (4v4 三线峡谷). Pick via ?map=<id>; falls back to default.
   var MAP_DATA = null;
+  function _normalizeStaticMap(map) {
+    if (!map) return map;
+    if (window.KOS_MAP_CONTRACT && typeof window.KOS_MAP_CONTRACT.normalizeMap === 'function') {
+      return window.KOS_MAP_CONTRACT.normalizeMap(map);
+    }
+    return map;
+  }
   function _resolveMapPath() {
     var requested = 'default';
     try {
@@ -60,7 +67,7 @@
       xhr.open('GET', url, false);
       xhr.send();
       if (xhr.status < 400 && xhr.responseText) {
-        MAP_DATA = JSON.parse(xhr.responseText);
+        MAP_DATA = _normalizeStaticMap(JSON.parse(xhr.responseText));
       }
     } catch (e) {
       console.warn('[map] sync load failed for', url, '— async retry', e && e.message);
@@ -71,7 +78,7 @@
         xhr2.open('GET', url, true);
         xhr2.onload = function() {
           if (xhr2.status < 400) {
-            try { MAP_DATA = JSON.parse(xhr2.responseText); console.log('[map] loaded', MAP_DATA.name); }
+            try { MAP_DATA = _normalizeStaticMap(JSON.parse(xhr2.responseText)); console.log('[map] loaded', MAP_DATA.name); }
             catch (e) { console.warn('[map] async parse failed', e); }
           }
         };

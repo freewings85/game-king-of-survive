@@ -137,6 +137,92 @@
     ];
   }
 
+  function addMissingPoints(map, listName, points) {
+    map[listName] = map[listName] || [];
+    for (var i = map[listName].length; i < points.length; i++) {
+      map[listName].push(points[i]);
+    }
+  }
+
+  function ensureStandardRoutes(map) {
+    var cx = Math.floor(map.cols / 2);
+    var cy = Math.floor(map.rows / 2);
+    for (var y = 0; y < map.rows; y++) {
+      for (var x = 0; x < map.cols; x++) {
+        var idx = y * map.cols + x;
+        if (Math.abs(x - cx) <= 1 || Math.abs(y - cy) <= 1) map.tiles[idx] = 4;
+        else if ((Math.abs(x - Math.floor(map.cols * 0.28)) <= 1 && y > map.rows * 0.18 && y < map.rows * 0.82)
+          || (Math.abs(y - Math.floor(map.rows * 0.72)) <= 1 && x > map.cols * 0.12 && x < map.cols * 0.88)) {
+          map.tiles[idx] = 2;
+        }
+      }
+    }
+  }
+
+  function ensureStandardProps(map) {
+    var placements = [
+      [0.18,0.22,0],[0.34,0.18,4],[0.62,0.20,5],[0.78,0.24,2],
+      [0.22,0.38,6],[0.42,0.36,3],[0.66,0.40,1],[0.84,0.42,4],
+      [0.16,0.56,2],[0.36,0.58,1],[0.56,0.55,6],[0.74,0.58,3],
+      [0.24,0.76,0],[0.44,0.78,2],[0.62,0.74,4],[0.82,0.76,1],
+      [0.12,0.84,5],[0.30,0.86,3],[0.70,0.86,0],[0.88,0.84,2],
+      [0.46,0.44,8],[0.53,0.42,9],[0.48,0.49,10],[0.58,0.55,8],
+      [0.40,0.62,9],[0.66,0.62,10],[0.26,0.48,8],[0.74,0.34,9]
+    ];
+    map.structures = map.structures || [];
+    for (var i = map.structures.length; i < 28 && i < placements.length; i++) {
+      var p = placements[i];
+      var def = propDefs[p[2] % propDefs.length];
+      map.structures.push({
+        kind: def.kind,
+        x: Math.round(map.width * p[0] - def.w / 2),
+        y: Math.round(map.height * p[1] - def.h / 2),
+        w: def.w,
+        h: def.h,
+        color: def.color,
+        gameplay: def.gameplay
+      });
+    }
+  }
+
+  function standardizeMap(input) {
+    var map = normalizeMap(input);
+    map.visualProfile = 'zombie-br-v03';
+    map.schemaVersion = 'v03-map-1';
+    map.gameplayProfile = map.gameplayProfile || createMap(map.cols, map.rows).gameplayProfile;
+    addMissingPoints(map, 'spawnPoints', [
+      { x: 320, y: 320 },
+      { x: map.width - 320, y: 320 },
+      { x: 320, y: map.height - 320 },
+      { x: map.width - 320, y: map.height - 320 }
+    ]);
+    addMissingPoints(map, 'zombieEntries', [
+      { x: map.width * 0.50, y: 120, kind: 'zombie_entry', name: '北部尸潮' },
+      { x: map.width - 120, y: map.height * 0.46, kind: 'zombie_entry', name: '东侧尸潮' },
+      { x: map.width * 0.48, y: map.height - 120, kind: 'zombie_entry', name: '南部尸潮' },
+      { x: 120, y: map.height * 0.54, kind: 'zombie_entry', name: '西侧尸潮' }
+    ]);
+    addMissingPoints(map, 'rewardPoints', [
+      { x: map.width * 0.18, y: map.height * 0.18, kind: 'reward', tier: 'small', xp: 12 },
+      { x: map.width * 0.50, y: map.height * 0.16, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: map.width * 0.82, y: map.height * 0.20, kind: 'reward', tier: 'small', xp: 12 },
+      { x: map.width * 0.20, y: map.height * 0.50, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: map.width * 0.80, y: map.height * 0.50, kind: 'reward', tier: 'medium', xp: 18 },
+      { x: map.width * 0.24, y: map.height * 0.82, kind: 'reward', tier: 'small', xp: 12 },
+      { x: map.width * 0.50, y: map.height * 0.84, kind: 'reward', tier: 'large', xp: 26 },
+      { x: map.width * 0.76, y: map.height * 0.80, kind: 'reward', tier: 'small', xp: 12 }
+    ]);
+    addMissingPoints(map, 'rivalPoints', [
+      { x: map.width * 0.30, y: map.height * 0.28, kind: 'rival' },
+      { x: map.width * 0.72, y: map.height * 0.72, kind: 'rival' }
+    ]);
+    if (!map.bossPoints || !map.bossPoints.length) map.bossPoints = [{ name: 'Boss', x: map.width / 2, y: map.height / 2, kind: 'boss' }];
+    map.stormCenter = map.stormCenter || { x: map.width / 2, y: map.height / 2 };
+    ensureStandardRoutes(map);
+    ensureStandardProps(map);
+    return map;
+  }
+
   function stampExport(map) {
     var checks = getQualityChecks(map);
     map.schemaVersion = 'v03-map-1';
@@ -158,6 +244,7 @@
     qualityTargets: qualityTargets,
     createMap: createMap,
     normalizeMap: normalizeMap,
+    standardizeMap: standardizeMap,
     getQualityChecks: getQualityChecks,
     stampExport: stampExport
   };

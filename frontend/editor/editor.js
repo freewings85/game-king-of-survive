@@ -621,6 +621,14 @@
   }
 
   function autoStandardize() {
+    if (mapContract.standardizeMap) {
+      state.map = mapContract.standardizeMap(state.map);
+      state.selected = null;
+      updateInspector();
+      draw();
+      setStatus('standardized: gameplay points and cover ready');
+      return;
+    }
     var m = state.map;
     m.visualProfile = 'zombie-br-v03';
     addMissingPoints('spawnPoints', [

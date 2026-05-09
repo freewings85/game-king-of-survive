@@ -16,10 +16,12 @@ python3 dev-server.py 8081
 - `/frontend/index.html`
   - Current modularized game entry.
   - Still contains the legacy gameplay core under `frontend/src/legacy-game.js`.
+  - Loads `frontend/src/map-contract.js` before the legacy core so editor-exported maps normalize to the same V03 schema at runtime.
 
 - `/frontend/editor/index.html`
   - Current map editor entry.
   - Should converge on the same map entities and rendering rules used by the game runtime.
+  - Uses `KOS_MAP_CONTRACT.standardizeMap()` for the standard wasteland battle royale layout and quality gates.
 
 ## Direction
 
