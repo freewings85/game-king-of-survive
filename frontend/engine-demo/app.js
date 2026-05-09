@@ -52,6 +52,10 @@ const mats = {
   boot: new THREE.MeshStandardMaterial({ color: 0x0d1110, roughness: 0.84 }),
   bone: new THREE.MeshStandardMaterial({ color: 0xd8d1a3, roughness: 0.8 }),
   hood: new THREE.MeshStandardMaterial({ color: 0x273321, roughness: 0.88 }),
+  armorEdge: new THREE.MeshBasicMaterial({ color: 0xdce9a0, transparent: true, opacity: 0.86 }),
+  facePaint: new THREE.MeshBasicMaterial({ color: 0xffd7a2, transparent: true, opacity: 0.78 }),
+  clothPatch: new THREE.MeshBasicMaterial({ color: 0x9a6b3a, transparent: true, opacity: 0.82 }),
+  rotPatch: new THREE.MeshBasicMaterial({ color: 0x37513b, transparent: true, opacity: 0.80 }),
   zombie: new THREE.MeshStandardMaterial({ color: 0x83936f, roughness: 0.88 }),
   zombieCloth: new THREE.MeshStandardMaterial({ color: 0x3b3027, roughness: 0.9 }),
   zombieRag: new THREE.MeshStandardMaterial({ color: 0x6c5838, roughness: 0.92 }),
@@ -107,6 +111,7 @@ const game = {
 let silhouettePartCount = 0;
 let zombieDetailPartCount = 0;
 let groundDetailCount = 0;
+let unitDecalCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -420,6 +425,10 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const faceShadow = box(0.34 * scale, 0.05 * scale, 0.28 * scale, mats.hair);
   faceShadow.position.set(0, 1.77 * scale, -0.22 * scale);
   root.add(faceShadow);
+  const facePaint = box(0.20 * scale, 0.06 * scale, 0.03 * scale, mats.facePaint);
+  facePaint.position.set(0.01 * scale, 1.80 * scale, -0.29 * scale);
+  unitDecalCount += 1;
+  root.add(facePaint);
   const eyeA = box(0.05 * scale, 0.035 * scale, 0.022 * scale, mats.boot);
   const eyeB = eyeA.clone();
   eyeA.position.set(-0.08 * scale, 1.86 * scale, -0.25 * scale);
@@ -441,6 +450,12 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   const visor = box(0.44 * scale, 0.09 * scale, 0.50 * scale, accentMat);
   visor.position.y = 1.90 * scale;
   root.add(visor);
+  const chestEdgeA = box(0.52 * scale, 0.035 * scale, 0.54 * scale, mats.armorEdge);
+  const chestEdgeB = chestEdgeA.clone();
+  chestEdgeA.position.set(0, 1.39 * scale, -0.035 * scale);
+  chestEdgeB.position.set(0, 1.02 * scale, -0.035 * scale);
+  unitDecalCount += 2;
+  root.add(chestEdgeA, chestEdgeB);
   const backpack = box(0.42 * scale, 0.68 * scale, 0.18 * scale, mats.road);
   backpack.position.set(0, 1.18 * scale, 0.32 * scale);
   root.add(backpack);
@@ -489,6 +504,12 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   guardianShieldCore.rotation.z = 0.18;
   guardianShieldCore.userData.classGear = 'guardian';
   root.add(guardianShieldCore);
+  const guardianShieldMark = box(0.21 * scale, 0.46 * scale, 0.08 * scale, mats.armorEdge);
+  guardianShieldMark.position.set(-0.86 * scale, 1.05 * scale, -0.10 * scale);
+  guardianShieldMark.rotation.z = 0.18;
+  guardianShieldMark.userData.classGear = 'guardian';
+  unitDecalCount += 1;
+  root.add(guardianShieldMark);
   const guardianPauldronA = box(0.34 * scale, 0.22 * scale, 0.62 * scale, accentMat);
   const guardianPauldronB = guardianPauldronA.clone();
   guardianPauldronA.position.set(-0.60 * scale, 1.55 * scale, 0.02 * scale);
@@ -520,6 +541,11 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   techAntenna.rotation.z = -0.18;
   techAntenna.userData.classGear = 'tech';
   root.add(techAntenna);
+  const techScreen = box(0.26 * scale, 0.14 * scale, 0.035 * scale, mats.armorEdge);
+  techScreen.position.set(-0.08 * scale, 1.34 * scale, 0.29 * scale);
+  techScreen.userData.classGear = 'tech';
+  unitDecalCount += 1;
+  root.add(techScreen);
 
   const rangerCloak = box(0.64 * scale, 0.74 * scale, 0.10 * scale, colorMat);
   rangerCloak.position.set(-0.04 * scale, 0.95 * scale, 0.44 * scale);
@@ -546,6 +572,12 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   rangerCapeTip.rotation.x = -0.38;
   rangerCapeTip.userData.classGear = 'ranger';
   root.add(rangerCapeTip);
+  const rangerCapeStripe = box(0.44 * scale, 0.055 * scale, 0.09 * scale, mats.armorEdge);
+  rangerCapeStripe.position.set(-0.08 * scale, 0.76 * scale, 0.55 * scale);
+  rangerCapeStripe.rotation.x = -0.38;
+  rangerCapeStripe.userData.classGear = 'ranger';
+  unitDecalCount += 1;
+  root.add(rangerCapeStripe);
 
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
@@ -572,6 +604,9 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   rag.rotation.x = -0.2;
   const wound = box((fast ? 0.28 : 0.36) * scale, 0.10 * scale, 0.40 * scale, mats.eye);
   wound.position.set(0.05 * scale, 1.05 * scale, -0.01 * scale);
+  const woundGlow = box((fast ? 0.22 : 0.30) * scale, 0.045 * scale, 0.43 * scale, mats.rotPatch);
+  woundGlow.position.set(0.06 * scale, 1.12 * scale, -0.04 * scale);
+  unitDecalCount += 1;
   const head = cyl(0.22 * scale, 0.23 * scale, 0.28 * scale, mats.zombie, 18);
   head.position.set(0, 1.44 * scale, -0.11 * scale);
   head.rotation.x = 0.28;
@@ -590,6 +625,9 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const skullPatch = box(0.18 * scale, 0.08 * scale, 0.15 * scale, mats.bone);
   skullPatch.position.set(-0.08 * scale, 1.54 * scale, -0.17 * scale);
   skullPatch.rotation.z = -0.22;
+  const cheekRot = box(0.13 * scale, 0.045 * scale, 0.03 * scale, mats.rotPatch);
+  cheekRot.position.set(0.10 * scale, 1.40 * scale, -0.35 * scale);
+  unitDecalCount += 1;
   const eyeA = cyl(0.035 * scale, 0.035 * scale, 0.02 * scale, mats.eye, 8);
   const eyeB = eyeA.clone();
   eyeA.position.set(-0.08 * scale, 1.48 * scale, -0.31 * scale);
@@ -618,10 +656,17 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   fingerD.position.set(0.54 * scale, 0.68 * scale, -0.72 * scale);
   const tornA = box(0.12 * scale, 0.42 * scale, 0.44 * scale, mats.zombieRag);
   const tornB = tornA.clone();
+  const clothPatchA = box(0.15 * scale, 0.22 * scale, 0.45 * scale, mats.clothPatch);
+  const clothPatchB = clothPatchA.clone();
   tornA.position.set(-0.34 * scale, 0.82 * scale, -0.06 * scale);
   tornB.position.set(0.34 * scale, 0.72 * scale, -0.04 * scale);
   tornA.rotation.z = 0.18;
   tornB.rotation.z = -0.15;
+  clothPatchA.position.set(-0.22 * scale, 1.18 * scale, -0.09 * scale);
+  clothPatchB.position.set(0.24 * scale, 0.96 * scale, -0.09 * scale);
+  clothPatchA.rotation.z = 0.22;
+  clothPatchB.rotation.z = -0.18;
+  unitDecalCount += 2;
   const variantParts = [];
   if (variant === 1) {
     const crawlerSpine = box(0.18 * scale, 0.72 * scale, 0.16 * scale, mats.bone);
@@ -652,7 +697,7 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
     variantParts.push(bellyRib, shoulderRip);
     root.userData.variantName = 'brute';
   }
-  root.add(legA, legB, bootA, bootB, body, rag, wound, head, jaw, teeth, skullPatch, eyeA, eyeB, armA, armB, clawA, clawB, fingerA, fingerB, fingerC, fingerD, tornA, tornB, ...variantParts);
+  root.add(legA, legB, bootA, bootB, body, rag, wound, woundGlow, head, jaw, teeth, skullPatch, cheekRot, eyeA, eyeB, armA, armB, clawA, clawB, fingerA, fingerB, fingerC, fingerD, tornA, tornB, clothPatchA, clothPatchB, ...variantParts);
   root.position.set(x, 0, z);
   root.rotation.y = Math.PI + (Math.random() - 0.5) * 0.5;
   root.userData.phase = Math.random() * Math.PI * 2;
@@ -1320,6 +1365,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.silhouettePartCount = silhouettePartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieDetailPartCount = zombieDetailPartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieVariantCount = new Set(zombies.map((z) => z.userData.variantName)).size;
+  window.__V03_ENGINE_DEMO_STATE.unitDecalCount = unitDecalCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

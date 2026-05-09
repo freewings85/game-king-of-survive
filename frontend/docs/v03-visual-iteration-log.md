@@ -336,3 +336,36 @@ Next iteration direction:
 2. Give zombie variants stronger scale/posture differences and color accents while preserving combat readability.
 3. Add a Cocos visual contract note for required class gear and zombie variant components so this work can migrate out of the WebGL reference.
 4. Continue using the landscape phone screenshot as the main target comparison for gameplay art direction.
+
+## 2026-05-10 Unit Decal Layer Pass
+
+Related work:
+
+- WebGL reference WIP after `c28ea21`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+What moved closer:
+
+- Units now have a lightweight painted/decal layer over the low-poly bodies: face highlights, armor edge lines, class gear marks, zombie wound patches, rot patches, and torn-cloth color panels.
+- The visual gate now records `unitDecalCount`; the current run reports 52 decal-layer pieces.
+- `zombieDetailPartCount` rose to 293 while the screenshots remain readable, so the extra detail is not only hidden behind counters.
+- The portrait review shows clearer armor/cloth/rot contrast around the player and nearby zombies.
+
+What is still far from the reference:
+
+- These are still geometric decals. The reference uses proper painted sprite/model textures, outlines, soft shading, and expressive faces.
+- Decals need more art direction: controlled palettes per zombie variant, class-specific iconography, and cleaner silhouette accents.
+- Skill FX still needs painted muzzle/impact cards to match the target's bullets, explosions, and electric arcs.
+- The Cocos runtime does not yet encode this decal/component requirement.
+
+Next iteration direction:
+
+1. Add painted-style muzzle and impact cards so attacks feel closer to the reference, not just the unit bodies.
+2. Create a Cocos visual contract document covering required hero gear, zombie variants, decal layers, and FX layers.
+3. Start translating the WebGL reference expectations into Cocos prefab/component names even before final assets exist.
+4. Keep screenshots as the source of truth: counters prevent regression but visual comparison decides direction.
