@@ -11080,13 +11080,13 @@
       if (!tutorialDone) {
         var _tutS = _tutSlides[_tutSlide];
         ctx.save();
-        // Dark backdrop
-        ctx.fillStyle = 'rgba(0,0,0,0.52)';
+        // Light touch tutorial: keep the playfield visible on phones.
+        ctx.fillStyle = 'rgba(0,0,0,0.16)';
         ctx.fillRect(0, 0, W, H);
         // Keep the 16:9 tutorial art compact on portrait phones instead of stretching it.
         if (_tutS && _tutS.ready) {
-          var _tutMaxW = W * (W < H ? 0.84 : 0.92);
-          var _tutMaxH = H * (W < H ? 0.28 : 0.58);
+          var _tutMaxW = W * (W < H ? 0.62 : 0.82);
+          var _tutMaxH = H * (W < H ? 0.12 : 0.42);
           var _tutPanelW = _tutMaxW;
           var _tutPanelH = _tutPanelW * 360 / 640;
           if (_tutPanelH > _tutMaxH) {
@@ -11094,9 +11094,9 @@
             _tutPanelW = _tutPanelH * 640 / 360;
           }
           var _tutPanelX = (W - _tutPanelW) / 2;
-          var _tutPanelY = W < H ? Math.max(H * 0.16, H / 2 - _tutPanelH * 0.72) : (H - _tutPanelH) / 2;
-          ctx.fillStyle = 'rgba(0,0,0,0.55)';
-          ctx.fillRect(_tutPanelX + 8, _tutPanelY + 10, _tutPanelW, _tutPanelH);
+          var _tutPanelY = W < H ? Math.max(H * 0.12, H - Math.max(280, H * 0.15) - _tutPanelH) : (H - _tutPanelH) / 2;
+          ctx.fillStyle = 'rgba(0,0,0,0.62)';
+          ctx.fillRect(_tutPanelX + 6, _tutPanelY + 8, _tutPanelW, _tutPanelH);
           ctx.drawImage(_tutS.img, 0, 0, 320, 360, _tutPanelX, _tutPanelY, _tutPanelW * 0.48, _tutPanelH);
           var _tutText = [
             { step: '1/3', title: '拖动摇杆移动', sub: '左下摇杆控制方向', body: '先拉开距离，再清掉尸群。' },
@@ -11118,21 +11118,21 @@
           ctx.roundRect(_txtX + 16, _txtY, Math.max(58, _txtW * 0.24), 34, 6);
           ctx.fill();
           ctx.fillStyle = '#1a1204';
-          ctx.font = 'bold ' + Math.max(17, Math.round(_tutPanelH * 0.045)) + 'px ' + _HUD_CJK;
+          ctx.font = 'bold ' + Math.max(13, Math.round(_tutPanelH * 0.038)) + 'px ' + _HUD_CJK;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(_tutText.step, _txtX + 16 + Math.max(58, _txtW * 0.24) / 2, _txtY + 17);
           ctx.fillStyle = '#ffd214';
-          ctx.font = 'bold ' + Math.max(28, Math.round(_tutPanelH * 0.078)) + 'px ' + _HUD_CJK;
+          ctx.font = 'bold ' + Math.max(20, Math.round(_tutPanelH * 0.058)) + 'px ' + _HUD_CJK;
           ctx.fillText(_tutText.title, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.18);
           ctx.fillStyle = '#fff2b8';
-          ctx.font = 'bold ' + Math.max(20, Math.round(_tutPanelH * 0.055)) + 'px ' + _HUD_CJK;
+          ctx.font = 'bold ' + Math.max(15, Math.round(_tutPanelH * 0.042)) + 'px ' + _HUD_CJK;
           ctx.fillText(_tutText.sub, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.31);
           ctx.fillStyle = '#e9dcc3';
-          ctx.font = Math.max(17, Math.round(_tutPanelH * 0.045)) + 'px ' + _HUD_CJK;
+          ctx.font = Math.max(13, Math.round(_tutPanelH * 0.034)) + 'px ' + _HUD_CJK;
           ctx.fillText(_tutText.body, _txtX + _txtW / 2, _txtY + _tutPanelH * 0.46);
           ctx.fillStyle = '#a99670';
-          ctx.font = Math.max(14, Math.round(_tutPanelH * 0.036)) + 'px ' + _HUD_CJK;
+          ctx.font = Math.max(12, Math.round(_tutPanelH * 0.03)) + 'px ' + _HUD_CJK;
           ctx.fillText(_tutSlide === _tutSlides.length - 1 ? '点击开始' : '点击继续', _txtX + _txtW / 2, _txtY + _tutPanelH * 0.58);
           ctx.strokeStyle = 'rgba(255,208,96,0.85)';
           ctx.lineWidth = Math.max(2, Math.round(Math.min(W, H) * 0.003));
@@ -11146,7 +11146,7 @@
           ctx.fillText(_fbLabels[_tutSlide] || '', W / 2, H / 2);
         }
         // Slide dots (progress)
-        var _dotY = H - Math.max(30, Math.round(H * 0.05));
+        var _dotY = (typeof _tutPanelY === 'number') ? _tutPanelY + _tutPanelH + Math.max(12, Math.round(H * 0.008)) : H - Math.max(30, Math.round(H * 0.05));
         var _dotR = Math.max(5, Math.round(Math.min(W, H) * 0.008));
         var _dotGap = _dotR * 3.5;
         var _dotStartX = W / 2 - _dotGap * (_tutSlides.length - 1) / 2;
@@ -11157,8 +11157,8 @@
           ctx.fill();
         }
         // Top-right X skip button
-        var _skX = W - Math.max(40, Math.round(W * 0.08));
-        var _skY = Math.max(40, Math.round(H * 0.04));
+        var _skX = (typeof _tutPanelX === 'number') ? _tutPanelX + _tutPanelW - Math.max(20, Math.round(W * 0.018)) : W - Math.max(40, Math.round(W * 0.08));
+        var _skY = (typeof _tutPanelY === 'number') ? _tutPanelY + Math.max(20, Math.round(W * 0.018)) : Math.max(40, Math.round(H * 0.04));
         var _skR = Math.max(18, Math.round(Math.min(W, H) * 0.03));
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.beginPath(); ctx.arc(_skX, _skY, _skR, 0, Math.PI * 2); ctx.fill();
