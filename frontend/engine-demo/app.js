@@ -157,10 +157,12 @@ let activePainterlySkin = 0;
 let activePainterlySkinColor = '#193743';
 let activePainterlyStyle = 'coil-screen';
 let activePainterlyUsesSpriteAsset = false;
+let zombiePainterlyUsesSpriteAsset = false;
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
 const classPortraitTextureCache = new Map();
+const zombieTextureCache = new Map();
 const classThumbStyles = {
   guardian: 'shield-armor',
   tech: 'coil-screen',
@@ -170,6 +172,11 @@ const classPortraitAssets = {
   guardian: '/frontend/engine-demo/assets/portraits/class-focus-guardian.png',
   tech: '/frontend/engine-demo/assets/portraits/class-focus-tech.png',
   ranger: '/frontend/engine-demo/assets/portraits/class-focus-ranger.png'
+};
+const zombieCardAssets = {
+  0: '/frontend/engine-demo/assets/zombies/zombie-card-brute.png',
+  1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler.png',
+  2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded.png'
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -364,6 +371,18 @@ function getClassPortraitTexture(classId) {
   return classPortraitTextureCache.get(classId);
 }
 
+function getZombieSpriteTexture(variant) {
+  const asset = zombieCardAssets[variant];
+  if (!asset) return null;
+  if (!zombieTextureCache.has(variant)) {
+    const texture = new THREE.TextureLoader().load(asset);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    zombieTextureCache.set(variant, texture);
+  }
+  return zombieTextureCache.get(variant);
+}
+
 function makeZombieCardTexture(variant = 0) {
   const cloth = variant === 2 ? '#413424' : variant === 1 ? '#2d3828' : '#4b3628';
   const skin = variant === 1 ? '#78906d' : '#8d9a72';
@@ -451,9 +470,9 @@ function makeFxCardTexture(kind) {
 const painterlyMaterials = {
   hero: makePainterlyMaterial(getClassPortraitTexture('tech') || getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
   rival: makePainterlyMaterial(getClassPortraitTexture('guardian') || getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
-  zombieBrute: makePainterlyMaterial(makeZombieCardTexture(0), 0.96),
-  zombieCrawler: makePainterlyMaterial(makeZombieCardTexture(1), 0.96),
-  zombieHooded: makePainterlyMaterial(makeZombieCardTexture(2), 0.96),
+  zombieBrute: makePainterlyMaterial(getZombieSpriteTexture(0) || makeZombieCardTexture(0), 0.90),
+  zombieCrawler: makePainterlyMaterial(getZombieSpriteTexture(1) || makeZombieCardTexture(1), 0.90),
+  zombieHooded: makePainterlyMaterial(getZombieSpriteTexture(2) || makeZombieCardTexture(2), 0.90),
   fan: makePainterlyMaterial(makeFxCardTexture('fan'), 0.96),
   boom: makePainterlyMaterial(makeFxCardTexture('boom'), 0.94),
   arc: makePainterlyMaterial(makeFxCardTexture('arc'), 0.94)
@@ -1195,7 +1214,7 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const root = new THREE.Group();
   addContactShadow(root, 0.88 * scale, 0.58 * scale, 0.25);
   const zombieCardMaterial = variant === 1 ? painterlyMaterials.zombieCrawler : variant === 2 ? painterlyMaterials.zombieHooded : painterlyMaterials.zombieBrute;
-  addPainterlyCard(root, zombieCardMaterial, 1.06 * scale, 1.74 * scale, 0.02 * scale, 0.88 * scale, -0.54 * scale, 'zombie');
+  addPainterlyCard(root, zombieCardMaterial, 0.82 * scale, 1.34 * scale, 0.02 * scale, 0.78 * scale, -0.54 * scale, 'zombie');
   const legA = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   const legB = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   legA.position.set(-0.14 * scale, 0.30 * scale, 0);
@@ -1389,6 +1408,7 @@ rivalBeam.castShadow = false;
 scene.add(rivalBeam);
 
 const zombies = [];
+zombiePainterlyUsesSpriteAsset = [0, 1, 2].every((variant) => !!getZombieSpriteTexture(variant));
 const zombieEntries = contractMap && contractMap.zombieEntries ? contractMap.zombieEntries : [];
 for (let i = 0; i < 10; i++) {
   const angle = i * 0.62;
@@ -2177,6 +2197,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.painterlyCardCount = painterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount = heroPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount = zombiePainterlyCardCount;
+  window.__V03_ENGINE_DEMO_STATE.zombiePainterlyUsesSpriteAsset = zombiePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;

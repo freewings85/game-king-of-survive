@@ -84,6 +84,7 @@ requiredText.forEach((text) => {
   'painterlyCardCount >= 40',
   'heroPainterlyCardCount >= 2',
   'zombiePainterlyCardCount >= 10',
+  'zombiePainterlyUsesSpriteAsset',
   'skillPainterlyCardCount >= 30',
   'activePainterlyClass: ranger',
   'activePainterlySkin: 2',
@@ -131,6 +132,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 11,
   mappedRequirements: 13,
-  gates: 39,
+  gates: 40,
   completionClaim: false
 }, null, 2));

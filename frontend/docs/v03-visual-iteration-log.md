@@ -1455,3 +1455,48 @@ Next iteration direction:
 1. Build skin-specific sprite variants for all 9 class/skin combinations and route `activeSkin` to those assets.
 2. Replace zombie painterly cards with authored zombie sprites so the enemy horde has the same art quality as the hero.
 3. Revisit the 3D body/card blend once the hero and zombie cards share the same asset style.
+
+## 2026-05-10 Zombie sprite card pass
+
+Related work:
+
+- WebGL reference WIP after `b4b5401`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-crawler.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-hooded.png`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-crawler.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-hooded.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-skill-fan.png`
+
+Current visual distance:
+
+- Art quality: closer for hero/enemy combat readability, still far for full target composition.
+- The enemy cards now share a generated painterly asset family with the hero card, but the low-poly bodies, skill cards, and skin variants are still not target quality.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Standard, crawler, and hooded zombie painterly cards now use transparent PNG sprite assets instead of procedural canvas silhouettes.
+- Runtime gates now require `zombiePainterlyUsesSpriteAsset` in the main review and class reviews.
+- The central combat cluster reads more consistently because player and zombie cards are both sprite-backed.
+- Zombie card scale and opacity were reduced after screenshot review so the horde supports the hero read instead of overwhelming it.
+
+What is still far from the reference:
+
+- The sprite cards are not yet tuned per on-screen scale, so dense combat can still look visually busy.
+- The actual 3D zombie bodies remain low-poly placeholders under the painterly cards.
+- Skill effects still use procedural cards, so the screen is only partially converted to authored/painterly assets.
+
+Next iteration direction:
+
+1. Generate or author skill-card assets for ARC, BOOM, and FAN.
+2. Extend the class sprite set to all 9 class/skin combinations after combat readability stabilizes.
+3. Revisit 3D body visibility and sprite/card blend after hero, zombie, and skill assets share the same style.
