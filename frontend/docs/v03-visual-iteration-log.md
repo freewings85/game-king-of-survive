@@ -1278,3 +1278,45 @@ Next iteration direction:
 1. Tune blend strength by object type in WebGL if highlights become too bright in dense combat.
 2. Start a consolidated first-playable presentation audit that reviews all required visual layers together.
 3. Replace Cocos placeholder boxes with real authored materials and prefabs when Cocos Creator is available.
+
+## 2026-05-10 In-match painterly style sync
+
+Related work:
+
+- WebGL reference WIP after `963ebaa`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `e2e/v03-presentation-audit-verify.js`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+Current visual distance:
+
+- Art quality: far.
+- The current game is still a procedural WebGL prototype with layered cards and geometry; the V03 reference is a compact painterly mobile composition with authored character, skin, skill, and UI art.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The in-match hero painterly card now follows the same class style vocabulary as the class showcase: Guardian uses shield/armor reads, Tech uses coil/screen reads, and Ranger uses hood/rifle reads.
+- Runtime state now exposes `activePainterlyStyle`, and the gate requires Ranger skin 2 to report `activePainterlyStyle: hood-rifle`.
+- The class review gate now checks that the in-match painterly card style matches the class showcase style for Guardian, Tech, and Ranger.
+
+What is still far from the reference:
+
+- The main character is still a small procedural card, not a hand-authored skin silhouette with the physical volume shown in the V03 reference.
+- The screen composition still lacks the target image's compact 2.5D staging, stronger foreground/background separation, and polished skill-callout artwork.
+- Skill effects and zombie silhouettes still read as generated placeholders compared with the reference's painted visual hierarchy.
+
+Next iteration direction:
+
+1. Build a larger mobile-first combat presentation frame that gives the player, zombies, skill cards, and class/skin UI the same first-read priority as the V03 reference.
+2. Replace the highest-impact procedural hero/zombie cards with authored or generated sprite sheets before spending more time on minor geometry details.
+3. Keep the comparison gate tied to the reference screenshot, current screenshots, the remaining gap, and the next iteration direction after each visual pass.

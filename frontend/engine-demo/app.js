@@ -155,6 +155,7 @@ let skillPainterlyCardCount = 0;
 let activePainterlyClass = 'tech';
 let activePainterlySkin = 0;
 let activePainterlySkinColor = '#193743';
+let activePainterlyStyle = 'coil-screen';
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
@@ -205,6 +206,11 @@ function addPaintedStroke(ctx, points, color, width, alpha = 1) {
 
 function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'tech', skinIndex = 0) {
   return makeCanvasTexture(192, 256, (ctx, w, h) => {
+    const skinGlaze = skinIndex === 0
+      ? 'rgba(255,255,255,0.26)'
+      : skinIndex === 1
+        ? 'rgba(255,210,96,0.30)'
+        : 'rgba(100,190,255,0.34)';
     const glow = ctx.createRadialGradient(w * 0.50, h * 0.46, 8, w * 0.50, h * 0.50, w * 0.46);
     glow.addColorStop(0, 'rgba(255,236,176,0.70)');
     glow.addColorStop(0.52, 'rgba(78,201,255,0.20)');
@@ -270,6 +276,7 @@ function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'te
     addPaintedStroke(ctx, [[w * 0.25, h * 0.36], [w * 0.54, h * 0.18], [w * 0.75, h * 0.29]], 'rgba(255,255,220,0.42)', 4, 1);
     ctx.fillStyle = accent;
     if (classId === 'guardian') {
+      addPaintedStroke(ctx, [[w * 0.22, h * 0.38], [w * 0.13, h * 0.72], [w * 0.24, h * 0.93]], 'rgba(6,9,8,0.84)', 22, 1);
       ctx.beginPath();
       ctx.moveTo(w * 0.16, h * 0.36);
       ctx.lineTo(w * 0.33, h * 0.42);
@@ -282,13 +289,29 @@ function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'te
       ctx.strokeStyle = 'rgba(255,235,174,0.88)';
       ctx.lineWidth = 4;
       ctx.stroke();
+      ctx.fillStyle = skinGlaze;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.15, h * 0.45);
+      ctx.lineTo(w * 0.27, h * 0.50);
+      ctx.lineTo(w * 0.24, h * 0.69);
+      ctx.lineTo(w * 0.14, h * 0.76);
+      ctx.closePath();
+      ctx.fill();
+      addPaintedStroke(ctx, [[w * 0.37, h * 0.39], [w * 0.68, h * 0.41]], 'rgba(255,235,174,0.82)', 7, 0.92);
+      addPaintedStroke(ctx, [[w * 0.64, h * 0.43], [w * 0.76, h * 0.63]], '#1b2423', 13, 0.92);
     } else if (classId === 'tech') {
+      ctx.fillStyle = 'rgba(7,13,16,0.92)';
+      ctx.fillRect(w * 0.24, h * 0.47, w * 0.22, h * 0.13);
+      ctx.fillStyle = skinGlaze;
+      ctx.fillRect(w * 0.28, h * 0.50, w * 0.14, h * 0.045);
       ctx.strokeStyle = accent;
       ctx.lineWidth = 7;
       ctx.beginPath();
       ctx.arc(w * 0.31, h * 0.35, w * 0.085, 0, Math.PI * 2);
       ctx.stroke();
       addPaintedStroke(ctx, [[w * 0.30, h * 0.36], [w * 0.24, h * 0.16]], accent, 5, 0.92);
+      addPaintedStroke(ctx, [[w * 0.37, h * 0.34], [w * 0.54, h * 0.53], [w * 0.44, h * 0.68]], 'rgba(255,235,174,0.78)', 4, 0.92);
+      addPaintedStroke(ctx, [[w * 0.71, h * 0.43], [w * 0.91, h * 0.32]], '#101413', 11, 0.92);
       ctx.fillStyle = 'rgba(255,240,168,0.90)';
       ctx.fillRect(w * 0.27, h * 0.49, w * 0.14, h * 0.045);
     } else {
@@ -301,10 +324,13 @@ function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'te
       ctx.lineTo(w * 0.41, h * 0.30);
       ctx.closePath();
       ctx.fill();
+      addPaintedStroke(ctx, [[w * 0.31, h * 0.32], [w * 0.23, h * 0.74], [w * 0.35, h * 0.96]], '#1c2618', 18, 0.88);
       addPaintedStroke(ctx, [[w * 0.60, h * 0.52], [w * 1.02, h * 0.34]], accent, 6, 0.94);
+      addPaintedStroke(ctx, [[w * 0.57, h * 0.49], [w * 1.06, h * 0.29]], '#0c1110', 9, 0.88);
+      addPaintedStroke(ctx, [[w * 0.60, h * 0.52], [w * 1.02, h * 0.34]], skinGlaze, 3, 0.96);
       addPaintedStroke(ctx, [[w * 0.35, h * 0.70], [w * 0.62, h * 0.92]], '#273321', 10, 0.90);
     }
-    ctx.fillStyle = skinIndex === 0 ? 'rgba(255,255,255,0.26)' : skinIndex === 1 ? 'rgba(255,210,96,0.28)' : 'rgba(100,190,255,0.30)';
+    ctx.fillStyle = skinGlaze;
     ctx.beginPath();
     ctx.ellipse(w * 0.52, h * 0.58, w * 0.22, h * 0.08, -0.28, 0, Math.PI * 2);
     ctx.fill();
@@ -1475,6 +1501,7 @@ function applySkin(index) {
   activePainterlyClass = activeClass;
   activePainterlySkin = activeSkin;
   activePainterlySkinColor = skinColor;
+  activePainterlyStyle = classThumbStyles[activeClass] || 'field-kit';
   Array.from(skinRow.children).forEach((el, i) => {
     el.classList.toggle('active', i === activeSkin);
   });
@@ -1492,6 +1519,7 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVisible = reviewMode === 'class' && !!classShowcase;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseTitle = showcaseTitle.textContent;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount = showcaseSkins.children.length;
@@ -1499,6 +1527,7 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.classShowcaseActiveThumbs = showcaseThumbs.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseVariantCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.skinVariant)).size;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle = classThumbStyles[activeClass] || 'field-kit';
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyStyleMatchesShowcase = activePainterlyStyle === window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseStyleCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.classStyle)).size;
 }
 
@@ -2108,6 +2137,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

@@ -18,6 +18,8 @@ assert(text.includes('What is still far from the reference'), 'Visual iteration 
 assert(text.includes('Current visual distance'), 'Visual iteration log must include a current distance assessment');
 assert(text.includes('Next iteration direction'), 'Visual iteration log must define the next visual iteration');
 assert(text.includes('Art quality: far'), 'Visual iteration log must explicitly acknowledge the current art-quality gap');
+assert(text.includes('Every meaningful visual iteration must record this comparison'), 'Visual iteration log must make comparison discipline explicit');
+assert(text.includes('In-match painterly style sync'), 'Visual iteration log must record the latest visual iteration focus');
 
 console.log(JSON.stringify({
   reference: referencePath,
