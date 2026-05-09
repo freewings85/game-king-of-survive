@@ -3613,10 +3613,6 @@
       _altar._lockedUntil = 60;
       _altar._unlockedAnnounced = false;
       _activeBossRef = _altar;
-      bossDropBanner.active = true;
-      bossDropBanner.timer = 3.5;
-      bossDropBanner.text = '★ 中央祭坛矗立中(90秒后开放)★';
-      bossDropBanner.zoneName = '中央祭坛';
     }
     for (var _seedI = 0; _seedI < 15; _seedI++) {
       var _seedA = Math.random() * Math.PI * 2;
@@ -10816,22 +10812,21 @@
     if (state === 'playing' && tutorialDone && gameTime < 25 && player && player.alive) {
       var _ssLeft = Math.max(0, 25 - gameTime);
       var _ssA = _spawnShieldAlpha(gameTime);
-      var _ssPct = Math.round((1 - _spawnShieldMul(gameTime)) * 100);
       var _ssFs = Math.max(13, Math.round(Math.min(W, H) * 0.022));
-      var _ssMsg = '🛡 新生庇护 -' + _ssPct + '% 伤害  ' + _ssLeft.toFixed(1) + 's';
+      var _ssMsg = '新生庇护 ' + Math.ceil(_ssLeft) + 's';
       ctx.save();
       ctx.font = 'bold ' + _ssFs + 'px "Noto Sans SC","PingFang SC",sans-serif';
       ctx.textAlign = 'center';
-      var _ssTw = ctx.measureText(_ssMsg).width + 24;
+      var _ssTw = ctx.measureText(_ssMsg).width + 18;
       var _ssY = Math.round(H * 0.105) + 8;
-      ctx.globalAlpha = 0.85 * _ssA;
-      ctx.fillStyle = 'rgba(0,0,0,0.78)';
-      ctx.fillRect(W / 2 - _ssTw / 2, _ssY, _ssTw, _ssFs + 12);
-      ctx.strokeStyle = '#ffd060'; ctx.lineWidth = 2;
-      ctx.strokeRect(W / 2 - _ssTw / 2 + 0.5, _ssY + 0.5, _ssTw - 1, _ssFs + 11);
+      ctx.globalAlpha = 0.72 * _ssA;
+      ctx.fillStyle = 'rgba(0,0,0,0.62)';
+      ctx.fillRect(W / 2 - _ssTw / 2, _ssY, _ssTw, _ssFs + 10);
+      ctx.strokeStyle = 'rgba(255,208,96,0.7)'; ctx.lineWidth = 1;
+      ctx.strokeRect(W / 2 - _ssTw / 2 + 0.5, _ssY + 0.5, _ssTw - 1, _ssFs + 9);
       ctx.fillStyle = '#ffd060';
-      ctx.globalAlpha = _ssA;
-      ctx.fillText(_ssMsg, W / 2, _ssY + _ssFs + 4);
+      ctx.globalAlpha = 0.9 * _ssA;
+      ctx.fillText(_ssMsg, W / 2, _ssY + _ssFs + 3);
       ctx.restore();
     }
     drawMinimap();
@@ -10843,7 +10838,7 @@
       ctx.globalAlpha = pvpAlpha;
       ctx.fillStyle = pvpLeft <= 3 ? '#f44' : '#4af';
       ctx.font = 'bold 14px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('🛡 新手保护 ' + pvpLeft + '秒', W / 2, 20);
+      ctx.fillText('新手保护 ' + pvpLeft + '秒', W / 2, 20);
       ctx.restore();
     }
     // BR killfeed — top-right, only the latest 3, larger font, 9-slice card
