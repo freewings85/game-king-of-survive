@@ -1796,6 +1796,10 @@
       for (var _aei = 0; _aei < offlineEnemies.length; _aei++) {
         var _ae = offlineEnemies[_aei];
         if (!_ae || !_ae.alive || _ae.hostile === false) continue;
+        var _lockedAltarArrow = (_ae._isAltar || _ae.bossTypeId === 'altar')
+          && gameTime < (_ae._lockedUntil || 60)
+          && _ae.hp >= _ae.maxHp;
+        if (_lockedAltarArrow) continue;
         var _adx = _ae.x - player.x, _ady = _ae.y - player.y;
         var _ad2 = _adx * _adx + _ady * _ady;
         if (_ad2 > maxDist * maxDist) continue;
@@ -2957,20 +2961,18 @@
       var prev = _waveState.wave;
       _waveState.wave = newWave;
       wave = newWave;
-      waveBanner.active = true; waveBanner.timer = 1.0;
       if (prev > 0) {
         // Boss on every wave transition after wave 1 — ring-spawned + banner.
         var spB = _ringSpawnPoint();
         spawnOfflineEnemy('miniBoss', spB.x, spB.y);
         if (typeof emit === 'function') emit(spB.x, spB.y, '#f80', 14, 100);
+        waveBanner.active = true; waveBanner.timer = 1.0;
         waveBanner.text = '⚠ BOSS 第' + newWave + '波 ⚠';
         waveBanner.color = '#fa0';
         if (typeof bossWarning !== 'undefined') { bossWarning.active = true; bossWarning.timer = 2.5; }
         if (typeof screenShake === 'function') screenShake(5, 240);
         if (typeof playSound === 'function') playSound('boss_warn');
       } else {
-        waveBanner.text = '— 第' + newWave + '波 —';
-        waveBanner.color = '#fff';
         if (typeof playSound === 'function') playSound('wave_start');
       }
     }
@@ -8512,9 +8514,11 @@
         if (d.wave) {
           wave = d.wave;
           var isBossWave = wave % 5 === 0;
-          waveBanner.active = true; waveBanner.timer = 1.0;
-          waveBanner.text = isBossWave ? '⚠ BOSS 第' + wave + '波 ⚠' : '— 第' + wave + '波 —';
-          waveBanner.color = isBossWave ? '#f44' : (wave > 10 ? '#fa0' : '#fff');
+          if (wave > 1 || isBossWave) {
+            waveBanner.active = true; waveBanner.timer = 1.0;
+            waveBanner.text = isBossWave ? '⚠ BOSS 第' + wave + '波 ⚠' : '— 第' + wave + '波 —';
+            waveBanner.color = isBossWave ? '#f44' : (wave > 10 ? '#fa0' : '#fff');
+          }
           if (isBossWave) {
             bossWarning.active = true; bossWarning.timer = 2.5;
             screenShake(4, 200);
@@ -10253,8 +10257,10 @@
     ctx.fillStyle = hpRatio > 0.5 ? '#0c0' : hpRatio > 0.25 ? '#fa0' : '#f44';
     ctx.fillRect(player.x - barW / 2, barY, barW * hpRatio, barH);
 
-    // Draw storm zone visual
-    if (stormZone.active) {
+    // Draw storm zone visual only near actual danger; early matches keep the map readable.
+    var stormVisualLead = (stormZone._shrinkDelay || 45) - 20;
+    var shouldDrawStormZone = stormZone.active && (gameTime > stormVisualLead || player._inStorm || stormZone.radius < Math.max(WORLD_W, WORLD_H) * 0.65);
+    if (shouldDrawStormZone) {
       ctx.save();
       ctx.globalAlpha = 0.15;
       ctx.fillStyle = '#f22';
@@ -10958,7 +10964,11 @@
     // Boss health bar UI at top of screen
     for (var bi = 0; bi < entities.length; bi++) {
       if (entities[bi].type === 'enemy' && entities[bi].enemyType === 'boss' && entities[bi].hp > 0) {
-        drawBossHealthBar(entities[bi]);
+        var _bossEntity = entities[bi];
+        var _lockedAltarHud = (_bossEntity._isAltar || _bossEntity.bossTypeId === 'altar')
+          && (_bossEntity._lockedUntil || 60) && gameTime < (_bossEntity._lockedUntil || 60)
+          && _bossEntity.hp >= _bossEntity.maxHp;
+        if (!_lockedAltarHud) drawBossHealthBar(_bossEntity);
         break;
       }
     }
@@ -11568,7 +11578,8 @@
     // Build POI list: { x, y, kind: 'holy'|'danger'|'neutral', label }
     var pois = [];
     // Altar — alive central boss is the holy POI
-    if (_activeBossRef && _activeBossRef.alive && _activeBossRef._isAltar) {
+    if (_activeBossRef && _activeBossRef.alive && (_activeBossRef._isAltar || _activeBossRef.bossTypeId === 'altar')
+        && (gameTime > (_activeBossRef._lockedUntil || 60) - 20 || _activeBossRef.hp < _activeBossRef.maxHp)) {
       pois.push({ x: _activeBossRef.x, y: _activeBossRef.y, kind: 'holy', label: '祭坛' });
     }
     // Nearest unowned/non-self strat point — neutral POI
@@ -11584,7 +11595,7 @@
     }
     if (bestPt) pois.push({ x: bestPt.x, y: bestPt.y, kind: 'neutral', label: bestPt.name || '据点' });
     // Storm center — danger POI when player is outside the safe ring
-    if (stormZone && stormZone.active) {
+    if (stormZone && stormZone.active && (gameTime > ((stormZone._shrinkDelay || 45) - 20) || player._inStorm)) {
       var sdx = player.x - stormZone.centerX, sdy = player.y - stormZone.centerY;
       if (sdx * sdx + sdy * sdy > stormZone.radius * stormZone.radius * 0.85) {
         pois.push({ x: stormZone.centerX, y: stormZone.centerY, kind: 'danger', label: '安全区' });
