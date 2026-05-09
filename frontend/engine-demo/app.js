@@ -77,6 +77,9 @@ const mats = {
   propLightBlock: new THREE.MeshBasicMaterial({ color: 0xffd58b, transparent: true, opacity: 0.34 }),
   propShadowBlock: new THREE.MeshBasicMaterial({ color: 0x0b0c0a, transparent: true, opacity: 0.42 }),
   propCoolRim: new THREE.MeshBasicMaterial({ color: 0x91e7ff, transparent: true, opacity: 0.30 }),
+  propBrokenLight: new THREE.MeshStandardMaterial({ color: 0xb3bca7, roughness: 0.92 }),
+  propBrokenDark: new THREE.MeshStandardMaterial({ color: 0x20251f, roughness: 0.96 }),
+  propBrokenRust: new THREE.MeshStandardMaterial({ color: 0x7b3f1f, roughness: 0.9, metalness: 0.05 }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -129,6 +132,7 @@ let groundDetailCount = 0;
 let unitDecalCount = 0;
 let propWearCount = 0;
 let propShapeCount = 0;
+let propBreakCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -222,6 +226,28 @@ function addPropRimFrame(root, w, h, d, y, z, mat = mats.propLightBlock) {
   addPropShapeBlock(root, 0.035, h, d, mats.propCoolRim, w * 0.5, y, z);
 }
 
+function addBrokenChunk(root, w, h, d, mat, x, y, z, ry = 0, rz = 0) {
+  const chunk = box(w, h, d, mat);
+  chunk.position.set(x, y, z);
+  chunk.rotation.y = ry;
+  chunk.rotation.z = rz;
+  chunk.castShadow = true;
+  chunk.receiveShadow = true;
+  chunk.userData.propBreak = true;
+  root.add(chunk);
+  propBreakCount += 1;
+  return chunk;
+}
+
+function addJaggedCap(root, w, d, y, z, mat, count = 4) {
+  for (let i = 0; i < count; i++) {
+    const width = w * (0.12 + (i % 3) * 0.035);
+    const height = 0.12 + (i % 2) * 0.10;
+    const x = -w * 0.42 + i * (w / Math.max(1, count - 1)) * 0.82;
+    addBrokenChunk(root, width, height, d, mat, x, y + height * 0.5, z, (i - 1.5) * 0.13, (i % 2 ? -0.18 : 0.22));
+  }
+}
+
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -268,6 +294,8 @@ function makeCrate(x, z, s = 1) {
   addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, -s * 0.42, s * 0.52, -s * 0.535);
   addPropWear(root, s * 0.10, s * 0.64, s * 0.05, mats.propEdge, s * 0.42, s * 0.52, -s * 0.535);
   addScratchStack(root, -s * 0.12, s * 0.36, -s * 0.55, s * 0.30, 3);
+  addBrokenChunk(root, s * 0.24, s * 0.18, s * 0.12, mats.propBrokenDark, -s * 0.43, s * 0.95, -s * 0.30, 0.22, -0.35);
+  addBrokenChunk(root, s * 0.28, s * 0.12, s * 0.10, mats.propBrokenLight, s * 0.34, s * 0.14, -s * 0.48, -0.28, 0.18);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
   root.position.set(x, 0, z);
   scene.add(root);
@@ -297,6 +325,11 @@ function makeWreck(x, z, rot) {
   addPropWear(root, 0.16, 0.12, 0.06, mats.hotCore, 1.02, 0.41, -0.56);
   addScratchStack(root, 0.06, 0.48, -0.57, 0.46, 5);
   addScratchStack(root, -0.54, 0.78, 0.46, 0.30, 3, mats.propDarkWear);
+  addBrokenChunk(root, 0.46, 0.18, 0.42, mats.propBrokenRust, -1.02, 0.68, -0.12, -0.18, 0.22);
+  addBrokenChunk(root, 0.38, 0.20, 0.34, mats.propBrokenDark, 1.08, 0.58, 0.20, 0.34, -0.18);
+  addBrokenChunk(root, 0.34, 0.18, 0.38, mats.propBrokenLight, -0.78, 1.08, 0.18, -0.36, 0.26);
+  addBrokenChunk(root, 0.30, 0.16, 0.30, mats.propBrokenRust, 0.40, 1.02, -0.38, 0.48, -0.22);
+  addJaggedCap(root, 2.0, 0.10, 0.66, -0.60, mats.propBrokenRust, 5);
   for (const dx of [-0.7, 0.75]) {
     const wheel = cyl(0.18, 0.18, 0.18, new THREE.MeshStandardMaterial({ color: 0x070908 }));
     wheel.rotation.z = Math.PI / 2;
@@ -328,6 +361,9 @@ function makeWall(x, z, w, d) {
   addPropWear(root, Math.max(0.035, w * 0.025), 0.82, Math.max(0.035, d * 0.16), mats.propDarkWear, -w * 0.25, 0.68, -d * 0.55);
   addPropWear(root, Math.max(0.035, w * 0.025), 0.62, Math.max(0.035, d * 0.16), mats.propDarkWear, w * 0.18, 0.78, -d * 0.55);
   addScratchStack(root, -w * 0.08, 0.52, -d * 0.57, Math.max(0.18, w * 0.18), 4);
+  addJaggedCap(root, w * 0.88, Math.max(0.06, d * 0.24), 1.34, -d * 0.54, mats.propBrokenLight, 5);
+  addBrokenChunk(root, Math.max(0.16, w * 0.12), 0.34, Math.max(0.06, d * 0.28), mats.propBrokenDark, -w * 0.44, 1.10, -d * 0.53, 0.18, -0.24);
+  addBrokenChunk(root, Math.max(0.14, w * 0.10), 0.28, Math.max(0.06, d * 0.28), mats.propBrokenDark, w * 0.37, 0.30, -d * 0.54, -0.22, 0.28);
   addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
   root.position.set(x, 0, z);
   scene.add(root);
@@ -349,6 +385,8 @@ function makeBarrel(x, z, s = 1) {
   addPropWear(root, 0.38 * s, 0.055 * s, 0.035 * s, mats.hazard, 0, 0.40 * s, -0.22 * s);
   addPropWear(root, 0.28 * s, 0.035 * s, 0.035 * s, mats.propEdge, 0.02 * s, 0.57 * s, -0.20 * s);
   addScratchStack(root, -0.05 * s, 0.23 * s, -0.225 * s, 0.18 * s, 3);
+  addBrokenChunk(root, 0.16 * s, 0.08 * s, 0.08 * s, mats.propBrokenRust, -0.15 * s, 0.62 * s, -0.04 * s, 0.34, -0.22);
+  addBrokenChunk(root, 0.12 * s, 0.14 * s, 0.05 * s, mats.propBrokenDark, 0.19 * s, 0.23 * s, -0.19 * s, -0.18, 0.25);
   addPropGroundScatter(root, 0.38 * s, 0.32 * s, 4);
   root.position.set(x, 0, z);
   root.traverse((o) => {
@@ -1625,6 +1663,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.unitDecalCount = unitDecalCount;
   window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
   window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;
+  window.__V03_ENGINE_DEMO_STATE.propBreakCount = propBreakCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

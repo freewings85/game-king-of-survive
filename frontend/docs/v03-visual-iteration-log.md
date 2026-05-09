@@ -760,3 +760,36 @@ Next iteration direction:
 1. Continue in WebGL with asymmetric broken car/wall silhouette chunks.
 2. Use the Cocos contract as the required implementation list when real prefabs are authored.
 3. Keep recording target-image gaps after each visual pass.
+
+## 2026-05-10 WebGL Broken Prop Silhouette Pass
+
+Related work:
+
+- WebGL reference WIP after `3f75de0`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- Wreck cars now have asymmetric broken hood, roof, side, and jagged edge chunks.
+- Walls now have uneven broken top caps and missing-corner chunks, which makes cover read less like clean rectangular boxes.
+- Crates and barrels picked up smaller chipped silhouette pieces so the prop layer is less uniform.
+- The verifier now requires `propBreakCount >= 80`; the current WebGL reference reports `propBreakCount: 96`.
+- The reviewed phone screenshot still keeps player, zombies, pickups, minimap, joystick, and skill buttons readable.
+
+What is still far from the reference:
+
+- The target image uses authored, painterly silhouettes; the current pass still uses geometric chunks.
+- Broken wall tops are more interesting, but they need better material blending and stronger directional lighting.
+- Cars still need a more iconic wreck profile: collapsed roof, exposed wheel wells, and more irregular side panels.
+- The total scene remains low-poly relative to the reference image's illustrated polish.
+
+Next iteration direction:
+
+1. Sync broken prop silhouette categories into the Cocos contract if this layer remains mandatory.
+2. Add a global lighting/value pass for foreground/background separation and stronger rim direction.
+3. Continue replacing clean primitive shapes with larger authored-looking forms before doing more small details.
