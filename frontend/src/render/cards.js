@@ -90,6 +90,67 @@
       ctx.bezierCurveTo(-size * 0.48, 0, -size * 0.35, -size * 0.40, 0, -size * 0.18);
       ctx.bezierCurveTo(size * 0.35, -size * 0.40, size * 0.48, 0, 0, size * 0.33);
       ctx.fill();
+    } else if (id === 'attack_up') {
+      ctx.lineWidth = Math.max(4, size * 0.07);
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.38, size * 0.28);
+      ctx.lineTo(size * 0.30, -size * 0.40);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(size * 0.30, -size * 0.40);
+      ctx.lineTo(size * 0.26, -size * 0.10);
+      ctx.lineTo(-size * 0.04, -size * 0.36);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#fff3c4';
+      ctx.lineWidth = Math.max(2, size * 0.035);
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.18, size * 0.36);
+      ctx.lineTo(size * 0.40, -size * 0.22);
+      ctx.stroke();
+    } else if (id === 'pierce') {
+      ctx.lineWidth = Math.max(3, size * 0.06);
+      for (var pr = 0; pr < 3; pr++) {
+        var py = (pr - 1) * size * 0.18;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.42, py);
+        ctx.lineTo(size * 0.34, py);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(size * 0.44, 0);
+      ctx.lineTo(size * 0.18, -size * 0.22);
+      ctx.lineTo(size * 0.18, size * 0.22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 0.45;
+      ctx.fillRect(-size * 0.04, -size * 0.38, size * 0.08, size * 0.76);
+      ctx.globalAlpha = 1;
+    } else if (id === 'crit') {
+      ctx.lineWidth = Math.max(3, size * 0.055);
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.18, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.48, 0); ctx.lineTo(-size * 0.28, 0);
+      ctx.moveTo(size * 0.28, 0); ctx.lineTo(size * 0.48, 0);
+      ctx.moveTo(0, -size * 0.48); ctx.lineTo(0, -size * 0.28);
+      ctx.moveTo(0, size * 0.28); ctx.lineTo(0, size * 0.48);
+      ctx.stroke();
+      ctx.fillStyle = '#fff3c4';
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2); ctx.fill();
+    } else if (id === 'lifesteal') {
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.44);
+      ctx.bezierCurveTo(size * 0.33, -size * 0.12, size * 0.34, size * 0.30, 0, size * 0.42);
+      ctx.bezierCurveTo(-size * 0.34, size * 0.30, -size * 0.33, -size * 0.12, 0, -size * 0.44);
+      ctx.fill();
+      ctx.strokeStyle = '#fff0ff';
+      ctx.lineWidth = Math.max(2, size * 0.035);
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.16, size * 0.02);
+      ctx.lineTo(-size * 0.02, size * 0.18);
+      ctx.lineTo(size * 0.20, -size * 0.10);
+      ctx.stroke();
     } else if (id === 'move_speed' || id === 'attack_speed') {
       for (var s = 0; s < 3; s++) {
         ctx.beginPath();
