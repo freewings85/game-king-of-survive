@@ -46,6 +46,12 @@ export const V03_REQUIRED_PROP_BREAK_SHAPES = [
   'prop-chipped-side'
 ] as const;
 
+export const V03_REQUIRED_PROP_COVER_SPRITES = [
+  'prop-cover-wreck',
+  'prop-cover-wall',
+  'prop-cover-crate'
+] as const;
+
 export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [
   'stage-warm-focus',
   'stage-cool-depth',

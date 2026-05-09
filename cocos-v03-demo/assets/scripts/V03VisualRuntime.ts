@@ -18,6 +18,7 @@ import {
   V03_REQUIRED_OBJECT_RIM_LAYERS,
   V03_REQUIRED_PAINTERLY_CARD_LAYERS,
   V03_REQUIRED_PROP_BREAK_SHAPES,
+  V03_REQUIRED_PROP_COVER_SPRITES,
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
   V03_REQUIRED_PROP_WEAR_DECALS,
@@ -37,6 +38,7 @@ export interface V03VisualRuntimeStats {
   propWearDecals: number;
   propShapeBlocks: number;
   propBreakShapes: number;
+  propCoverSprites: number;
   globalLightLayers: number;
   objectRimLayers: number;
   materialBlendLayers: number;
@@ -63,6 +65,7 @@ export class V03VisualRuntime extends Component {
     propWearDecals: 0,
     propShapeBlocks: 0,
     propBreakShapes: 0,
+    propCoverSprites: 0,
     globalLightLayers: 0,
     objectRimLayers: 0,
     materialBlendLayers: 0,
@@ -85,6 +88,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropWearDecals();
     this.buildPropShapeBlocks();
     this.buildPropBreakShapes();
+    this.buildPropCoverSprites();
     this.buildGlobalLightLayers();
     this.buildObjectRimLayers();
     this.buildMaterialBlendLayers();
@@ -111,6 +115,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propWearDecals = 0;
     this.stats.propShapeBlocks = 0;
     this.stats.propBreakShapes = 0;
+    this.stats.propCoverSprites = 0;
     this.stats.globalLightLayers = 0;
     this.stats.objectRimLayers = 0;
     this.stats.materialBlendLayers = 0;
@@ -193,6 +198,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.24 - 0.36, 0.66 + (index % 3) * 0.08, 1.64);
       this.actorRoot!.addChild(node);
       this.stats.propBreakShapes += 1;
+    });
+  }
+
+  private buildPropCoverSprites(): void {
+    V03_REQUIRED_PROP_COVER_SPRITES.forEach((sprite, index) => {
+      const color = sprite.includes('wreck') ? '#7b3f1f' : sprite.includes('wall') ? '#5a5f59' : '#7d552d';
+      const node = this.makeBox(`prop-cover-sprite-${sprite}`, 0.34 + index * 0.06, 0.018, 0.22, color);
+      node.setPosition(index * 0.28 - 0.28, 0.88 + (index % 2) * 0.08, 1.78);
+      this.actorRoot!.addChild(node);
+      this.stats.propCoverSprites += 1;
     });
   }
 

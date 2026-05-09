@@ -94,6 +94,16 @@ Required prop break/silhouette layers:
 
 These layers keep wreck cars, walls, crates, and barrels from reverting to clean boxes when the WebGL reference is rebuilt as Cocos prefabs.
 
+## Prop Cover Sprites
+
+Required prop cover sprite families:
+
+- `prop-cover-wreck`
+- `prop-cover-wall`
+- `prop-cover-crate`
+
+These cover sprites preserve the current WebGL pass where wreck cars, tall walls, and crates receive painterly overlay cards above their functional collision roots. In Cocos they should become real sprite/prefab layers such as `PropCoverWreck`, `PropCoverWall`, and `PropCoverCrate`, not only extra box geometry.
+
 ## Global Light Layers
 
 Required global lighting/value layers:
@@ -182,4 +192,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, global light layers, object rim layers, material blend layers, painterly card layers, hero skin sprites, zombie card sprites, skill card sprites, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, prop cover sprites, global light layers, object rim layers, material blend layers, painterly card layers, hero skin sprites, zombie card sprites, skill card sprites, FX layers, and review screenshot names.

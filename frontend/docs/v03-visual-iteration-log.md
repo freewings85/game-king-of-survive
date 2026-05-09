@@ -1840,3 +1840,43 @@ Next iteration direction:
 1. Review phone screenshot scale for prop covers and tune opacity/size so they support combat instead of creating noise.
 2. Extend cover cards or generated bitmap assets to barrels, tires, and debris if they remain visibly geometric.
 3. Mirror prop sprite cover coverage into the Cocos visual contract/checklist after WebGL scale stabilizes.
+
+## 2026-05-10 Cocos prop cover sprite contract sync
+
+Related work:
+
+- Follow-up to `2aff8ea`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- This is not a new rendered-art pass; it is a migration guard so the WebGL prop cover direction cannot be lost when the mini-game path moves into Cocos Creator.
+- The current phone screenshot is still visibly below the reference in authored map asset quality, but the Cocos contract now names the missing sprite family explicitly.
+
+What moved closer:
+
+- Cocos now requires `prop-cover-wreck`, `prop-cover-wall`, and `prop-cover-crate` alongside the older prop wear, shape, and break layers.
+- First-playable checklist and scene assembly manifest now include `PropCoverWreck.prefab`, `PropCoverWall.prefab`, and `PropCoverCrate.prefab`.
+- Visual coverage now includes `propCoverSprites`, and the scene assembly gate reports 73 prefabs and 17 visual coverage families.
+
+What is still far from the reference:
+
+- These are still source-level contracts and placeholder Cocos runtime boxes, not real Cocos Creator sprite prefabs.
+- The WebGL pass still uses procedural cover textures; final quality needs authored bitmap assets with consistent perspective, lighting, alpha, and scale.
+- Barrels, tires, and debris are still less illustrated than the target.
+
+Next iteration direction:
+
+1. Create authored or generated prop cover bitmap assets for wreck, wall, and crate rather than relying on procedural canvas textures.
+2. Use those assets in the WebGL reference first, then mirror asset names and prefab requirements into Cocos.
+3. Extend the same treatment to barrels, tires, and debris once the three major cover families look good at phone scale.

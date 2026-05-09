@@ -136,6 +136,7 @@ assertIncludesAll(
     'PropEdgeHighlight.prefab',
     'PropLightBlock.prefab',
     'PropJaggedCap.prefab',
+    'PropCoverWreck.prefab',
     'StageWarmFocus.prefab',
     'ObjectWarmRim.prefab',
     'MaterialWarmBlend.prefab'
