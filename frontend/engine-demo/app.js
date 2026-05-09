@@ -74,6 +74,9 @@ const mats = {
   propScratch: new THREE.MeshBasicMaterial({ color: 0xffd79a, transparent: true, opacity: 0.76 }),
   propGlass: new THREE.MeshBasicMaterial({ color: 0x86d7ff, transparent: true, opacity: 0.42 }),
   hazard: new THREE.MeshBasicMaterial({ color: 0xf6c84f, transparent: true, opacity: 0.84 }),
+  propLightBlock: new THREE.MeshBasicMaterial({ color: 0xffd58b, transparent: true, opacity: 0.34 }),
+  propShadowBlock: new THREE.MeshBasicMaterial({ color: 0x0b0c0a, transparent: true, opacity: 0.42 }),
+  propCoolRim: new THREE.MeshBasicMaterial({ color: 0x91e7ff, transparent: true, opacity: 0.30 }),
   spark: new THREE.MeshBasicMaterial({ color: 0xffd36a, transparent: true, opacity: 0.9 }),
   hotCore: new THREE.MeshBasicMaterial({ color: 0xfff2a8, transparent: true, opacity: 0.95 }),
   smoke: new THREE.MeshBasicMaterial({ color: 0x2d2520, transparent: true, opacity: 0.28 }),
@@ -125,6 +128,7 @@ let zombieDetailPartCount = 0;
 let groundDetailCount = 0;
 let unitDecalCount = 0;
 let propWearCount = 0;
+let propShapeCount = 0;
 
 function add(mesh, x, z, y = 0) {
   mesh.position.set(x, y, z);
@@ -198,6 +202,26 @@ function addScratchStack(root, x, y, z, width, count, mat = mats.propScratch) {
   }
 }
 
+function addPropShapeBlock(root, w, h, d, mat, x, y, z, ry = 0, rz = 0) {
+  const block = box(w, h, d, mat);
+  block.position.set(x, y, z);
+  block.rotation.y = ry;
+  block.rotation.z = rz;
+  block.castShadow = false;
+  block.receiveShadow = false;
+  block.userData.propShapeBlock = true;
+  root.add(block);
+  propShapeCount += 1;
+  return block;
+}
+
+function addPropRimFrame(root, w, h, d, y, z, mat = mats.propLightBlock) {
+  addPropShapeBlock(root, w, 0.03, d, mat, 0, y + h * 0.5, z);
+  addPropShapeBlock(root, w, 0.028, d, mats.propShadowBlock, 0, y - h * 0.5, z);
+  addPropShapeBlock(root, 0.035, h, d, mat, -w * 0.5, y, z);
+  addPropShapeBlock(root, 0.035, h, d, mats.propCoolRim, w * 0.5, y, z);
+}
+
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
@@ -233,6 +257,9 @@ function makeCrate(x, z, s = 1) {
   c.position.y = s * 0.5;
   c.castShadow = c.receiveShadow = true;
   root.add(c);
+  addPropShapeBlock(root, s * 0.82, s * 0.26, s * 0.055, mats.propLightBlock, -s * 0.02, s * 0.70, -s * 0.535);
+  addPropShapeBlock(root, s * 0.90, s * 0.22, s * 0.055, mats.propShadowBlock, s * 0.04, s * 0.30, -s * 0.538);
+  addPropRimFrame(root, s * 0.92, s * 0.78, s * 0.055, s * 0.52, -s * 0.545);
   const plank = box(s * 1.08, s * 0.08, s * 0.10, mats.gold);
   plank.position.set(0, s * 0.82, 0);
   plank.rotation.y = Math.PI / 4;
@@ -256,6 +283,12 @@ function makeWreck(x, z, rot) {
   const cabin = box(0.8, 0.45, 0.82, mats.wall);
   cabin.position.set(-0.25, 0.85, -0.05);
   root.add(cabin);
+  addPropShapeBlock(root, 1.48, 0.22, 0.065, mats.propLightBlock, -0.20, 0.56, -0.57, -0.03);
+  addPropShapeBlock(root, 1.88, 0.24, 0.065, mats.propShadowBlock, 0.18, 0.28, -0.575, 0.02);
+  addPropShapeBlock(root, 0.52, 0.34, 0.065, mats.propLightBlock, -0.40, 0.86, -0.50, -0.04);
+  addPropShapeBlock(root, 0.36, 0.38, 0.065, mats.propShadowBlock, 0.12, 0.80, -0.505, 0.08);
+  addPropShapeBlock(root, 2.18, 0.05, 0.075, mats.propCoolRim, 0, 0.67, 0.54);
+  addPropRimFrame(root, 2.15, 0.50, 0.065, 0.39, -0.585);
   addPropWear(root, 0.95, 0.05, 0.78, mats.propDarkWear, 0.42, 0.66, -0.02);
   addPropWear(root, 0.76, 0.035, 0.08, mats.propEdge, -0.72, 0.66, -0.56);
   addPropWear(root, 0.62, 0.035, 0.08, mats.propEdge, 0.66, 0.67, -0.56);
@@ -284,6 +317,10 @@ function makeWall(x, z, w, d) {
   wall.position.y = 0.68;
   wall.castShadow = wall.receiveShadow = true;
   root.add(wall);
+  addPropShapeBlock(root, w * 0.82, 0.36, Math.max(0.04, d * 0.18), mats.propLightBlock, -w * 0.06, 1.02, -d * 0.56);
+  addPropShapeBlock(root, w * 0.92, 0.34, Math.max(0.04, d * 0.18), mats.propShadowBlock, w * 0.04, 0.44, -d * 0.565);
+  addPropShapeBlock(root, Math.max(0.06, w * 0.05), 1.16, Math.max(0.04, d * 0.18), mats.propCoolRim, w * 0.48, 0.76, -d * 0.57);
+  addPropRimFrame(root, w * 0.94, 1.18, Math.max(0.035, d * 0.14), 0.73, -d * 0.575);
   const cap = box(w * 1.04, 0.08, d * 1.04, mats.road);
   cap.position.y = 1.39;
   root.add(cap);
@@ -306,6 +343,9 @@ function makeBarrel(x, z, s = 1) {
   const cap = cyl(0.23 * s, 0.23 * s, 0.04 * s, mats.orange, 18);
   cap.position.y = 0.56 * s;
   root.add(cap);
+  addPropShapeBlock(root, 0.30 * s, 0.18 * s, 0.035 * s, mats.propLightBlock, -0.05 * s, 0.42 * s, -0.225 * s);
+  addPropShapeBlock(root, 0.34 * s, 0.16 * s, 0.035 * s, mats.propShadowBlock, 0.04 * s, 0.20 * s, -0.228 * s);
+  addPropShapeBlock(root, 0.035 * s, 0.45 * s, 0.035 * s, mats.propCoolRim, 0.19 * s, 0.31 * s, -0.23 * s);
   addPropWear(root, 0.38 * s, 0.055 * s, 0.035 * s, mats.hazard, 0, 0.40 * s, -0.22 * s);
   addPropWear(root, 0.28 * s, 0.035 * s, 0.035 * s, mats.propEdge, 0.02 * s, 0.57 * s, -0.20 * s);
   addScratchStack(root, -0.05 * s, 0.23 * s, -0.225 * s, 0.18 * s, 3);
@@ -352,6 +392,7 @@ function makeDebris(x, z, s = 1) {
     chunk.position.set((i - 1.5) * 0.22 * s, 0.08 * s, (i % 2 ? -0.14 : 0.16) * s);
     chunk.rotation.y = i * 0.42;
     root.add(chunk);
+    addPropShapeBlock(root, (0.20 + i * 0.025) * s, 0.05 * s, 0.04 * s, i % 2 ? mats.propLightBlock : mats.propShadowBlock, chunk.position.x, 0.19 * s, chunk.position.z - 0.14 * s, i * 0.32);
     addPropWear(root, (0.16 + i * 0.025) * s, 0.025 * s, 0.035 * s, i % 2 ? mats.propEdge : mats.propDarkWear, chunk.position.x, 0.18 * s, chunk.position.z - 0.13 * s, i * 0.38);
   }
   addPropGroundScatter(root, 0.68 * s, 0.42 * s, 4);
@@ -1583,6 +1624,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.zombieVariantCount = new Set(zombies.map((z) => z.userData.variantName)).size;
   window.__V03_ENGINE_DEMO_STATE.unitDecalCount = unitDecalCount;
   window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
+  window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;

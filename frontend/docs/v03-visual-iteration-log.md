@@ -694,3 +694,35 @@ Next iteration direction:
 1. Continue visual work in WebGL by improving large prop silhouettes and value grouping.
 2. Keep Cocos contract/checklist synchronized whenever a WebGL visual layer becomes mandatory.
 3. Capture real Cocos phone screenshots once Cocos Creator is available.
+
+## 2026-05-10 WebGL Prop Shape Value Pass
+
+Related work:
+
+- WebGL reference WIP after `db98602`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-landscape-phone.png`
+
+What moved closer:
+
+- Wreck cars, walls, crates, barrels, and debris now have larger light/shadow blocks instead of relying only on small scratches.
+- Cars and walls gained cool rim strips and frame blocks so their silhouettes read more clearly at phone scale.
+- The verifier now requires `propShapeCount >= 85`; the current WebGL reference reports `propShapeCount: 113`.
+- Mobile combat readability remained intact: player, zombies, safe zone, minimap, joystick, and skill buttons are still visible in the reviewed screenshot.
+
+What is still far from the reference:
+
+- The target image still has stronger hand-painted shape language; the current scene is more readable but still visibly low-poly.
+- Walls are clearer but still too rectangular and uniform compared with the broken, chunky cover in the reference.
+- Cars need more distinctive damaged silhouettes, especially warped hoods, broken roof shapes, and asymmetric side panels.
+- The overall scene still needs better global lighting direction and material grouping to reach the reference's depth.
+
+Next iteration direction:
+
+1. Break up large wall and car silhouettes with non-uniform chunks while keeping collision/cover simple.
+2. Add a global lighting/value pass that strengthens foreground/background separation without hurting combat clarity.
+3. Sync any mandatory prop shape categories into the Cocos visual contract if they survive another WebGL review.
