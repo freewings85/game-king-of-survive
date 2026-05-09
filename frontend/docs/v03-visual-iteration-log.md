@@ -1764,3 +1764,41 @@ Next iteration direction:
 1. Reduce or restyle the bottom class strip during combat so the target phone frame reads as gameplay first.
 2. Start a sprite/painterly pass for major map props, especially wreck cars and tall walls.
 3. Keep the focus panel compact while tuning skill button and minimap polish.
+
+## 2026-05-10 Compact class dock pass
+
+Related work:
+
+- WebGL reference WIP after `778c089`
+- `frontend/engine-demo/styles.css`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- Art quality: closer for mobile composition because the bottom class/skin control now behaves more like a compact debug dock and less like a large card.
+- The class dock still exposes class and skin switching for review, but it consumes less of the lower-left battle field.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The class strip width, padding, skin dots, and class buttons were reduced for portrait phone review.
+- Runtime gates now require `classStripRect <= 126x118`, preventing the control from returning to the larger prototype footprint.
+- The landscape phone review still hides the class strip entirely, preserving the target phone battle-frame direction.
+
+What is still far from the reference:
+
+- The class dock is still visible in portrait gameplay review; production should likely move this to pre-match or a small menu.
+- Skill buttons and minimap still need final art-direction polish.
+- Major map props remain the largest source of low-poly visual mismatch after the unit sprite passes.
+
+Next iteration direction:
+
+1. Start the major map prop sprite/painterly cover pass, focusing on wreck cars and tall wall silhouettes.
+2. Keep gameplay controls compact and move class switching out of the main combat surface later.
+3. Mirror prop sprite-cover requirements into the Cocos visual contract after WebGL review stabilizes.

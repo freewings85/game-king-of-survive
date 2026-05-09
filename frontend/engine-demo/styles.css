@@ -526,9 +526,9 @@ body {
 .class-strip {
   position: absolute;
   left: 12px;
-  bottom: 18px;
-  width: 132px;
-  padding: 10px;
+  bottom: 16px;
+  width: 118px;
+  padding: 8px;
   border: 1px solid rgba(244,201,90,0.4);
   background: rgba(7,10,10,0.64);
   box-shadow: 0 10px 28px rgba(0,0,0,0.45);
@@ -541,24 +541,24 @@ body {
 
 .class-card strong {
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .class-card span {
   margin-top: 2px;
   color: #aab5ae;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .skin-row {
   display: flex;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 6px;
 }
 
 .skin-row i {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.42);
   background: #193743;
@@ -576,12 +576,12 @@ body {
 .class-buttons {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-top: 10px;
+  gap: 5px;
+  margin-top: 8px;
 }
 
 .class-buttons button {
-  height: 30px;
+  height: 26px;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(0,0,0,0.38);
   color: #dce4df;

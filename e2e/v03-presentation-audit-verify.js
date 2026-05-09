@@ -103,6 +103,7 @@ requiredText.forEach((text) => {
   'combatFocusUsesSpriteAsset',
   'combatFocusSkillCount: 3',
   'combatFocusRect <= 180x128',
+  'classStripRect <= 126x118',
   'classSkinSpriteVariantCount >= 9',
   'activePainterlySkinSpriteVariant: ranger-2',
   'class-review painterly style matching the class showcase styles for Guardian, Tech, and Ranger',
