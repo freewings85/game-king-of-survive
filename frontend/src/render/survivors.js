@@ -73,6 +73,106 @@
     ctx.stroke();
   }
 
+  function drawSkinPattern(ctx, r, skinId, colors) {
+    if (!skinId || skinId === 'default') return;
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    if (/fire|flame|red|inferno/.test(skinId)) {
+      ctx.strokeStyle = '#ffba4a';
+      ctx.lineWidth = Math.max(1.5, r * 0.045);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.22, r * 0.26);
+      ctx.quadraticCurveTo(0, -r * 0.05, r * 0.18, r * 0.24);
+      ctx.moveTo(r * 0.02, r * 0.28);
+      ctx.quadraticCurveTo(r * 0.18, r * 0.02, r * 0.28, r * 0.20);
+      ctx.stroke();
+    } else if (/ice|frost|blue|ocean/.test(skinId)) {
+      ctx.strokeStyle = '#d7f7ff';
+      ctx.lineWidth = Math.max(1, r * 0.035);
+      for (var i = 0; i < 3; i++) {
+        var yy = -r * 0.2 + i * r * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(-r * 0.24, yy);
+        ctx.lineTo(r * 0.24, yy + r * 0.08);
+        ctx.stroke();
+      }
+    } else if (/shadow|ninja|purple|void/.test(skinId)) {
+      ctx.fillStyle = 'rgba(8,6,16,0.62)';
+      roundedRect(ctx, -r * 0.42, -r * 0.42, r * 0.84, r * 0.24, r * 0.08);
+      ctx.fill();
+      ctx.fillStyle = colors.accent;
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(-r * 0.24, -r * 0.33, r * 0.48, r * 0.04);
+    } else if (/forest|green/.test(skinId)) {
+      ctx.strokeStyle = '#b4f08a';
+      ctx.lineWidth = Math.max(1, r * 0.035);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.24, -r * 0.18);
+      ctx.lineTo(r * 0.22, r * 0.20);
+      ctx.moveTo(r * 0.20, -r * 0.18);
+      ctx.lineTo(-r * 0.22, r * 0.20);
+      ctx.stroke();
+    } else if (/gold|royal|knight/.test(skinId)) {
+      ctx.fillStyle = '#f4c95a';
+      ctx.beginPath();
+      ctx.moveTo(0, -r * 0.3);
+      ctx.lineTo(r * 0.12, -r * 0.12);
+      ctx.lineTo(0, r * 0.02);
+      ctx.lineTo(-r * 0.12, -r * 0.12);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawClassGear(ctx, r, classType, colors, gt) {
+    ctx.save();
+    if (classType === 'warrior') {
+      ctx.fillStyle = '#252b2c';
+      roundedRect(ctx, -r * 0.50, -r * 0.28, r * 0.22, r * 0.24, r * 0.06);
+      ctx.fill();
+      roundedRect(ctx, r * 0.28, -r * 0.28, r * 0.22, r * 0.24, r * 0.06);
+      ctx.fill();
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = Math.max(1, r * 0.035);
+      ctx.stroke();
+    } else if (classType === 'mage') {
+      ctx.strokeStyle = colors.accent;
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = Math.max(1.5, r * 0.04);
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.05, r * (0.52 + Math.sin(gt * 2.4) * 0.025), Math.PI * 0.18, Math.PI * 1.82);
+      ctx.stroke();
+      ctx.fillStyle = colors.accent;
+      ctx.globalAlpha = 0.45;
+      circle(ctx, -r * 0.34, -r * 0.18, r * 0.055, colors.accent);
+      circle(ctx, r * 0.34, -r * 0.18, r * 0.055, colors.accent);
+    } else if (classType === 'healer') {
+      ctx.fillStyle = colors.accent;
+      ctx.globalAlpha = 0.95;
+      ctx.fillRect(-r * 0.17, -r * 0.07, r * 0.34, r * 0.08);
+      ctx.fillRect(-r * 0.04, -r * 0.20, r * 0.08, r * 0.34);
+    } else if (classType === 'assassin') {
+      ctx.fillStyle = 'rgba(15,12,24,0.72)';
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.42, -r * 0.22);
+      ctx.lineTo(0, r * 0.54);
+      ctx.lineTo(r * 0.42, -r * 0.22);
+      ctx.closePath();
+      ctx.fill();
+    } else if (classType === 'scout') {
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = Math.max(1.5, r * 0.045);
+      ctx.beginPath();
+      ctx.arc(0, -r * 0.05, r * 0.46, -0.9, 0.9);
+      ctx.stroke();
+      ctx.fillStyle = '#1a211c';
+      roundedRect(ctx, -r * 0.36, -r * 0.04, r * 0.20, r * 0.34, r * 0.04);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function limb(ctx, x1, y1, x2, y2, w, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = w;
@@ -213,6 +313,8 @@
     ctx.globalAlpha = opts.fury ? 0.95 : 0.75;
     ctx.fillRect(-r * 0.05, -r * 0.28, r * 0.1, r * 0.58);
     ctx.globalAlpha = 1;
+    drawSkinPattern(ctx, r, opts.skinId || 'default', colors);
+    drawClassGear(ctx, r, classType, colors, gt);
 
     if (classType === 'healer') {
       ctx.fillStyle = '#102018';

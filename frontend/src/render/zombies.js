@@ -62,6 +62,28 @@
     ctx.restore();
   }
 
+  function drawTornMarks(ctx, r, cfg, bob) {
+    ctx.save();
+    ctx.globalAlpha = cfg.markAlpha || 0.86;
+    ctx.strokeStyle = cfg.markColor || '#231a16';
+    ctx.lineWidth = Math.max(1, r * 0.035);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.18, r * 0.02 + bob);
+    ctx.lineTo(r * 0.06, r * 0.16 + bob);
+    ctx.moveTo(r * 0.16, -r * 0.01 + bob);
+    ctx.lineTo(-r * 0.02, r * 0.24 + bob);
+    ctx.stroke();
+    if (cfg.wound) {
+      ctx.fillStyle = cfg.wound;
+      ctx.globalAlpha = 0.72;
+      ctx.beginPath();
+      ctx.ellipse(r * 0.18, r * 0.12 + bob, r * 0.09, r * 0.045, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawZombieBody(ctx, r, cfg, gt) {
     var skin = cfg.skin || col('zombieSkin', '#8da082');
     var dark = cfg.dark || col('zombieDark', '#334036');
@@ -82,6 +104,7 @@
       ctx.lineTo(-r * cfg.bodyW * 0.78, r * cfg.bodyH + bob);
       ctx.closePath();
     }, cloth, '#151a14', 2);
+    drawTornMarks(ctx, r, cfg, bob);
 
     strokeLimb(ctx, -r * cfg.armReach, -r * 0.05 + bob, -r * 0.3, r * 0.03 + bob, r * 0.12, skin);
     strokeLimb(ctx, r * 0.3, r * 0.03 + bob, r * cfg.armReach, -r * 0.05 + bob, r * 0.12, skin);
@@ -94,13 +117,24 @@
     }, skin, '#172018', 2);
     drawEyes(ctx, r * 0.045, 0, -r * (cfg.headY + 0.05) + bob, r * 0.11, eye, cfg.eyeGlow || 0);
     ellipse(ctx, 0, -r * (cfg.headY - 0.13) + bob, r * 0.09, r * 0.055, 0, '#160909');
+    if (cfg.headScar) {
+      ctx.save();
+      ctx.strokeStyle = cfg.headScar;
+      ctx.lineWidth = Math.max(1, r * 0.03);
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.10, -r * (cfg.headY + 0.20) + bob);
+      ctx.lineTo(r * 0.08, -r * (cfg.headY + 0.02) + bob);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function drawWalker(ctx, r, gt) {
     drawZombieBody(ctx, r, {
       bodyW: 0.3, bodyH: 0.28, headY: 0.32, headR: 0.29,
       armReach: 0.62, legSwing: Math.sin(gt * 2.4) * r * 0.05,
-      cloth: '#4a3c2f', bobSpeed: 2.4, bob: 0.03, eyeGlow: 2
+      cloth: '#4a3c2f', bobSpeed: 2.4, bob: 0.03, eyeGlow: 2,
+      wound: '#6e1c18', headScar: '#3b211d'
     }, gt);
   }
 
@@ -114,7 +148,7 @@
       bodyW: 0.25, bodyH: 0.24, headY: 0.34, headR: 0.25,
       armReach: 0.74, legSwing: Math.sin(gt * 13) * r * 0.11,
       skin: '#9d8f78', cloth: '#332722', bobSpeed: 12, bob: 0.02,
-      eye: '#ff3a26', eyeGlow: 4
+      eye: '#ff3a26', eyeGlow: 4, wound: '#8a2418', markColor: '#170d0b'
     }, gt);
     ctx.restore();
   }
@@ -132,6 +166,13 @@
     circle(ctx, -r * 0.2, -r * 0.12, r * 0.09, '#b8cc4e');
     circle(ctx, r * 0.32, r * 0.08, r * 0.075, '#b8cc4e');
     circle(ctx, r * 0.05, r * 0.3, r * 0.06, '#d7e778');
+    ctx.save();
+    ctx.strokeStyle = 'rgba(180,210,88,0.7)';
+    ctx.lineWidth = Math.max(1.5, r * 0.035);
+    ctx.beginPath();
+    ctx.arc(0, r * 0.07 + pulse, r * 0.48, -0.2, Math.PI * 0.85);
+    ctx.stroke();
+    ctx.restore();
     strokeLimb(ctx, -r * 0.65, -r * 0.02, -r * 0.96, r * 0.1, r * 0.16, skin);
     strokeLimb(ctx, r * 0.65, -r * 0.02, r * 0.96, r * 0.1, r * 0.16, skin);
     outline(ctx, function() {
@@ -147,7 +188,7 @@
       bodyW: 0.22, bodyH: 0.3, headY: 0.42, headR: 0.23,
       armReach: 0.52, legSwing: Math.sin(gt * 3) * r * 0.04,
       skin: '#788f60', cloth: '#283426', bobSpeed: 3, bob: 0.02,
-      eye: '#9aff40', eyeGlow: 5
+      eye: '#9aff40', eyeGlow: 5, wound: '#6f9d2a', markColor: '#1a2a14'
     }, gt);
     ellipse(ctx, 0, -r * 0.27, r * 0.14, r * 0.09, 0, '#253c10');
     ellipse(ctx, 0, -r * 0.25, r * 0.1, r * 0.055, 0, '#9aff40', acid);
@@ -169,6 +210,12 @@
       ctx.arc(r * 0.12, -r * 0.06, r * 0.19, 0, Math.PI * 2);
     }, skin, '#172018', 2);
     drawEyes(ctx, r * 0.035, r * 0.08, -r * 0.11, r * 0.08, '#ff5a3d', 2);
+    ctx.fillStyle = '#5a2118';
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.12, r * 0.18, r * 0.1, r * 0.035, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
   function drawBoss(ctx, r, gt, mini) {
