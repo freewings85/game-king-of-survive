@@ -4,6 +4,28 @@
 
 ---
 
+## 🗑️ 一次性产出物 → 全部进 `can_delete/`（强制规则）
+
+**目的**：保持仓库根目录干净，让人和 PR review 一眼能看出"哪些是产品代码、哪些是丢得起的实验"。
+
+**必须放进 `can_delete/` 的东西**：
+- playtest 截图（`*.png` / `*.jpg`）—— 任何 puppeteer/playwright/headless 跑出来的可视化产物
+- 一次性 smoke / debug / eval 脚本 —— `_qa_*.mjs` / `_pt_*.mjs` / `test_*.js` / `r2_*.js` / `critic_*.js` / `run_*.js` 之类前缀
+- 临时 sketch（手写的 markdown 笔记、scratch 方案图、AB 对比 collage）
+- 评估报告 / round_eval 结果
+
+**绝对不许**：直接往项目根写截图、scratch 脚本或 markdown 草稿。`can_delete/` 是收容站。
+
+**保留位置（不要扔到 `can_delete/`）**：
+- `candidate_pics/` —— 美术参考方向（codex pitch，长期保留）
+- `demo/assets/` —— 运行时需要的游戏 asset
+- `qa/`、`review_screenshots/`、`round*_eval/` —— 已经有约定结构的评审存档（看 HANDOVER 决定何时归档/清理）
+- 项目级文档：`README.md` / `HANDOVER.md` / `CLAUDE.md` / `AGENTS.md` / `prd.json`
+
+**`can_delete/` 已 gitignore**，里面写啥都不会污染 git。需要清理时一句 `rm -rf can_delete/*`。
+
+---
+
 ## 必读文档（按顺序）
 
 1. **`README.md`** — 项目架构 / 启动 / QA / 项目结构
@@ -21,17 +43,15 @@
 
 ## 当前阶段（2026-04-25 起）
 
-旧 GameDev 团队（ArtDesigner / Developer / Testor）方向已确认错误，进入团队重建期。
+进入团队重建期 + 题材重写期。
 
-- **旧路线**：8 人 BR + 4v4 MOBA + 大秘境，稳态评分 7.0/10 三周推不动
-- **新路线**：8 人同图 PvE + PvP 杂交（类 survivor.io「Battle of Survivors」），怪海 + 真人双威胁，最后存活赢段位，一局 15-20 分钟
-  - 核心钩子：玩法重玩性（8 人 × 怪海 × 选卡变量）
-  - Meta 钩子：皮肤 + 段位（放大器，不是必需）
-  - 砍：4v4 团战 / 友伤免疫 / 大秘境 / daily challenge / 纯 PvP 不带刷怪
-- **代码目标**：`demo/survivor.html` 14k 行 → 8-10k 行
-- **基线政策**：旧 `.claude/PLAYTEST_BASELINE.md` 全部作废，不要参考
+**新路线一句话**：8 人同图 PvE + PvP 杂交（"Battle of Survivors"）—— 怪海 + 真人双威胁、自动攻击 + 选卡升级、最后存活 1 人赢段位、一局 15-20 分钟。
 
-具体执行细节全部在 **`HANDOVER.md`**。
+- **重玩钩子分层**：**核心** = 玩法重玩性（8 人 × 怪海 × 选卡 三随机交叉）；**Meta** = 皮肤+段位（放大器，不是必需）
+- **代码目标**：`demo/survivor.html` 14k → 8-10k（宁删勿加）
+- **基线**：旧 `.claude/PLAYTEST_BASELINE.md` 全部作废，不要参考
+
+砍 / 留 / 改清单 + 新团队 system prompt 全部在 **`HANDOVER.md`**。
 
 ---
 

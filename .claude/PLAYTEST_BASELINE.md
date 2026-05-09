@@ -197,10 +197,10 @@ Catastrophic single-run failure (coverage < 70%, any cell μ = 0 across 3+
 cells, crash / pageerror) remains 1-run actionable — the signal is large
 enough that Run2 confirmation is not required.
 
-## Historical Stability — R5ae → R5al (7 rounds × 2-run = 14 runs, ~330 sessions)
+## Historical Stability — R5ae → R5an (8 rounds × 2-run = 16 runs + 1 edge-noise)
 
-Updated 2026-04-22 per Leo R5ak / R5am. Statistics across R5ae–R5al 2-run
-gate sign-offs, for future reference / auto-revert sanity checks.
+Updated 2026-04-22 per Leo R5ak / R5am / R5an. Statistics across R5ae–R5an
+2-run gate sign-offs, for future reference / auto-revert sanity checks.
 
 ### Composite score (2-run avg per round)
 | Round | Run 1 | Run 2 | Avg   |
@@ -212,11 +212,13 @@ gate sign-offs, for future reference / auto-revert sanity checks.
 | R5ai  | 7.25  | 7.25  | 7.250 |
 | R5aj  | 7.25  | 7.25  | 7.250 |
 | R5al  | —     | —     | 6.75  |  *edge noise, same HEAD as R5aj; sub-runs not reported to Dev*
+| R5an  | 6.75  | 7.00  | 6.875 |  *first 2-run on 52-game matrix after R5am band widen*
 
-**Pre-R5al μ = 7.125 ± 0.125** (6 rounds). **Including R5al: μ ≈ 7.07 ± 0.18**
-— R5am widens the official band to **7.0 ± 0.25 = [6.75, 7.25]** to absorb
-observed single-round matrix variance. 6 / 7 rounds PASS on 2-run gate; R5al
-inside the new band. No hard-fail revert since R5u (R5af F1 mechanism).
+**Including R5an: μ ≈ 7.03 ± 0.17** (8 rounds, widened band now covers all).
+7 / 8 rounds PASS on 2-run gate (R5al inside new band). No hard-fail revert
+since R5u (R5af F1 mechanism). R5an composite matches R5af exactly — Run1
+warn-zone (coverage 90.4%, band lower) + Run2 recovery (94.2%) typical of
+the noise pattern the 2-run gate was designed to absorb.
 
 ### Per-round variance memo (R5am finding)
 Same commit, same harness can swing composite by up to **±0.5** round-to-
@@ -238,10 +240,12 @@ zero code delta). Consequences:
 | R5ah  | 40.9% | 40.9% | 40.9% |
 | R5ai  | 42.3% | 61.5% | 51.9% |
 | R5aj  | 57.7% | 57.7% | 57.7% |
+| R5an  | 96.2% | 98.1% | 97.2% |
 
-**μ = 48.2% ± 10.1 pp**. Range [31.8%, 61.4%]. All within R5l baseline
-45% ±15 pp. Lowest (R5af 31.8) recovered to 45%+ the next round with
-zero code change — confirms the 2-run gate's noise-absorbing design.
+**μ (incl R5an) = 55.2% ± 19.4 pp**. R5an FPS jumped to 97% — first round
+on the 52-game expanded matrix; sample size doubled and headless variance
+absorbed into a tighter rate. Treat R5an FPS as new floor on 52-game
+methodology, not comparable to R5ae–R5aj 22- / 26-game numbers.
 
 ### Coverage (have-kill, 2-run avg)
 | Round | Run 1   | Run 2   | Avg    |

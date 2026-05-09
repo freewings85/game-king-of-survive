@@ -41,3 +41,9 @@ node_modules/
 # Python
 __pycache__/
 .venv/
+
+# Throwaway artifacts (playtest screenshots / smoke scripts / eval dumps).
+# Bots and developers should write any one-off test output here.
+# Periodic cleanup: rm -rf can_delete/*
+can_delete/
+!can_delete/.gitkeep
