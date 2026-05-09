@@ -501,6 +501,27 @@ body {
   box-shadow: -18px 8px 0 -11px rgba(5,8,8,0.95), 18px 8px 0 -11px rgba(5,8,8,0.95);
 }
 
+.showcase-thumbs i[data-skin-variant$="-0"]::before {
+  width: 34px;
+  border-radius: 12px 12px 5px 5px;
+  box-shadow: -22px 6px 0 -12px color-mix(in srgb, var(--accent-color, #4ec9ff), #000 20%), 20px 10px 0 -12px rgba(5,8,8,0.95);
+}
+
+.showcase-thumbs i[data-skin-variant$="-1"]::before {
+  width: 26px;
+  height: 46px;
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: -15px 10px 0 -10px rgba(5,8,8,0.95), 22px 0 0 -13px var(--accent-color, #4ec9ff);
+}
+
+.showcase-thumbs i[data-skin-variant$="-2"]::before {
+  top: 16px;
+  width: 28px;
+  height: 48px;
+  border-radius: 14px 8px 5px 5px;
+  box-shadow: -22px 14px 0 -10px color-mix(in srgb, var(--skin-color, #2f6068), #000 40%), 22px 8px 0 -13px var(--accent-color, #4ec9ff);
+}
+
 .showcase-thumbs i::after {
   content: "";
   position: absolute;
@@ -512,6 +533,26 @@ body {
   background: color-mix(in srgb, var(--skin-color, #2f6068), #f1c990 45%);
   transform: translateX(-50%);
   box-shadow: 0 -6px 0 -2px rgba(11,16,13,0.88);
+}
+
+.showcase-thumbs i[data-skin-variant$="-0"]::after {
+  width: 24px;
+  border-radius: 8px 8px 10px 10px;
+}
+
+.showcase-thumbs i[data-skin-variant$="-1"]::after {
+  top: 7px;
+  width: 18px;
+  height: 22px;
+  border-radius: 50% 50% 8px 8px;
+  box-shadow: 0 -8px 0 -3px var(--accent-color, #4ec9ff);
+}
+
+.showcase-thumbs i[data-skin-variant$="-2"]::after {
+  width: 26px;
+  height: 17px;
+  border-radius: 14px 14px 6px 6px;
+  box-shadow: 0 -7px 0 -2px rgba(11,16,13,0.88), 16px 22px 0 -8px var(--accent-color, #4ec9ff);
 }
 
 .showcase-thumbs i b {

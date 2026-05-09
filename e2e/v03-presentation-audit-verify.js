@@ -90,7 +90,7 @@ requiredText.forEach((text) => {
   'activePainterlySkinColor: #283746',
   'class-review painterly state and class showcase title matching Guardian, Tech, and Ranger',
   'classShowcaseDisplayed',
-  '3 showcase skin thumbnails with 1 active thumbnail',
+  '3 variant showcase skin thumbnails with 1 active thumbnail',
   'silhouettePartCount >= 75',
   'zombieDetailPartCount >= 285',
   'zombieVariantCount >= 3',

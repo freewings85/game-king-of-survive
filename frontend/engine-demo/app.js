@@ -1448,6 +1448,7 @@ function applyClass(id) {
     el.style.setProperty('--skin-color', def.skins[index] || def.skins[0]);
     el.style.setProperty('--accent-color', `#${def.accent.toString(16).padStart(6, '0')}`);
     el.dataset.skin = String(index);
+    el.dataset.skinVariant = `${id}-${index}`;
   });
   Array.from(classButtons.querySelectorAll('button')).forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.class === id);
@@ -1490,6 +1491,7 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.classShowcaseSkinCount = showcaseSkins.children.length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseThumbCount = showcaseThumbs.children.length;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseActiveThumbs = showcaseThumbs.querySelectorAll('.active').length;
+  window.__V03_ENGINE_DEMO_STATE.classShowcaseVariantCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.skinVariant)).size;
 }
 
 function applySkill(id) {

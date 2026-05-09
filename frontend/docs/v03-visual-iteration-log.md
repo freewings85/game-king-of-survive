@@ -263,6 +263,37 @@ Next iteration direction:
 2. Add a Cocos checklist item for class showcase thumbnails once the Cocos scene work resumes.
 3. Keep the three-class screenshots as the comparison surface for class/skin readability.
 
+## 2026-05-10 Showcase Skin Silhouette Variant Pass
+
+Related work:
+
+- WIP after `ebdcb7f`
+
+Reviewed screenshots:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+What moved closer:
+
+- Showcase skin thumbnails now carry three distinct silhouette variants instead of using one identical body shape for every skin.
+- The variants change body width, head/helmet shape, side gear, and accent placement while preserving the current class palette.
+- The verifier now checks `classShowcaseVariantCount === 3`, keeping the thumbnail row from regressing to same-shape color swatches.
+
+What is still far from the reference:
+
+- These are still CSS-generated mini silhouettes, not finished skin artwork.
+- The variants are generic across classes; Guardian, Tech, and Ranger need class-specific skin costume language next.
+- Cocos still needs real skin thumbnail sprites/prefabs rather than CSS-only review assets.
+
+Next iteration direction:
+
+1. Make the three skin variants class-aware: Guardian shield plates, Tech coils/screens, Ranger hood/cape/rifle trims.
+2. Add larger isolated class art to the showcase so the selected skin is readable beyond the thumbnail row.
+3. Mirror the variant requirement in Cocos once the Cocos scene uses authored UI prefabs.
+
 ## 2026-05-10 Character Silhouette Pass
 
 Related work:
