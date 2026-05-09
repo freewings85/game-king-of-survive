@@ -3214,6 +3214,7 @@
       var _sxCull = s.x - camX2, _syCull = s.y - camY2;
       if (_sxCull + s.w < -10 || _sxCull > W + 10 || _syCull + s.h < -10 || _syCull > H + 10) continue;
       var sx = s.x, sy = s.y;
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawWorldProp === 'function' && window.KOS_RENDER.drawWorldProp(ctx2, sx, sy, s.w, s.h, s.sprite || s.type, s)) continue;
       if (s.type === 'building') {
         // Building — base + roof + shadow
         ctx2.fillStyle = 'rgba(0,0,0,0.3)';
