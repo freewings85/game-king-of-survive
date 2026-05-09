@@ -268,7 +268,7 @@ body {
   background-color: var(--skin-color, #332d2a);
   background-image:
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
-    url("/frontend/engine-demo/assets/portraits/class-focus-guardian.png"),
+    var(--portrait-image),
     linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
   background-size: 100% 100%, 115% auto, 100% 100%;
   background-position: center, center bottom, center;
@@ -278,7 +278,7 @@ body {
   background-color: var(--skin-color, #2f6068);
   background-image:
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
-    url("/frontend/engine-demo/assets/portraits/class-focus-tech.png"),
+    var(--portrait-image),
     linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
   background-size: 100% 100%, 112% auto, 100% 100%;
   background-position: center, center bottom, center;
@@ -288,7 +288,7 @@ body {
   background-color: var(--skin-color, #283746);
   background-image:
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.42)),
-    url("/frontend/engine-demo/assets/portraits/class-focus-ranger.png"),
+    var(--portrait-image),
     linear-gradient(140deg, rgba(255,255,255,0.12), rgba(0,0,0,0.62));
   background-size: 100% 100%, 118% auto, 100% 100%;
   background-position: center, center bottom, center;

@@ -171,9 +171,21 @@ const classThumbStyles = {
   ranger: 'hood-rifle'
 };
 const classPortraitAssets = {
-  guardian: '/frontend/engine-demo/assets/portraits/class-focus-guardian.png',
-  tech: '/frontend/engine-demo/assets/portraits/class-focus-tech.png',
-  ranger: '/frontend/engine-demo/assets/portraits/class-focus-ranger.png'
+  guardian: [
+    '/frontend/engine-demo/assets/portraits/class-skin-guardian-0.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-guardian-1.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-guardian-2.png'
+  ],
+  tech: [
+    '/frontend/engine-demo/assets/portraits/class-skin-tech-0.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-tech-1.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-tech-2.png'
+  ],
+  ranger: [
+    '/frontend/engine-demo/assets/portraits/class-skin-ranger-0.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-ranger-1.png',
+    '/frontend/engine-demo/assets/portraits/class-skin-ranger-2.png'
+  ]
 };
 const zombieCardAssets = {
   0: '/frontend/engine-demo/assets/zombies/zombie-card-brute.png',
@@ -366,16 +378,22 @@ function getHeroCardTexture(classId, skinIndex, skinColor, accentHex) {
   return heroTextureCache.get(key);
 }
 
-function getClassPortraitTexture(classId) {
-  const asset = classPortraitAssets[classId];
+function getClassPortraitAsset(classId, skinIndex = 0) {
+  const assets = classPortraitAssets[classId];
+  return assets && (assets[skinIndex] || assets[0]);
+}
+
+function getClassPortraitTexture(classId, skinIndex = 0) {
+  const asset = getClassPortraitAsset(classId, skinIndex);
   if (!asset) return null;
-  if (!classPortraitTextureCache.has(classId)) {
+  const key = `${classId}:${skinIndex}`;
+  if (!classPortraitTextureCache.has(key)) {
     const texture = new THREE.TextureLoader().load(asset);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
-    classPortraitTextureCache.set(classId, texture);
+    classPortraitTextureCache.set(key, texture);
   }
-  return classPortraitTextureCache.get(classId);
+  return classPortraitTextureCache.get(key);
 }
 
 function getZombieSpriteTexture(variant) {
@@ -487,8 +505,8 @@ function makeFxCardTexture(kind) {
 }
 
 const painterlyMaterials = {
-  hero: makePainterlyMaterial(getClassPortraitTexture('tech') || getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
-  rival: makePainterlyMaterial(getClassPortraitTexture('guardian') || getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
+  hero: makePainterlyMaterial(getClassPortraitTexture('tech', 0) || getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
+  rival: makePainterlyMaterial(getClassPortraitTexture('guardian', 0) || getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
   zombieBrute: makePainterlyMaterial(getZombieSpriteTexture(0) || makeZombieCardTexture(0), 0.90),
   zombieCrawler: makePainterlyMaterial(getZombieSpriteTexture(1) || makeZombieCardTexture(1), 0.90),
   zombieHooded: makePainterlyMaterial(getZombieSpriteTexture(2) || makeZombieCardTexture(2), 0.90),
@@ -1560,7 +1578,7 @@ function applySkin(index) {
   const accentHex = `#${def.accent.toString(16).padStart(6, '0')}`;
   mats.player.color.set(skinColor);
   if (playerPainterlyCard) {
-    const spriteTexture = getClassPortraitTexture(activeClass);
+    const spriteTexture = getClassPortraitTexture(activeClass, activeSkin);
     playerPainterlyCard.material.map = spriteTexture || getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
     playerPainterlyCard.material.needsUpdate = true;
     activePainterlyUsesSpriteAsset = !!spriteTexture;
@@ -1569,10 +1587,13 @@ function applySkin(index) {
   activePainterlySkin = activeSkin;
   activePainterlySkinColor = skinColor;
   activePainterlyStyle = classThumbStyles[activeClass] || 'field-kit';
+  const focusPortraitAsset = getClassPortraitAsset(activeClass, activeSkin);
   focusPortrait.classList.add('sprite');
   focusPortrait.dataset.classId = activeClass;
+  focusPortrait.dataset.skinVariant = `${activeClass}-${activeSkin}`;
   focusPortrait.style.setProperty('--skin-color', skinColor);
   focusPortrait.style.setProperty('--accent-color', accentHex);
+  focusPortrait.style.setProperty('--portrait-image', `url("${focusPortraitAsset}")`);
   focusPortrait.dataset.classStyle = activePainterlyStyle;
   focusSkinLabel.textContent = `SKIN ${String(activeSkin + 1).padStart(2, '0')} / ${activePainterlyStyle}`;
   Array.from(skinRow.children).forEach((el, i) => {
@@ -1594,9 +1615,12 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activeClass}-${activeSkin}`;
+  window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusSkinVariant = focusPortrait.dataset.skinVariant;
   window.__V03_ENGINE_DEMO_STATE.combatFocusUsesSpriteAsset = focusPortrait.classList.contains('sprite');
   window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
   window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
@@ -2225,9 +2249,12 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activePainterlyClass}-${activePainterlySkin}`;
+  window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
+  window.__V03_ENGINE_DEMO_STATE.combatFocusSkinVariant = focusPortrait.dataset.skinVariant;
   window.__V03_ENGINE_DEMO_STATE.combatFocusUsesSpriteAsset = focusPortrait.classList.contains('sprite');
   window.__V03_ENGINE_DEMO_STATE.combatFocusSkillCount = focusSkills.children.length;
   window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;

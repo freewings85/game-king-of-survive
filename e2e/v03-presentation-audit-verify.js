@@ -95,8 +95,11 @@ requiredText.forEach((text) => {
   'combatFocusDisplayed',
   'combatFocusStyle: hood-rifle',
   'combatFocusClassId: ranger',
+  'combatFocusSkinVariant: ranger-2',
   'combatFocusUsesSpriteAsset',
   'combatFocusSkillCount: 3',
+  'classSkinSpriteVariantCount >= 9',
+  'activePainterlySkinSpriteVariant: ranger-2',
   'class-review painterly style matching the class showcase styles for Guardian, Tech, and Ranger',
   'classShowcaseDisplayed',
   '3 variant showcase skin thumbnails with 1 active thumbnail',
@@ -133,6 +136,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 11,
   mappedRequirements: 13,
-  gates: 41,
+  gates: 44,
   completionClaim: false
 }, null, 2));

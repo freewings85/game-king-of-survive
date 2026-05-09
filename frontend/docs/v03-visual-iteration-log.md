@@ -1547,3 +1547,56 @@ Next iteration direction:
 1. Build skin-specific class portraits for all 9 class/skin combinations.
 2. Replace the most visible projectile trails and impact marks with sprite-backed assets.
 3. Audit the full phone screenshot against the V03 reference before widening to Cocos prefab equivalents.
+
+## 2026-05-10 Class skin sprite variant pass
+
+Related work:
+
+- WebGL reference WIP after `3528e27`
+- `frontend/engine-demo/assets/portraits/class-skin-guardian-0.png`
+- `frontend/engine-demo/assets/portraits/class-skin-guardian-1.png`
+- `frontend/engine-demo/assets/portraits/class-skin-guardian-2.png`
+- `frontend/engine-demo/assets/portraits/class-skin-tech-0.png`
+- `frontend/engine-demo/assets/portraits/class-skin-tech-1.png`
+- `frontend/engine-demo/assets/portraits/class-skin-tech-2.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-0.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-1.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-2.png`
+- `frontend/engine-demo/app.js`
+- `frontend/engine-demo/styles.css`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/assets/portraits/class-skin-guardian-0.png`
+- `frontend/engine-demo/assets/portraits/class-skin-tech-1.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-2.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+Current visual distance:
+
+- Art quality: closer for class/skin readability, still far for true skin-specific illustration.
+- The current variants are tint/contrast branches from the class portraits, not fully unique poses or costumes.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- All 9 class/skin combinations now have routable sprite assets instead of only 3 class-level portraits.
+- Focus portrait and in-match hero card now follow `activeSkin`; Ranger skin 2 reports `activePainterlySkinSpriteVariant: ranger-2` and `combatFocusSkinVariant: ranger-2`.
+- Runtime gates now require `classSkinSpriteVariantCount >= 9`, so future changes cannot collapse the skin asset set back to 3 class portraits.
+
+What is still far from the reference:
+
+- The skin variants still need hand-authored or generated costume differences, not only palette shifts.
+- Main 3D bodies still do not reflect the selected skin beyond material color.
+- Cocos prefab equivalents for the 9 skin variants still have not been authored or previewed.
+
+Next iteration direction:
+
+1. Generate or author truly distinct skin costumes for the highest-priority class, likely Ranger first because the mobile gate uses Ranger skin 2.
+2. Route selected skin state into 3D gear/material differences beyond the painterly card.
+3. Mirror the 9-skin asset contract into the Cocos visual checklist once WebGL review stabilizes.
