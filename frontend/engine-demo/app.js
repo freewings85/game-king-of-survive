@@ -74,6 +74,7 @@ const blobShadowMat = new THREE.MeshBasicMaterial({
 let activeClass = 'tech';
 let activeSkill = 'arc';
 let activeSkin = 0;
+let activeGearCount = 0;
 const playerSpawn = { x: -0.8, z: 0.7 };
 
 const game = {
@@ -396,6 +397,33 @@ function makeCharacter(colorMat, accentMat, scale = 1) {
   muzzle.rotation.z = Math.PI / 2;
   root.add(muzzle);
 
+  const guardianShield = box(0.18 * scale, 0.88 * scale, 0.72 * scale, accentMat);
+  guardianShield.position.set(-0.68 * scale, 1.02 * scale, -0.08 * scale);
+  guardianShield.rotation.z = 0.18;
+  guardianShield.userData.classGear = 'guardian';
+  root.add(guardianShield);
+
+  const techCoil = new THREE.Mesh(new THREE.TorusGeometry(0.25 * scale, 0.035 * scale, 10, 24), accentMat);
+  techCoil.position.set(-0.38 * scale, 1.64 * scale, 0.18 * scale);
+  techCoil.rotation.x = Math.PI / 2;
+  techCoil.userData.classGear = 'tech';
+  root.add(techCoil);
+  const techMast = box(0.08 * scale, 0.62 * scale, 0.08 * scale, accentMat);
+  techMast.position.set(-0.39 * scale, 1.42 * scale, 0.18 * scale);
+  techMast.userData.classGear = 'tech';
+  root.add(techMast);
+
+  const rangerCloak = box(0.64 * scale, 0.74 * scale, 0.10 * scale, colorMat);
+  rangerCloak.position.set(-0.04 * scale, 0.95 * scale, 0.44 * scale);
+  rangerCloak.rotation.x = -0.22;
+  rangerCloak.userData.classGear = 'ranger';
+  root.add(rangerCloak);
+  const rangerBarrel = box(1.18 * scale, 0.08 * scale, 0.10 * scale, accentMat);
+  rangerBarrel.position.set(0.70 * scale, 1.26 * scale, -0.45 * scale);
+  rangerBarrel.rotation.y = -0.20;
+  rangerBarrel.userData.classGear = 'ranger';
+  root.add(rangerBarrel);
+
   root.traverse((o) => {
     if (o.isMesh && !o.userData.contactShadow) {
       o.castShadow = true;
@@ -453,6 +481,17 @@ function resetZombie(z, x, zPos) {
   z.visible = true;
 }
 
+function setCharacterGear(root, id) {
+  let visibleCount = 0;
+  root.traverse((part) => {
+    if (part.userData && part.userData.classGear) {
+      part.visible = part.userData.classGear === id;
+      if (part.visible) visibleCount += 1;
+    }
+  });
+  return visibleCount;
+}
+
 const contractMap = makeContractMap();
 const contractProps = [];
 let contractTileLayer = null;
@@ -484,6 +523,7 @@ scene.add(player);
 
 const rival = makeCharacter(mats.rival, mats.rivalAccent, 0.9);
 rival.position.set(3.1, 0, -2.2);
+setCharacterGear(rival, 'guardian');
 scene.add(rival);
 
 const rivalBeamMat = new THREE.MeshBasicMaterial({ color: 0xff8b3d, transparent: true, opacity: 0.65 });
@@ -549,6 +589,7 @@ function updateHud() {
 function applyClass(id) {
   const def = classDefs[id] || classDefs.tech;
   activeClass = id;
+  activeGearCount = setCharacterGear(player, id);
   mats.playerAccent.color.setHex(def.accent);
   mats.playerAccent.emissive.setHex(def.emissive);
   accentLight.color.setHex(def.accent);
@@ -576,6 +617,8 @@ function applySkin(index) {
     el.classList.toggle('active', i === activeSkin);
   });
   window.__V03_ENGINE_DEMO_STATE = window.__V03_ENGINE_DEMO_STATE || {};
+  window.__V03_ENGINE_DEMO_STATE.activeGearCount = activeGearCount;
+  window.__V03_ENGINE_DEMO_STATE.activeGearClass = activeClass;
   window.__V03_ENGINE_DEMO_STATE.activeSkin = activeSkin;
   window.__V03_ENGINE_DEMO_STATE.activeSkinColor = skinColor;
 }
