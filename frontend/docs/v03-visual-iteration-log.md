@@ -1880,3 +1880,44 @@ Next iteration direction:
 1. Create authored or generated prop cover bitmap assets for wreck, wall, and crate rather than relying on procedural canvas textures.
 2. Use those assets in the WebGL reference first, then mirror asset names and prefab requirements into Cocos.
 3. Extend the same treatment to barrels, tires, and debris once the three major cover families look good at phone scale.
+
+## 2026-05-10 Prop cover bitmap asset pass
+
+Related work:
+
+- Follow-up to `c97574a`
+- `frontend/engine-demo/assets/props/prop-cover-wreck.png`
+- `frontend/engine-demo/assets/props/prop-cover-wall.png`
+- `frontend/engine-demo/assets/props/prop-cover-crate.png`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The map prop layer is closer to the reference because wreck cars, walls, and crates now use generated bitmap cover assets instead of only procedural canvas paint.
+- The phone screenshot now has more authored material detail in the lower combat field, especially the wreck car silhouette and rusted panels.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added transparent PNG cover assets for `wreck`, `wall`, and `crate`.
+- Runtime gates now require `propSpriteCoverUsesAsset`, so the project cannot silently fall back to generated canvas-only covers.
+- Prop cover sizes were tuned so the assets read more like the object body and less like small decals.
+
+What is still far from the reference:
+
+- The asset overlays still sit on top of low-poly roots; walls and crates can still read partly as pasted surfaces rather than fully authored props.
+- The generated PNG assets are not final art-direction-locked Cocos prefabs.
+- Barrels, tires, debris, and ground material still need the same bitmap-asset treatment.
+
+Next iteration direction:
+
+1. Convert wall and crate from overlay-first presentation into fuller asset-bodied props, reducing visible low-poly backing where it hurts the read.
+2. Add bitmap cover assets for barrels, tires, and debris after the main three prop families stabilize.
+3. Mirror actual bitmap asset names into the Cocos visual contract once WebGL scale and perspective are final.

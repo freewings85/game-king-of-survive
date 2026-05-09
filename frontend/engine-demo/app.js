@@ -162,6 +162,7 @@ let activePainterlyUsesSpriteAsset = false;
 let activePainterlyUsesUnitSpriteAsset = false;
 let zombiePainterlyUsesSpriteAsset = false;
 let skillPainterlyUsesSpriteAsset = false;
+let propCoverUsesSpriteAsset = false;
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
@@ -206,6 +207,11 @@ const classUnitAssets = {
   ranger: {
     2: '/frontend/engine-demo/assets/units/hero-ranger-2-isometric.png'
   }
+};
+const propCoverAssets = {
+  wreck: '/frontend/engine-demo/assets/props/prop-cover-wreck.png',
+  wall: '/frontend/engine-demo/assets/props/prop-cover-wall.png',
+  crate: '/frontend/engine-demo/assets/props/prop-cover-crate.png'
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -448,6 +454,19 @@ function getSkillSpriteTexture(kind) {
   return skillTextureCache.get(kind);
 }
 
+function getPropCoverTexture(kind) {
+  const asset = propCoverAssets[kind];
+  if (!asset) return null;
+  const cacheKey = `asset:${kind}`;
+  if (!propTextureCache.has(cacheKey)) {
+    const texture = new THREE.TextureLoader().load(asset);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    propTextureCache.set(cacheKey, texture);
+  }
+  return propTextureCache.get(cacheKey);
+}
+
 function makeZombieCardTexture(variant = 0) {
   const cloth = variant === 2 ? '#413424' : variant === 1 ? '#2d3828' : '#4b3628';
   const skin = variant === 1 ? '#78906d' : '#8d9a72';
@@ -603,7 +622,7 @@ function makePropCoverTexture(kind) {
 
 function getPropCoverMaterial(kind) {
   if (!propTextureCache.has(kind)) {
-    propTextureCache.set(kind, makePainterlyMaterial(makePropCoverTexture(kind), 0.74));
+    propTextureCache.set(kind, makePainterlyMaterial(getPropCoverTexture(kind) || makePropCoverTexture(kind), 0.94));
   }
   return propTextureCache.get(kind);
 }
@@ -619,6 +638,7 @@ const painterlyMaterials = {
   arc: makePainterlyMaterial(getSkillSpriteTexture('arc') || makeFxCardTexture('arc'), 0.94)
 };
 skillPainterlyUsesSpriteAsset = ['arc', 'boom', 'fan'].every((kind) => !!getSkillSpriteTexture(kind));
+propCoverUsesSpriteAsset = ['wreck', 'wall', 'crate'].every((kind) => !!getPropCoverTexture(kind));
 
 function addPainterlyCard(root, material, width, height, x, y, z, kind) {
   const card = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material.clone());
@@ -863,7 +883,7 @@ function makeCrate(x, z, s = 1) {
   addBrokenChunk(root, s * 0.24, s * 0.18, s * 0.12, mats.propBrokenDark, -s * 0.43, s * 0.95, -s * 0.30, 0.22, -0.35);
   addBrokenChunk(root, s * 0.28, s * 0.12, s * 0.10, mats.propBrokenLight, s * 0.34, s * 0.14, -s * 0.48, -0.28, 0.18);
   addPropGroundScatter(root, 0.62 * s, 0.52 * s, 3);
-  addPropSpriteCover(root, 'crate', s * 0.94, s * 0.82, 0, s * 0.54, -s * 0.61);
+  addPropSpriteCover(root, 'crate', s * 1.14, s * 1.04, 0, s * 0.56, -s * 0.63);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -911,7 +931,7 @@ function makeWreck(x, z, rot) {
     root.add(wheel);
   }
   addPropGroundScatter(root, 1.25, 0.72, 7);
-  addPropSpriteCover(root, 'wreck', 2.18, 0.98, 0, 0.62, -0.70);
+  addPropSpriteCover(root, 'wreck', 2.34, 1.30, 0, 0.66, -0.70);
   root.rotation.y = rot;
   root.position.set(x, 0, z);
   scene.add(root);
@@ -946,7 +966,7 @@ function makeWall(x, z, w, d) {
   addBrokenChunk(root, Math.max(0.16, w * 0.12), 0.34, Math.max(0.06, d * 0.28), mats.propBrokenDark, -w * 0.44, 1.10, -d * 0.53, 0.18, -0.24);
   addBrokenChunk(root, Math.max(0.14, w * 0.10), 0.28, Math.max(0.06, d * 0.28), mats.propBrokenDark, w * 0.37, 0.30, -d * 0.54, -0.22, 0.28);
   addPropGroundScatter(root, Math.max(0.45, w * 0.58), Math.max(0.24, d * 0.82), 4);
-  addPropSpriteCover(root, 'wall', Math.max(0.76, w * 0.96), 1.12, 0, 0.70, -d * 0.66);
+  addPropSpriteCover(root, 'wall', Math.max(0.96, w * 1.14), 1.34, 0, 0.74, -d * 0.66);
   root.position.set(x, 0, z);
   scene.add(root);
   return root;
@@ -2398,6 +2418,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.propBreakCount = propBreakCount;
   window.__V03_ENGINE_DEMO_STATE.propSpriteCoverCount = propSpriteCoverCount;
   window.__V03_ENGINE_DEMO_STATE.propSpriteCoverKinds = new Set(painterlyCards.filter((card) => card.userData.propSpriteCover).map((card) => card.userData.propSpriteCover)).size;
+  window.__V03_ENGINE_DEMO_STATE.propSpriteCoverUsesAsset = propCoverUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.globalLightCount = globalLightCount;
   window.__V03_ENGINE_DEMO_STATE.objectRimCount = objectRimCount;
   window.__V03_ENGINE_DEMO_STATE.materialBlendCount = materialBlendCount;
