@@ -1685,3 +1685,44 @@ Next iteration direction:
 1. Create matching in-match unit sprites for the highest-visibility zombie variants or shrink/simplify hero/zombie cards together for consistent phone-scale composition.
 2. Tune the mobile HUD/focus frame so the battle area has more room and reads closer to the target phone screenshot.
 3. Start Cocos prefab authoring once the WebGL unit/card scale is stable.
+
+## 2026-05-10 Zombie sprite body cleanup pass
+
+Related work:
+
+- WebGL reference WIP after `3cb22a5`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-crawler.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-hooded.png`
+
+Current visual distance:
+
+- Art quality: closer for enemy readability because zombie sprite cards now drive the visible enemy bodies instead of being mixed with blocky low-poly zombie geometry.
+- The phone combat cluster is more consistent with the target image's illustrated horde direction, but the map props and enemy/unit scale still need composition tuning.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Zombie low-poly body meshes are hidden when a matching zombie sprite asset exists.
+- Runtime gates now require `zombieSpriteBodyHiddenForAll` and `zombieSpriteBodyHiddenCount >= 240`, so the horde cannot silently return to visible blocky geometry under the sprite cards.
+- Combat behavior remains backed by the same zombie roots, movement, hit pulses, HP, and defeat logic.
+
+What is still far from the reference:
+
+- The zombie card assets are still reused from card-style sprites and are not yet fully camera-matched per horde distance.
+- Major map props remain low-poly with painterly overlays, so the scene still mixes rendering languages.
+- The phone HUD/focus layer still takes more visual area than the target phone battle frame.
+
+Next iteration direction:
+
+1. Tune zombie and hero unit card scale/opacity together from the latest phone screenshot.
+2. Move the biggest map props toward sprite/painterly cover assets or hide their clean-box geometry where overlays are sufficient.
+3. Reduce the mobile focus panel footprint after the combat cluster scale stabilizes.

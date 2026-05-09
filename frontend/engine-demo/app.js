@@ -151,6 +151,7 @@ let materialBlendCount = 0;
 let painterlyCardCount = 0;
 let heroPainterlyCardCount = 0;
 let zombiePainterlyCardCount = 0;
+let zombieSpriteBodyHiddenCount = 0;
 let skillPainterlyCardCount = 0;
 let activePainterlyClass = 'tech';
 let activePainterlySkin = 0;
@@ -1408,6 +1409,9 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
       zombieDetailPartCount += 1;
     }
   });
+  if (getZombieSpriteTexture(variant)) {
+    root.userData.spriteBodyHiddenCount = hideSpriteCoveredBody(root, 'zombie');
+  }
   scene.add(root);
   return root;
 }
@@ -1448,6 +1452,21 @@ function setSpriteReplaceableBodyVisible(root, visible, classId) {
       part.visible = visible && part.userData.classGear === classId;
     }
   });
+}
+
+function hideSpriteCoveredBody(root, counterName) {
+  let hidden = 0;
+  root.traverse((part) => {
+    if (part.isMesh && !part.userData.contactShadow && !part.userData.painterlyCard) {
+      part.visible = false;
+      part.userData.spriteCoveredBody = true;
+      hidden += 1;
+    }
+  });
+  if (counterName === 'zombie') {
+    zombieSpriteBodyHiddenCount += hidden;
+  }
+  return hidden;
 }
 
 const contractMap = makeContractMap();
@@ -2282,6 +2301,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.silhouettePartCount = silhouettePartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieDetailPartCount = zombieDetailPartCount;
   window.__V03_ENGINE_DEMO_STATE.zombieVariantCount = new Set(zombies.map((z) => z.userData.variantName)).size;
+  window.__V03_ENGINE_DEMO_STATE.zombieSpriteBodyHiddenCount = zombieSpriteBodyHiddenCount;
+  window.__V03_ENGINE_DEMO_STATE.zombieSpriteBodyHiddenForAll = zombieSpriteBodyHiddenCount >= zombies.length * 20;
   window.__V03_ENGINE_DEMO_STATE.unitDecalCount = unitDecalCount;
   window.__V03_ENGINE_DEMO_STATE.propWearCount = propWearCount;
   window.__V03_ENGINE_DEMO_STATE.propShapeCount = propShapeCount;

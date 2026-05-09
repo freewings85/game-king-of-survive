@@ -85,6 +85,8 @@ requiredText.forEach((text) => {
   'heroPainterlyCardCount >= 2',
   'zombiePainterlyCardCount >= 10',
   'zombiePainterlyUsesSpriteAsset',
+  'zombieSpriteBodyHiddenForAll',
+  'zombieSpriteBodyHiddenCount >= 240',
   'skillPainterlyCardCount >= 30',
   'skillPainterlyUsesSpriteAsset',
   'activePainterlyClass: ranger',
