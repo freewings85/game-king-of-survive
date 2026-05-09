@@ -13,6 +13,7 @@ import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_PROP_GROUND_LAYERS,
+  V03_REQUIRED_PROP_SHAPE_BLOCKS,
   V03_REQUIRED_PROP_WEAR_DECALS,
   V03_REQUIRED_UNIT_DECALS,
   V03_ZOMBIE_VARIANTS
@@ -26,6 +27,7 @@ export interface V03VisualRuntimeStats {
   unitDecals: number;
   propGroundLayers: number;
   propWearDecals: number;
+  propShapeBlocks: number;
   fxLayers: number;
 }
 
@@ -43,6 +45,7 @@ export class V03VisualRuntime extends Component {
     unitDecals: 0,
     propGroundLayers: 0,
     propWearDecals: 0,
+    propShapeBlocks: 0,
     fxLayers: 0
   };
 
@@ -56,6 +59,7 @@ export class V03VisualRuntime extends Component {
     this.buildUnitDecals();
     this.buildPropGroundLayers();
     this.buildPropWearDecals();
+    this.buildPropShapeBlocks();
     this.buildFxLayers(skillId);
     return { ...this.stats };
   }
@@ -73,6 +77,7 @@ export class V03VisualRuntime extends Component {
     this.stats.unitDecals = 0;
     this.stats.propGroundLayers = 0;
     this.stats.propWearDecals = 0;
+    this.stats.propShapeBlocks = 0;
     this.stats.fxLayers = 0;
   }
 
@@ -128,6 +133,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.22 - 0.44, 0.32 + (index % 2) * 0.08, 1.18);
       this.actorRoot!.addChild(node);
       this.stats.propWearDecals += 1;
+    });
+  }
+
+  private buildPropShapeBlocks(): void {
+    V03_REQUIRED_PROP_SHAPE_BLOCKS.forEach((block, index) => {
+      const color = index === 0 ? '#ffd58b' : index === 1 ? '#0b0c0a' : index === 2 ? '#91e7ff' : '#f0d189';
+      const node = this.makeBox(`prop-shape-${block}`, 0.28 + index * 0.06, 0.045, 0.09, color);
+      node.setPosition(index * 0.26 - 0.39, 0.48 + (index % 2) * 0.08, 1.42);
+      this.actorRoot!.addChild(node);
+      this.stats.propShapeBlocks += 1;
     });
   }
 

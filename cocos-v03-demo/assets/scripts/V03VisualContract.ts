@@ -32,6 +32,13 @@ export const V03_REQUIRED_PROP_WEAR_DECALS = [
   'prop-hazard-band'
 ] as const;
 
+export const V03_REQUIRED_PROP_SHAPE_BLOCKS = [
+  'prop-light-block',
+  'prop-shadow-block',
+  'prop-cool-rim',
+  'prop-rim-frame'
+] as const;
+
 export const V03_REQUIRED_FX_LAYERS = {
   fan: ['muzzle-card', 'bullet-card', 'warm-trail', 'impact-card'],
   boom: ['muzzle-card', 'explosion-core', 'shock-ring', 'debris-card', 'smoke-card'],

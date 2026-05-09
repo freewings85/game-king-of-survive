@@ -72,6 +72,17 @@ Required prop-wear decal layers:
 
 These layers preserve the WebGL reference's authored cover readability: wreck cars need windows, headlights, edge highlights, and scratches; walls and crates need readable cracks and worn corners; barrels need hazard bands.
 
+## Prop Shape Blocks
+
+Required prop shape/value layers:
+
+- `prop-light-block`
+- `prop-shadow-block`
+- `prop-cool-rim`
+- `prop-rim-frame`
+
+These layers are the larger value shapes that make wreck cars, walls, crates, barrels, and debris read as chunky cover on a phone screen instead of flat clean geometry.
+
 ## Skill FX
 
 Required FX layers:
@@ -84,4 +95,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, FX layers, and review screenshot names.

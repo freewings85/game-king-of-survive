@@ -70,7 +70,11 @@
       "prefabs/map/PropDarkPanel.prefab",
       "prefabs/map/PropScratchStack.prefab",
       "prefabs/map/PropGlassCard.prefab",
-      "prefabs/map/PropHazardBand.prefab"
+      "prefabs/map/PropHazardBand.prefab",
+      "prefabs/map/PropLightBlock.prefab",
+      "prefabs/map/PropShadowBlock.prefab",
+      "prefabs/map/PropCoolRim.prefab",
+      "prefabs/map/PropRimFrame.prefab"
     ],
     "fx": [
       "prefabs/fx/FanBulletCard.prefab",
@@ -94,6 +98,7 @@
     "unitDecals",
     "propGroundLayers",
     "propWearDecals",
+    "propShapeBlocks",
     "fxLayers",
     "reviewScreenshots"
   ],

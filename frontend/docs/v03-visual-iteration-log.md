@@ -726,3 +726,37 @@ Next iteration direction:
 1. Break up large wall and car silhouettes with non-uniform chunks while keeping collision/cover simple.
 2. Add a global lighting/value pass that strengthens foreground/background separation without hurting combat clarity.
 3. Sync any mandatory prop shape categories into the Cocos visual contract if they survive another WebGL review.
+
+## 2026-05-10 Cocos Prop Shape Contract Sync
+
+Related work:
+
+- Cocos bridge/checklist WIP after `347f81b`
+
+Reviewed artifacts:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+What moved closer:
+
+- The large prop value blocks added in WebGL are now named in the Cocos visual contract.
+- Cocos runtime stats now separate `propShapeBlocks` from `propWearDecals` and `propGroundLayers`, matching the target's need for clear cover silhouettes, surface wear, and ground contact.
+- The first-playable checklist now names light block, shadow block, cool rim, and rim frame prefabs.
+- The Cocos bridge verifier now fails if these shape/value categories disappear from source, docs, or checklist coverage.
+
+What is still far from the reference:
+
+- This pass does not author the real Cocos prefabs; it only prevents the required visual layer from being omitted later.
+- The target image still needs more asymmetric damaged silhouettes and better global lighting than the current WebGL reference.
+- Cocos Creator is still unavailable in this environment, so no real Cocos phone screenshots have been captured.
+
+Next iteration direction:
+
+1. Continue in WebGL with asymmetric broken car/wall silhouette chunks.
+2. Use the Cocos contract as the required implementation list when real prefabs are authored.
+3. Keep recording target-image gaps after each visual pass.
