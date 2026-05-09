@@ -2879,6 +2879,18 @@
   };
   function _initSpawnPoints() {
     _waveSpawnPoints = [];
+    if (MAP_DATA && MAP_DATA.zombieEntries && MAP_DATA.zombieEntries.length) {
+      for (var zi = 0; zi < MAP_DATA.zombieEntries.length; zi++) {
+        var ze = MAP_DATA.zombieEntries[zi];
+        _waveSpawnPoints.push({
+          x: ze.x,
+          y: ze.y,
+          name: ze.name || ze.kind || '尸群入口',
+          source: 'editor'
+        });
+      }
+      return;
+    }
     var margin = 220;
     var cx = WORLD_W / 2, cy = WORLD_H / 2;
     var pts = [
@@ -2896,6 +2908,21 @@
   // R6-respawn F1 — player-centric ring spawn (250-450px around player).
   // 旧 8-zone fixed picker 把怪散在玩家半径外，n300 全程 0；改成跟随玩家。
   function _ringSpawnPoint() {
+    if (_waveSpawnPoints.length && Math.random() < 0.35) {
+      var best = null;
+      var bestScore = 1e12;
+      for (var i = 0; i < _waveSpawnPoints.length; i++) {
+        var ep = _waveSpawnPoints[i];
+        var dx0 = ep.x - player.x, dy0 = ep.y - player.y;
+        var d0 = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+        var score = Math.abs(d0 - 420) + Math.random() * 180;
+        if (score < bestScore) { best = ep; bestScore = score; }
+      }
+      if (best) {
+        window._editorEntrySpawnFired = (window._editorEntrySpawnFired || 0) + 1;
+        return { x: best.x, y: best.y };
+      }
+    }
     var R_MIN = 250, R_MAX = 450;
     var ang = Math.random() * Math.PI * 2;
     var r = R_MIN + Math.random() * (R_MAX - R_MIN);
@@ -3449,6 +3476,9 @@
       if (MAP_DATA && MAP_DATA.spawnPoints && MAP_DATA.spawnPoints.length > bi + 1) {
         var _mspi = MAP_DATA.spawnPoints[bi + 1];
         _botX = _mspi.x; _botY = _mspi.y;
+      } else if (MAP_DATA && MAP_DATA.rivalPoints && MAP_DATA.rivalPoints.length > bi) {
+        var _rpi = MAP_DATA.rivalPoints[bi % MAP_DATA.rivalPoints.length];
+        _botX = _rpi.x; _botY = _rpi.y;
       } else {
         _botX = WORLD_W / 2 + Math.cos(bAngle) * bDist;
         _botY = WORLD_H / 2 + Math.sin(bAngle) * bDist;
@@ -3487,6 +3517,21 @@
         _patrolAngle: Math.random() * Math.PI * 2,
         _nextDecision: 0.5 + Math.random() * 2
       });
+    }
+
+    if (MAP_DATA && MAP_DATA.rewardPoints && MAP_DATA.rewardPoints.length) {
+      for (var _rwi = 0; _rwi < MAP_DATA.rewardPoints.length; _rwi++) {
+        var _rw = MAP_DATA.rewardPoints[_rwi];
+        gems.push({
+          x: _rw.x,
+          y: _rw.y,
+          xp: _rw.xp || 18,
+          radius: 5,
+          _t: 0,
+          gemTier: _rw.tier || 'medium',
+          source: 'editor_reward'
+        });
+      }
     }
     // Experiment G + R5k F3 + R5l F2 — pick rival whose spawn distance lands
     // in a class-specific sweet band:
