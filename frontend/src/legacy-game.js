@@ -10685,6 +10685,13 @@
         ? { light: _bsd && _bsd.color ? _bsd.color : '#7a5cff', dark: '#1a1a3a' }
         : { light: '#2a2a3a', dark: '#0a0a1a' };
       var _bsIcon = _bsd ? _bsd.icon : '?';
+      if (_bsd && window.KOS_RENDER && typeof window.KOS_RENDER.drawSkillSymbol === 'function') {
+        _bsIcon = (function(skillId, skillColor) {
+          return function(cx, cy, sz) {
+            window.KOS_RENDER.drawSkillSymbol(ctx, skillId, cx, cy, sz * 0.48, skillColor);
+          };
+        })(_bsid, _bsd.color || '#ffffff');
+      }
       var _bsLabel = _bsd && _bsd.name ? _bsd.name.substring(0, 4) : '技能';
       if (_bslv > 0) _bsLabel += ' Lv' + _bslv;
       _drawRoundBtn(curX, btnY, btnSize, _bsColors, _bslv > 0 ? '#ffd700' : '#444', _bsIcon, _bsLabel);
@@ -11473,12 +11480,27 @@
     drawHeartBeat();
   }
 
+  function getSkillUpgradePanelLayout() {
+    var barW = Math.min(126, Math.max(104, Math.round(W * 0.30)));
+    var slotH = Math.max(31, Math.min(36, Math.round(H * 0.042)));
+    return {
+      barX: W - barW - 8,
+      barY: Math.max(52, Math.round(H * 0.075)),
+      barW: barW,
+      slotH: slotH,
+      plusW: 22,
+      plusH: 24
+    };
+  }
+
   function drawSkillBar() {
     if (state !== 'playing' || !player) return;
-    // Draw on the right side, below dodge/ult buttons area
-    var barX = W - 160;
-    var barY = 60;
-    var slotH = 44;
+    if (pendingSkillPoints <= 0) return;
+    var layout = getSkillUpgradePanelLayout();
+    var barX = layout.barX;
+    var barY = layout.barY;
+    var barW = layout.barW;
+    var slotH = layout.slotH;
 
     // Always show all 5 build skills for upgrade selection
     var buildSkills = selectedBuild && selectedBuild.length > 0 ? selectedBuild : [];
@@ -11492,60 +11514,64 @@
       var sy = barY + i * slotH;
 
       // Slot gradient background
-      var slotGrad = ctx.createLinearGradient(barX, sy, barX, sy + slotH - 4);
-      slotGrad.addColorStop(0, 'rgba(28,28,52,0.92)');
-      slotGrad.addColorStop(1, 'rgba(8,8,18,0.92)');
+      var slotGrad = ctx.createLinearGradient(barX, sy, barX, sy + slotH - 3);
+      slotGrad.addColorStop(0, 'rgba(28,28,52,0.88)');
+      slotGrad.addColorStop(1, 'rgba(8,8,18,0.88)');
       ctx.fillStyle = slotGrad;
-      ctx.fillRect(barX, sy, 150, slotH - 4);
+      ctx.fillRect(barX, sy, barW, slotH - 3);
       // Skill-colored left accent stripe
       ctx.fillStyle = sd.color || '#888';
-      ctx.fillRect(barX, sy, 3, slotH - 4);
+      ctx.fillRect(barX, sy, 3, slotH - 3);
       // Border with glow (if maxed, gold)
       ctx.save();
       var borderCol = (lv >= maxLv) ? '#ffd700' : (sd.color || '#888');
       ctx.shadowColor = borderCol;
-      ctx.shadowBlur = (lv >= maxLv) ? 8 : 4;
+      ctx.shadowBlur = (lv >= maxLv) ? 6 : 3;
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = lv >= maxLv ? 2 : 1;
-      ctx.strokeRect(barX + 0.5, sy + 0.5, 149, slotH - 5);
+      ctx.strokeRect(barX + 0.5, sy + 0.5, barW - 1, slotH - 4);
       ctx.restore();
       // Icon box (colored square)
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(barX + 6, sy + 6, 26, 26);
-      ctx.strokeStyle = sd.color || '#888'; ctx.lineWidth = 1; ctx.strokeRect(barX + 6.5, sy + 6.5, 25, 25);
-      ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = sd.color || '#fff';
-      ctx.fillText(sd.icon, barX + 19, sy + 26);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(barX + 5, sy + 5, 22, 22);
+      ctx.strokeStyle = sd.color || '#888'; ctx.lineWidth = 1; ctx.strokeRect(barX + 5.5, sy + 5.5, 21, 21);
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawSkillSymbol === 'function') {
+        window.KOS_RENDER.drawSkillSymbol(ctx, sid, barX + 16, sy + 16, 10, sd.color || '#fff');
+      } else {
+        ctx.font = '15px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = sd.color || '#fff';
+        ctx.fillText(sd.icon, barX + 16, sy + 22);
+      }
       // Name + level
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.font = 'bold 10px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(sd.name, barX + 36, sy + 15);
+      ctx.fillText(sd.name, barX + 32, sy + 13);
       ctx.fillStyle = lv >= maxLv ? '#ffd700' : '#aaa';
-      ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
-      ctx.fillText('Lv.' + lv + (lv >= maxLv ? ' MAX' : '/' + maxLv), barX + 36, sy + 28);
+      ctx.font = '9px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
+      ctx.fillText('Lv.' + lv + (lv >= maxLv ? ' MAX' : '/' + maxLv), barX + 32, sy + 25);
 
       // Level progress dots
-      var dotsStart = barX + 72;
-      for (var d = 0; d < Math.min(maxLv, 10); d++) {
+      var dotsStart = barX + Math.min(70, barW - 52);
+      for (var d = 0; d < Math.min(maxLv, 8); d++) {
         ctx.fillStyle = d < lv ? (sd.color || '#888') : '#2a2a3a';
         ctx.beginPath();
-        ctx.arc(dotsStart + d * 7, sy + 32, 2.5, 0, Math.PI * 2);
+        ctx.arc(dotsStart + d * 5.5, sy + slotH - 7, 2, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // "+" button when skill points available and skill not maxed
       if (pendingSkillPoints > 0 && lv < maxLv) {
-        var btnX = barX + 125;
-        var btnY2 = sy + 5;
+        var btnX = barX + barW - layout.plusW - 4;
+        var btnY2 = sy + 4;
         var pulse = 0.6 + 0.4 * Math.sin(Date.now() / 200);
         ctx.fillStyle = 'rgba(50,200,50,' + pulse + ')';
-        ctx.fillRect(btnX, btnY2, 22, 28);
+        ctx.fillRect(btnX, btnY2, layout.plusW, layout.plusH);
         ctx.strokeStyle = '#4f4';
         ctx.lineWidth = 2;
-        ctx.strokeRect(btnX, btnY2, 22, 28);
+        ctx.strokeRect(btnX, btnY2, layout.plusW, layout.plusH);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+        ctx.font = 'bold 17px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('+', btnX + 11, btnY2 + 21);
+        ctx.fillText('+', btnX + layout.plusW / 2, btnY2 + 18);
       }
     }
 
@@ -11556,23 +11582,23 @@
       ctx.save();
       ctx.globalAlpha = spPulse * 0.15;
       ctx.fillStyle = '#ffd700';
-      ctx.fillRect(barX - 10, barY - 30, 170, barY + selectedBuild.length * 44);
+      ctx.fillRect(barX - 6, barY - 24, barW + 12, selectedBuild.length * slotH + 30);
       ctx.restore();
       // Glowing background banner
       ctx.globalAlpha = spPulse * 0.35;
       ctx.fillStyle = '#ffd700';
-      ctx.fillRect(barX - 4, barY - 24, 155, 20);
+      ctx.fillRect(barX, barY - 22, barW, 18);
       ctx.globalAlpha = 1;
       // Border
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5;
       ctx.globalAlpha = spPulse;
-      ctx.strokeRect(barX - 4, barY - 24, 155, 20);
+      ctx.strokeRect(barX, barY - 22, barW, 18);
       ctx.globalAlpha = 1;
       // Text
       ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+      ctx.font = 'bold 11px "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText('\u25B2 技能点: ' + pendingSkillPoints + ' \u25C0点击+加点', barX, barY - 8);
+      ctx.fillText('技能点 ' + pendingSkillPoints + ' · 点 + 升级', barX + 5, barY - 9);
     }
 
     // First-time skill upgrade tutorial hint — large animated arrow pointing at skill panel
@@ -13895,9 +13921,10 @@
       }
       // Skill bar upgrade clicks (MOBA-style)
       if (pendingSkillPoints > 0) {
-        var _sbBarX = W - 160;
-        var _sbBarY = 60;
-        var _sbSlotH = 44;
+        var _sbLayout = getSkillUpgradePanelLayout();
+        var _sbBarX = _sbLayout.barX;
+        var _sbBarY = _sbLayout.barY;
+        var _sbSlotH = _sbLayout.slotH;
         // Always show all 5 build skills for upgrade, not just owned ones
         var _sbSkills = selectedBuild && selectedBuild.length > 0 ? selectedBuild : [];
         for (var _si = 0; _si < _sbSkills.length; _si++) {
@@ -13907,10 +13934,14 @@
           var _slv = skillLevels[_sid] || 0;
           var _smaxLv = _ssd.maxLevel || 10;
           if (_slv >= _smaxLv) continue;
-          var _sbtnX = _sbBarX + 125;
-          var _sbtnY = _sbBarY + _si * _sbSlotH + 5;
-          if (cx > _sbtnX && cx < _sbtnX + 22 && cy > _sbtnY && cy < _sbtnY + 28) {
-            NetworkClient.sendSkillChoice(_sid);
+          var _sbtnX = _sbBarX + _sbLayout.barW - _sbLayout.plusW - 4;
+          var _sbtnY = _sbBarY + _si * _sbSlotH + 4;
+          if (cx > _sbtnX && cx < _sbtnX + _sbLayout.plusW && cy > _sbtnY && cy < _sbtnY + _sbLayout.plusH) {
+            if (NetworkClient && typeof NetworkClient.isConnected === 'function' && NetworkClient.isConnected()) {
+              NetworkClient.sendSkillChoice(_sid);
+            } else {
+              applySkill(_sid);
+            }
             pendingSkillPoints--;
             if (pendingSkillPoints < 0) pendingSkillPoints = 0;
             _skillHintTimer = 0; // Dismiss tutorial hint on first skill spend
@@ -13959,6 +13990,8 @@
     get gold() { return gold; }, set gold(v) { gold = v; },
     get waveNumber() { return wave; },
     get pendingSkillPoints() { return pendingSkillPoints; }, set pendingSkillPoints(v) { pendingSkillPoints = v; },
+    get skillLevels() { return skillLevels; },
+    get ownedSkills() { return ownedSkills; },
     get selectedClass() { return selectedClass; },
     get selectedBuild() { return selectedBuild; },
     get gameMode() { return gameMode; },
