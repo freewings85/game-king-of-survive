@@ -89,6 +89,7 @@ requiredText.forEach((text) => {
   'activePainterlySkin: 2',
   'activePainterlySkinColor: #283746',
   'activePainterlyStyle: hood-rifle',
+  'activePainterlyUsesSpriteAsset',
   'combatFocusDisplayed',
   'combatFocusStyle: hood-rifle',
   'combatFocusClassId: ranger',
@@ -130,6 +131,6 @@ console.log(JSON.stringify({
   reference: 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png',
   screenshots: 11,
   mappedRequirements: 13,
-  gates: 38,
+  gates: 39,
   completionClaim: false
 }, null, 2));

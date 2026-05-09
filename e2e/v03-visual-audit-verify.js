@@ -22,6 +22,7 @@ assert(text.includes('Every meaningful visual iteration must record this compari
 assert(text.includes('In-match painterly style sync'), 'Visual iteration log must record the latest visual iteration focus');
 assert(text.includes('Mobile combat focus frame'), 'Visual iteration log must record the latest mobile composition pass');
 assert(text.includes('Class focus sprite asset pass'), 'Visual iteration log must record the latest sprite asset pass');
+assert(text.includes('In-match hero sprite card pass'), 'Visual iteration log must record the latest in-match sprite pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

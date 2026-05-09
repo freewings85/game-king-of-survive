@@ -1409,3 +1409,49 @@ Next iteration direction:
 1. Split or extend the sprite asset strategy into skin-specific portraits so all 9 class/skin combinations have authored reads.
 2. Bring the same sprite-backed visual quality into the main player card and zombie cards.
 3. Start a skill-card art pass after the class/skin portrait set is complete.
+
+## 2026-05-10 In-match hero sprite card pass
+
+Related work:
+
+- WebGL reference WIP after `ea99c39`
+- `frontend/engine-demo/assets/portraits/class-focus-guardian.png`
+- `frontend/engine-demo/assets/portraits/class-focus-tech.png`
+- `frontend/engine-demo/assets/portraits/class-focus-ranger.png`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `frontend/engine-demo/assets/portraits/class-focus-guardian.png`
+- `frontend/engine-demo/assets/portraits/class-focus-tech.png`
+- `frontend/engine-demo/assets/portraits/class-focus-ranger.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+
+Current visual distance:
+
+- Art quality: closer for the hero read, still far for the full combat screen.
+- The in-match player card now shares the same sprite-backed class assets as the UI focus portrait, but zombies, skills, and all skin variants remain below target quality.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- The central in-match hero painterly card now uses the class PNG assets for Guardian, Tech, and Ranger instead of the older procedural hero card texture.
+- Runtime gates now require `activePainterlyUsesSpriteAsset` in both the main Ranger review and Guardian/Tech/Ranger class reviews.
+- The UI focus portrait and in-world hero card now share the same asset family, making the selected class more consistent across the screen.
+
+What is still far from the reference:
+
+- The sprite asset is still a class-level portrait, not 9 distinct skin-specific poses.
+- The 3D body underneath remains low-poly and can visually conflict with the painterly portrait card.
+- Zombies and skill effects still use procedural cards, so the screen is not yet consistently painterly.
+
+Next iteration direction:
+
+1. Build skin-specific sprite variants for all 9 class/skin combinations and route `activeSkin` to those assets.
+2. Replace zombie painterly cards with authored zombie sprites so the enemy horde has the same art quality as the hero.
+3. Revisit the 3D body/card blend once the hero and zombie cards share the same asset style.

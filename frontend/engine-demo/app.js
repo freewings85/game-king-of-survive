@@ -156,13 +156,20 @@ let activePainterlyClass = 'tech';
 let activePainterlySkin = 0;
 let activePainterlySkinColor = '#193743';
 let activePainterlyStyle = 'coil-screen';
+let activePainterlyUsesSpriteAsset = false;
 let playerPainterlyCard = null;
 const painterlyCards = [];
 const heroTextureCache = new Map();
+const classPortraitTextureCache = new Map();
 const classThumbStyles = {
   guardian: 'shield-armor',
   tech: 'coil-screen',
   ranger: 'hood-rifle'
+};
+const classPortraitAssets = {
+  guardian: '/frontend/engine-demo/assets/portraits/class-focus-guardian.png',
+  tech: '/frontend/engine-demo/assets/portraits/class-focus-tech.png',
+  ranger: '/frontend/engine-demo/assets/portraits/class-focus-ranger.png'
 };
 
 function makeCanvasTexture(width, height, draw) {
@@ -345,6 +352,18 @@ function getHeroCardTexture(classId, skinIndex, skinColor, accentHex) {
   return heroTextureCache.get(key);
 }
 
+function getClassPortraitTexture(classId) {
+  const asset = classPortraitAssets[classId];
+  if (!asset) return null;
+  if (!classPortraitTextureCache.has(classId)) {
+    const texture = new THREE.TextureLoader().load(asset);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    classPortraitTextureCache.set(classId, texture);
+  }
+  return classPortraitTextureCache.get(classId);
+}
+
 function makeZombieCardTexture(variant = 0) {
   const cloth = variant === 2 ? '#413424' : variant === 1 ? '#2d3828' : '#4b3628';
   const skin = variant === 1 ? '#78906d' : '#8d9a72';
@@ -430,8 +449,8 @@ function makeFxCardTexture(kind) {
 }
 
 const painterlyMaterials = {
-  hero: makePainterlyMaterial(getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
-  rival: makePainterlyMaterial(getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
+  hero: makePainterlyMaterial(getClassPortraitTexture('tech') || getHeroCardTexture('tech', 0, '#193743', '#4ec9ff'), 0.98),
+  rival: makePainterlyMaterial(getClassPortraitTexture('guardian') || getHeroCardTexture('guardian', 0, '#3b2d28', '#ff8b3d'), 0.94),
   zombieBrute: makePainterlyMaterial(makeZombieCardTexture(0), 0.96),
   zombieCrawler: makePainterlyMaterial(makeZombieCardTexture(1), 0.96),
   zombieHooded: makePainterlyMaterial(makeZombieCardTexture(2), 0.96),
@@ -1501,8 +1520,10 @@ function applySkin(index) {
   const accentHex = `#${def.accent.toString(16).padStart(6, '0')}`;
   mats.player.color.set(skinColor);
   if (playerPainterlyCard) {
-    playerPainterlyCard.material.map = getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
+    const spriteTexture = getClassPortraitTexture(activeClass);
+    playerPainterlyCard.material.map = spriteTexture || getHeroCardTexture(activeClass, activeSkin, skinColor, accentHex);
     playerPainterlyCard.material.needsUpdate = true;
+    activePainterlyUsesSpriteAsset = !!spriteTexture;
   }
   activePainterlyClass = activeClass;
   activePainterlySkin = activeSkin;
@@ -1532,6 +1553,7 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
@@ -2160,6 +2182,7 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkin = activePainterlySkin;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
