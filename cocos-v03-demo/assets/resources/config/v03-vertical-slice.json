@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "v03-cocos-slice-1",
+  "visualProfile": "zombie-br-v03",
+  "engine": "cocos-creator-3.x",
+  "viewport": {
+    "orientation": "portrait",
+    "baselineWidth": 390,
+    "baselineHeight": 844
+  },
+  "arena": {
+    "cols": 26,
+    "rows": 22,
+    "tileSize": 42,
+    "props": ["wreck-car", "concrete-wall", "supply-crate", "burn-barrel", "roadblock"],
+    "zombieEntries": 4,
+    "rewardPoints": 8
+  },
+  "classes": ["guardian", "engineer", "ranger"],
+  "skills": ["arc", "boom", "fan"],
+  "zombies": [
+    { "id": "walker", "hp": 28, "speed": 42, "count": 18 },
+    { "id": "runner", "hp": 18, "speed": 68, "count": 8 },
+    { "id": "bruiser", "hp": 72, "speed": 28, "count": 3 }
+  ],
+  "gate": {
+    "durationSeconds": 120,
+    "targetFps": 30,
+    "maxMainPackageMb": 4,
+    "requiresWeChatPreview": true
+  }
+}

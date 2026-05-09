@@ -26,9 +26,17 @@ python3 dev-server.py 8081
 
 ## Direction
 
+- Mini-game engine decision: `frontend/docs/mini-game-engine-decision.md`
 - Engine decision: `frontend/docs/engine-evaluation.md`
 - Cocos vertical slice gate: `frontend/docs/cocos-vertical-slice.md`
 - V03 class/skill/tuning config: `frontend/src/v03-runtime-config.js`
+
+## Production Engine Scaffold
+
+- `cocos-v03-demo/`
+  - Cocos Creator 3.x vertical slice scaffold.
+  - Use this as the production-engine starting point after installing Cocos Creator.
+  - The first Cocos demo should match `/frontend/engine-demo/index.html` before replacing the current browser runtime.
 
 ## Verification
 
