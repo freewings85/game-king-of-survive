@@ -537,17 +537,29 @@
       }
 
       // Icon
-      ctx.font = '20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
-      ctx.fillStyle = sd.color;
-      ctx.fillText(sd.icon, cx + 8, cy + 30);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.32)';
+      ctx.fillRect(cx + 8, cy + 9, 28, 32);
+      ctx.strokeStyle = sd.color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(cx + 8.5, cy + 9.5, 27, 31);
+      if (window.KOS_RENDER && typeof window.KOS_RENDER.drawSkillSymbol === 'function') {
+        window.KOS_RENDER.drawSkillSymbol(ctx, sid, cx + 22, cy + 25, 24, sd.color);
+      } else {
+        ctx.font = '20px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
+        ctx.fillStyle = sd.color;
+        ctx.fillText(sd.icon, cx + 8, cy + 30);
+      }
+      ctx.restore();
 
       // Name
+      ctx.textAlign = 'left';
       ctx.font = 'bold 13px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText(sd.name, cx + 34, cy + 22);
+      ctx.fillText(sd.name, cx + 50, cy + 22);
 
       // Desc
       ctx.font = '10px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.fillStyle = '#aaa';
-      ctx.fillText(sd.desc, cx + 34, cy + 40);
+      ctx.fillText(sd.desc, cx + 50, cy + 40);
     }
 
     // Selected build display
@@ -558,14 +570,23 @@
     ctx.fillText('已选: ' + selectedBuild.length + '/5', DW / 2, buildY + 18);
 
     // Show selected skill icons
-    ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'; ctx.textAlign = 'left';
+    ctx.textAlign = 'left';
     for (var bi = 0; bi < 5; bi++) {
       var bx = DW / 2 - 90 + bi * 40;
       if (bi < selectedBuild.length) {
         var bsd = SKILL_DATA[selectedBuild[bi]];
         if (bsd) {
-          ctx.fillStyle = bsd.color;
-          ctx.fillText(bsd.icon, bx, buildY + 42);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.fillRect(bx - 2, buildY + 22, 28, 24);
+          ctx.strokeStyle = bsd.color; ctx.lineWidth = 1;
+          ctx.strokeRect(bx - 1.5, buildY + 22.5, 27, 23);
+          if (window.KOS_RENDER && typeof window.KOS_RENDER.drawSkillSymbol === 'function') {
+            window.KOS_RENDER.drawSkillSymbol(ctx, selectedBuild[bi], bx + 12, buildY + 34, 18, bsd.color);
+          } else {
+            ctx.font = '18px "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif';
+            ctx.fillStyle = bsd.color;
+            ctx.fillText(bsd.icon, bx, buildY + 42);
+          }
         }
       } else {
         ctx.fillStyle = '#333';

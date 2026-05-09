@@ -317,5 +317,6 @@
   }
 
   window.KOS_RENDER = window.KOS_RENDER || {};
+  window.KOS_RENDER.drawSkillSymbol = drawSkillSymbol;
   window.KOS_RENDER.drawLevelUpCards = drawLevelUpCards;
 })();
