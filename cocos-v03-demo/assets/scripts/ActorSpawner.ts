@@ -20,12 +20,18 @@ import { forceLayerRecursive } from './BootstrapMain';
 
 interface ZombieEntity {
     node: Node;
+    sprite: Sprite;
     hp: number;
     maxHp: number;
     speed: number;
     bodyType: ZombieBodyType;
     scale: number;
     baseSize: number;
+    baseColor: Color;
+    hitFlashTimer: number;
+    deathTimer: number; // -1 = alive, >=0 = dying (counting up to fade duration)
+    hpBarFill: Node | null;
+    hpBarBg: Node | null;
 }
 
 interface BulletEntity {
@@ -250,13 +256,22 @@ export class ActorSpawner extends Component {
             const sprite = node.addComponent(Sprite);
             const bodyType: ZombieBodyType = z.bodyType ?? 'riley';
             sprite.spriteFrame = this.zombieFrames.get(`${bodyType}:${z.frame}`) ?? null;
-            sprite.color = new Color(z.tint[0], z.tint[1], z.tint[2], z.tint[3]);
+            const baseColor = new Color(z.tint[0], z.tint[1], z.tint[2], z.tint[3]);
+            sprite.color = baseColor;
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             const baseSize = Math.floor(z.baseSize * z.scale);
             tr.setContentSize(baseSize, baseSize);
             node.setPosition(new Vec3(z.pos[0], z.pos[1], 0));
             node.angle = angleDeg;
             this.worldLayer.addChild(node);
+            // HP bar above zombie
+            const hpBarBg = this.makeHpBar(baseSize, false);
+            const hpBarFill = this.makeHpBar(baseSize, true);
+            const yOff = baseSize * 0.55;
+            hpBarBg.setPosition(0, yOff, 0);
+            hpBarFill.setPosition(0, yOff, 0);
+            node.addChild(hpBarBg);
+            node.addChild(hpBarFill);
             // register entity for gameplay update
             const speedByType: Record<ZombieBodyType, number> = {
                 riley: 60, clint: 60, runner: 90, brute: 40, crawler: 55,
@@ -266,14 +281,32 @@ export class ActorSpawner extends Component {
             };
             this.zombies.push({
                 node,
+                sprite,
                 hp: hpByType[bodyType],
                 maxHp: hpByType[bodyType],
                 speed: speedByType[bodyType],
                 bodyType,
                 scale: z.scale,
                 baseSize: z.baseSize,
+                baseColor,
+                hitFlashTimer: 0,
+                deathTimer: -1,
+                hpBarFill,
+                hpBarBg,
             });
         }
+    }
+
+    private makeHpBar(zombieSize: number, isFill: boolean): Node {
+        const node = new Node(isFill ? 'HPBarFill' : 'HPBarBg');
+        node.layer = Layers.Enum.UI_2D;
+        const sp = node.addComponent(Sprite);
+        sp.spriteFrame = this.makeRadialAlpha(8, [255, 255, 255, 255], [255, 255, 255, 255]);
+        sp.color = isFill ? new Color(220, 60, 60, 255) : new Color(20, 20, 20, 200);
+        const tr = node.addComponent(UITransform);
+        const w = Math.max(36, Math.floor(zombieSize * 0.5));
+        tr.setContentSize(w, 5);
+        return node;
     }
 
     private spawnContactShadow(pos: Vec2, w: number, h: number) {
@@ -486,7 +519,40 @@ export class ActorSpawner extends Component {
         const hp = this.heroNode.position;
         for (let i = this.zombies.length - 1; i >= 0; i--) {
             const z = this.zombies[i];
-            if (z.hp <= 0) { z.node.destroy(); this.zombies.splice(i, 1); continue; }
+            // Death fade animation: scale to 0 + opacity 0 over 0.35s
+            if (z.deathTimer >= 0) {
+                z.deathTimer += dt;
+                const t = Math.min(1, z.deathTimer / 0.35);
+                const s = 1 - t;
+                z.node.setScale(s, s, 1);
+                z.sprite.color = new Color(z.baseColor.r, z.baseColor.g, z.baseColor.b, Math.floor(255 * s));
+                if (t >= 1) {
+                    z.node.destroy();
+                    this.zombies.splice(i, 1);
+                }
+                continue;
+            }
+            if (z.hp <= 0) {
+                // start dying
+                z.deathTimer = 0;
+                if (z.hpBarFill) z.hpBarFill.active = false;
+                if (z.hpBarBg) z.hpBarBg.active = false;
+                continue;
+            }
+            // hit flash decay (white tint)
+            if (z.hitFlashTimer > 0) {
+                z.hitFlashTimer -= dt;
+                if (z.hitFlashTimer <= 0) {
+                    z.sprite.color = z.baseColor;
+                } else {
+                    const k = Math.min(1, z.hitFlashTimer / 0.12);
+                    const r = Math.floor(z.baseColor.r * (1 - k) + 255 * k);
+                    const g = Math.floor(z.baseColor.g * (1 - k) + 255 * k);
+                    const b = Math.floor(z.baseColor.b * (1 - k) + 255 * k);
+                    z.sprite.color = new Color(r, g, b, z.baseColor.a);
+                }
+            }
+            // chase hero
             const zp = z.node.position;
             const dx = hp.x - zp.x, dy = hp.y - zp.y;
             const len = Math.hypot(dx, dy);
@@ -494,6 +560,14 @@ export class ActorSpawner extends Component {
             const nx = dx / len, ny = dy / len;
             z.node.setPosition(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, 0);
             z.node.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            // HP bar fill scale by hp ratio
+            if (z.hpBarFill) {
+                const ratio = Math.max(0, Math.min(1, z.hp / z.maxHp));
+                z.hpBarFill.setScale(ratio, 1, 1);
+                // counter-rotate so HP bar stays horizontal regardless of zombie rotation
+                z.hpBarFill.angle = -z.node.angle;
+            }
+            if (z.hpBarBg) z.hpBarBg.angle = -z.node.angle;
         }
     }
 
@@ -542,11 +616,12 @@ export class ActorSpawner extends Component {
             if (b.ttl <= 0) { b.node.destroy(); this.bullets.splice(i, 1); continue; }
             // collision
             for (const z of this.zombies) {
-                if (z.hp <= 0) continue;
+                if (z.hp <= 0 || z.deathTimer >= 0) continue;
                 const zx = z.node.position.x, zy = z.node.position.y;
                 const dx = zx - nx, dy = zy - ny;
                 if (dx * dx + dy * dy < this.ZOMBIE_HIT_RADIUS * this.ZOMBIE_HIT_RADIUS) {
                     z.hp -= this.BULLET_DAMAGE;
+                    z.hitFlashTimer = 0.12;
                     b.node.destroy();
                     this.bullets.splice(i, 1);
                     break;
