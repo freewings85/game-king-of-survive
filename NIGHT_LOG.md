@@ -8,6 +8,9 @@
 
 | Commit | Track | What |
 |---|---|---|
+| `4b26740` | A-terrain | wire painterly asphalt-tile into terrain (brick #7 integration) |
+| `833440b` | C-PASS#7 | brick #7 final — 3 painterly terrain tiles, baseline 21 locked |
+| `e9f608b` | docs | NIGHT_LOG: brick #6 closed, brick #7 dispatched |
 | `2724ca0` | C-step12b | hero frame-switch — idle/walk/shoot driven by movement+fire |
 | `21b243d` | C-PASS#6 | brick #6 final — 5 combat frames, baseline 18 locked |
 | `8a41a91` | docs | NIGHT_LOG refresh + brick #6 dispatched |
@@ -27,7 +30,7 @@
 | `fe327d8` | M3-prep  | painterly baseline (11 sprites) + gameplay v1 |
 | `f1af116` | M2-X     | Real Cocos engine build proof + M2-1B/C/2A asset baseline (earlier) |
 
-**Total this session: 17 commits.** Baseline assets: **18** (3 hero + 6 zombie [3 idle + 3 attack] + 3 icon + 4 prop + 2 frame). Brick #6 ✅ landed + wired (zombie *and* hero frame-switch active). Brick #7 (3 terrain tiles) dispatched 17:10, in progress.
+**Total this session: 19 commits.** Baseline assets: **21** (3 hero + 6 zombie + 3 icon + 4 prop + 2 frame + 3 terrain). Brick #6 ✅ wired (hero+zombie frame-switch). Brick #7 ✅ landed + wired (asphalt-tile painterly tiling). Visual side closed for the night.
 
 ## Progress vs the two goals
 
