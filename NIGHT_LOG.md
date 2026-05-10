@@ -8,14 +8,23 @@
 
 | Commit | Track | What |
 |---|---|---|
-| `dd03b78` | B-step8 | Wire NetClient into ActorSpawner — network mode toggle (default off, enableNetwork() flips authoritative path) |
-| `5551738` | A-step5 | Atmospheric polish — vignette + horizon haze (closer to candidate_pics dark+spotlight feel) |
-| `d8aad69` | A-step4 | Combat feedback — hit flash + HP bars + death fade |
-| `9976b22` | B-step7 | Add NetClient.ts — WebSocket bridge to Java server (matches GameWebSocketHandler protocol) |
-| `40d18e9` | A-step3 | Swap 7 OGA stock props -> 4 painterly props (wreckCar / barrelRust / sandbagPile / oilSplat painterly versions) |
-| `c95e10f` | A-step2 | Wire painterly skill icons + portrait frame into HUD (fire/lightning/shield) |
-| `fe327d8` | M3-prep | painterly baseline (11 sprites) + gameplay v1 (input/hero/zombie/bullet/wave) |
-| `f1af116` | M2-X | Real Cocos engine build proof + M2-1B/C/2A asset baseline (already committed earlier) |
+| `512362b` | C-step12 | brick #6 prep — frame-switch + tolerant load (zombie close to hero -> attack pose) |
+| (next)    | C-PASS#5 | brick #5 final — minimap-frame.png landed (baseline 13 total) |
+| `86f7d23` | A-step4d | hero respawn (4s) + kill counter |
+| `205f4e9` | B-step8b | render server projectiles in net mode |
+| `5b3e5bd` | A-step1b | dynamic minimap — live hero+enemy dots |
+| `fdeab6d` | A-step4c | hero HP bar overhead (visible HP feedback) |
+| `af458ea` | A-step4b | hero contact damage (12 dmg, 0.6s iframe, screen shake) |
+| `dd03b78` | B-step8  | Wire NetClient into ActorSpawner — network mode toggle |
+| `5551738` | A-step5  | Atmospheric polish — vignette + horizon haze |
+| `d8aad69` | A-step4  | Combat feedback — hit flash + HP bars + death fade |
+| `9976b22` | B-step7  | Add NetClient.ts — WebSocket bridge |
+| `40d18e9` | A-step3  | Swap 7 OGA stock props -> 4 painterly props |
+| `c95e10f` | A-step2  | Wire painterly skill icons + portrait frame into HUD |
+| `fe327d8` | M3-prep  | painterly baseline (11 sprites) + gameplay v1 |
+| `f1af116` | M2-X     | Real Cocos engine build proof + M2-1B/C/2A asset baseline (earlier) |
+
+**Total this session: 14 commits.** Baseline assets: 13 (1 hero + 3 zombie + 3 icon + 4 prop + 2 frame). Brick #6 (5 attack/walk frames) in progress.
 
 ## Progress vs the two goals
 
