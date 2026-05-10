@@ -2371,3 +2371,44 @@ Next iteration direction:
 1. Add Cocos-side ground wash and safe-zone sprite runtime support using imported/generated assets.
 2. Add contact shadow or shadow blob sprites under map-bound units and props.
 3. Capture a Cocos phone screenshot to compare against the target once Creator is available.
+
+## 2026-05-10 Cocos contact shadow runtime pass
+
+Related work:
+
+- Follow-up to `69917d6`
+- `cocos-v03-demo/assets/scripts/V03ContactShadowRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `e2e/v03-cocos-bridge-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The Cocos runtime now has first-pass contact shadow meshes under player spawn, zombie entry points, and map cover structures, directly addressing the flat/floating look that kept the scene far from the target image's 2.5D depth.
+- The shadows are still simple dark flat meshes, not authored soft shadow sprites or tuned lighting, so the target's painterly depth is not reached yet.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added `V03ContactShadowRuntime` to build player, zombie, and prop shadows from `V03MapData`.
+- `V03SceneBootstrap` now creates `World/ContactShadows` and wires the shadow runtime.
+- `V03BattleDirector` now builds and reports shadow stats in the Cocos status output.
+
+What is still far from the reference:
+
+- Contact shadows need soft painterly blob assets and better blending once Creator import/rendering is available.
+- The pass still needs a real Cocos screenshot to judge scale, opacity, and overlap.
+- Ground wash and safe-zone storm layers still need Cocos-side runtime asset support.
+
+Next iteration direction:
+
+1. Add Cocos ground wash and safe-zone storm sprite/mesh runtime layers.
+2. Replace flat shadow boxes with authored shadow blob sprites when the art set is ready.
+3. Capture and audit the first Cocos phone screenshot when Creator is available.

@@ -14,6 +14,7 @@
     "V03SceneBootstrap",
     "V03BattleDirector",
     "V03MapRuntime",
+    "V03ContactShadowRuntime",
     "V03VisualRuntime",
     "V03ArtSpriteRuntime",
     "V03ResourceBridge",

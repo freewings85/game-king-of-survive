@@ -11,6 +11,7 @@
     "World/GroundTiles",
     "World/RoadMarks",
     "World/Props",
+    "World/ContactShadows",
     "World/SpawnPins",
     "World/RewardPins",
     "Actors/Player",
@@ -42,6 +43,11 @@
       "component": "V03MapRuntime",
       "node": "World",
       "requires": ["GroundTiles", "Props", "SpawnPins", "RewardPins"]
+    },
+    {
+      "component": "V03ContactShadowRuntime",
+      "node": "World",
+      "requires": ["ContactShadows", "spawnPoints", "zombieEntries", "structures"]
     },
     {
       "component": "V03VisualRuntime",

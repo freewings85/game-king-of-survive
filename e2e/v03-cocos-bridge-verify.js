@@ -43,6 +43,7 @@ const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/ass
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
 const sceneBootstrapSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts'), 'utf8');
 const artSpriteRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts'), 'utf8');
+const contactShadowRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ContactShadowRuntime.ts'), 'utf8');
 const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
 const visualRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualRuntime.ts'), 'utf8');
 const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
@@ -112,8 +113,17 @@ assert(mapRuntimeSource.includes('map.tiles.forEach'), 'Cocos map runtime must i
 assert(mapRuntimeSource.includes('map.structures.forEach'), 'Cocos map runtime must instantiate props');
 assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must expose zombie entries');
 assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
+assert(contactShadowRuntimeSource.includes("@ccclass('V03ContactShadowRuntime')"), 'Cocos contact shadow runtime component is missing');
+assert(contactShadowRuntimeSource.includes('buildFromMap(map: V03MapData)'), 'Contact shadow runtime must build from map data');
+assert(contactShadowRuntimeSource.includes('map.spawnPoints[0]'), 'Contact shadow runtime must create player spawn shadow');
+assert(contactShadowRuntimeSource.includes('map.zombieEntries.forEach'), 'Contact shadow runtime must create zombie entry shadows');
+assert(contactShadowRuntimeSource.includes('map.structures'), 'Contact shadow runtime must create prop shadows from structures');
+assert(contactShadowRuntimeSource.includes('primitives.box({ width, height: 0.012, length: depth })'), 'Contact shadow runtime must create flat shadow meshes');
+assert(contactShadowRuntimeSource.includes('propShadows'), 'Contact shadow runtime must report prop shadow stats');
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
+assert(battleDirectorSource.includes('public contactShadowRuntime: V03ContactShadowRuntime'), 'Battle director must expose V03ContactShadowRuntime');
+assert(battleDirectorSource.includes('this.contactShadowRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build contact shadows from map data');
 assert(battleDirectorSource.includes('loadV03ArtAssetManifest'), 'Battle director must load Cocos art asset manifest');
 assert(battleDirectorSource.includes('public artSpriteRuntime: V03ArtSpriteRuntime'), 'Battle director must expose V03ArtSpriteRuntime');
 assert(battleDirectorSource.includes('this.artSpriteRuntime.buildFromManifest(this.artManifest, this.bridgeData.map)'), 'Battle director must build art sprites from manifest and map data');
@@ -121,9 +131,11 @@ assert(sceneBootstrapSource.includes("@ccclass('V03SceneBootstrap')"), 'Cocos sc
 assert(sceneBootstrapSource.includes('buildRuntimeScene()'), 'Scene bootstrap must expose buildRuntimeScene');
 assert(sceneBootstrapSource.includes('Camera.ProjectionType.ORTHO'), 'Scene bootstrap must create an orthographic camera');
 assert(sceneBootstrapSource.includes("this.ensurePath('World/GroundTiles')"), 'Scene bootstrap must create ground tile root');
+assert(sceneBootstrapSource.includes("this.ensurePath('World/ContactShadows')"), 'Scene bootstrap must create contact shadow root');
 assert(sceneBootstrapSource.includes("this.ensurePath('Actors/VisualActors')"), 'Scene bootstrap must create visual actor root');
 assert(sceneBootstrapSource.includes("this.ensurePath('FX/VisualFX')"), 'Scene bootstrap must create visual FX root');
 assert(sceneBootstrapSource.includes('director.mapRuntime = mapRuntime'), 'Scene bootstrap must wire map runtime into battle director');
+assert(sceneBootstrapSource.includes('director.contactShadowRuntime = contactShadowRuntime'), 'Scene bootstrap must wire contact shadow runtime into battle director');
 assert(sceneBootstrapSource.includes('director.visualRuntime = visualRuntime'), 'Scene bootstrap must wire visual runtime into battle director');
 assert(sceneBootstrapSource.includes('director.artSpriteRuntime = artSpriteRuntime'), 'Scene bootstrap must wire art sprite runtime into battle director');
 assert(sceneBootstrapSource.includes('director.statusLabel = statusLabel'), 'Scene bootstrap must wire status label into battle director');
@@ -271,7 +283,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['CameraRig/MainCamera', 'World/GroundTiles', 'World/Props', 'Actors/Player', 'Actors/Zombies', 'FX/CardLayers', 'UI/MiniMap', 'UI/SkillButtons'].forEach((node) => {
   assert(firstPlayableChecklist.requiredNodes.includes(node), `First playable checklist must include node ${node}`);
 });
-['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime', 'V03ArtSpriteRuntime'].forEach((component) => {
+['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03ContactShadowRuntime', 'V03VisualRuntime', 'V03ArtSpriteRuntime'].forEach((component) => {
   assert(firstPlayableChecklist.componentBindings.some((binding) => binding.component === component), `First playable checklist must bind ${component}`);
 });
 ['Guardian.prefab', 'TechEngineer.prefab', 'Ranger.prefab'].forEach((prefab) => {

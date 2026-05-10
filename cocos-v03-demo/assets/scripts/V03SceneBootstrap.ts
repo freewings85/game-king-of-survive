@@ -1,6 +1,7 @@
 import { _decorator, Camera, Component, Label, Node, Vec3 } from 'cc';
 import { V03ArtSpriteRuntime } from './V03ArtSpriteRuntime';
 import { V03BattleDirector } from './V03BattleDirector';
+import { V03ContactShadowRuntime } from './V03ContactShadowRuntime';
 import { V03MapRuntime } from './V03MapRuntime';
 import { V03VisualRuntime } from './V03VisualRuntime';
 
@@ -12,6 +13,7 @@ export interface V03SceneBootstrapStats {
   usesOrthographicCamera: boolean;
   hasStatusLabel: boolean;
   mapRuntimeWired: boolean;
+  contactShadowRuntimeWired: boolean;
   visualRuntimeWired: boolean;
   artSpriteRuntimeWired: boolean;
   battleDirectorWired: boolean;
@@ -25,6 +27,7 @@ export class V03SceneBootstrap extends Component {
     usesOrthographicCamera: false,
     hasStatusLabel: false,
     mapRuntimeWired: false,
+    contactShadowRuntimeWired: false,
     visualRuntimeWired: false,
     artSpriteRuntimeWired: false,
     battleDirectorWired: false
@@ -41,6 +44,7 @@ export class V03SceneBootstrap extends Component {
     const groundTiles = this.ensurePath('World/GroundTiles');
     this.ensurePath('World/RoadMarks');
     const props = this.ensurePath('World/Props');
+    const contactShadows = this.ensurePath('World/ContactShadows');
     const spawnPins = this.ensurePath('World/SpawnPins');
     this.ensurePath('World/RewardPins');
     const actors = this.ensurePath('Actors');
@@ -80,6 +84,10 @@ export class V03SceneBootstrap extends Component {
     mapRuntime.pinRoot = spawnPins;
     this.stats.mapRuntimeWired = true;
 
+    const contactShadowRuntime = this.ensureComponent(world, V03ContactShadowRuntime);
+    contactShadowRuntime.shadowRoot = contactShadows;
+    this.stats.contactShadowRuntimeWired = true;
+
     const visualRuntime = this.ensureComponent(actors, V03VisualRuntime);
     visualRuntime.actorRoot = visualActors;
     visualRuntime.fxRoot = visualFx;
@@ -95,6 +103,7 @@ export class V03SceneBootstrap extends Component {
     const director = this.ensureComponent(this.node, V03BattleDirector);
     director.statusLabel = statusLabel;
     director.mapRuntime = mapRuntime;
+    director.contactShadowRuntime = contactShadowRuntime;
     director.visualRuntime = visualRuntime;
     director.artSpriteRuntime = artSpriteRuntime;
     this.stats.battleDirectorWired = true;

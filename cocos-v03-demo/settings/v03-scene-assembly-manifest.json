@@ -31,8 +31,8 @@
     },
     {
       "path": "World",
-      "components": ["V03MapRuntime"],
-      "children": ["GroundTiles", "RoadMarks", "Props", "SpawnPins", "RewardPins"]
+      "components": ["V03MapRuntime", "V03ContactShadowRuntime"],
+      "children": ["GroundTiles", "RoadMarks", "Props", "ContactShadows", "SpawnPins", "RewardPins"]
     },
     {
       "path": "Actors",
@@ -60,6 +60,7 @@
     "assets/scripts/V03BattleDirector.ts",
     "assets/scripts/V03ResourceBridge.ts",
     "assets/scripts/V03MapRuntime.ts",
+    "assets/scripts/V03ContactShadowRuntime.ts",
     "assets/scripts/V03VisualRuntime.ts",
     "assets/scripts/V03ArtSpriteRuntime.ts",
     "assets/scripts/V03VisualContract.ts"

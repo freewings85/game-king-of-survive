@@ -37,7 +37,7 @@ assert(manifest.artManifest === 'assets/resources/config/v03-art-assets.json', '
 assert(manifest.productionRenderRoute === 'orthographic-2.5d-sprite-billboard-plus-prop-depth', 'Engine proof manifest must lock the render route');
 assert(manifest.cocosScene === sceneManifest.scene && manifest.cocosScene === firstPlayableChecklist.scene, 'Engine proof scene must match the Cocos scene manifests');
 
-['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime', 'V03ArtSpriteRuntime', 'V03ResourceBridge', 'V03VisualContract'].forEach((component) => {
+['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03ContactShadowRuntime', 'V03VisualRuntime', 'V03ArtSpriteRuntime', 'V03ResourceBridge', 'V03VisualContract'].forEach((component) => {
   assert(manifest.requiredComponents.includes(component), `Engine proof manifest must include component ${component}`);
   assert(sceneManifest.scripts.some((script) => script.includes(component)), `Scene manifest must include script ${component}`);
 });

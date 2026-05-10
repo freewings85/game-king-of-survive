@@ -45,6 +45,7 @@ assert(text.includes('Cocos V03 art asset bridge pass'), 'Visual iteration log m
 assert(text.includes('Cocos sprite runtime adapter pass'), 'Visual iteration log must record the latest Cocos sprite runtime adapter pass');
 assert(text.includes('Cocos map-bound sprite placement pass'), 'Visual iteration log must record the latest Cocos map-bound sprite placement pass');
 assert(text.includes('Cocos multi-instance sprite depth pass'), 'Visual iteration log must record the latest Cocos multi-instance sprite depth pass');
+assert(text.includes('Cocos contact shadow runtime pass'), 'Visual iteration log must record the latest Cocos contact shadow runtime pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

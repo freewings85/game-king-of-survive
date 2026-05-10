@@ -95,6 +95,7 @@ checklist.requiredNodes.forEach((node) => {
   ['Root', 'V03SceneBootstrap'],
   ['Root', 'V03BattleDirector'],
   ['World', 'V03MapRuntime'],
+  ['World', 'V03ContactShadowRuntime'],
   ['Actors', 'V03VisualRuntime'],
   ['Actors', 'V03ArtSpriteRuntime'],
   ['CameraRig/MainCamera', 'Camera']
@@ -120,6 +121,7 @@ assertIncludesAll(
     'assets/scripts/V03SceneBootstrap.ts',
     'assets/scripts/V03ResourceBridge.ts',
     'assets/scripts/V03MapRuntime.ts',
+    'assets/scripts/V03ContactShadowRuntime.ts',
     'assets/scripts/V03VisualRuntime.ts',
     'assets/scripts/V03ArtSpriteRuntime.ts',
     'assets/scripts/V03VisualContract.ts'

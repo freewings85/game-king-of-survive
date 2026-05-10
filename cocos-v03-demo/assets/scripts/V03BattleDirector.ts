@@ -1,6 +1,7 @@
 import { _decorator, Component, Label } from 'cc';
 import { V03ArtSpriteRuntime, type V03ArtSpriteRuntimeStats } from './V03ArtSpriteRuntime';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
+import { V03ContactShadowRuntime, type V03ContactShadowRuntimeStats } from './V03ContactShadowRuntime';
 import { loadV03ArtAssetManifest, loadV03BridgeData, type V03ArtAssetManifest, type V03BridgeData } from './V03ResourceBridge';
 import { V03MapRuntime, type V03MapRuntimeStats } from './V03MapRuntime';
 import { V03VisualRuntime, type V03VisualRuntimeStats } from './V03VisualRuntime';
@@ -18,6 +19,9 @@ export class V03BattleDirector extends Component {
   @property(V03VisualRuntime)
   public visualRuntime: V03VisualRuntime | null = null;
 
+  @property(V03ContactShadowRuntime)
+  public contactShadowRuntime: V03ContactShadowRuntime | null = null;
+
   @property(V03ArtSpriteRuntime)
   public artSpriteRuntime: V03ArtSpriteRuntime | null = null;
 
@@ -32,6 +36,7 @@ export class V03BattleDirector extends Component {
   private bridgeData: V03BridgeData | null = null;
   private artManifest: V03ArtAssetManifest | null = null;
   private mapStats: V03MapRuntimeStats | null = null;
+  private shadowStats: V03ContactShadowRuntimeStats | null = null;
   private visualStats: V03VisualRuntimeStats | null = null;
   private artSpriteStats: V03ArtSpriteRuntimeStats | null = null;
 
@@ -44,6 +49,9 @@ export class V03BattleDirector extends Component {
     this.artManifest = artManifest;
     if (this.mapRuntime) {
       this.mapStats = this.mapRuntime.buildFromMap(this.bridgeData.map);
+    }
+    if (this.contactShadowRuntime) {
+      this.shadowStats = this.contactShadowRuntime.buildFromMap(this.bridgeData.map);
     }
     if (this.visualRuntime) {
       this.visualStats = this.visualRuntime.buildVisualContract(this.classId, this.skillId);
@@ -117,6 +125,9 @@ export class V03BattleDirector extends Component {
     const visualStats = this.visualStats
       ? `G${this.visualStats.heroGear} V${this.visualStats.zombieVariants} D${this.visualStats.unitDecals} PG${this.visualStats.propGroundLayers} PW${this.visualStats.propWearDecals} PS${this.visualStats.propShapeBlocks} PB${this.visualStats.propBreakShapes} GL${this.visualStats.globalLightLayers} OR${this.visualStats.objectRimLayers} MB${this.visualStats.materialBlendLayers} FX${this.visualStats.fxLayers}`
       : 'visual pending';
+    const shadowStats = this.shadowStats
+      ? `SHADOW ${this.shadowStats.shadows} U${this.shadowStats.playerShadows} Z${this.shadowStats.zombieShadows} P${this.shadowStats.propShadows}`
+      : 'shadow pending';
     const artStats = this.artManifest
       ? `ART ${this.artManifest.assets.length} P${this.artManifest.counts.portraits} U${this.artManifest.counts.units} Z${this.artManifest.counts.zombies} S${this.artManifest.counts.skills} PR${this.artManifest.counts.props}`
       : 'art pending';
@@ -128,6 +139,7 @@ export class V03BattleDirector extends Component {
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
       `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
       `MAP ${mapName} ${mapStats}`,
+      shadowStats,
       `VISUAL ${visualStats}`,
       artStats,
       spriteStats
