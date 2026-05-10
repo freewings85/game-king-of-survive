@@ -17,6 +17,7 @@ import {
     resources,
 } from 'cc';
 import { forceLayerRecursive } from './BootstrapMain';
+import { NetClient, GameStateSnapshot, EnemySnapshot } from './NetClient';
 
 interface ZombieEntity {
     node: Node;
@@ -121,6 +122,12 @@ export class ActorSpawner extends Component {
     private touchAnchor: CcVec2 | null = null;
     private touchId: number | null = null;
     private readonly JOYSTICK_RADIUS = 80;
+
+    // === network mode (B轨 — Java server authoritative) ===
+    // null = local sim (default). non-null = follow server snapshots.
+    private netClient: NetClient | null = null;
+    private serverEnemies = new Map<string, ZombieEntity>();
+    private serverPlayerId: string | null = null;
 
     private static readonly PROP_PATHS: Record<PropKey, string> = {
         wreckTank:    'art/v03/props/wreck-tank',
@@ -442,11 +449,126 @@ export class ActorSpawner extends Component {
 
     update(dt: number) {
         if (!this.heroNode || !this.config) return;
+        if (this.netClient && this.netClient.isConnected()) {
+            // Network mode: server is authoritative. We only send our input;
+            // hero/zombie positions arrive via onSnapshot.
+            const dx = this.joystickDir.x + this.keyDir.x;
+            const dy = this.joystickDir.y + this.keyDir.y;
+            const m = Math.hypot(dx, dy);
+            const nx = m > 1 ? dx / m : dx;
+            const ny = m > 1 ? dy / m : dy;
+            this.netClient.sendInput(nx, ny);
+            // Death-fade animation still ticks for visuals; movement does not.
+            this.tickDeathFadesOnly(dt);
+            return;
+        }
+        // Local sim path
         this.updateHero(dt);
         this.updateZombies(dt);
         this.updateAutoFire(dt);
         this.updateBullets(dt);
         this.updateSpawn(dt);
+    }
+
+    // ----- network-mode helpers -----
+
+    /** Enable network mode. Call from BootstrapMain when server URL is configured. */
+    public enableNetwork(serverUrl: string, playerId: string, playerName?: string): Promise<void> {
+        const client = new NetClient(serverUrl, playerId, playerName);
+        client.setHandlers({
+            onConnect: () => console.log('[ActorSpawner] net connected'),
+            onDisconnect: (c, r) => console.log('[ActorSpawner] net disconnected', c, r),
+            onSnapshot: (snap) => this.applySnapshot(snap),
+            onError: (e) => console.warn('[ActorSpawner] net err', e),
+        });
+        this.netClient = client;
+        this.serverPlayerId = playerId;
+        return client.connect();
+    }
+
+    /** Apply server snapshot: sync hero pos + zombie pool. */
+    private applySnapshot(snap: GameStateSnapshot) {
+        if (!this.heroNode || !this.serverPlayerId) return;
+        // Hero pos from local player snapshot
+        const me = snap.players.find((p) => p.id === this.serverPlayerId);
+        if (me) {
+            this.heroNode.setPosition(me.x, me.y, 0);
+        }
+        // Reconcile enemies: add new, update existing, remove gone
+        const seen = new Set<string>();
+        for (const e of snap.enemies) {
+            seen.add(e.id);
+            let z = this.serverEnemies.get(e.id);
+            if (!z) {
+                z = this.createServerZombie(e);
+                this.serverEnemies.set(e.id, z);
+                this.zombies.push(z);
+            }
+            z.node.setPosition(e.x, e.y, 0);
+            z.hp = e.hp;
+            z.maxHp = e.maxHp;
+            if (z.hpBarFill) {
+                z.hpBarFill.setScale(Math.max(0, Math.min(1, e.hp / e.maxHp)), 1, 1);
+            }
+        }
+        // Remove zombies the server no longer reports
+        for (const [id, z] of this.serverEnemies) {
+            if (!seen.has(id) && z.deathTimer < 0) {
+                z.deathTimer = 0;
+                if (z.hpBarFill) z.hpBarFill.active = false;
+                if (z.hpBarBg) z.hpBarBg.active = false;
+                this.serverEnemies.delete(id);
+            }
+        }
+    }
+
+    private createServerZombie(e: EnemySnapshot): ZombieEntity {
+        // Map server enemy.type to client bodyType (best-effort).
+        const t = (e.type || '').toLowerCase();
+        const bodyType: ZombieBodyType =
+            t.includes('brute') || t.includes('boss') ? 'brute'
+            : t.includes('crawler') || t.includes('crawl') ? 'crawler'
+            : 'runner';
+        const node = new Node(`NetZ:${e.id}`);
+        node.layer = Layers.Enum.UI_2D;
+        const sprite = node.addComponent(Sprite);
+        sprite.spriteFrame = this.zombieFrames.get(`${bodyType}:idle`) ?? null;
+        const baseColor = new Color(255, 255, 255, 255);
+        sprite.color = baseColor;
+        const tr = node.addComponent(UITransform);
+        const baseSize = 130;
+        tr.setContentSize(baseSize, baseSize);
+        node.setPosition(e.x, e.y, 0);
+        this.worldLayer.addChild(node);
+        const hpBarBg = this.makeHpBar(baseSize, false);
+        const hpBarFill = this.makeHpBar(baseSize, true);
+        const yOff = baseSize * 0.55;
+        hpBarBg.setPosition(0, yOff, 0);
+        hpBarFill.setPosition(0, yOff, 0);
+        node.addChild(hpBarBg);
+        node.addChild(hpBarFill);
+        return {
+            node, sprite, hp: e.hp, maxHp: e.maxHp,
+            speed: 0, bodyType, scale: 1, baseSize: 130,
+            baseColor, hitFlashTimer: 0, deathTimer: -1,
+            hpBarFill, hpBarBg,
+        };
+    }
+
+    private tickDeathFadesOnly(dt: number) {
+        for (let i = this.zombies.length - 1; i >= 0; i--) {
+            const z = this.zombies[i];
+            if (z.deathTimer < 0) continue;
+            z.deathTimer += dt;
+            const t = Math.min(1, z.deathTimer / 0.35);
+            const s = 1 - t;
+            z.node.setScale(s, s, 1);
+            z.sprite.color = new Color(z.baseColor.r, z.baseColor.g, z.baseColor.b, Math.floor(255 * s));
+            if (t >= 1) {
+                z.node.destroy();
+                this.zombies.splice(i, 1);
+            }
+        }
     }
 
     // ----- input -----
