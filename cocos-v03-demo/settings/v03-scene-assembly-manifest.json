@@ -36,7 +36,7 @@
     },
     {
       "path": "Actors",
-      "components": ["V03VisualRuntime"],
+      "components": ["V03VisualRuntime", "V03ArtSpriteRuntime"],
       "children": ["Player", "Zombies", "Projectiles", "Pickups", "VisualActors"]
     },
     {
@@ -61,6 +61,7 @@
     "assets/scripts/V03ResourceBridge.ts",
     "assets/scripts/V03MapRuntime.ts",
     "assets/scripts/V03VisualRuntime.ts",
+    "assets/scripts/V03ArtSpriteRuntime.ts",
     "assets/scripts/V03VisualContract.ts"
   ],
   "prefabGroups": {

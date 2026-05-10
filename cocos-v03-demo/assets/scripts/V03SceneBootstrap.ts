@@ -1,4 +1,5 @@
 import { _decorator, Camera, Component, Label, Node, Vec3 } from 'cc';
+import { V03ArtSpriteRuntime } from './V03ArtSpriteRuntime';
 import { V03BattleDirector } from './V03BattleDirector';
 import { V03MapRuntime } from './V03MapRuntime';
 import { V03VisualRuntime } from './V03VisualRuntime';
@@ -12,6 +13,7 @@ export interface V03SceneBootstrapStats {
   hasStatusLabel: boolean;
   mapRuntimeWired: boolean;
   visualRuntimeWired: boolean;
+  artSpriteRuntimeWired: boolean;
   battleDirectorWired: boolean;
 }
 
@@ -24,6 +26,7 @@ export class V03SceneBootstrap extends Component {
     hasStatusLabel: false,
     mapRuntimeWired: false,
     visualRuntimeWired: false,
+    artSpriteRuntimeWired: false,
     battleDirectorWired: false
   };
 
@@ -82,10 +85,18 @@ export class V03SceneBootstrap extends Component {
     visualRuntime.fxRoot = visualFx;
     this.stats.visualRuntimeWired = true;
 
+    const artSpriteRuntime = this.ensureComponent(actors, V03ArtSpriteRuntime);
+    artSpriteRuntime.actorRoot = visualActors;
+    artSpriteRuntime.fxRoot = visualFx;
+    artSpriteRuntime.propRoot = props;
+    artSpriteRuntime.uiRoot = topHud;
+    this.stats.artSpriteRuntimeWired = true;
+
     const director = this.ensureComponent(this.node, V03BattleDirector);
     director.statusLabel = statusLabel;
     director.mapRuntime = mapRuntime;
     director.visualRuntime = visualRuntime;
+    director.artSpriteRuntime = artSpriteRuntime;
     this.stats.battleDirectorWired = true;
 
     // Keep empty roots alive for Creator scene inspection and future prefab replacement.

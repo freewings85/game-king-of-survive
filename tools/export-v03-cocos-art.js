@@ -59,6 +59,7 @@ function copyAsset(group, fileName) {
     group,
     source: path.relative(repoRoot, source).replace(/\\/g, '/'),
     resourcePath,
+    spriteFramePath: `${resourcePath}/spriteFrame`,
     file: path.relative(repoRoot, target).replace(/\\/g, '/')
   };
 }

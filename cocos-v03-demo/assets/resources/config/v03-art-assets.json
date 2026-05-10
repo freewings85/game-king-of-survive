@@ -9,6 +9,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-focus-guardian.png",
       "resourcePath": "art/v03/portraits/class-focus-guardian",
+      "spriteFramePath": "art/v03/portraits/class-focus-guardian/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-guardian.png"
     },
     {
@@ -16,6 +17,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-focus-ranger.png",
       "resourcePath": "art/v03/portraits/class-focus-ranger",
+      "spriteFramePath": "art/v03/portraits/class-focus-ranger/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-ranger.png"
     },
     {
@@ -23,6 +25,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-focus-tech.png",
       "resourcePath": "art/v03/portraits/class-focus-tech",
+      "spriteFramePath": "art/v03/portraits/class-focus-tech/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-tech.png"
     },
     {
@@ -30,6 +33,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-0.png",
       "resourcePath": "art/v03/portraits/class-skin-guardian-0",
+      "spriteFramePath": "art/v03/portraits/class-skin-guardian-0/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-0.png"
     },
     {
@@ -37,6 +41,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-1.png",
       "resourcePath": "art/v03/portraits/class-skin-guardian-1",
+      "spriteFramePath": "art/v03/portraits/class-skin-guardian-1/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-1.png"
     },
     {
@@ -44,6 +49,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-2.png",
       "resourcePath": "art/v03/portraits/class-skin-guardian-2",
+      "spriteFramePath": "art/v03/portraits/class-skin-guardian-2/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-2.png"
     },
     {
@@ -51,6 +57,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-tech-0.png",
       "resourcePath": "art/v03/portraits/class-skin-tech-0",
+      "spriteFramePath": "art/v03/portraits/class-skin-tech-0/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-0.png"
     },
     {
@@ -58,6 +65,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-tech-1.png",
       "resourcePath": "art/v03/portraits/class-skin-tech-1",
+      "spriteFramePath": "art/v03/portraits/class-skin-tech-1/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-1.png"
     },
     {
@@ -65,6 +73,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-tech-2.png",
       "resourcePath": "art/v03/portraits/class-skin-tech-2",
+      "spriteFramePath": "art/v03/portraits/class-skin-tech-2/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-2.png"
     },
     {
@@ -72,6 +81,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-0.png",
       "resourcePath": "art/v03/portraits/class-skin-ranger-0",
+      "spriteFramePath": "art/v03/portraits/class-skin-ranger-0/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-0.png"
     },
     {
@@ -79,6 +89,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-1.png",
       "resourcePath": "art/v03/portraits/class-skin-ranger-1",
+      "spriteFramePath": "art/v03/portraits/class-skin-ranger-1/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-1.png"
     },
     {
@@ -86,6 +97,7 @@
       "group": "portraits",
       "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-2.png",
       "resourcePath": "art/v03/portraits/class-skin-ranger-2",
+      "spriteFramePath": "art/v03/portraits/class-skin-ranger-2/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-2.png"
     },
     {
@@ -93,6 +105,7 @@
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-ranger-2-isometric.png",
       "resourcePath": "art/v03/units/hero-ranger-2-isometric",
+      "spriteFramePath": "art/v03/units/hero-ranger-2-isometric/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-2-isometric.png"
     },
     {
@@ -100,6 +113,7 @@
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-brute.png",
       "resourcePath": "art/v03/zombies/zombie-card-brute",
+      "spriteFramePath": "art/v03/zombies/zombie-card-brute/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute.png"
     },
     {
@@ -107,6 +121,7 @@
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler.png",
       "resourcePath": "art/v03/zombies/zombie-card-crawler",
+      "spriteFramePath": "art/v03/zombies/zombie-card-crawler/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler.png"
     },
     {
@@ -114,6 +129,7 @@
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded.png",
       "resourcePath": "art/v03/zombies/zombie-card-hooded",
+      "spriteFramePath": "art/v03/zombies/zombie-card-hooded/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded.png"
     },
     {
@@ -121,6 +137,7 @@
       "group": "skills",
       "source": "frontend/engine-demo/assets/skills/skill-card-arc.png",
       "resourcePath": "art/v03/skills/skill-card-arc",
+      "spriteFramePath": "art/v03/skills/skill-card-arc/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-arc.png"
     },
     {
@@ -128,6 +145,7 @@
       "group": "skills",
       "source": "frontend/engine-demo/assets/skills/skill-card-boom.png",
       "resourcePath": "art/v03/skills/skill-card-boom",
+      "spriteFramePath": "art/v03/skills/skill-card-boom/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-boom.png"
     },
     {
@@ -135,6 +153,7 @@
       "group": "skills",
       "source": "frontend/engine-demo/assets/skills/skill-card-fan.png",
       "resourcePath": "art/v03/skills/skill-card-fan",
+      "spriteFramePath": "art/v03/skills/skill-card-fan/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-fan.png"
     },
     {
@@ -142,6 +161,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-wreck.png",
       "resourcePath": "art/v03/props/prop-cover-wreck",
+      "spriteFramePath": "art/v03/props/prop-cover-wreck/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-wreck.png"
     },
     {
@@ -149,6 +169,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-wall.png",
       "resourcePath": "art/v03/props/prop-cover-wall",
+      "spriteFramePath": "art/v03/props/prop-cover-wall/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-wall.png"
     },
     {
@@ -156,6 +177,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-crate.png",
       "resourcePath": "art/v03/props/prop-cover-crate",
+      "spriteFramePath": "art/v03/props/prop-cover-crate/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-crate.png"
     },
     {
@@ -163,6 +185,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-barrel.png",
       "resourcePath": "art/v03/props/prop-cover-barrel",
+      "spriteFramePath": "art/v03/props/prop-cover-barrel/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-barrel.png"
     },
     {
@@ -170,6 +193,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-tires.png",
       "resourcePath": "art/v03/props/prop-cover-tires",
+      "spriteFramePath": "art/v03/props/prop-cover-tires/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-tires.png"
     },
     {
@@ -177,6 +201,7 @@
       "group": "props",
       "source": "frontend/engine-demo/assets/props/prop-cover-debris.png",
       "resourcePath": "art/v03/props/prop-cover-debris",
+      "spriteFramePath": "art/v03/props/prop-cover-debris/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-debris.png"
     }
   ],

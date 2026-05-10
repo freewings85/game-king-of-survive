@@ -1,4 +1,5 @@
 import { _decorator, Component, Label } from 'cc';
+import { V03ArtSpriteRuntime, type V03ArtSpriteRuntimeStats } from './V03ArtSpriteRuntime';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
 import { loadV03ArtAssetManifest, loadV03BridgeData, type V03ArtAssetManifest, type V03BridgeData } from './V03ResourceBridge';
 import { V03MapRuntime, type V03MapRuntimeStats } from './V03MapRuntime';
@@ -17,6 +18,9 @@ export class V03BattleDirector extends Component {
   @property(V03VisualRuntime)
   public visualRuntime: V03VisualRuntime | null = null;
 
+  @property(V03ArtSpriteRuntime)
+  public artSpriteRuntime: V03ArtSpriteRuntime | null = null;
+
   private classId: V03ClassId = 'ranger';
   private skillId: V03SkillId = 'fan';
   private elapsed = 0;
@@ -29,6 +33,7 @@ export class V03BattleDirector extends Component {
   private artManifest: V03ArtAssetManifest | null = null;
   private mapStats: V03MapRuntimeStats | null = null;
   private visualStats: V03VisualRuntimeStats | null = null;
+  private artSpriteStats: V03ArtSpriteRuntimeStats | null = null;
 
   async start(): Promise<void> {
     const [bridgeData, artManifest] = await Promise.all([
@@ -42,6 +47,9 @@ export class V03BattleDirector extends Component {
     }
     if (this.visualRuntime) {
       this.visualStats = this.visualRuntime.buildVisualContract(this.classId, this.skillId);
+    }
+    if (this.artSpriteRuntime) {
+      this.artSpriteStats = await this.artSpriteRuntime.buildFromManifest(this.artManifest);
     }
     this.hp = this.bridgeData.runtime.tuning.player.hp;
     this.alive = Math.max(18, this.bridgeData.map.zombieEntries.length * 8);
@@ -112,13 +120,17 @@ export class V03BattleDirector extends Component {
     const artStats = this.artManifest
       ? `ART ${this.artManifest.assets.length} P${this.artManifest.counts.portraits} U${this.artManifest.counts.units} Z${this.artManifest.counts.zombies} S${this.artManifest.counts.skills} PR${this.artManifest.counts.props}`
       : 'art pending';
+    const spriteStats = this.artSpriteStats
+      ? `SPRITES ${this.artSpriteStats.spriteNodes} UI${this.artSpriteStats.portraits} U${this.artSpriteStats.units} Z${this.artSpriteStats.zombies} S${this.artSpriteStats.skills} P${this.artSpriteStats.props}`
+      : 'sprites pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
       `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
       `MAP ${mapName} ${mapStats}`,
       `VISUAL ${visualStats}`,
-      artStats
+      artStats,
+      spriteStats
     ].join('\n');
   }
 }

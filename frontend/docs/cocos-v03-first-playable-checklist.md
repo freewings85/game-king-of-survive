@@ -39,6 +39,7 @@ Required component bindings:
 - `V03SceneBootstrap` on `Root`, able to create the required camera, world, actor, FX, and UI roots when the hand-authored scene asset is not available yet.
 - `V03MapRuntime` on `World`, wired to ground, prop, spawn, and reward roots.
 - `V03VisualRuntime` on `Actors`, wired to visual actor and FX roots and backed by `V03VisualContract`.
+- `V03ArtSpriteRuntime` on `Actors`, wired to the imported V03 art manifest and able to create Sprite nodes from `spriteFramePath` entries.
 
 ## Prefab Targets
 
@@ -52,7 +53,7 @@ Required prefab groups:
 
 These names are placeholders until real Cocos prefabs exist, but the structure is intentional. Real asset work should replace these prefabs without changing the scene contract.
 
-The Cocos resource bridge also loads `assets/resources/config/v03-art-assets.json`, which maps imported PNGs under `assets/resources/art/v03/` to stable resource paths for portraits, the Ranger unit sprite, zombie cards, skill cards, and prop cover sprites.
+The Cocos resource bridge also loads `assets/resources/config/v03-art-assets.json`, which maps imported PNGs under `assets/resources/art/v03/` to stable resource paths and `spriteFramePath` entries for portraits, the Ranger unit sprite, zombie cards, skill cards, and prop cover sprites.
 
 The checklist also requires visual contract coverage for `heroSkinSprites`, `zombieCardSprites`, `skillCardSprites`, `propCoverSprites`, `groundWashLayers`, and `safeZoneLayers` so the Cocos slice keeps pace with the current WebGL V03 reference.
 

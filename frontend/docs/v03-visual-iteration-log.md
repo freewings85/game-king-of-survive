@@ -2247,3 +2247,45 @@ Next iteration direction:
 1. Create Cocos sprite/material adapter code that turns `v03-art-assets.json` entries into billboard sprite nodes.
 2. Start replacing `V03VisualRuntime` placeholder boxes with imported sprite resources.
 3. Capture a Cocos phone screenshot once the first asset-backed nodes render in Creator.
+
+## 2026-05-10 Cocos sprite runtime adapter pass
+
+Related work:
+
+- Follow-up to `d1eabb4`
+- `cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `cocos-v03-demo/assets/resources/config/v03-art-assets.json`
+- `e2e/v03-cocos-bridge-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `cocos-v03-demo/assets/resources/art/v03/`
+
+Current visual distance:
+
+- Cocos now has adapter code that can create Sprite nodes from imported V03 PNG manifest entries, which is the first code path toward asset-backed characters, zombies, props, skills, and UI portraits in Creator.
+- This still does not prove final visual parity because the adapter has not been run inside Cocos Creator and the scene still needs authored prefab placement, sizing, billboarding behavior, and mobile composition tuning.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added `V03ArtSpriteRuntime` with manifest-driven Sprite node creation and `SpriteFrame` loading through Cocos resources.
+- `V03SceneBootstrap` now wires `V03ArtSpriteRuntime` to actor, FX, prop, and UI roots.
+- `V03BattleDirector` now builds art sprites from the loaded art manifest and reports sprite counts in the status label.
+
+What is still far from the reference:
+
+- Sprites are placed by starter lanes, not by final battle composition or prefab anchors.
+- The adapter creates Sprite components, but it does not yet handle real 3D billboarding, atlas packing, animation, hit flashes, or hand-tuned scaling.
+- A Creator screenshot is still required before this can be judged visually against the target image.
+
+Next iteration direction:
+
+1. Replace the starter sprite placement with asset-backed nodes aligned to the map contract and combat actors.
+2. Add billboarding/scale rules for unit, zombie, prop, skill, and portrait groups.
+3. Run the first Cocos Creator visual capture as soon as the environment can open the project.

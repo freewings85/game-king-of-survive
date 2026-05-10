@@ -42,6 +42,7 @@ const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
 const sceneBootstrapSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts'), 'utf8');
+const artSpriteRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts'), 'utf8');
 const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
 const visualRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualRuntime.ts'), 'utf8');
 const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
@@ -97,6 +98,7 @@ assert(cocosArt.counts.props >= 6, 'Cocos art bridge needs prop cover assets');
   const asset = cocosArt.assets.find((item) => item.id === id);
   assert(asset, `Cocos art manifest must include ${id}`);
   assert(asset.resourcePath.startsWith(`art/v03/${asset.group}/`), `Cocos art manifest resource path must be under art/v03 for ${id}`);
+  assert(asset.spriteFramePath === `${asset.resourcePath}/spriteFrame`, `Cocos art manifest must include spriteFramePath for ${id}`);
   assert(fs.existsSync(path.join(repoRoot, asset.file)), `Cocos art file must exist for ${id}`);
 });
 assert(resourceBridgeSource.includes("resources.load(path, JsonAsset"), 'Cocos bridge must load resources JsonAsset files');
@@ -113,6 +115,8 @@ assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must ex
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
 assert(battleDirectorSource.includes('loadV03ArtAssetManifest'), 'Battle director must load Cocos art asset manifest');
+assert(battleDirectorSource.includes('public artSpriteRuntime: V03ArtSpriteRuntime'), 'Battle director must expose V03ArtSpriteRuntime');
+assert(battleDirectorSource.includes('this.artSpriteRuntime.buildFromManifest(this.artManifest)'), 'Battle director must build art sprites from manifest');
 assert(sceneBootstrapSource.includes("@ccclass('V03SceneBootstrap')"), 'Cocos scene bootstrap component is missing');
 assert(sceneBootstrapSource.includes('buildRuntimeScene()'), 'Scene bootstrap must expose buildRuntimeScene');
 assert(sceneBootstrapSource.includes('Camera.ProjectionType.ORTHO'), 'Scene bootstrap must create an orthographic camera');
@@ -121,7 +125,13 @@ assert(sceneBootstrapSource.includes("this.ensurePath('Actors/VisualActors')"), 
 assert(sceneBootstrapSource.includes("this.ensurePath('FX/VisualFX')"), 'Scene bootstrap must create visual FX root');
 assert(sceneBootstrapSource.includes('director.mapRuntime = mapRuntime'), 'Scene bootstrap must wire map runtime into battle director');
 assert(sceneBootstrapSource.includes('director.visualRuntime = visualRuntime'), 'Scene bootstrap must wire visual runtime into battle director');
+assert(sceneBootstrapSource.includes('director.artSpriteRuntime = artSpriteRuntime'), 'Scene bootstrap must wire art sprite runtime into battle director');
 assert(sceneBootstrapSource.includes('director.statusLabel = statusLabel'), 'Scene bootstrap must wire status label into battle director');
+assert(artSpriteRuntimeSource.includes("@ccclass('V03ArtSpriteRuntime')"), 'Cocos art sprite runtime component is missing');
+assert(artSpriteRuntimeSource.includes('buildFromManifest(manifest: V03ArtAssetManifest)'), 'Art sprite runtime must build from art manifest');
+assert(artSpriteRuntimeSource.includes('resources.load(spriteFramePath, SpriteFrame'), 'Art sprite runtime must load Cocos SpriteFrame resources');
+assert(artSpriteRuntimeSource.includes('node.addComponent(Sprite)'), 'Art sprite runtime must create Sprite components');
+assert(artSpriteRuntimeSource.includes("asset.spriteFramePath || `${asset.resourcePath}/spriteFrame`"), 'Art sprite runtime must use manifest sprite frame path');
 assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');
@@ -251,7 +261,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['CameraRig/MainCamera', 'World/GroundTiles', 'World/Props', 'Actors/Player', 'Actors/Zombies', 'FX/CardLayers', 'UI/MiniMap', 'UI/SkillButtons'].forEach((node) => {
   assert(firstPlayableChecklist.requiredNodes.includes(node), `First playable checklist must include node ${node}`);
 });
-['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime'].forEach((component) => {
+['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime', 'V03ArtSpriteRuntime'].forEach((component) => {
   assert(firstPlayableChecklist.componentBindings.some((binding) => binding.component === component), `First playable checklist must bind ${component}`);
 });
 ['Guardian.prefab', 'TechEngineer.prefab', 'Ranger.prefab'].forEach((prefab) => {

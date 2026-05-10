@@ -15,6 +15,7 @@
     "V03BattleDirector",
     "V03MapRuntime",
     "V03VisualRuntime",
+    "V03ArtSpriteRuntime",
     "V03ResourceBridge",
     "V03VisualContract"
   ],

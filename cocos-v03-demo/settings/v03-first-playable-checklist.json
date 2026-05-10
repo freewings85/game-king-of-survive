@@ -47,6 +47,11 @@
       "component": "V03VisualRuntime",
       "node": "Actors",
       "requires": ["VisualActors", "VisualFX", "V03VisualContract"]
+    },
+    {
+      "component": "V03ArtSpriteRuntime",
+      "node": "Actors",
+      "requires": ["v03-art-assets", "VisualActors", "VisualFX", "Props", "TopHud"]
     }
   ],
   "prefabs": {

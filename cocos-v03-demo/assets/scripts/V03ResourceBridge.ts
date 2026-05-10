@@ -64,6 +64,7 @@ export interface V03ArtAssetEntry {
   group: 'portraits' | 'units' | 'zombies' | 'skills' | 'props';
   source: string;
   resourcePath: string;
+  spriteFramePath?: string;
   file: string;
 }
 
