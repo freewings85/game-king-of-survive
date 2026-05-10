@@ -2460,3 +2460,47 @@ Next iteration direction:
 1. Push the unit sprites from generated placeholders toward authored production character sheets: cleaner faces, hands, weapon silhouettes, and skin-specific costume changes.
 2. Add matching zombie in-match sprites or animation-ready zombie frames so hero quality does not outpace enemy readability.
 3. Start capturing Cocos/WeChat phone screenshots as soon as the scene is runnable, because browser gates alone cannot prove final mini-game rendering quality.
+
+## 2026-05-10 Portrait-backed unit sprite repair pass
+
+Related work:
+
+- Follow-up to `0b6c4c3`
+- `tools/build-v03-unit-assets.js`
+- `frontend/engine-demo/assets/units/hero-ranger-2-isometric.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/portraits/class-skin-guardian-0.png`
+- `frontend/engine-demo/assets/portraits/class-skin-tech-1.png`
+- `frontend/engine-demo/assets/portraits/class-skin-ranger-2.png`
+- `frontend/engine-demo/assets/units/hero-guardian-0-isometric.png`
+- `frontend/engine-demo/assets/units/hero-tech-1-isometric.png`
+- `frontend/engine-demo/assets/units/hero-ranger-2-isometric.png`
+
+Current visual distance:
+
+- The first full-class unit sprite pass technically filled the asset matrix, but the generated unit art was too symbolic and visibly worse than the target image. This repair pass rebuilds the unit sprites from the stronger class/skin portrait assets so the in-match hero now has painterly face, armor, hood, shield, rifle, and device detail at phone scale.
+- The battle screenshot is closer to the reference image's illustrated character read than the flat generated-stick version, but it is still not a true full-body isometric animation sheet.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Unit sprites now reuse the high-detail portrait art as the base layer, with class-specific lower-body/contact shape cues layered underneath.
+- The Ranger mobile battle screenshot now reads as an illustrated survivor instead of a simple geometric marker.
+- The same repair path rebuilds Guardian and Tech unit sprites, keeping the 9-variant gate intact.
+
+What is still far from the reference:
+
+- The in-match units are still portrait-backed busts with simplified lower-body cues, not full-body hand-authored combat sprites.
+- Weapons and legs need proper action poses, recoil frames, and direction-specific variants.
+- The player is now visually stronger than the movement/animation system, so the next gap is animation and enemy parity rather than just asset existence.
+
+Next iteration direction:
+
+1. Produce full-body, animation-ready hero frames or sprite sheets for the three classes, starting with Ranger attack/recoil because it is the primary mobile screenshot path.
+2. Bring zombie variants to the same painterly quality and add simple walk/hit/death frame contracts.
+3. Tune battlefield scale so the hero, zombies, cover props, and skill FX match the reference image's isometric proportions more closely.
