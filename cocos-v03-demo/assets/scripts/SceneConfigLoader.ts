@@ -23,7 +23,9 @@ export interface ZombieConfig {
     rotateTowardHero: boolean;
 }
 
-export type PropKey = 'wreckTank' | 'barrelRust' | 'sandbag';
+export type PropKey =
+    | 'wreckTank' | 'barrelRust' | 'sandbag'
+    | 'tankGreen' | 'barrelRed' | 'sandbagBeige' | 'oilSplat';
 export interface PropConfig {
     name: string;
     key: PropKey;
@@ -80,7 +82,8 @@ export interface VfxConfig {
     muzzleCone: MuzzleConfig;
     muzzleBurst: MuzzleConfig;
     fanBullets: FanBulletsConfig;
-    hitSparks: HitSparksConfig;
+    /** ≥1 hit-spark cluster; M2-1A raises this to 2 simultaneous impact points. */
+    hitSparkClusters: HitSparksConfig[];
     lightningChain: LightningChainConfig;
 }
 

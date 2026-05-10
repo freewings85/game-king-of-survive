@@ -143,10 +143,13 @@ def render():
         place_radial(canvas, n["pos"], n["contentSize"], vfx["fanBullets"]["inner"],
                      vfx["fanBullets"]["outer"], W, H, angle_deg=n["angle"])
 
-    # Hit sparks
+    # Hit sparks — Spark_<clusterIdx>_<i> name pattern picks per-cluster paint colors
     for n in all_named(flat, "Spark_"):
-        place_radial(canvas, n["pos"], n["contentSize"], vfx["hitSparks"]["inner"],
-                     vfx["hitSparks"]["outer"], W, H, src_size=64)
+        parts = n["name"].split("_")
+        cluster_idx = int(parts[1]) if len(parts) >= 3 and parts[1].isdigit() else 0
+        cluster = vfx["hitSparkClusters"][cluster_idx]
+        place_radial(canvas, n["pos"], n["contentSize"], cluster["inner"],
+                     cluster["outer"], W, H, src_size=64)
 
     # Lightning bolt segments
     for n in all_named(flat, "Bolt_"):
@@ -211,7 +214,7 @@ def render():
 def main():
     os.makedirs(OUT, exist_ok=True)
     img, W, H = render()
-    prefix = "m2-0b-runtime-loader"
+    prefix = sys.argv[1] if len(sys.argv) > 1 else "m2-1a-density-runtime"
     img.convert("RGB").save(os.path.join(OUT, f"{prefix}-01-overview.png"), "PNG")
     z1 = img.crop((50, 380, 390, 720))
     z1.convert("RGB").save(os.path.join(OUT, f"{prefix}-02-combat-vfx-zoom.png"), "PNG")
