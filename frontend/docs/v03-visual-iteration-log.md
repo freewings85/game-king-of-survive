@@ -2504,3 +2504,45 @@ Next iteration direction:
 1. Produce full-body, animation-ready hero frames or sprite sheets for the three classes, starting with Ranger attack/recoil because it is the primary mobile screenshot path.
 2. Bring zombie variants to the same painterly quality and add simple walk/hit/death frame contracts.
 3. Tune battlefield scale so the hero, zombies, cover props, and skill FX match the reference image's isometric proportions more closely.
+
+## 2026-05-10 Unit attack frame pass
+
+Related work:
+
+- Follow-up to `73efb8f`
+- `tools/build-v03-unit-assets.js`
+- `frontend/engine-demo/app.js`
+- `frontend/engine-demo/assets/units/hero-ranger-2-attack-isometric.png`
+- `cocos-v03-demo/assets/resources/config/v03-art-assets.json`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/units/hero-guardian-0-attack-isometric.png`
+- `frontend/engine-demo/assets/units/hero-tech-1-attack-isometric.png`
+- `frontend/engine-demo/assets/units/hero-ranger-2-attack-isometric.png`
+
+Current visual distance:
+
+- The hero is no longer a purely static battlefield card. Each class/skin now has idle and attack unit assets, and the runtime switches the active player card to an attack frame during weapon fire.
+- This brings the primary phone battle closer to the target image's weapon-action read, especially the fan volley screenshot path, but it is still a two-frame effect rather than a real run/aim/recoil animation sheet.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added 9 attack-frame unit sprites, bringing the Cocos/WebGL unit animation asset set to 18 files.
+- The engine demo tracks `classUnitAttackSpriteVariantCount >= 9` and `unitAnimationFrameSwitchCount >= 2`, so combat must actually switch frames during the verification run.
+- Cocos art export and visual contracts now include idle and attack unit sprite variants.
+
+What is still far from the reference:
+
+- The attack frames are still derived from portrait-backed unit art, not full-body directional combat sprites.
+- There is no zombie animation parity yet, so the hero action reads better than enemy motion.
+- Weapon effects and unit animation are not yet authored as a coherent sprite sheet with frame timing, pivots, and hit reactions.
+
+Next iteration direction:
+
+1. Add zombie walk/hit/death frame variants and gate that they animate in the phone battle screenshot.
+2. Replace the portrait-backed hero unit frames with full-body sheets once the Cocos scene path can consume them cleanly.
+3. Tune firing pivots so bullets, muzzle cards, and the attack frame align more precisely at phone scale.

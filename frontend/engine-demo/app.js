@@ -135,6 +135,7 @@ const game = {
   xpDropped: 0,
   lastKillAt: 0,
   fireTimer: 0,
+  attackTimer: 0,
   hitTimer: 0,
   input: { active: false, id: null, startX: 0, startY: 0, x: 0, y: 0 }
 };
@@ -164,6 +165,8 @@ let activePainterlySkinColor = '#193743';
 let activePainterlyStyle = 'coil-screen';
 let activePainterlyUsesSpriteAsset = false;
 let activePainterlyUsesUnitSpriteAsset = false;
+let activePainterlyUnitFrame = 'idle';
+let unitAnimationFrameSwitchCount = 0;
 let zombiePainterlyUsesSpriteAsset = false;
 let skillPainterlyUsesSpriteAsset = false;
 let propCoverUsesSpriteAsset = false;
@@ -222,6 +225,23 @@ const classUnitAssets = {
     0: '/frontend/engine-demo/assets/units/hero-ranger-0-isometric.png',
     1: '/frontend/engine-demo/assets/units/hero-ranger-1-isometric.png',
     2: '/frontend/engine-demo/assets/units/hero-ranger-2-isometric.png'
+  }
+};
+const classUnitAttackAssets = {
+  guardian: {
+    0: '/frontend/engine-demo/assets/units/hero-guardian-0-attack-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-guardian-1-attack-isometric.png',
+    2: '/frontend/engine-demo/assets/units/hero-guardian-2-attack-isometric.png'
+  },
+  tech: {
+    0: '/frontend/engine-demo/assets/units/hero-tech-0-attack-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-tech-1-attack-isometric.png',
+    2: '/frontend/engine-demo/assets/units/hero-tech-2-attack-isometric.png'
+  },
+  ranger: {
+    0: '/frontend/engine-demo/assets/units/hero-ranger-0-attack-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-ranger-1-attack-isometric.png',
+    2: '/frontend/engine-demo/assets/units/hero-ranger-2-attack-isometric.png'
   }
 };
 const propCoverAssets = {
@@ -557,15 +577,15 @@ function getClassPortraitTexture(classId, skinIndex = 0) {
   return classPortraitTextureCache.get(key);
 }
 
-function getClassUnitAsset(classId, skinIndex = 0) {
-  const classAssets = classUnitAssets[classId];
+function getClassUnitAsset(classId, skinIndex = 0, frame = 'idle') {
+  const classAssets = frame === 'attack' ? classUnitAttackAssets[classId] : classUnitAssets[classId];
   return classAssets && classAssets[skinIndex];
 }
 
-function getClassUnitTexture(classId, skinIndex = 0) {
-  const asset = getClassUnitAsset(classId, skinIndex);
+function getClassUnitTexture(classId, skinIndex = 0, frame = 'idle') {
+  const asset = getClassUnitAsset(classId, skinIndex, frame);
   if (!asset) return null;
-  const key = `${classId}:${skinIndex}:unit`;
+  const key = `${classId}:${skinIndex}:${frame}:unit`;
   if (!classUnitTextureCache.has(key)) {
     const texture = new THREE.TextureLoader().load(asset);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -1942,6 +1962,7 @@ function applySkin(index) {
   const skinColor = def.skins[activeSkin] || `#${def.body.toString(16).padStart(6, '0')}`;
   const accentHex = `#${def.accent.toString(16).padStart(6, '0')}`;
   mats.player.color.set(skinColor);
+  activePainterlyUnitFrame = 'idle';
   if (playerPainterlyCard) {
     const unitTexture = getClassUnitTexture(activeClass, activeSkin);
     const portraitTexture = getClassPortraitTexture(activeClass, activeSkin);
@@ -1984,10 +2005,12 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesUnitSpriteAsset = activePainterlyUsesUnitSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitFrame = activePainterlyUnitFrame;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activeClass}-${activeSkin}`;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitSpriteVariant = getClassUnitAsset(activeClass, activeSkin) ? `${activeClass}-${activeSkin}` : '';
   window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
   window.__V03_ENGINE_DEMO_STATE.classUnitSpriteVariantCount = Object.values(classUnitAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
+  window.__V03_ENGINE_DEMO_STATE.classUnitAttackSpriteVariantCount = Object.values(classUnitAttackAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
@@ -2004,6 +2027,16 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle = classThumbStyles[activeClass] || 'field-kit';
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyleMatchesShowcase = activePainterlyStyle === window.__V03_ENGINE_DEMO_STATE.classShowcaseStyle;
   window.__V03_ENGINE_DEMO_STATE.classShowcaseStyleCount = new Set(Array.from(showcaseThumbs.children).map((el) => el.dataset.classStyle)).size;
+}
+
+function updatePlayerUnitSpriteFrame(frame) {
+  if (!playerPainterlyCard || activePainterlyUnitFrame === frame) return;
+  const texture = getClassUnitTexture(activeClass, activeSkin, frame) || getClassUnitTexture(activeClass, activeSkin, 'idle');
+  if (!texture) return;
+  playerPainterlyCard.material.map = texture;
+  playerPainterlyCard.material.needsUpdate = true;
+  activePainterlyUnitFrame = frame;
+  unitAnimationFrameSwitchCount += 1;
 }
 
 function applySkill(id) {
@@ -2312,6 +2345,7 @@ function fireWeapon(dt) {
   const targets = nearestZombies(skill.range).slice(0, skill.targets);
   if (!targets.length) return;
   game.fireTimer = activeClass === 'ranger' ? demoTuning.player.rangerFireCooldown : demoTuning.player.defaultFireCooldown;
+  game.attackTimer = 0.20;
   game.shotsFired += 1;
   targets.forEach(({ z }, index) => {
     const splash = activeSkill === 'boom' && index === 0 ? 1.35 : 1;
@@ -2376,6 +2410,8 @@ function animate(now) {
   rivalBeam.rotation.y = Math.atan2(rival.position.x - player.position.x, rival.position.z - player.position.z) + Math.PI / 2;
   rivalBeamMat.opacity = 0.18 + Math.abs(Math.sin(t * 3.2)) * 0.35;
   fireWeapon(dt);
+  game.attackTimer = Math.max(0, game.attackTimer - dt);
+  updatePlayerUnitSpriteFrame(game.attackTimer > 0 ? 'attack' : 'idle');
   collectXp();
 
   zombies.forEach((z, i) => {
@@ -2633,10 +2669,13 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesUnitSpriteAsset = activePainterlyUsesUnitSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitFrame = activePainterlyUnitFrame;
+  window.__V03_ENGINE_DEMO_STATE.unitAnimationFrameSwitchCount = unitAnimationFrameSwitchCount;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activePainterlyClass}-${activePainterlySkin}`;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitSpriteVariant = getClassUnitAsset(activePainterlyClass, activePainterlySkin) ? `${activePainterlyClass}-${activePainterlySkin}` : '';
   window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
   window.__V03_ENGINE_DEMO_STATE.classUnitSpriteVariantCount = Object.values(classUnitAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
+  window.__V03_ENGINE_DEMO_STATE.classUnitAttackSpriteVariantCount = Object.values(classUnitAttackAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;

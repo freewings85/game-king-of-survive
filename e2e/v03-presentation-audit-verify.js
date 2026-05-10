@@ -116,6 +116,8 @@ requiredText.forEach((text) => {
   'activePainterlyUsesUnitSpriteAsset',
   'activePainterlyUnitSpriteVariant: ranger-2',
   'classUnitSpriteVariantCount >= 9',
+  'classUnitAttackSpriteVariantCount >= 9',
+  'unitAnimationFrameSwitchCount >= 2',
   'combatFocusDisplayed',
   'combatFocusStyle: hood-rifle',
   'combatFocusClassId: ranger',

@@ -112,14 +112,23 @@ export const V03_REQUIRED_HERO_SKIN_SPRITES = [
 
 export const V03_REQUIRED_HERO_UNIT_SPRITES = [
   'hero-guardian-0-isometric',
+  'hero-guardian-0-attack-isometric',
   'hero-guardian-1-isometric',
+  'hero-guardian-1-attack-isometric',
   'hero-guardian-2-isometric',
+  'hero-guardian-2-attack-isometric',
   'hero-tech-0-isometric',
+  'hero-tech-0-attack-isometric',
   'hero-tech-1-isometric',
+  'hero-tech-1-attack-isometric',
   'hero-tech-2-isometric',
+  'hero-tech-2-attack-isometric',
   'hero-ranger-0-isometric',
+  'hero-ranger-0-attack-isometric',
   'hero-ranger-1-isometric',
-  'hero-ranger-2-isometric'
+  'hero-ranger-1-attack-isometric',
+  'hero-ranger-2-isometric',
+  'hero-ranger-2-attack-isometric'
 ] as const;
 
 export const V03_REQUIRED_ZOMBIE_CARD_SPRITES = [

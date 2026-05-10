@@ -109,12 +109,28 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-0-isometric.png"
     },
     {
+      "id": "hero-guardian-0-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-guardian-0-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-guardian-0-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-guardian-0-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-0-attack-isometric.png"
+    },
+    {
       "id": "hero-guardian-1-isometric",
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-guardian-1-isometric.png",
       "resourcePath": "art/v03/units/hero-guardian-1-isometric",
       "spriteFramePath": "art/v03/units/hero-guardian-1-isometric/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-1-isometric.png"
+    },
+    {
+      "id": "hero-guardian-1-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-guardian-1-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-guardian-1-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-guardian-1-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-1-attack-isometric.png"
     },
     {
       "id": "hero-guardian-2-isometric",
@@ -125,12 +141,28 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-2-isometric.png"
     },
     {
+      "id": "hero-guardian-2-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-guardian-2-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-guardian-2-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-guardian-2-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-guardian-2-attack-isometric.png"
+    },
+    {
       "id": "hero-tech-0-isometric",
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-tech-0-isometric.png",
       "resourcePath": "art/v03/units/hero-tech-0-isometric",
       "spriteFramePath": "art/v03/units/hero-tech-0-isometric/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-0-isometric.png"
+    },
+    {
+      "id": "hero-tech-0-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-tech-0-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-tech-0-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-tech-0-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-0-attack-isometric.png"
     },
     {
       "id": "hero-tech-1-isometric",
@@ -141,12 +173,28 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-1-isometric.png"
     },
     {
+      "id": "hero-tech-1-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-tech-1-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-tech-1-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-tech-1-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-1-attack-isometric.png"
+    },
+    {
       "id": "hero-tech-2-isometric",
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-tech-2-isometric.png",
       "resourcePath": "art/v03/units/hero-tech-2-isometric",
       "spriteFramePath": "art/v03/units/hero-tech-2-isometric/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-2-isometric.png"
+    },
+    {
+      "id": "hero-tech-2-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-tech-2-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-tech-2-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-tech-2-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-tech-2-attack-isometric.png"
     },
     {
       "id": "hero-ranger-0-isometric",
@@ -157,6 +205,14 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-0-isometric.png"
     },
     {
+      "id": "hero-ranger-0-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-ranger-0-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-ranger-0-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-ranger-0-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-0-attack-isometric.png"
+    },
+    {
       "id": "hero-ranger-1-isometric",
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-ranger-1-isometric.png",
@@ -165,12 +221,28 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-1-isometric.png"
     },
     {
+      "id": "hero-ranger-1-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-ranger-1-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-ranger-1-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-ranger-1-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-1-attack-isometric.png"
+    },
+    {
       "id": "hero-ranger-2-isometric",
       "group": "units",
       "source": "frontend/engine-demo/assets/units/hero-ranger-2-isometric.png",
       "resourcePath": "art/v03/units/hero-ranger-2-isometric",
       "spriteFramePath": "art/v03/units/hero-ranger-2-isometric/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-2-isometric.png"
+    },
+    {
+      "id": "hero-ranger-2-attack-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-ranger-2-attack-isometric.png",
+      "resourcePath": "art/v03/units/hero-ranger-2-attack-isometric",
+      "spriteFramePath": "art/v03/units/hero-ranger-2-attack-isometric/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-2-attack-isometric.png"
     },
     {
       "id": "zombie-card-brute",
@@ -271,7 +343,7 @@
   ],
   "counts": {
     "portraits": 12,
-    "units": 9,
+    "units": 18,
     "zombies": 3,
     "skills": 3,
     "props": 6

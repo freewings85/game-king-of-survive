@@ -225,7 +225,7 @@ export class V03ArtSpriteRuntime extends Component {
   }
 
   private unitVariantIndex(id: string): number {
-    const match = id.match(/hero-(guardian|tech|ranger)-(\d)-isometric/);
+    const match = id.match(/hero-(guardian|tech|ranger)-(\d)(?:-attack)?-isometric/);
     if (!match) return 0;
     const classOffset: Record<string, number> = {
       guardian: 0,

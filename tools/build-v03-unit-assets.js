@@ -26,7 +26,7 @@ const classes = {
   }
 };
 
-async function drawUnit(ctx, spec, skin, skinIndex, portraitDataUrl) {
+async function drawUnit(ctx, spec, skin, skinIndex, portraitDataUrl, frame) {
   const w = 449;
   const h = 620;
   ctx.clearRect(0, 0, w, h);
@@ -55,8 +55,9 @@ async function drawUnit(ctx, spec, skin, skinIndex, portraitDataUrl) {
   const portraitScale = spec.gear === 'shield' ? 0.70 : 0.73;
   const drawW = portrait.width * portraitScale;
   const drawH = portrait.height * portraitScale;
-  const drawX = (w - drawW) / 2 + (spec.gear === 'shield' ? -18 : spec.gear === 'rifle' ? 12 : 0);
-  const drawY = 30 + skinIndex * 2;
+  const attackOffset = frame === 'attack' ? 12 : 0;
+  const drawX = (w - drawW) / 2 + (spec.gear === 'shield' ? -18 : spec.gear === 'rifle' ? 12 : 0) + attackOffset;
+  const drawY = 30 + skinIndex * 2 - (frame === 'attack' ? 6 : 0);
   ctx.shadowColor = `${spec.accent}55`;
   ctx.shadowBlur = 18;
   ctx.drawImage(portrait, drawX, drawY, drawW, drawH);
@@ -67,19 +68,19 @@ async function drawUnit(ctx, spec, skin, skinIndex, portraitDataUrl) {
   ctx.strokeStyle = 'rgba(7,9,9,0.84)';
   ctx.lineWidth = 20;
   ctx.beginPath();
-  ctx.moveTo(w * 0.37, h * 0.62);
+  ctx.moveTo(w * 0.37 + attackOffset * 0.15, h * 0.62);
   ctx.lineTo(w * 0.30, h * 0.82);
-  ctx.moveTo(w * 0.56, h * 0.62);
-  ctx.lineTo(w * 0.68, h * 0.82);
+  ctx.moveTo(w * 0.56 + attackOffset * 0.18, h * 0.62);
+  ctx.lineTo(w * 0.68 + attackOffset * 0.08, h * 0.82);
   ctx.stroke();
 
   ctx.strokeStyle = `${spec.accent}dd`;
   ctx.lineWidth = 8;
   ctx.beginPath();
-  ctx.moveTo(w * 0.37, h * 0.62);
+  ctx.moveTo(w * 0.37 + attackOffset * 0.15, h * 0.62);
   ctx.lineTo(w * 0.31, h * 0.79);
-  ctx.moveTo(w * 0.56, h * 0.62);
-  ctx.lineTo(w * 0.66, h * 0.79);
+  ctx.moveTo(w * 0.56 + attackOffset * 0.18, h * 0.62);
+  ctx.lineTo(w * 0.66 + attackOffset * 0.08, h * 0.79);
   ctx.stroke();
 
   if (spec.gear === 'shield') {
@@ -109,15 +110,34 @@ async function drawUnit(ctx, spec, skin, skinIndex, portraitDataUrl) {
     ctx.strokeStyle = '#0b0d0d';
     ctx.lineWidth = 15;
     ctx.beginPath();
-    ctx.moveTo(w * 0.52, h * 0.50);
-    ctx.lineTo(w * 0.94, h * 0.38);
+    ctx.moveTo(w * 0.52 + attackOffset * 0.12, h * 0.50);
+    ctx.lineTo(w * 0.94 + attackOffset * 0.10, h * 0.38);
     ctx.stroke();
     ctx.strokeStyle = spec.accent;
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(w * 0.55, h * 0.51);
-    ctx.lineTo(w * 0.91, h * 0.40);
+    ctx.moveTo(w * 0.55 + attackOffset * 0.12, h * 0.51);
+    ctx.lineTo(w * 0.91 + attackOffset * 0.10, h * 0.40);
     ctx.stroke();
+  }
+
+  if (frame === 'attack') {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.strokeStyle = `${spec.accent}dd`;
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.55, h * 0.53);
+    ctx.lineTo(w * 0.94, h * 0.43);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,239,166,0.90)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.73, h * 0.47);
+    ctx.lineTo(w * 0.98, h * 0.41);
+    ctx.stroke();
+    ctx.restore();
   }
 
   ctx.strokeStyle = 'rgba(3,5,4,0.54)';
@@ -142,16 +162,25 @@ async function main() {
       const dataUrl = await page.evaluate(async ({ spec, skin, skinIndex, drawUnitSource, portraitDataUrl }) => {
         const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
-        const renderUnit = new Function('ctx', 'spec', 'skin', 'skinIndex', 'portraitDataUrl', `return (${drawUnitSource})(ctx, spec, skin, skinIndex, portraitDataUrl);`);
-        await renderUnit(ctx, spec, skin, skinIndex, portraitDataUrl);
+        const renderUnit = new Function('ctx', 'spec', 'skin', 'skinIndex', 'portraitDataUrl', 'frame', `return (${drawUnitSource})(ctx, spec, skin, skinIndex, portraitDataUrl, frame);`);
+        await renderUnit(ctx, spec, skin, skinIndex, portraitDataUrl, 'idle');
         return canvas.toDataURL('image/png');
       }, { spec, skin: spec.skins[skinIndex], skinIndex, drawUnitSource, portraitDataUrl });
       const buffer = Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
       fs.writeFileSync(path.join(outDir, `hero-${classId}-${skinIndex}-isometric.png`), buffer);
+      const attackDataUrl = await page.evaluate(async ({ spec, skin, skinIndex, drawUnitSource, portraitDataUrl }) => {
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const renderUnit = new Function('ctx', 'spec', 'skin', 'skinIndex', 'portraitDataUrl', 'frame', `return (${drawUnitSource})(ctx, spec, skin, skinIndex, portraitDataUrl, frame);`);
+        await renderUnit(ctx, spec, skin, skinIndex, portraitDataUrl, 'attack');
+        return canvas.toDataURL('image/png');
+      }, { spec, skin: spec.skins[skinIndex], skinIndex, drawUnitSource, portraitDataUrl });
+      const attackBuffer = Buffer.from(attackDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64');
+      fs.writeFileSync(path.join(outDir, `hero-${classId}-${skinIndex}-attack-isometric.png`), attackBuffer);
     }
   }
   await browser.close();
-  console.log('Built 9 V03 isometric unit assets.');
+  console.log('Built 18 V03 isometric unit animation assets.');
 }
 
 main().catch((error) => {

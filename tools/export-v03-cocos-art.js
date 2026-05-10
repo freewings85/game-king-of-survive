@@ -23,14 +23,23 @@ const groups = {
   ],
   units: [
     'hero-guardian-0-isometric.png',
+    'hero-guardian-0-attack-isometric.png',
     'hero-guardian-1-isometric.png',
+    'hero-guardian-1-attack-isometric.png',
     'hero-guardian-2-isometric.png',
+    'hero-guardian-2-attack-isometric.png',
     'hero-tech-0-isometric.png',
+    'hero-tech-0-attack-isometric.png',
     'hero-tech-1-isometric.png',
+    'hero-tech-1-attack-isometric.png',
     'hero-tech-2-isometric.png',
+    'hero-tech-2-attack-isometric.png',
     'hero-ranger-0-isometric.png',
+    'hero-ranger-0-attack-isometric.png',
     'hero-ranger-1-isometric.png',
-    'hero-ranger-2-isometric.png'
+    'hero-ranger-1-attack-isometric.png',
+    'hero-ranger-2-isometric.png',
+    'hero-ranger-2-attack-isometric.png'
   ],
   zombies: [
     'zombie-card-brute.png',
