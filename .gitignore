@@ -26,6 +26,7 @@ qa/rounds/*/screenshots/
 !demo/assets/**/*.jpg
 !cocos-v03-demo/assets/resources/art/**/*.png
 
+
 # Replay recordings
 server/replays/
 
@@ -34,7 +35,7 @@ critic_evaluation.js
 r2_evaluation.js
 run_6_games.js
 test_three_classes.js
-scripts/
+/scripts/
 
 # Node
 node_modules/
