@@ -29,9 +29,10 @@ const STAIN: RGBA = { r: 24, g: 18, b: 14, a: 180 };
 const RUST: RGBA = { r: 80, g: 38, b: 22, a: 130 };
 const BURN: RGBA = { r: 14, g: 10, b: 8, a: 200 };
 
-export function attachWastelandTerrain(parent: Node, viewportWidth: number, viewportHeight: number): Node {
-    const tileSize = 512;
-    const tile = generateTile(tileSize, Date.now() & 0xffff);
+export function attachWastelandTerrain(parent: Node, viewportWidth: number, viewportHeight: number, painterlyTile?: SpriteFrame | null): Node {
+    // Painterly tile from brick #7 (256px tileable). Falls back to programmatic 512 tile.
+    const tile = painterlyTile ?? generateTile(512, Date.now() & 0xffff);
+    const tileSize = painterlyTile ? 256 : 512;
 
     const root = new Node('WastelandTerrain');
     parent.addChild(root);

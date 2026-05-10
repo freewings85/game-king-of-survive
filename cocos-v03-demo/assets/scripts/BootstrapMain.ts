@@ -69,8 +69,9 @@ export class BootstrapMain extends Component {
             const config = await loadSceneConfig();
             console.log('[BootstrapMain] config loaded', { canvas: config.canvas, zombies: config.zombies?.length, props: config.props?.length });
             this.applyClearColor(config);
-            attachWastelandTerrain(this.worldLayer, config.canvas.width, config.canvas.height);
-            console.log('[BootstrapMain] terrain attached');
+            const painterlyTile = await preloadTerrainTile();
+            attachWastelandTerrain(this.worldLayer, config.canvas.width, config.canvas.height, painterlyTile);
+            console.log('[BootstrapMain] terrain attached', painterlyTile ? '(painterly)' : '(programmatic)');
 
             const spawner = this.node.addComponent(ActorSpawner);
             spawner.worldLayer = this.worldLayer;
@@ -194,6 +195,16 @@ interface HudIconSet {
     skillShield: SpriteFrame | null;
     portraitFrame: SpriteFrame | null;
     minimapFrame: SpriteFrame | null;
+}
+
+async function preloadTerrainTile(): Promise<SpriteFrame | null> {
+    return new Promise<SpriteFrame | null>((resolve) => {
+        resources.load('art/v03/terrain/asphalt-tile/spriteFrame', SpriteFrame, (err, sf) => {
+            if (err) { console.warn('[terrain] painterly tile miss, fallback to programmatic'); resolve(null); return; }
+            (sf as any).packable = false;
+            resolve(sf);
+        });
+    });
 }
 
 async function preloadHudIcons(): Promise<HudIconSet> {
