@@ -49,6 +49,8 @@ assert(manifest.creatorRequired === '3.8.x', 'Scene assembly manifest must targe
 assert(manifest.targetPlatform === 'WeChat Mini Game', 'Scene assembly manifest must target WeChat Mini Game');
 assert(manifest.reference === 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png', 'Scene assembly manifest must cite the V03 target image');
 assert(manifest.reviewSource === 'frontend/engine-demo/index.html', 'Scene assembly manifest must cite the WebGL review source');
+assert(manifest.engineProofSource === 'frontend/engine-proof/index.html', 'Scene assembly manifest must cite the engine proof source');
+assert(manifest.engineProofManifest === 'settings/v03-engine-proof-manifest.json', 'Scene assembly manifest must cite the engine proof manifest');
 assert(manifest.orientation === checklist.orientation, 'Scene assembly manifest orientation must match checklist');
 assert(manifest.viewports.portrait === '390x844', 'Scene assembly manifest must include portrait phone viewport');
 assert(manifest.viewports.landscapeReview === '844x390', 'Scene assembly manifest must include landscape review viewport');

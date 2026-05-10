@@ -21,6 +21,12 @@ http://localhost:8081/frontend/engine-proof/index.html
 
 This proof intentionally uses Three.js only as a fast browser stand-in for the Cocos render target. The route it validates is `orthographic-2.5d-sprite-billboard-plus-prop-depth`: authored sprites/billboards for characters and FX, simple 3D roots for prop depth and shadows, painterly ground splats, and layered storm boundaries.
 
+The Cocos-side manifest for this route is:
+
+```text
+cocos-v03-demo/settings/v03-engine-proof-manifest.json
+```
+
 Official references:
 
 - Cocos WeChat Mini Game publishing: https://docs.cocos.com/creator/3.8/manual/en/editor/publish/publish-wechatgame.html

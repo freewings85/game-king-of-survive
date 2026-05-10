@@ -2122,3 +2122,44 @@ Next iteration direction:
 1. Create the first real Cocos Creator scene/prefab slice that mirrors the proof's layer contract.
 2. Verify package/runtime constraints early: WeChat preview, main package budget, 390x844 HUD, and 30 FPS target.
 3. Keep `frontend/engine-demo` and `frontend/engine-proof` as visual regression references while the production Cocos slice catches up.
+
+## 2026-05-10 Cocos engine proof manifest sync
+
+Related work:
+
+- Follow-up to `9bad9be`
+- `cocos-v03-demo/settings/v03-engine-proof-manifest.json`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `e2e/v03-cocos-engine-proof-verify.js`
+- `frontend/docs/mini-game-engine-decision.md`
+- `frontend/docs/v03-first-playable-presentation-audit.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The visual target is now expressed as a Cocos-side production contract, not only as a browser proof. This reduces the risk that the next implementation step drifts away from the target image while rebuilding in Cocos.
+- The actual playable Cocos scene still does not exist in this environment, so the gap to the target remains large at runtime.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added `v03-engine-proof-manifest.json` with seven required production layers: orthographic camera, billboard character sprites, prop depth roots, painterly ground splats, safe-zone storm layers, skill FX cards, and mobile combat HUD.
+- Added `e2e/v03-cocos-engine-proof-verify.js` and wired it into `npm run verify:v03`.
+- The Cocos scene manifest now cites both the gameplay reference and the engine-proof manifest.
+
+What is still far from the reference:
+
+- The manifest is still source-only; it proves intended Cocos structure but not real Creator scene rendering.
+- There is no exported WeChat Mini Game preview, no device FPS evidence, and no real Cocos prefab art yet.
+- The next quality gain depends on making the first Creator scene/prefab slice visible, not adding more paper contracts.
+
+Next iteration direction:
+
+1. Start the real Cocos scene slice by turning the proof layers into Creator nodes/prefabs or an importable scene asset plan.
+2. Keep the browser proof as a visual regression target while Cocos catches up.
+3. Run the WeChat package/runtime gate as soon as a Creator build can be produced.

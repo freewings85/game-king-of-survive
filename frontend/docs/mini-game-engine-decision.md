@@ -16,6 +16,14 @@ http://localhost:8081/frontend/engine-proof/index.html
 
 It isolates the rendering contract that the production engine must carry: orthographic 2.5D camera, bitmap/billboard hero and zombies, real prop depth roots, painterly ground splats, skill FX cards, and layered safe-zone storm art. `e2e/v03-engine-proof-verify.js` keeps this proof tied to the V03 reference image and asserts `engineRecommendation === 'cocos-creator-3.x'`.
 
+The matching Cocos-side manifest is:
+
+```text
+cocos-v03-demo/settings/v03-engine-proof-manifest.json
+```
+
+`e2e/v03-cocos-engine-proof-verify.js` checks that this manifest maps the browser proof into the production Cocos route and keeps the WeChat gate visible.
+
 ## Why Cocos Creator
 
 - It has an official WeChat Mini Game build path that generates the WeChat project output and can launch WeChat DevTools.

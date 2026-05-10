@@ -6,6 +6,8 @@
   "targetPlatform": "WeChat Mini Game",
   "reference": "candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png",
   "reviewSource": "frontend/engine-demo/index.html",
+  "engineProofSource": "frontend/engine-proof/index.html",
+  "engineProofManifest": "settings/v03-engine-proof-manifest.json",
   "orientation": "portrait",
   "viewports": {
     "portrait": "390x844",

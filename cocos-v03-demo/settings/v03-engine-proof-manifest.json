@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "v03-engine-proof-1",
+  "status": "source-manifest-only",
+  "targetEngine": "cocos-creator-3.x",
+  "creatorRequired": "3.8.x",
+  "targetPlatform": "WeChat Mini Game",
+  "reference": "candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png",
+  "browserProof": "frontend/engine-proof/index.html",
+  "browserProofScreenshot": "can_delete/v03-gate/engine-proof-cocos-route.png",
+  "productionRenderRoute": "orthographic-2.5d-sprite-billboard-plus-prop-depth",
+  "cocosScene": "V03Battle.scene",
+  "requiredComponents": [
+    "V03BattleDirector",
+    "V03MapRuntime",
+    "V03VisualRuntime",
+    "V03ResourceBridge",
+    "V03VisualContract"
+  ],
+  "proofLayers": [
+    {
+      "id": "orthographic-2.5d-camera",
+      "cocosNode": "CameraRig/MainCamera",
+      "required": ["orthographicProjection", "portraitFraming", "390x844"],
+      "browserGate": "usesOrthographicCamera"
+    },
+    {
+      "id": "billboard-character-sprites",
+      "cocosNode": "Actors/VisualActors",
+      "required": ["hero-ranger-2-isometric", "zombie-card-brute", "zombie-card-crawler", "zombie-card-hooded"],
+      "browserGate": "billboardSpriteCount >= 8"
+    },
+    {
+      "id": "prop-depth-roots",
+      "cocosNode": "World/Props",
+      "required": ["wreck-car-root", "wall-root", "crate-root", "debris-root", "contact-shadow"],
+      "browserGate": "propDepthLayerCount >= 4"
+    },
+    {
+      "id": "painterly-ground-splats",
+      "cocosNode": "World/GroundTiles",
+      "required": ["combat-asphalt-splat", "road-dust-splat", "rust-edge-splat", "value-patches"],
+      "browserGate": "groundSplatCount >= 5"
+    },
+    {
+      "id": "safe-zone-storm-layers",
+      "cocosNode": "FX/CardLayers",
+      "required": ["safe-zone-painterly-haze", "safe-zone-painterly-edge"],
+      "browserGate": "stormLayerCount >= 2"
+    },
+    {
+      "id": "skill-fx-cards",
+      "cocosNode": "FX/SkillBeams",
+      "required": ["skill-card-arc", "skill-card-boom", "skill-card-fan", "fan-trails", "impact-card"],
+      "browserGate": "skillFxLayerCount >= 5"
+    },
+    {
+      "id": "mobile-combat-hud",
+      "cocosNode": "UI",
+      "required": ["TopHud", "MoveStick", "SkillButtons", "ClassPanel"],
+      "browserGate": "skillButtonsClear"
+    }
+  ],
+  "runtimeGate": {
+    "durationSeconds": 120,
+    "targetFps": 30,
+    "maxMainPackageMb": 4,
+    "wechatMiniGame": true,
+    "offlineConfig": true,
+    "portraitViewport": "390x844"
+  },
+  "knownGaps": [
+    "Cocos Creator scene asset has not been authored in this environment",
+    "WeChat Mini Game build has not been exported",
+    "Browser proof uses Three.js as a fast stand-in for the Cocos render route"
+  ]
+}
