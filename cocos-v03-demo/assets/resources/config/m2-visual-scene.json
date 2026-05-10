@@ -28,13 +28,13 @@
   ],
 
   "props": [
-    { "name": "WreckTank",    "key": "wreckTank",    "pos": [-50, -50],   "angleDeg": 65,  "contentSize": [130, 110], "shadow": [150, 50], "tint": [110, 90, 75, 255] },
-    { "name": "BarrelRust",   "key": "barrelRust",   "pos": [-10, -90],   "angleDeg": 0,   "contentSize": [56, 56],   "shadow": [60, 18],  "tint": [185, 100, 70, 255] },
-    { "name": "WreckGreen",   "key": "tankGreen",    "pos": [220, 220],   "angleDeg": -25, "contentSize": [110, 95],  "shadow": [125, 42], "tint": [110, 120, 90, 255] },
-    { "name": "Sandbag",      "key": "sandbag",      "pos": [-180, -240], "angleDeg": -8,  "contentSize": [70, 38],   "shadow": [80, 22],  "tint": null },
-    { "name": "SandbagBeige", "key": "sandbagBeige", "pos": [10, -230],   "angleDeg": 10,  "contentSize": [70, 38],   "shadow": [80, 22],  "tint": null },
-    { "name": "BarrelRed",    "key": "barrelRed",    "pos": [90, -40],    "angleDeg": 0,   "contentSize": [44, 44],   "shadow": [50, 18],  "tint": null },
-    { "name": "OilSplat",     "key": "oilSplat",     "pos": [-220, -310], "angleDeg": 15,  "contentSize": [80, 80],   "shadow": [0, 0],    "tint": [120, 110, 95, 180] }
+    { "name": "WreckCar",     "key": "wreckCarPainterly",    "pos": [-50, -50],   "angleDeg": 65,  "contentSize": [130, 110], "shadow": [150, 50], "tint": null },
+    { "name": "BarrelRust1",  "key": "barrelRustPainterly",  "pos": [-10, -90],   "angleDeg": 0,   "contentSize": [56, 56],   "shadow": [60, 18],  "tint": null },
+    { "name": "WreckCar2",    "key": "wreckCarPainterly",    "pos": [220, 220],   "angleDeg": -25, "contentSize": [110, 95],  "shadow": [125, 42], "tint": null },
+    { "name": "SandbagPile1", "key": "sandbagPilePainterly", "pos": [-180, -240], "angleDeg": -8,  "contentSize": [80, 40],   "shadow": [85, 24],  "tint": null },
+    { "name": "SandbagPile2", "key": "sandbagPilePainterly", "pos": [10, -230],   "angleDeg": 10,  "contentSize": [80, 40],   "shadow": [85, 24],  "tint": null },
+    { "name": "BarrelRust2",  "key": "barrelRustPainterly",  "pos": [90, -40],    "angleDeg": 0,   "contentSize": [48, 56],   "shadow": [52, 20],  "tint": null },
+    { "name": "OilSplat",     "key": "oilSplatPainterly",    "pos": [-220, -310], "angleDeg": 15,  "contentSize": [100, 60],  "shadow": [0, 0],    "tint": null }
   ],
 
   "vfx": {

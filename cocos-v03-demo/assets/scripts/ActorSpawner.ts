@@ -124,6 +124,11 @@ export class ActorSpawner extends Component {
         barrelRed:    'art/v03/props/barrel-red',
         sandbagBeige: 'art/v03/props/sandbag-beige',
         oilSplat:     'art/v03/props/oil-splat',
+        // M3-Gameplay+ painterly versions
+        wreckCarPainterly:    'art/v03/props/wreck-car-painterly',
+        barrelRustPainterly:  'art/v03/props/barrel-rust-painterly',
+        sandbagPilePainterly: 'art/v03/props/sandbag-pile-painterly',
+        oilSplatPainterly:    'art/v03/props/oil-splat-painterly',
     };
 
     async start() {

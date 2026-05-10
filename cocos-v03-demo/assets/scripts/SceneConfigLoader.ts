@@ -29,7 +29,9 @@ export interface ZombieConfig {
 
 export type PropKey =
     | 'wreckTank' | 'barrelRust' | 'sandbag'
-    | 'tankGreen' | 'barrelRed' | 'sandbagBeige' | 'oilSplat';
+    | 'tankGreen' | 'barrelRed' | 'sandbagBeige' | 'oilSplat'
+    // M3-Gameplay+: painterly versions (overhead oblique, painterly tier)
+    | 'wreckCarPainterly' | 'barrelRustPainterly' | 'sandbagPilePainterly' | 'oilSplatPainterly';
 export interface PropConfig {
     name: string;
     key: PropKey;
