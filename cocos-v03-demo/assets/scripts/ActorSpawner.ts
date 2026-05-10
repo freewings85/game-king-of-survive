@@ -33,6 +33,7 @@ interface ZombieEntity {
     deathTimer: number; // -1 = alive, >=0 = dying (counting up to fade duration)
     hpBarFill: Node | null;
     hpBarBg: Node | null;
+    currentFrame: 'idle' | 'move' | 'attack';
 }
 
 interface BulletEntity {
@@ -68,22 +69,23 @@ const ZOMBIE_PACK_PATHS: Record<ZombieBodyType, Record<ZombieConfig['frame'], st
         move:   'art/v03/zombie2/clint-move',
         attack: 'art/v03/zombie2/clint-attack',
     },
-    // M2-X+ painterly baseline: only idle exists for now,
-    // move/attack reuse idle until ZombieArtist produces those frames
+    // M3-Gameplay+ painterly baseline. Brick #6 produces *-attack; brick #6+ would
+    // produce *-walk. Until those land, resources.load fails gracefully and the
+    // frame falls back to idle in spawnZombies.
     'runner': {
         idle:   'art/v03/zombie/runner-idle',
         move:   'art/v03/zombie/runner-idle',
-        attack: 'art/v03/zombie/runner-idle',
+        attack: 'art/v03/zombie/runner-attack',
     },
     'brute': {
         idle:   'art/v03/zombie/brute-idle',
         move:   'art/v03/zombie/brute-idle',
-        attack: 'art/v03/zombie/brute-idle',
+        attack: 'art/v03/zombie/brute-attack',
     },
     'crawler': {
         idle:   'art/v03/zombie/crawler-idle',
         move:   'art/v03/zombie/crawler-idle',
-        attack: 'art/v03/zombie/crawler-idle',
+        attack: 'art/v03/zombie/crawler-attack',
     },
 };
 
@@ -224,14 +226,15 @@ export class ActorSpawner extends Component {
         await Promise.all(
             paths.map(
                 ([p, assign]) =>
-                    new Promise<void>((resolve, reject) => {
+                    new Promise<void>((resolve) => {
                         resources.load(p, SpriteFrame, (err, sf) => {
                             if (err) {
-                                console.error('[ActorSpawner] load fail', p, err);
-                                reject(err);
+                                // Tolerate missing optional frames (e.g. brick #6 attack
+                                // before delivery). spawnZombies falls back to idle.
+                                console.warn('[ActorSpawner] load skip:', p);
+                                resolve();
                                 return;
                             }
-                            // M2-X: opt out of dynamic atlas per-frame (avoid texSubImage2D fail)
                             (sf as any).packable = false;
                             assign(sf);
                             resolve();
@@ -305,7 +308,11 @@ export class ActorSpawner extends Component {
             node.layer = Layers.Enum.UI_2D;
             const sprite = node.addComponent(Sprite);
             const bodyType: ZombieBodyType = z.bodyType ?? 'riley';
-            sprite.spriteFrame = this.zombieFrames.get(`${bodyType}:${z.frame}`) ?? null;
+            // Use requested frame if available, else fall back to idle
+            sprite.spriteFrame =
+                this.zombieFrames.get(`${bodyType}:${z.frame}`)
+                ?? this.zombieFrames.get(`${bodyType}:idle`)
+                ?? null;
             const baseColor = new Color(z.tint[0], z.tint[1], z.tint[2], z.tint[3]);
             sprite.color = baseColor;
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
@@ -343,6 +350,7 @@ export class ActorSpawner extends Component {
                 deathTimer: -1,
                 hpBarFill,
                 hpBarBg,
+                currentFrame: z.frame,
             });
         }
     }
@@ -884,6 +892,14 @@ export class ActorSpawner extends Component {
             const zp = z.node.position;
             const dx = hp.x - zp.x, dy = hp.y - zp.y;
             const len = Math.hypot(dx, dy);
+            // Frame switch: close to hero -> attack pose, else move/idle
+            const wantFrame: 'idle' | 'move' | 'attack' = len < 50 ? 'attack' : 'move';
+            if (wantFrame !== z.currentFrame) {
+                const nextSf = this.zombieFrames.get(`${z.bodyType}:${wantFrame}`)
+                    ?? this.zombieFrames.get(`${z.bodyType}:idle`);
+                if (nextSf) z.sprite.spriteFrame = nextSf;
+                z.currentFrame = wantFrame;
+            }
             if (len < 1) continue;
             const nx = dx / len, ny = dy / len;
             z.node.setPosition(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, 0);
