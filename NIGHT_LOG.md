@@ -4,6 +4,12 @@
 > Cron `*/5 * * * *` runs `/loop` style monitor; each tick I make smallest meaningful
 > commit and report status. This file = morning summary so Leo can scan in 60s.
 
+## TL;DR
+
+- ✅ **Visual side closed**: 21 painterly assets PM-gated and wired (hero idle/walk/shoot, 3 zombie idle+attack, 3 skill icons, 4 props, portrait/minimap frame, 3 terrain tiles). Bricks #5 / #6 / #7 all delivered by ZombieArtist + integrated by me.
+- ⏳ **Java server side ready, not yet started**: NetClient + ActorSpawner.enableNetwork() landed earlier; awaiting Leo to double-click `server/run-local.bat` (Windows-side; can't run from WSL).
+- 🟢 ZombieArtist is on standby. Nothing for Leo to do in the bot chat unless you want more art.
+
 ## Commits this session (newest first)
 
 | Commit | Track | What |
