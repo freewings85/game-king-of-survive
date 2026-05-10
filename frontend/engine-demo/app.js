@@ -168,6 +168,8 @@ let activePainterlyUsesUnitSpriteAsset = false;
 let activePainterlyUnitFrame = 'idle';
 let unitAnimationFrameSwitchCount = 0;
 let zombiePainterlyUsesSpriteAsset = false;
+let zombieHitFrameUsesSpriteAsset = false;
+let zombieHitFrameSwitchCount = 0;
 let skillPainterlyUsesSpriteAsset = false;
 let propCoverUsesSpriteAsset = false;
 let playerPainterlyCard = null;
@@ -204,6 +206,11 @@ const zombieCardAssets = {
   0: '/frontend/engine-demo/assets/zombies/zombie-card-brute.png',
   1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler.png',
   2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded.png'
+};
+const zombieHitCardAssets = {
+  0: '/frontend/engine-demo/assets/zombies/zombie-card-brute-hit.png',
+  1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler-hit.png',
+  2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded-hit.png'
 };
 const skillCardAssets = {
   arc: '/frontend/engine-demo/assets/skills/skill-card-arc.png',
@@ -595,16 +602,17 @@ function getClassUnitTexture(classId, skinIndex = 0, frame = 'idle') {
   return classUnitTextureCache.get(key);
 }
 
-function getZombieSpriteTexture(variant) {
-  const asset = zombieCardAssets[variant];
+function getZombieSpriteTexture(variant, frame = 'idle') {
+  const asset = frame === 'hit' ? zombieHitCardAssets[variant] : zombieCardAssets[variant];
   if (!asset) return null;
-  if (!zombieTextureCache.has(variant)) {
+  const cacheKey = `${variant}:${frame}`;
+  if (!zombieTextureCache.has(cacheKey)) {
     const texture = new THREE.TextureLoader().load(asset);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.needsUpdate = true;
-    zombieTextureCache.set(variant, texture);
+    zombieTextureCache.set(cacheKey, texture);
   }
-  return zombieTextureCache.get(variant);
+  return zombieTextureCache.get(cacheKey);
 }
 
 function getSkillSpriteTexture(kind) {
@@ -803,6 +811,7 @@ const painterlyMaterials = {
   arc: makePainterlyMaterial(getSkillSpriteTexture('arc') || makeFxCardTexture('arc'), 0.94)
 };
 skillPainterlyUsesSpriteAsset = ['arc', 'boom', 'fan'].every((kind) => !!getSkillSpriteTexture(kind));
+zombieHitFrameUsesSpriteAsset = [0, 1, 2].every((variant) => !!getZombieSpriteTexture(variant, 'hit'));
 propCoverUsesSpriteAsset = ['wreck', 'wall', 'crate', 'barrel', 'tires', 'debris'].every((kind) => !!getPropCoverTexture(kind));
 
 function addPainterlyCard(root, material, width, height, x, y, z, kind) {
@@ -1599,7 +1608,9 @@ function makeZombie(x, z, scale = 1, fast = false, variant = 0) {
   const root = new THREE.Group();
   addContactShadow(root, 0.88 * scale, 0.58 * scale, 0.25);
   const zombieCardMaterial = variant === 1 ? painterlyMaterials.zombieCrawler : variant === 2 ? painterlyMaterials.zombieHooded : painterlyMaterials.zombieBrute;
-  addPainterlyCard(root, zombieCardMaterial, 0.82 * scale, 1.34 * scale, 0.02 * scale, 0.78 * scale, -0.54 * scale, 'zombie');
+  const zombieCard = addPainterlyCard(root, zombieCardMaterial, 0.82 * scale, 1.34 * scale, 0.02 * scale, 0.78 * scale, -0.54 * scale, 'zombie');
+  root.userData.painterlyCard = zombieCard;
+  root.userData.painterlyFrame = 'idle';
   const legA = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   const legB = box(0.16 * scale, 0.58 * scale, 0.18 * scale, mats.road);
   legA.position.set(-0.14 * scale, 0.30 * scale, 0);
@@ -1741,7 +1752,19 @@ function resetZombie(z, x, zPos) {
   z.userData.hp = z.userData.maxHp + game.level * demoTuning.zombie.levelHpGrowth;
   z.userData.alive = true;
   z.userData.hitPulse = 0;
+  updateZombieSpriteFrame(z, 'idle');
   z.visible = true;
+}
+
+function updateZombieSpriteFrame(z, frame) {
+  if (!z.userData.painterlyCard || z.userData.painterlyFrame === frame) return;
+  const variant = z.userData.variant || 0;
+  const texture = getZombieSpriteTexture(variant, frame) || getZombieSpriteTexture(variant, 'idle');
+  if (!texture) return;
+  z.userData.painterlyCard.material.map = texture;
+  z.userData.painterlyCard.material.needsUpdate = true;
+  z.userData.painterlyFrame = frame;
+  zombieHitFrameSwitchCount += 1;
 }
 
 function setCharacterGear(root, id) {
@@ -2425,6 +2448,7 @@ function animate(now) {
     z.position.z += Math.cos(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
     z.position.y = Math.abs(Math.sin(t * (z.userData.fast ? 9 : 4) + z.userData.phase)) * 0.045;
     z.userData.hitPulse = Math.max(0, (z.userData.hitPulse || 0) - dt);
+    updateZombieSpriteFrame(z, z.userData.hitPulse > 0 ? 'hit' : 'idle');
     const hitScale = z.userData.hitPulse > 0 ? 0.18 * (z.userData.hitPulse / 0.46) : 0;
     z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025 + hitScale);
     if (dist < 0.75 && game.hitTimer <= 0) {
@@ -2661,6 +2685,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.heroPainterlyCardCount = heroPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyCardCount = zombiePainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyUsesSpriteAsset = zombiePainterlyUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.zombieHitFrameUsesSpriteAsset = zombieHitFrameUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.zombieHitFrameSwitchCount = zombieHitFrameSwitchCount;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyUsesSpriteAsset = skillPainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;

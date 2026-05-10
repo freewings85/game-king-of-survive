@@ -253,6 +253,14 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute.png"
     },
     {
+      "id": "zombie-card-brute-hit",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-brute-hit.png",
+      "resourcePath": "art/v03/zombies/zombie-card-brute-hit",
+      "spriteFramePath": "art/v03/zombies/zombie-card-brute-hit/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute-hit.png"
+    },
+    {
       "id": "zombie-card-crawler",
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler.png",
@@ -261,12 +269,28 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler.png"
     },
     {
+      "id": "zombie-card-crawler-hit",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler-hit.png",
+      "resourcePath": "art/v03/zombies/zombie-card-crawler-hit",
+      "spriteFramePath": "art/v03/zombies/zombie-card-crawler-hit/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler-hit.png"
+    },
+    {
       "id": "zombie-card-hooded",
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded.png",
       "resourcePath": "art/v03/zombies/zombie-card-hooded",
       "spriteFramePath": "art/v03/zombies/zombie-card-hooded/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded.png"
+    },
+    {
+      "id": "zombie-card-hooded-hit",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded-hit.png",
+      "resourcePath": "art/v03/zombies/zombie-card-hooded-hit",
+      "spriteFramePath": "art/v03/zombies/zombie-card-hooded-hit/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded-hit.png"
     },
     {
       "id": "skill-card-arc",
@@ -344,7 +368,7 @@
   "counts": {
     "portraits": 12,
     "units": 18,
-    "zombies": 3,
+    "zombies": 6,
     "skills": 3,
     "props": 6
   }

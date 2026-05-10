@@ -133,8 +133,11 @@ export const V03_REQUIRED_HERO_UNIT_SPRITES = [
 
 export const V03_REQUIRED_ZOMBIE_CARD_SPRITES = [
   'zombie-card-brute',
+  'zombie-card-brute-hit',
   'zombie-card-crawler',
-  'zombie-card-hooded'
+  'zombie-card-crawler-hit',
+  'zombie-card-hooded',
+  'zombie-card-hooded-hit'
 ] as const;
 
 export const V03_REQUIRED_SKILL_CARD_SPRITES = [

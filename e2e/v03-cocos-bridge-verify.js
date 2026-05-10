@@ -89,13 +89,13 @@ assert(cocosMap.rivalPoints.length >= 2, 'Cocos map needs two rival points');
 assert(cocosMap.qualityChecks.every((check) => check.ok), 'Cocos map quality gate failed');
 assert(cocosArt.schemaVersion === 'v03-art-assets-1', 'Cocos art asset schema mismatch');
 assert(cocosArt.reference === 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png', 'Cocos art assets must cite target reference');
-assert(cocosArt.assets.length >= 42, 'Cocos art bridge needs imported V03 PNG assets');
+assert(cocosArt.assets.length >= 45, 'Cocos art bridge needs imported V03 PNG assets');
 assert(cocosArt.counts.portraits >= 12, 'Cocos art bridge needs class portrait assets');
 assert(cocosArt.counts.units >= 18, 'Cocos art bridge needs idle and attack class/skin unit sprite assets');
-assert(cocosArt.counts.zombies >= 3, 'Cocos art bridge needs zombie card assets');
+assert(cocosArt.counts.zombies >= 6, 'Cocos art bridge needs idle and hit zombie card assets');
 assert(cocosArt.counts.skills >= 3, 'Cocos art bridge needs skill card assets');
 assert(cocosArt.counts.props >= 6, 'Cocos art bridge needs prop cover assets');
-['hero-guardian-0-isometric', 'hero-guardian-0-attack-isometric', 'hero-guardian-1-isometric', 'hero-guardian-1-attack-isometric', 'hero-guardian-2-isometric', 'hero-guardian-2-attack-isometric', 'hero-tech-0-isometric', 'hero-tech-0-attack-isometric', 'hero-tech-1-isometric', 'hero-tech-1-attack-isometric', 'hero-tech-2-isometric', 'hero-tech-2-attack-isometric', 'hero-ranger-0-isometric', 'hero-ranger-0-attack-isometric', 'hero-ranger-1-isometric', 'hero-ranger-1-attack-isometric', 'hero-ranger-2-isometric', 'hero-ranger-2-attack-isometric', 'zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded', 'skill-card-arc', 'skill-card-boom', 'skill-card-fan', 'prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((id) => {
+['hero-guardian-0-isometric', 'hero-guardian-0-attack-isometric', 'hero-guardian-1-isometric', 'hero-guardian-1-attack-isometric', 'hero-guardian-2-isometric', 'hero-guardian-2-attack-isometric', 'hero-tech-0-isometric', 'hero-tech-0-attack-isometric', 'hero-tech-1-isometric', 'hero-tech-1-attack-isometric', 'hero-tech-2-isometric', 'hero-tech-2-attack-isometric', 'hero-ranger-0-isometric', 'hero-ranger-0-attack-isometric', 'hero-ranger-1-isometric', 'hero-ranger-1-attack-isometric', 'hero-ranger-2-isometric', 'hero-ranger-2-attack-isometric', 'zombie-card-brute', 'zombie-card-brute-hit', 'zombie-card-crawler', 'zombie-card-crawler-hit', 'zombie-card-hooded', 'zombie-card-hooded-hit', 'skill-card-arc', 'skill-card-boom', 'skill-card-fan', 'prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((id) => {
   const asset = cocosArt.assets.find((item) => item.id === id);
   assert(asset, `Cocos art manifest must include ${id}`);
   assert(asset.resourcePath.startsWith(`art/v03/${asset.group}/`), `Cocos art manifest resource path must be under art/v03 for ${id}`);
@@ -290,7 +290,7 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
   assert(visualContractSource.includes(sprite), `Visual contract must include hero unit sprite ${sprite}`);
   assert(visualContractDoc.includes(sprite), `Visual contract doc must include hero unit sprite ${sprite}`);
 });
-['zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded'].forEach((sprite) => {
+['zombie-card-brute', 'zombie-card-brute-hit', 'zombie-card-crawler', 'zombie-card-crawler-hit', 'zombie-card-hooded', 'zombie-card-hooded-hit'].forEach((sprite) => {
   assert(visualContractSource.includes(sprite), `Visual contract must include zombie card sprite ${sprite}`);
   assert(visualContractDoc.includes(sprite), `Visual contract doc must include zombie card sprite ${sprite}`);
 });

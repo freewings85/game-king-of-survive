@@ -212,8 +212,11 @@ Required in-match unit sprites:
 Required zombie card sprites:
 
 - `zombie-card-brute`
+- `zombie-card-brute-hit`
 - `zombie-card-crawler`
+- `zombie-card-crawler-hit`
 - `zombie-card-hooded`
+- `zombie-card-hooded-hit`
 
 Required skill card sprites:
 

@@ -2546,3 +2546,45 @@ Next iteration direction:
 1. Add zombie walk/hit/death frame variants and gate that they animate in the phone battle screenshot.
 2. Replace the portrait-backed hero unit frames with full-body sheets once the Cocos scene path can consume them cleanly.
 3. Tune firing pivots so bullets, muzzle cards, and the attack frame align more precisely at phone scale.
+
+## 2026-05-10 Zombie hit frame pass
+
+Related work:
+
+- Follow-up to `03408de`
+- `tools/build-v03-zombie-animation-assets.js`
+- `frontend/engine-demo/app.js`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute-hit.png`
+- `cocos-v03-demo/assets/resources/config/v03-art-assets.json`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute-hit.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-crawler-hit.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-hooded-hit.png`
+
+Current visual distance:
+
+- Zombies now have a real hit-frame asset family and swap into the hit frame during combat damage, so enemy feedback is no longer only scale pulse plus impact particles.
+- This moves the phone battle closer to the target image's visible impact feedback, but zombies still lack walk and death frame families.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added hit-frame zombie card sprites for brute, crawler, and hooded variants.
+- Runtime now tracks `zombieHitFrameUsesSpriteAsset` and `zombieHitFrameSwitchCount >= 4`, proving hit frames are exercised during verification.
+- Cocos art export and visual contract now include idle and hit zombie card variants.
+
+What is still far from the reference:
+
+- Hit frames are still derived overlays, not fully authored reaction poses.
+- Zombie walk cycles and death/dissolve frames are still missing.
+- The reference's threat direction comes from pose language and clustering; this pass only improves impact readability.
+
+Next iteration direction:
+
+1. Add walk-frame zombie variants and make movement swap frames while zombies close on the player.
+2. Add death or dissolve frames that play before XP drops.
+3. Start tuning enemy scale/spacing against the reference phone combat screenshot so the crowd reads less pasted-on.
