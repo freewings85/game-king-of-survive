@@ -55,6 +55,12 @@ export const V03_REQUIRED_PROP_COVER_SPRITES = [
   'prop-cover-debris'
 ] as const;
 
+export const V03_REQUIRED_GROUND_WASH_LAYERS = [
+  'ground-wash-combat-asphalt',
+  'ground-wash-road-dust',
+  'ground-wash-rust-edge'
+] as const;
+
 export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [
   'stage-warm-focus',
   'stage-cool-depth',

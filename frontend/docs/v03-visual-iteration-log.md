@@ -2000,3 +2000,43 @@ Next iteration direction:
 1. Improve ground/tile integration so props sit in a painterly wasteland surface rather than on a visibly modular grid.
 2. Add alternate wall/crate cover variants if repetition becomes too obvious in phone screenshots.
 3. Start a Cocos Creator asset import plan once the WebGL reference prop set stabilizes.
+
+## 2026-05-10 Painterly ground integration pass
+
+Related work:
+
+- Follow-up to `5a4efea`
+- `frontend/engine-demo/app.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The ground is closer to the reference because the phone shot now has large painterly wash layers over the standard tile contract, reducing the obvious square-grid look.
+- The map contract is still intact, but the player-facing scene reads more like a single wasteland surface with dust, asphalt, rust, cracks, and broad value patches.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added three large ground wash layers: `ground-wash-combat-asphalt`, `ground-wash-road-dust`, and `ground-wash-rust-edge`.
+- Tile planes now overlap slightly so the standard map is still present but seams are less prominent.
+- Runtime gates now require `groundWashLayerCount >= 3` and `groundTileBlendCount >= 572`.
+- Cocos visual contract, scene manifest, and first-playable checklist now include `GroundWashCombatAsphalt`, `GroundWashRoadDust`, and `GroundWashRustEdge` prefab requirements.
+
+What is still far from the reference:
+
+- The ground wash is procedural canvas art, not a final authored wasteland tile/splat map.
+- Some remaining tile geometry still reads modular near the bottom edge and under the UI.
+- Cocos still has contract placeholders for ground wash prefabs rather than imported Creator assets.
+
+Next iteration direction:
+
+1. Add a stronger authored safe-zone/storm ground treatment so the purple ring reads like part of the scene rather than a geometric overlay.
+2. Continue reducing visible tile repetition near camera edges without losing editor/map contract readability.
+3. Prepare a Cocos asset import checklist for prop covers and ground wash sprites once the WebGL reference stabilizes.

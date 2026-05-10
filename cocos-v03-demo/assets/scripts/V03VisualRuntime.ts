@@ -12,6 +12,7 @@ import type { V03ClassId, V03SkillId } from './V03Config';
 import {
   V03_REQUIRED_FX_LAYERS,
   V03_REQUIRED_GLOBAL_LIGHT_LAYERS,
+  V03_REQUIRED_GROUND_WASH_LAYERS,
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_HERO_SKIN_SPRITES,
   V03_REQUIRED_MATERIAL_BLEND_LAYERS,
@@ -39,6 +40,7 @@ export interface V03VisualRuntimeStats {
   propShapeBlocks: number;
   propBreakShapes: number;
   propCoverSprites: number;
+  groundWashLayers: number;
   globalLightLayers: number;
   objectRimLayers: number;
   materialBlendLayers: number;
@@ -66,6 +68,7 @@ export class V03VisualRuntime extends Component {
     propShapeBlocks: 0,
     propBreakShapes: 0,
     propCoverSprites: 0,
+    groundWashLayers: 0,
     globalLightLayers: 0,
     objectRimLayers: 0,
     materialBlendLayers: 0,
@@ -89,6 +92,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropShapeBlocks();
     this.buildPropBreakShapes();
     this.buildPropCoverSprites();
+    this.buildGroundWashLayers();
     this.buildGlobalLightLayers();
     this.buildObjectRimLayers();
     this.buildMaterialBlendLayers();
@@ -116,6 +120,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propShapeBlocks = 0;
     this.stats.propBreakShapes = 0;
     this.stats.propCoverSprites = 0;
+    this.stats.groundWashLayers = 0;
     this.stats.globalLightLayers = 0;
     this.stats.objectRimLayers = 0;
     this.stats.materialBlendLayers = 0;
@@ -208,6 +213,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition((index % 3) * 0.26 - 0.26, 0.88 + Math.floor(index / 3) * 0.10, 1.78);
       this.actorRoot!.addChild(node);
       this.stats.propCoverSprites += 1;
+    });
+  }
+
+  private buildGroundWashLayers(): void {
+    V03_REQUIRED_GROUND_WASH_LAYERS.forEach((layer, index) => {
+      const color = index === 0 ? '#687052' : index === 1 ? '#141816' : '#714e2a';
+      const node = this.makeBox(`ground-wash-${layer}`, 0.52 + index * 0.08, 0.010, 0.30, color);
+      node.setPosition(index * 0.24 - 0.24, 0.026, 1.58);
+      this.actorRoot!.addChild(node);
+      this.stats.groundWashLayers += 1;
     });
   }
 

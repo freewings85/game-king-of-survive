@@ -141,6 +141,8 @@ const game = {
 let silhouettePartCount = 0;
 let zombieDetailPartCount = 0;
 let groundDetailCount = 0;
+let groundWashLayerCount = 0;
+let groundTileBlendCount = 0;
 let unitDecalCount = 0;
 let propWearCount = 0;
 let propShapeCount = 0;
@@ -255,6 +257,72 @@ function addPaintedStroke(ctx, points, color, width, alpha = 1) {
   });
   ctx.stroke();
   ctx.restore();
+}
+
+function makeGroundWashTexture(kind) {
+  return makeCanvasTexture(1024, 1024, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    const base = ctx.createRadialGradient(w * 0.50, h * 0.50, 20, w * 0.50, h * 0.50, w * 0.62);
+    if (kind === 'combat') {
+      base.addColorStop(0, 'rgba(104,112,82,0.38)');
+      base.addColorStop(0.45, 'rgba(69,78,61,0.26)');
+      base.addColorStop(1, 'rgba(0,0,0,0)');
+    } else if (kind === 'road') {
+      base.addColorStop(0, 'rgba(20,24,22,0.44)');
+      base.addColorStop(0.58, 'rgba(72,64,45,0.22)');
+      base.addColorStop(1, 'rgba(0,0,0,0)');
+    } else {
+      base.addColorStop(0, 'rgba(113,78,42,0.28)');
+      base.addColorStop(0.48, 'rgba(27,32,28,0.22)');
+      base.addColorStop(1, 'rgba(0,0,0,0)');
+    }
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = 0; i < 46; i++) {
+      const x = ((i * 137) % 997) / 997 * w;
+      const y = ((i * 251) % 991) / 991 * h;
+      const rx = w * (0.025 + (i % 5) * 0.012);
+      const ry = h * (0.010 + (i % 4) * 0.008);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(((i % 11) - 5) * 0.22);
+      ctx.fillStyle = i % 3 === 0 ? 'rgba(14,17,15,0.24)' : i % 3 === 1 ? 'rgba(135,87,45,0.20)' : 'rgba(168,153,102,0.16)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    for (let i = 0; i < 24; i++) {
+      const x = ((i * 89) % 983) / 983 * w;
+      const y = ((i * 197) % 977) / 977 * h;
+      const len = w * (0.05 + (i % 4) * 0.02);
+      addPaintedStroke(ctx, [[x, y], [x + len * 0.42, y + ((i % 5) - 2) * 9], [x + len, y + ((i % 7) - 3) * 7]], i % 2 ? 'rgba(7,9,8,0.34)' : 'rgba(201,178,118,0.18)', 2 + (i % 3), 1);
+    }
+  });
+}
+
+function addGroundWashLayer(name, x, z, sx, sz, kind, opacity, rot = 0) {
+  const mat = new THREE.MeshBasicMaterial({
+    map: makeGroundWashTexture(kind),
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    depthTest: true,
+    side: THREE.DoubleSide
+  });
+  const wash = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+  wash.name = name;
+  wash.rotation.x = -Math.PI / 2;
+  wash.rotation.z = rot;
+  wash.scale.set(sx, sz, 1);
+  wash.position.set(x, 0.033, z);
+  wash.castShadow = false;
+  wash.receiveShadow = false;
+  scene.add(wash);
+  groundWashLayerCount += 1;
+  return wash;
 }
 
 function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'tech', skinIndex = 0) {
@@ -848,6 +916,9 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(42, 42, 1, 1), mats.ground
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
+addGroundWashLayer('ground-wash-combat-asphalt', 0.2, -0.2, 8.8, 6.6, 'combat', 0.78, -0.08);
+addGroundWashLayer('ground-wash-road-dust', -1.2, 0.8, 9.4, 4.2, 'road', 0.62, -0.62);
+addGroundWashLayer('ground-wash-rust-edge', 1.1, 1.4, 7.8, 5.4, 'rust', 0.54, 0.28);
 
 const safeZoneMat = new THREE.MeshBasicMaterial({
   color: 0xb95cff,
@@ -1138,8 +1209,9 @@ function paintContractTiles(map) {
   const tileGroup = new THREE.Group();
   const tileW = 12 / map.cols;
   const tileD = 10 / map.rows;
-  const geom = new THREE.PlaneGeometry(tileW * 0.98, tileD * 0.98);
+  const geom = new THREE.PlaneGeometry(tileW * 1.05, tileD * 1.05);
   const crackGeom = new THREE.PlaneGeometry(tileW * 0.64, 0.018);
+  groundTileBlendCount += map.tiles.length;
   for (let y = 0; y < map.rows; y++) {
     for (let x = 0; x < map.cols; x++) {
       const id = map.tiles[y * map.cols + x] || 0;
@@ -2489,6 +2561,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.combatFocusActiveSkillCount = focusSkills.querySelectorAll('.active').length;
   window.__V03_ENGINE_DEMO_STATE.fxTipCount = projectileTips.filter((tip) => tip.visible).length;
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
+  window.__V03_ENGINE_DEMO_STATE.groundWashLayerCount = groundWashLayerCount;
+  window.__V03_ENGINE_DEMO_STATE.groundTileBlendCount = groundTileBlendCount;
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
   window.__V03_ENGINE_DEMO_STATE.fanTrailCount = fanTrails.filter((trail) => trail.visible).length;
   window.__V03_ENGINE_DEMO_STATE.boomRingReady = boomRing.visible || activeSkill !== 'boom';

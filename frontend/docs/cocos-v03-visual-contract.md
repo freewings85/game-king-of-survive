@@ -107,6 +107,16 @@ Required prop cover sprite families:
 
 These cover sprites preserve the current WebGL pass where wreck cars, tall walls, crates, barrels, tires, and debris receive painterly overlay cards above their functional collision roots. In Cocos they should become real sprite/prefab layers such as `PropCoverWreck`, `PropCoverWall`, `PropCoverCrate`, `PropCoverBarrel`, `PropCoverTires`, and `PropCoverDebris`, not only extra box geometry.
 
+## Ground Wash Layers
+
+Required painterly ground integration layers:
+
+- `ground-wash-combat-asphalt`
+- `ground-wash-road-dust`
+- `ground-wash-rust-edge`
+
+These layers preserve the WebGL reference's painterly ground pass that reduces visible tile seams while keeping the standard map contract intact. In Cocos they should become large translucent ground sprite/prefab layers such as `GroundWashCombatAsphalt`, `GroundWashRoadDust`, and `GroundWashRustEdge`.
+
 ## Global Light Layers
 
 Required global lighting/value layers:
@@ -195,4 +205,4 @@ FX must remain readable over the wasteland map and must not hide enemies, pickup
 
 ## Verification
 
-`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, prop cover sprites, global light layers, object rim layers, material blend layers, painterly card layers, hero skin sprites, zombie card sprites, skill card sprites, FX layers, and review screenshot names.
+`e2e/v03-cocos-bridge-verify.js` checks that the Cocos visual contract source exists and contains the required class gear, zombie variants, unit decals, prop-ground layers, prop-wear decals, prop shape blocks, prop break shapes, prop cover sprites, ground wash layers, global light layers, object rim layers, material blend layers, painterly card layers, hero skin sprites, zombie card sprites, skill card sprites, FX layers, and review screenshot names.

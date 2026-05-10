@@ -138,6 +138,7 @@ assertIncludesAll(
     'PropJaggedCap.prefab',
     'PropCoverWreck.prefab',
     'PropCoverBarrel.prefab',
+    'GroundWashCombatAsphalt.prefab',
     'StageWarmFocus.prefab',
     'ObjectWarmRim.prefab',
     'MaterialWarmBlend.prefab'
