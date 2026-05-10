@@ -375,7 +375,7 @@ function makeGlyphFrame(size: number, kind: 'bolt' | 'star' | 'flame'): SpriteFr
 
 /**
  * FX 工具贴图: 程序生成 radial alpha mask. CONTRACT §3.4 允许 (非角色美术).
- * Export 给 ActorSpawner 共享 (contact shadow / pickup orb / muzzle cone).
+ * Export 给 ActorSpawner 共享 (contact shadow / muzzle cone / fan bullets / sparks / lightning).
  */
 export function makeRadialGradientSpriteFrame(
     size: number,
