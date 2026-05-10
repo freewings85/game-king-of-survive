@@ -12,7 +12,7 @@ export interface HeroConfig {
     shadow: Vec2;
 }
 
-export type ZombieBodyType = 'riley' | 'clint';
+export type ZombieBodyType = 'riley' | 'clint' | 'runner' | 'brute' | 'crawler';
 
 export interface ZombieConfig {
     name: string;

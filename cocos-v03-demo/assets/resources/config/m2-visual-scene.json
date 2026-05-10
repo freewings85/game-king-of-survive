@@ -17,14 +17,14 @@
   },
 
   "zombies": [
-    { "name": "lead",     "pos": [60, -150],   "scale": 1.20, "tint": [225, 200, 195, 255], "frame": "attack", "bodyType": "clint", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "rusher",   "pos": [10, -180],   "scale": 1.15, "tint": [225, 160, 145, 255], "frame": "attack", "bodyType": "riley", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "sneak",    "pos": [130, -100],  "scale": 1.05, "tint": [215, 205, 200, 255], "frame": "move",   "bodyType": "clint", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "flank",    "pos": [200, -50],   "scale": 1.00, "tint": [200, 195, 170, 255], "frame": "move",   "bodyType": "riley", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "backrush", "pos": [-30, -120],  "scale": 1.05, "tint": [210, 195, 175, 255], "frame": "attack", "bodyType": "riley", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "pack",     "pos": [180, 50],    "scale": 0.95, "tint": [195, 200, 175, 255], "frame": "move",   "bodyType": "riley", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "far",      "pos": [220, 200],   "scale": 0.78, "tint": [200, 195, 195, 255], "frame": "idle",   "bodyType": "clint", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "distant",  "pos": [-180, 80],   "scale": 0.78, "tint": [180, 190, 180, 255], "frame": "idle",   "bodyType": "riley", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true }
+    { "name": "lead",     "pos": [60, -150],   "scale": 1.20, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "rusher",   "pos": [10, -180],   "scale": 1.15, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "sneak",    "pos": [130, -100],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "crawler", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "flank",    "pos": [200, -50],   "scale": 1.00, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "backrush", "pos": [-30, -120],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "pack",     "pos": [180, 50],    "scale": 0.95, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "far",      "pos": [220, 200],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "crawler", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
+    { "name": "distant",  "pos": [-180, 80],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true }
   ],
 
   "props": [
