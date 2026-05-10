@@ -136,6 +136,12 @@ export class ActorSpawner extends Component {
     private serverEnemies = new Map<string, ZombieEntity>();
     private serverPlayerId: string | null = null;
 
+    // === minimap dynamic dots (A轨) ===
+    private minimapContainer: Node | null = null;
+    private minimapRadius = 0;
+    private minimapHeroDot: Node | null = null;
+    private minimapEnemyDots: Node[] = [];
+
     private static readonly PROP_PATHS: Record<PropKey, string> = {
         wreckTank:    'art/v03/props/wreck-tank',
         barrelRust:   'art/v03/props/barrel-rust',
@@ -501,6 +507,7 @@ export class ActorSpawner extends Component {
         this.updateSpawn(dt);
         this.updateHeroDamage(dt);
         this.updateShake(dt);
+        this.updateMinimap();
     }
 
     private updateHeroDamage(dt: number) {
@@ -640,6 +647,64 @@ export class ActorSpawner extends Component {
             baseColor, hitFlashTimer: 0, deathTimer: -1,
             hpBarFill, hpBarBg,
         };
+    }
+
+    /** Wire dynamic minimap: containerNode is the minimap circle Node from HUD.
+     *  Dots are appended into this container; positions update each frame. */
+    public attachDynamicMinimap(containerNode: Node, mapDiameterPx: number) {
+        this.minimapContainer = containerNode;
+        this.minimapRadius = mapDiameterPx * 0.5 - 3;
+        // Hero dot (cyan)
+        const dot = new Node('MinimapHeroDot');
+        dot.layer = Layers.Enum.UI_2D;
+        const sp = dot.addComponent(Sprite);
+        sp.spriteFrame = this.makeRadialAlpha(16, [120, 220, 255, 255], [120, 220, 255, 0]);
+        sp.color = new Color(120, 220, 255, 255);
+        const tr = dot.addComponent(UITransform);
+        tr.setContentSize(7, 7);
+        containerNode.addChild(dot);
+        this.minimapHeroDot = dot;
+    }
+
+    private updateMinimap() {
+        if (!this.minimapContainer || !this.heroNode) return;
+        const halfW = this.HERO_SCREEN_HALF_W, halfH = this.HERO_SCREEN_HALF_H;
+        const r = this.minimapRadius;
+        // Hero dot: always center (camera follows hero in vampire-survivors style)
+        if (this.minimapHeroDot) this.minimapHeroDot.setPosition(0, 0, 0);
+        // Enemy dots: relative-to-hero positions, clipped to circle radius
+        const heroPos = this.heroNode.position;
+        let dotIdx = 0;
+        for (const z of this.zombies) {
+            if (z.deathTimer >= 0 || z.hp <= 0) continue;
+            const dx = z.node.position.x - heroPos.x;
+            const dy = z.node.position.y - heroPos.y;
+            const mx = (dx / halfW) * r;
+            const my = (dy / halfH) * r;
+            // clamp to circle
+            const len = Math.hypot(mx, my);
+            const cx = len > r ? (mx / len) * r : mx;
+            const cy = len > r ? (my / len) * r : my;
+            let dot = this.minimapEnemyDots[dotIdx];
+            if (!dot) {
+                dot = new Node('MinimapEnemy');
+                dot.layer = Layers.Enum.UI_2D;
+                const sp = dot.addComponent(Sprite);
+                sp.spriteFrame = this.makeRadialAlpha(16, [255, 80, 80, 255], [255, 80, 80, 0]);
+                sp.color = new Color(255, 80, 80, 255);
+                const tr = dot.addComponent(UITransform);
+                tr.setContentSize(5, 5);
+                this.minimapContainer.addChild(dot);
+                this.minimapEnemyDots.push(dot);
+            }
+            dot.active = true;
+            dot.setPosition(cx, cy, 0);
+            dotIdx++;
+        }
+        // hide unused pool dots
+        for (let i = dotIdx; i < this.minimapEnemyDots.length; i++) {
+            this.minimapEnemyDots[i].active = false;
+        }
     }
 
     private tickDeathFadesOnly(dt: number) {

@@ -85,6 +85,13 @@ export class BootstrapMain extends Component {
 
             attachHudSkeleton(this.hudLayer, config, hudIcons);
 
+            // Hook dynamic minimap dots into the static minimap container
+            const minimapNode = this.hudLayer.getChildByName('HUD_Minimap_Frame_Painterly')
+                ?? this.hudLayer.getChildByName('HUD_Minimap');
+            if (minimapNode) {
+                spawner.attachDynamicMinimap(minimapNode, config.hud.minimap.contentSize[0]);
+            }
+
             // Atmospheric polish: heavy vignette + ground-shadow edge for end-of-world mood
             this.attachVignette(config.canvas.width, config.canvas.height);
             console.log('[BootstrapMain] start() done');
