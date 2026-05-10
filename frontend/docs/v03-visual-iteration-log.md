@@ -2040,3 +2040,44 @@ Next iteration direction:
 1. Add a stronger authored safe-zone/storm ground treatment so the purple ring reads like part of the scene rather than a geometric overlay.
 2. Continue reducing visible tile repetition near camera edges without losing editor/map contract readability.
 3. Prepare a Cocos asset import checklist for prop covers and ground wash sprites once the WebGL reference stabilizes.
+
+## 2026-05-10 Painterly safe-zone edge pass
+
+Related work:
+
+- Follow-up to `8e20347`
+- `frontend/engine-demo/app.js`
+- `e2e/v03-contract-verify.js`
+- `cocos-v03-demo/assets/scripts/V03VisualContract.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `frontend/docs/cocos-v03-visual-contract.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The safe zone is closer to the reference because the shrinking boundary now reads as layered storm haze and energy paint instead of only a clean geometry ring.
+- It still falls short of the reference's authored illustration quality because the edge is procedural canvas texture work, not final hand-authored storm art.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added two painterly storm layers: `safe-zone-painterly-haze` and `safe-zone-painterly-edge`.
+- Runtime gates now require `safeZonePainterlyLayerCount >= 2`, `safeZonePainterlyUsesTexture`, and `safeZoneScale` between 0.7 and 1.
+- Cocos visual contract, runtime stats, scene manifest, and first-playable checklist now include safe-zone layer requirements.
+
+What is still far from the reference:
+
+- The storm boundary should eventually use authored texture assets with stronger painterly silhouettes and edge breakup.
+- The current pass improves the battle boundary, but the whole scene still needs a stronger Cocos/mini-game rendering target before it can reach the target image's depth.
+- Cocos still has contract placeholders for `SafeZonePainterlyHaze` and `SafeZonePainterlyEdge` rather than imported Creator prefabs.
+
+Next iteration direction:
+
+1. Decide the concrete mobile engine/rendering path that can support the target image's 2.5D painterly depth in WeChat Mini Game.
+2. Build a small Cocos-side or engine-specific render demo that proves authored sprites, ground splats, billboards, skill FX, and storm layers can match the V03 image direction.
+3. Replace procedural storm/ground textures with authored assets once the engine path is confirmed.

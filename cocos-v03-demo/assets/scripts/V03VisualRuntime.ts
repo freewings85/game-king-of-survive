@@ -23,6 +23,7 @@ import {
   V03_REQUIRED_PROP_GROUND_LAYERS,
   V03_REQUIRED_PROP_SHAPE_BLOCKS,
   V03_REQUIRED_PROP_WEAR_DECALS,
+  V03_REQUIRED_SAFE_ZONE_LAYERS,
   V03_REQUIRED_SKILL_CARD_SPRITES,
   V03_REQUIRED_UNIT_DECALS,
   V03_REQUIRED_ZOMBIE_CARD_SPRITES,
@@ -41,6 +42,7 @@ export interface V03VisualRuntimeStats {
   propBreakShapes: number;
   propCoverSprites: number;
   groundWashLayers: number;
+  safeZoneLayers: number;
   globalLightLayers: number;
   objectRimLayers: number;
   materialBlendLayers: number;
@@ -69,6 +71,7 @@ export class V03VisualRuntime extends Component {
     propBreakShapes: 0,
     propCoverSprites: 0,
     groundWashLayers: 0,
+    safeZoneLayers: 0,
     globalLightLayers: 0,
     objectRimLayers: 0,
     materialBlendLayers: 0,
@@ -93,6 +96,7 @@ export class V03VisualRuntime extends Component {
     this.buildPropBreakShapes();
     this.buildPropCoverSprites();
     this.buildGroundWashLayers();
+    this.buildSafeZoneLayers();
     this.buildGlobalLightLayers();
     this.buildObjectRimLayers();
     this.buildMaterialBlendLayers();
@@ -121,6 +125,7 @@ export class V03VisualRuntime extends Component {
     this.stats.propBreakShapes = 0;
     this.stats.propCoverSprites = 0;
     this.stats.groundWashLayers = 0;
+    this.stats.safeZoneLayers = 0;
     this.stats.globalLightLayers = 0;
     this.stats.objectRimLayers = 0;
     this.stats.materialBlendLayers = 0;
@@ -223,6 +228,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition(index * 0.24 - 0.24, 0.026, 1.58);
       this.actorRoot!.addChild(node);
       this.stats.groundWashLayers += 1;
+    });
+  }
+
+  private buildSafeZoneLayers(): void {
+    V03_REQUIRED_SAFE_ZONE_LAYERS.forEach((layer, index) => {
+      const color = index === 0 ? '#9650c8' : '#d672ff';
+      const node = this.makeBox(`safe-zone-${layer}`, 0.58 + index * 0.08, 0.012, 0.30, color);
+      node.setPosition(index * 0.26 - 0.13, 0.034, 1.44);
+      this.actorRoot!.addChild(node);
+      this.stats.safeZoneLayers += 1;
     });
   }
 

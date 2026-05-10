@@ -143,6 +143,7 @@ let zombieDetailPartCount = 0;
 let groundDetailCount = 0;
 let groundWashLayerCount = 0;
 let groundTileBlendCount = 0;
+let safeZonePainterlyLayerCount = 0;
 let unitDecalCount = 0;
 let propWearCount = 0;
 let propShapeCount = 0;
@@ -323,6 +324,66 @@ function addGroundWashLayer(name, x, z, sx, sz, kind, opacity, rot = 0) {
   scene.add(wash);
   groundWashLayerCount += 1;
   return wash;
+}
+
+function makeStormEdgeTexture(kind) {
+  return makeCanvasTexture(1024, 1024, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    const cx = w * 0.50;
+    const cy = h * 0.50;
+    const radius = w * 0.39;
+    const band = w * (kind === 'haze' ? 0.105 : 0.040);
+    const ring = ctx.createRadialGradient(cx, cy, radius - band, cx, cy, radius + band);
+    if (kind === 'haze') {
+      ring.addColorStop(0, 'rgba(0,0,0,0)');
+      ring.addColorStop(0.35, 'rgba(150,66,210,0.12)');
+      ring.addColorStop(0.62, 'rgba(78,201,255,0.13)');
+      ring.addColorStop(1, 'rgba(0,0,0,0)');
+    } else {
+      ring.addColorStop(0, 'rgba(0,0,0,0)');
+      ring.addColorStop(0.48, 'rgba(214,114,255,0.42)');
+      ring.addColorStop(0.55, 'rgba(255,216,154,0.24)');
+      ring.addColorStop(0.72, 'rgba(78,201,255,0.22)');
+      ring.addColorStop(1, 'rgba(0,0,0,0)');
+    }
+    ctx.fillStyle = ring;
+    ctx.fillRect(0, 0, w, h);
+
+    for (let i = 0; i < (kind === 'haze' ? 42 : 28); i++) {
+      const a = (i / (kind === 'haze' ? 42 : 28)) * Math.PI * 2;
+      const r = radius + ((i % 7) - 3) * (kind === 'haze' ? 7 : 4);
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      const len = w * (kind === 'haze' ? 0.040 : 0.028);
+      const tangent = a + Math.PI / 2;
+      addPaintedStroke(ctx, [
+        [x - Math.cos(tangent) * len, y - Math.sin(tangent) * len],
+        [x, y],
+        [x + Math.cos(tangent) * len * 0.9, y + Math.sin(tangent) * len * 0.9]
+      ], kind === 'haze' ? 'rgba(126,68,170,0.18)' : (i % 2 ? 'rgba(255,220,150,0.34)' : 'rgba(108,220,255,0.32)'), kind === 'haze' ? 8 : 4, 1);
+    }
+  });
+}
+
+function addStormEdgeLayer(name, kind, opacity, yOffset, scaleX = 9.3, scaleZ = 8.0) {
+  const mat = new THREE.MeshBasicMaterial({
+    map: makeStormEdgeTexture(kind),
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    depthTest: true,
+    side: THREE.DoubleSide
+  });
+  const layer = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+  layer.name = name;
+  layer.rotation.x = -Math.PI / 2;
+  layer.scale.set(scaleX, scaleZ, 1);
+  layer.position.y = yOffset;
+  layer.castShadow = false;
+  layer.receiveShadow = false;
+  scene.add(layer);
+  safeZonePainterlyLayerCount += 1;
+  return layer;
 }
 
 function makeHeroCardTexture(accent = '#4ec9ff', body = '#283746', classId = 'tech', skinIndex = 0) {
@@ -931,6 +992,8 @@ const safeZone = new THREE.Mesh(new THREE.RingGeometry(4.35, 4.56, 96), safeZone
 safeZone.rotation.x = -Math.PI / 2;
 safeZone.position.y = 0.035;
 scene.add(safeZone);
+const stormHaze = addStormEdgeLayer('safe-zone-painterly-haze', 'haze', 0.78, 0.034, 9.6, 8.2);
+const stormEdge = addStormEdgeLayer('safe-zone-painterly-edge', 'edge', 0.82, 0.038, 9.1, 7.9);
 
 addGroundLight('stage-warm-combat-focus', playerSpawn.x + 0.35, playerSpawn.z - 0.15, 3.35, 2.35, mats.stageWarm, 0.14, -0.22);
 addGroundLight('stage-cool-enemy-depth', 1.95, -1.65, 3.6, 2.15, mats.stageCool, 0.09, 0.42);
@@ -2285,6 +2348,12 @@ function animate(now) {
   safeZone.scale.set(zoneScale * 1.08, zoneScale * 0.92, 1);
   safeZone.rotation.z += dt * 0.08;
   safeZoneMat.opacity = 0.14 + Math.abs(Math.sin(t * 1.4)) * 0.06;
+  stormHaze.scale.set(zoneScale * 9.6, zoneScale * 8.2, 1);
+  stormEdge.scale.set(zoneScale * 9.1, zoneScale * 7.9, 1);
+  stormHaze.rotation.z -= dt * 0.025;
+  stormEdge.rotation.z += dt * 0.065;
+  stormHaze.material.opacity = 0.52 + Math.abs(Math.sin(t * 0.9)) * 0.18;
+  stormEdge.material.opacity = 0.62 + Math.abs(Math.sin(t * 1.7)) * 0.16;
   rival.position.x = 3.1 + Math.sin(t * 0.42) * 0.55;
   rival.position.z = -2.2 + Math.cos(t * 0.35) * 0.45;
   rival.position.y = Math.sin(t * 4.5) * 0.018;
@@ -2563,6 +2632,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.groundDetailCount = groundDetailCount;
   window.__V03_ENGINE_DEMO_STATE.groundWashLayerCount = groundWashLayerCount;
   window.__V03_ENGINE_DEMO_STATE.groundTileBlendCount = groundTileBlendCount;
+  window.__V03_ENGINE_DEMO_STATE.safeZonePainterlyLayerCount = safeZonePainterlyLayerCount;
+  window.__V03_ENGINE_DEMO_STATE.safeZonePainterlyUsesTexture = !!(stormHaze.material.map && stormEdge.material.map);
   window.__V03_ENGINE_DEMO_STATE.fanRoundCount = fanRounds.filter((round) => round.visible).length;
   window.__V03_ENGINE_DEMO_STATE.fanTrailCount = fanTrails.filter((trail) => trail.visible).length;
   window.__V03_ENGINE_DEMO_STATE.boomRingReady = boomRing.visible || activeSkill !== 'boom';

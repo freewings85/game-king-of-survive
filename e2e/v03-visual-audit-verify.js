@@ -37,6 +37,7 @@ assert(text.includes('Prop cover bitmap asset pass'), 'Visual iteration log must
 assert(text.includes('Prop sprite body cleanup pass'), 'Visual iteration log must record the latest prop sprite body cleanup pass');
 assert(text.includes('Secondary prop bitmap asset pass'), 'Visual iteration log must record the latest secondary prop bitmap asset pass');
 assert(text.includes('Painterly ground integration pass'), 'Visual iteration log must record the latest painterly ground integration pass');
+assert(text.includes('Painterly safe-zone edge pass'), 'Visual iteration log must record the latest painterly safe-zone edge pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

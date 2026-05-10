@@ -61,6 +61,11 @@ export const V03_REQUIRED_GROUND_WASH_LAYERS = [
   'ground-wash-rust-edge'
 ] as const;
 
+export const V03_REQUIRED_SAFE_ZONE_LAYERS = [
+  'safe-zone-painterly-haze',
+  'safe-zone-painterly-edge'
+] as const;
+
 export const V03_REQUIRED_GLOBAL_LIGHT_LAYERS = [
   'stage-warm-focus',
   'stage-cool-depth',

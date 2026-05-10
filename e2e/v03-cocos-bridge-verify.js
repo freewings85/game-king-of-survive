@@ -112,6 +112,7 @@ assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_SHAPE_BLOCKS'), 'Cocos vi
 assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_BREAK_SHAPES'), 'Cocos visual runtime must consume prop break shape contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_PROP_COVER_SPRITES'), 'Cocos visual runtime must consume prop cover sprite contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GROUND_WASH_LAYERS'), 'Cocos visual runtime must consume ground wash layer contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_SAFE_ZONE_LAYERS'), 'Cocos visual runtime must consume safe zone layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_FX_LAYERS'), 'Cocos visual runtime must consume FX layer contract');
 assert(visualRuntimeSource.includes('heroGear'), 'Cocos visual runtime must report hero gear stats');
 assert(visualRuntimeSource.includes('zombieVariants'), 'Cocos visual runtime must report zombie variant stats');
@@ -122,6 +123,7 @@ assert(visualRuntimeSource.includes('propShapeBlocks'), 'Cocos visual runtime mu
 assert(visualRuntimeSource.includes('propBreakShapes'), 'Cocos visual runtime must report prop break shape stats');
 assert(visualRuntimeSource.includes('propCoverSprites'), 'Cocos visual runtime must report prop cover sprite stats');
 assert(visualRuntimeSource.includes('groundWashLayers'), 'Cocos visual runtime must report ground wash layer stats');
+assert(visualRuntimeSource.includes('safeZoneLayers'), 'Cocos visual runtime must report safe zone layer stats');
 assert(visualRuntimeSource.includes('globalLightLayers'), 'Cocos visual runtime must report global light layer stats');
 assert(visualRuntimeSource.includes('objectRimLayers'), 'Cocos visual runtime must report object rim layer stats');
 assert(visualRuntimeSource.includes('materialBlendLayers'), 'Cocos visual runtime must report material blend layer stats');
@@ -167,6 +169,10 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
 ['ground-wash-combat-asphalt', 'ground-wash-road-dust', 'ground-wash-rust-edge'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include ground wash layer ${layer}`);
   assert(visualContractDoc.includes(layer), `Visual contract doc must include ground wash layer ${layer}`);
+});
+['safe-zone-painterly-haze', 'safe-zone-painterly-edge'].forEach((layer) => {
+  assert(visualContractSource.includes(layer), `Visual contract must include safe zone layer ${layer}`);
+  assert(visualContractDoc.includes(layer), `Visual contract doc must include safe zone layer ${layer}`);
 });
 ['stage-warm-focus', 'stage-cool-depth', 'stage-rim-light', 'stage-edge-darkening', 'stage-diagonal-shadow'].forEach((layer) => {
   assert(visualContractSource.includes(layer), `Visual contract must include global light layer ${layer}`);
@@ -256,6 +262,9 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['GroundWashCombatAsphalt.prefab', 'GroundWashRoadDust.prefab', 'GroundWashRustEdge.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include ground wash prefab ${prefab}`);
 });
+['SafeZonePainterlyHaze.prefab', 'SafeZonePainterlyEdge.prefab'].forEach((prefab) => {
+  assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include safe zone prefab ${prefab}`);
+});
 ['StageWarmFocus.prefab', 'StageCoolDepth.prefab', 'StageRimLight.prefab', 'StageEdgeDarkening.prefab', 'StageDiagonalShadow.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include global light prefab ${prefab}`);
 });
@@ -265,7 +274,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['MaterialWarmBlend.prefab', 'MaterialCoolBlend.prefab', 'MaterialDarkBlend.prefab', 'MaterialPropBlend.prefab', 'MaterialUnitBlend.prefab'].forEach((prefab) => {
   assert(firstPlayableChecklist.prefabs.map.some((item) => item.endsWith(prefab)), `First playable checklist must include material blend prefab ${prefab}`);
 });
-['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'propCoverSprites', 'groundWashLayers', 'globalLightLayers', 'objectRimLayers', 'materialBlendLayers', 'painterlyCardLayers', 'heroSkinSprites', 'zombieCardSprites', 'skillCardSprites', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
+['heroGear', 'zombieVariants', 'unitDecals', 'propGroundLayers', 'propWearDecals', 'propShapeBlocks', 'propBreakShapes', 'propCoverSprites', 'groundWashLayers', 'safeZoneLayers', 'globalLightLayers', 'objectRimLayers', 'materialBlendLayers', 'painterlyCardLayers', 'heroSkinSprites', 'zombieCardSprites', 'skillCardSprites', 'fxLayers', 'reviewScreenshots'].forEach((coverage) => {
   assert(firstPlayableChecklist.visualContractCoverage.includes(coverage), `First playable checklist must cover ${coverage}`);
 });
 ['cocos-v03-phone-portrait.png', 'cocos-v03-phone-landscape.png', 'cocos-v03-skill-fan.png', 'cocos-v03-skill-boom.png', 'cocos-v03-skill-arc.png'].forEach((screenshot) => {

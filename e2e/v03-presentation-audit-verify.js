@@ -88,6 +88,8 @@ requiredText.forEach((text) => {
   'materialBlendCount >= 70',
   'groundWashLayerCount >= 3',
   'groundTileBlendCount >= 572',
+  'safeZonePainterlyLayerCount >= 2',
+  'safeZonePainterlyUsesTexture',
   'painterlyCardCount >= 40',
   'heroPainterlyCardCount >= 2',
   'zombiePainterlyCardCount >= 10',

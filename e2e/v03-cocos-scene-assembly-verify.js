@@ -139,6 +139,7 @@ assertIncludesAll(
     'PropCoverWreck.prefab',
     'PropCoverBarrel.prefab',
     'GroundWashCombatAsphalt.prefab',
+    'SafeZonePainterlyHaze.prefab',
     'StageWarmFocus.prefab',
     'ObjectWarmRim.prefab',
     'MaterialWarmBlend.prefab'
