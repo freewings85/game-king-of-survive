@@ -13,6 +13,7 @@ import {
     SceneConfig,
     HeroConfig,
     ZombieConfig,
+    ZombieBodyType,
     PropConfig,
     PropKey,
     MuzzleConfig,
@@ -24,6 +25,19 @@ import {
     resolveAnchorPos,
 } from './SceneConfigLoader';
 
+const ZOMBIE_PACK_PATHS: Record<ZombieBodyType, Record<ZombieConfig['frame'], string>> = {
+    'riley': {
+        idle:   'art/v03/zombie/zombie-idle',
+        move:   'art/v03/zombie/zombie-move',
+        attack: 'art/v03/zombie/zombie-attack',
+    },
+    'clint': {
+        idle:   'art/v03/zombie2/clint-idle',
+        move:   'art/v03/zombie2/clint-move',
+        attack: 'art/v03/zombie2/clint-attack',
+    },
+};
+
 const { ccclass } = _decorator;
 
 @ccclass('ActorSpawner')
@@ -34,7 +48,7 @@ export class ActorSpawner extends Component {
     public config!: SceneConfig;
 
     private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null };
-    private zombieFrames: Record<ZombieConfig['frame'], SpriteFrame | null> = { idle: null, move: null, attack: null };
+    private zombieFrames: Map<string, SpriteFrame> = new Map(); // key = `${bodyType}:${frame}`
     private propFrames: Record<PropKey, SpriteFrame | null> = { wreckTank: null, barrelRust: null, sandbag: null };
 
     async start() {
@@ -56,13 +70,24 @@ export class ActorSpawner extends Component {
         const paths: Array<[string, (sf: SpriteFrame) => void]> = [
             ['art/v03/hero/survivor-idle/spriteFrame', (sf) => (this.heroFrames.idle = sf)],
             ['art/v03/hero/survivor-shoot/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
-            ['art/v03/zombie/zombie-idle/spriteFrame', (sf) => (this.zombieFrames.idle = sf)],
-            ['art/v03/zombie/zombie-move/spriteFrame', (sf) => (this.zombieFrames.move = sf)],
-            ['art/v03/zombie/zombie-attack/spriteFrame', (sf) => (this.zombieFrames.attack = sf)],
             ['art/v03/props/wreck-tank/spriteFrame', (sf) => (this.propFrames.wreckTank = sf)],
             ['art/v03/props/barrel-rust/spriteFrame', (sf) => (this.propFrames.barrelRust = sf)],
             ['art/v03/props/sandbag/spriteFrame', (sf) => (this.propFrames.sandbag = sf)],
         ];
+
+        // Only load zombie packs / frames the config actually references — avoids
+        // dragging clint sprites into builds that haven't enabled the silhouette gate yet.
+        const referencedZombieKeys = new Set<string>();
+        for (const z of this.config.zombies) {
+            const bodyType: ZombieBodyType = z.bodyType ?? 'riley';
+            referencedZombieKeys.add(`${bodyType}:${z.frame}`);
+        }
+        for (const key of referencedZombieKeys) {
+            const [bodyType, frame] = key.split(':') as [ZombieBodyType, ZombieConfig['frame']];
+            const path = ZOMBIE_PACK_PATHS[bodyType]?.[frame];
+            if (!path) throw new Error(`[ActorSpawner] no sprite path for zombie ${key}`);
+            paths.push([`${path}/spriteFrame`, (sf) => this.zombieFrames.set(key, sf)]);
+        }
         await Promise.all(
             paths.map(
                 ([p, assign]) =>
@@ -118,7 +143,8 @@ export class ActorSpawner extends Component {
 
             const node = new Node(z.name);
             const sprite = node.addComponent(Sprite);
-            sprite.spriteFrame = this.zombieFrames[z.frame];
+            const bodyType: ZombieBodyType = z.bodyType ?? 'riley';
+            sprite.spriteFrame = this.zombieFrames.get(`${bodyType}:${z.frame}`) ?? null;
             sprite.color = new Color(z.tint[0], z.tint[1], z.tint[2], z.tint[3]);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             const baseSize = Math.floor(z.baseSize * z.scale);

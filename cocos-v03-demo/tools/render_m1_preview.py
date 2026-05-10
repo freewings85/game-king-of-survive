@@ -28,6 +28,14 @@ ZOMBIE_FILE = {
     "move": "zombie-move.png",
     "attack": "zombie-attack.png",
 }
+ZOMBIE_PACK_DIR = {
+    "riley": "zombie",
+    "clint": "zombie2",
+}
+ZOMBIE_PACK_FILE = {
+    "riley": {"idle": "zombie-idle.png", "move": "zombie-move.png", "attack": "zombie-attack.png"},
+    "clint": {"idle": "clint-idle.png",  "move": "clint-move.png",  "attack": "clint-attack.png"},
+}
 HERO_FILE = {
     "idle": "survivor-idle.png",
     "shoot": "survivor-shoot.png",
@@ -331,8 +339,13 @@ def render(config):
     place(canvas, load_sprite(f"hero/{HERO_FILE[hero['frame']]}"), HERO_POS,
           hero["contentSize"], W, H, angle_deg=hero["angleDeg"])
 
-    # Zombie sprites
-    z_frames = {k: load_sprite(f"zombie/{v}") for k, v in ZOMBIE_FILE.items()}
+    # Zombie sprites — bodyType picks which pack (riley default for backwards compat)
+    z_frame_cache = {}
+    def get_zombie_frame(body_type, frame):
+        key = (body_type, frame)
+        if key not in z_frame_cache:
+            z_frame_cache[key] = load_sprite(f"{ZOMBIE_PACK_DIR[body_type]}/{ZOMBIE_PACK_FILE[body_type][frame]}")
+        return z_frame_cache[key]
     for z in config["zombies"]:
         if z["rotateTowardHero"]:
             dx = HERO_POS[0] - z["pos"][0]
@@ -341,7 +354,8 @@ def render(config):
         else:
             angle = 0
         base_size = int(z["baseSize"] * z["scale"])
-        place(canvas, tint_sprite(z_frames[z["frame"]], z["tint"]),
+        body_type = z.get("bodyType", "riley")
+        place(canvas, tint_sprite(get_zombie_frame(body_type, z["frame"]), z["tint"]),
               z["pos"], (base_size, base_size), W, H, angle_deg=angle)
 
     # ---- Combat VFX ----

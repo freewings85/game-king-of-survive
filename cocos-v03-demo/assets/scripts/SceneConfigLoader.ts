@@ -12,12 +12,16 @@ export interface HeroConfig {
     shadow: Vec2;
 }
 
+export type ZombieBodyType = 'riley' | 'clint';
+
 export interface ZombieConfig {
     name: string;
     pos: Vec2;
     scale: number;
     tint: RGBA;
     frame: 'idle' | 'move' | 'attack';
+    /** Defaults to 'riley' if omitted (M2-0 baseline). M2-2A introduces 'clint' as the second silhouette body type. */
+    bodyType?: ZombieBodyType;
     baseSize: number;
     shadow: Vec2;
     rotateTowardHero: boolean;
