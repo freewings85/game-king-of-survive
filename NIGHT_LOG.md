@@ -8,8 +8,11 @@
 
 | Commit | Track | What |
 |---|---|---|
+| `2724ca0` | C-step12b | hero frame-switch — idle/walk/shoot driven by movement+fire |
+| `21b243d` | C-PASS#6 | brick #6 final — 5 combat frames, baseline 18 locked |
+| `8a41a91` | docs | NIGHT_LOG refresh + brick #6 dispatched |
 | `512362b` | C-step12 | brick #6 prep — frame-switch + tolerant load (zombie close to hero -> attack pose) |
-| (next)    | C-PASS#5 | brick #5 final — minimap-frame.png landed (baseline 13 total) |
+| `9f324d6` | C-PASS#5 | brick #5 final — minimap-frame.png landed (baseline 13 total) |
 | `86f7d23` | A-step4d | hero respawn (4s) + kill counter |
 | `205f4e9` | B-step8b | render server projectiles in net mode |
 | `5b3e5bd` | A-step1b | dynamic minimap — live hero+enemy dots |
@@ -24,7 +27,7 @@
 | `fe327d8` | M3-prep  | painterly baseline (11 sprites) + gameplay v1 |
 | `f1af116` | M2-X     | Real Cocos engine build proof + M2-1B/C/2A asset baseline (earlier) |
 
-**Total this session: 14 commits.** Baseline assets: 13 (1 hero + 3 zombie + 3 icon + 4 prop + 2 frame). Brick #6 (5 attack/walk frames) in progress.
+**Total this session: 17 commits.** Baseline assets: **18** (3 hero + 6 zombie [3 idle + 3 attack] + 3 icon + 4 prop + 2 frame). Brick #6 ✅ landed + wired (zombie *and* hero frame-switch active). Brick #7 (3 terrain tiles) dispatched 17:10, in progress.
 
 ## Progress vs the two goals
 
