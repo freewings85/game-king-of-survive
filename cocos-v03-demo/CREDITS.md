@@ -37,18 +37,27 @@ CONTRACT §3.4 允许程序生成的 FX 工具贴图 (radial gradient / soft mas
 - **author**: Riley Gombart (ChessMasterRiley)
 - **license**: **CC0** (Public Domain, 无署名义务但本文件保留来源作为台账)
 - **selected**: skeleton-idle_0 + skeleton-move_8 + skeleton-attack_4
-- **usage**: M1 5 个 zombie 实例复用 3 帧, 用 scale / tint / 朝向 / 间距制造压迫感, 不做"复制粘贴队列"
+- **usage**:
+  - M1: 5 个 zombie 实例复用 3 帧, 用 scale / tint / 朝向 / 间距制造压迫感, 不做"复制粘贴队列"
+  - M2-1A: 扩到 8 个实例 (Riley 单 silhouette body type, 真 silhouette 多样性 deferred to M2-2 作为阻断项)
 
-### Props — Kenney "Top-down Tanks" (M1x)
-- **path**:
+### Props — Kenney "Top-down Tanks" (M1x baseline + M2-1A 扩容)
+- **path** (M1x baseline, 3 件):
   - `assets/resources/art/v03/props/wreck-tank.png` (625B, source `PNG/Tanks/tankBeige.png`, 运行时 tint 灰棕表达"锈废战车残骸")
   - `assets/resources/art/v03/props/barrel-rust.png` (686B, source `PNG/Obstacles/barrelGrey_sde_rust.png`)
   - `assets/resources/art/v03/props/sandbag.png` (647B, source `PNG/Obstacles/sandbagBrown.png`)
+- **path** (M2-1A 街景密度扩容, +4 件):
+  - `assets/resources/art/v03/props/tank-green.png` (609B, source `PNG/Tanks/tankGreen.png`, 远端第二辆 wreck landmark, tint 暗绿橄榄)
+  - `assets/resources/art/v03/props/barrel-red.png` (1099B, source `PNG/Obstacles/barrelRed_up.png`, 中央红桶, 不 tint, 给暗调街景一个亮点)
+  - `assets/resources/art/v03/props/sandbag-beige.png` (650B, source `PNG/Obstacles/sandbagBeige.png`, 玩家左下第二沙袋堆, 不 tint)
+  - `assets/resources/art/v03/props/oil-splat.png` (2172B, source `PNG/Obstacles/oil.png`, 中央地面油渍背景 prop, tint 沙土暖色)
 - **source**: https://kenney.nl/assets/top-down-tanks
 - **download**: https://kenney.nl/media/pages/assets/top-down-tanks/800ff1ded5-1677699019/kenney_top-down-tanks.zip (md5 `f0c3eeecf6fb2345d4d1b8ca63f8db1c`)
 - **author**: Kenney Vleugels (www.kenney.nl)
 - **license**: **CC0** (Public Domain, 无署名义务但本文件保留)
-- **usage**: M1x 场景 cover/landmark — wreck tank 中左 / sandbag 玩家右下 / rust barrel 玩家右侧脚下
+- **usage**:
+  - M1x baseline: 3 件 cover/landmark — wreck tank 中左 / sandbag 玩家右下 / rust barrel 玩家右侧脚下
+  - M2-1A: 同 author 同 pack 加 4 件凑到 7 件街景级密度, 同时把现有 3 件重新摆位 (wreck tank 从 (-200,-110) 移到 (-110,-60) 中央偏左, 不再边角露一下); 风格统一不混源
 
 ## Quarantined (legacy, NOT in M1)
 
