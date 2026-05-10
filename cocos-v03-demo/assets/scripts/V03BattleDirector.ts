@@ -121,7 +121,7 @@ export class V03BattleDirector extends Component {
       ? `ART ${this.artManifest.assets.length} P${this.artManifest.counts.portraits} U${this.artManifest.counts.units} Z${this.artManifest.counts.zombies} S${this.artManifest.counts.skills} PR${this.artManifest.counts.props}`
       : 'art pending';
     const spriteStats = this.artSpriteStats
-      ? `SPRITES ${this.artSpriteStats.spriteNodes} M${this.artSpriteStats.mapBoundSprites} UI${this.artSpriteStats.portraits} U${this.artSpriteStats.units} Z${this.artSpriteStats.zombies} S${this.artSpriteStats.skills} P${this.artSpriteStats.props}`
+      ? `SPRITES ${this.artSpriteStats.spriteNodes} M${this.artSpriteStats.mapBoundSprites} D${this.artSpriteStats.depthSortedSprites} X${this.artSpriteStats.scaledSprites} UI${this.artSpriteStats.portraits} U${this.artSpriteStats.units} Z${this.artSpriteStats.zombies} S${this.artSpriteStats.skills} P${this.artSpriteStats.props}`
       : 'sprites pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,

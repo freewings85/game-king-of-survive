@@ -134,8 +134,14 @@ assert(artSpriteRuntimeSource.includes('node.addComponent(Sprite)'), 'Art sprite
 assert(artSpriteRuntimeSource.includes("asset.spriteFramePath || `${asset.resourcePath}/spriteFrame`"), 'Art sprite runtime must use manifest sprite frame path');
 assert(artSpriteRuntimeSource.includes('map.spawnPoints[0]'), 'Art sprite runtime must bind unit and skill sprites to map spawn points');
 assert(artSpriteRuntimeSource.includes('map.zombieEntries'), 'Art sprite runtime must bind zombie sprites to map entry points');
-assert(artSpriteRuntimeSource.includes('structureForPropAsset(map, asset.id)'), 'Art sprite runtime must bind prop sprites to map structures');
+assert(artSpriteRuntimeSource.includes('structuresForPropAsset(map, asset.id)'), 'Art sprite runtime must bind prop sprites to map structures');
+assert(artSpriteRuntimeSource.includes('.slice(0, 6)'), 'Art sprite runtime must support multiple prop instances per asset family');
+assert(artSpriteRuntimeSource.includes('node.setScale(new Vec3(placement.scale, placement.scale, 1))'), 'Art sprite runtime must apply per-group sprite scaling');
+assert(artSpriteRuntimeSource.includes('node.setSiblingIndex(placement.depthIndex)'), 'Art sprite runtime must depth-sort runtime sprites');
 assert(artSpriteRuntimeSource.includes('mapBoundSprites'), 'Art sprite runtime must report map-bound sprite count');
+assert(artSpriteRuntimeSource.includes('propInstances'), 'Art sprite runtime must report prop instance count');
+assert(artSpriteRuntimeSource.includes('depthSortedSprites'), 'Art sprite runtime must report depth-sorted sprite count');
+assert(artSpriteRuntimeSource.includes('scaledSprites'), 'Art sprite runtime must report scaled sprite count');
 assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');

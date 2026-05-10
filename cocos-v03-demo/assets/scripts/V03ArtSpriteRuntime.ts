@@ -12,6 +12,9 @@ export interface V03ArtSpriteRuntimeStats {
   skills: number;
   props: number;
   mapBoundSprites: number;
+  propInstances: number;
+  depthSortedSprites: number;
+  scaledSprites: number;
 }
 
 @ccclass('V03ArtSpriteRuntime')
@@ -35,7 +38,10 @@ export class V03ArtSpriteRuntime extends Component {
     zombies: 0,
     skills: 0,
     props: 0,
-    mapBoundSprites: 0
+    mapBoundSprites: 0,
+    propInstances: 0,
+    depthSortedSprites: 0,
+    scaledSprites: 0
   };
 
   private readonly worldWidth = 12;
@@ -65,6 +71,9 @@ export class V03ArtSpriteRuntime extends Component {
     this.stats.skills = 0;
     this.stats.props = 0;
     this.stats.mapBoundSprites = 0;
+    this.stats.propInstances = 0;
+    this.stats.depthSortedSprites = 0;
+    this.stats.scaledSprites = 0;
   }
 
   private async addSpriteAsset(asset: V03ArtAssetEntry, index: number, map?: V03MapData): Promise<void> {
@@ -73,10 +82,16 @@ export class V03ArtSpriteRuntime extends Component {
       return;
     }
 
-    const node = new Node(`art-sprite-${asset.id}`);
-    const placement = this.positionForAsset(asset, index, map);
+    const placements = this.placementsForAsset(asset, index, map);
+    await Promise.all(placements.map((placement, instanceIndex) => this.addSpriteNode(parent, asset, placement, instanceIndex)));
+  }
+
+  private async addSpriteNode(parent: Node, asset: V03ArtAssetEntry, placement: SpritePlacement, instanceIndex: number): Promise<void> {
+    const node = new Node(`art-sprite-${asset.id}-${instanceIndex}`);
     node.setPosition(placement.position);
+    node.setScale(new Vec3(placement.scale, placement.scale, 1));
     parent.addChild(node);
+    node.setSiblingIndex(placement.depthIndex);
 
     const sprite = node.addComponent(Sprite);
     sprite.spriteFrame = await this.loadSpriteFrame(asset);
@@ -84,6 +99,15 @@ export class V03ArtSpriteRuntime extends Component {
     this.stats[asset.group] += 1;
     if (placement.mapBound) {
       this.stats.mapBoundSprites += 1;
+    }
+    if (asset.group === 'props') {
+      this.stats.propInstances += 1;
+    }
+    if (placement.depthSorted) {
+      this.stats.depthSortedSprites += 1;
+    }
+    if (placement.scale !== 1) {
+      this.stats.scaledSprites += 1;
     }
   }
 
@@ -94,28 +118,33 @@ export class V03ArtSpriteRuntime extends Component {
     return this.actorRoot;
   }
 
-  private positionForAsset(asset: V03ArtAssetEntry, index: number, map?: V03MapData): { position: Vec3; mapBound: boolean } {
+  private placementsForAsset(asset: V03ArtAssetEntry, index: number, map?: V03MapData): SpritePlacement[] {
     const lane = index % 6;
     const row = Math.floor(index / 6);
     if (asset.group === 'portraits') {
-      return { position: new Vec3(lane * 56, -row * 64, 0), mapBound: false };
+      return [this.makePlacement(new Vec3(lane * 56, -row * 64, 0), false, this.scaleForAsset(asset), false)];
     }
     if (!map) {
-      return { position: this.fallbackPosition(asset, lane, row), mapBound: false };
+      return [this.makePlacement(this.fallbackPosition(asset, lane, row), false, this.scaleForAsset(asset), false)];
     }
     if (asset.group === 'units') {
       const spawn = map.spawnPoints[0] || map.stormCenter;
-      return { position: this.mapPointToWorld(map, spawn, 1.05), mapBound: true };
+      return [this.makePlacement(this.mapPointToWorld(map, spawn, 1.05), true, this.scaleForAsset(asset), true)];
     }
     if (asset.group === 'zombies') {
       const zombieIndex = Math.max(0, this.zombieIndex(asset.id));
       const entry = map.zombieEntries[zombieIndex % map.zombieEntries.length] || map.stormCenter;
-      return { position: this.mapPointToWorld(map, entry, 0.92), mapBound: true };
+      return [this.makePlacement(this.mapPointToWorld(map, entry, 0.92), true, this.scaleForAsset(asset), true)];
     }
     if (asset.group === 'props') {
-      const structure = this.structureForPropAsset(map, asset.id);
-      if (structure) {
-        return { position: this.structureToWorld(map, structure, 0.72), mapBound: true };
+      const structures = this.structuresForPropAsset(map, asset.id);
+      if (structures.length) {
+        return structures.map((structure) => this.makePlacement(
+          this.structureToWorld(map, structure, 0.72),
+          true,
+          this.scaleForAsset(asset),
+          true
+        ));
       }
     }
     if (asset.group === 'skills') {
@@ -123,9 +152,9 @@ export class V03ArtSpriteRuntime extends Component {
       const base = this.mapPointToWorld(map, spawn, 0.26);
       base.x += (lane - 1) * 0.42;
       base.z -= 0.72 + row * 0.1;
-      return { position: base, mapBound: true };
+      return [this.makePlacement(base, true, this.scaleForAsset(asset), true)];
     }
-    return { position: this.fallbackPosition(asset, lane, row), mapBound: false };
+    return [this.makePlacement(this.fallbackPosition(asset, lane, row), false, this.scaleForAsset(asset), false)];
   }
 
   private fallbackPosition(asset: V03ArtAssetEntry, lane: number, row: number): Vec3 {
@@ -150,7 +179,7 @@ export class V03ArtSpriteRuntime extends Component {
     }, y);
   }
 
-  private structureForPropAsset(map: V03MapData, id: string): V03Structure | undefined {
+  private structuresForPropAsset(map: V03MapData, id: string): V03Structure[] {
     const kindByAsset: Record<string, V03PropKind[]> = {
       'prop-cover-wreck': ['wreck_car'],
       'prop-cover-wall': ['wall', 'building'],
@@ -160,7 +189,28 @@ export class V03ArtSpriteRuntime extends Component {
       'prop-cover-debris': ['debris', 'barricade']
     };
     const kinds = kindByAsset[id] || [];
-    return map.structures.find((structure) => kinds.includes(structure.kind));
+    return map.structures
+      .filter((structure) => kinds.includes(structure.kind))
+      .slice(0, 6);
+  }
+
+  private scaleForAsset(asset: V03ArtAssetEntry): number {
+    if (asset.group === 'portraits') return 0.72;
+    if (asset.group === 'units') return 1.16;
+    if (asset.group === 'zombies') return asset.id.includes('brute') ? 1.08 : 0.9;
+    if (asset.group === 'props') return asset.id.includes('wall') ? 1.28 : 1.0;
+    if (asset.group === 'skills') return 0.58;
+    return 1;
+  }
+
+  private makePlacement(position: Vec3, mapBound: boolean, scale: number, depthSorted: boolean): SpritePlacement {
+    return {
+      position,
+      mapBound,
+      scale,
+      depthSorted,
+      depthIndex: Math.max(0, Math.round((position.z + this.worldDepth / 2) * 10))
+    };
   }
 
   private zombieIndex(id: string): number {
@@ -182,4 +232,12 @@ export class V03ArtSpriteRuntime extends Component {
       });
     });
   }
+}
+
+interface SpritePlacement {
+  position: Vec3;
+  mapBound: boolean;
+  scale: number;
+  depthSorted: boolean;
+  depthIndex: number;
 }

@@ -2330,3 +2330,44 @@ Next iteration direction:
 1. Add per-group visual scale and billboard-facing rules for Cocos sprites.
 2. Bind prop cover sprites to multiple matching structures instead of one starter instance per asset family.
 3. Run or document the first Creator-side visual capture path once Cocos Creator is available.
+
+## 2026-05-10 Cocos multi-instance sprite depth pass
+
+Related work:
+
+- Follow-up to `ca3464e`
+- `cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `e2e/v03-cocos-bridge-verify.js`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `cocos-v03-demo/assets/resources/art/v03/`
+
+Current visual distance:
+
+- Cocos prop cover sprites now instantiate across multiple matching map structures, and all battle-space sprite groups get first-pass scale and depth ordering.
+- This moves the Cocos implementation closer to the target's layered 2.5D composition, but the result still needs Creator rendering, contact shadows, final billboard facing, and authored prefab tuning.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Prop cover sprite families can create up to six map-bound instances per matching prop kind.
+- Added per-group sprite scaling for portraits, units, zombies, props, and skills.
+- Added depth ordering and runtime stats for `propInstances`, `depthSortedSprites`, and `scaledSprites`.
+
+What is still far from the reference:
+
+- Depth ordering is a first-pass sibling index rule, not a final renderer sorting strategy.
+- Sprite scale values are heuristic and still need visual tuning inside Cocos Creator.
+- Ground wash and storm layers still need real Cocos asset-backed rendering, not only browser proof/contract coverage.
+
+Next iteration direction:
+
+1. Add Cocos-side ground wash and safe-zone sprite runtime support using imported/generated assets.
+2. Add contact shadow or shadow blob sprites under map-bound units and props.
+3. Capture a Cocos phone screenshot to compare against the target once Creator is available.
