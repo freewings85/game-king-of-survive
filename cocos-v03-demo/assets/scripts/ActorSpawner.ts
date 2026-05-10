@@ -17,7 +17,7 @@ import {
     resources,
 } from 'cc';
 import { forceLayerRecursive } from './BootstrapMain';
-import { NetClient, GameStateSnapshot, EnemySnapshot } from './NetClient';
+import { NetClient, GameStateSnapshot, EnemySnapshot, ProjectileSnapshot } from './NetClient';
 
 interface ZombieEntity {
     node: Node;
@@ -135,6 +135,7 @@ export class ActorSpawner extends Component {
     private netClient: NetClient | null = null;
     private serverEnemies = new Map<string, ZombieEntity>();
     private serverPlayerId: string | null = null;
+    private serverProjectiles = new Map<string, Node>();
 
     // === minimap dynamic dots (A轨) ===
     private minimapContainer: Node | null = null;
@@ -614,6 +615,37 @@ export class ActorSpawner extends Component {
                 this.serverEnemies.delete(id);
             }
         }
+        // Reconcile projectiles: simple yellow dots
+        const seenProj = new Set<string>();
+        for (const p of snap.projectiles) {
+            seenProj.add(p.id);
+            let node = this.serverProjectiles.get(p.id);
+            if (!node) {
+                node = this.createProjectileVisual(p);
+                this.serverProjectiles.set(p.id, node);
+            }
+            node.setPosition(p.x, p.y, 0);
+        }
+        for (const [id, node] of this.serverProjectiles) {
+            if (!seenProj.has(id)) {
+                node.destroy();
+                this.serverProjectiles.delete(id);
+            }
+        }
+    }
+
+    private createProjectileVisual(_p: ProjectileSnapshot): Node {
+        if (!this.bulletFrame) {
+            this.bulletFrame = this.makeRadialAlpha(16, [255, 230, 110, 255], [255, 180, 60, 0]);
+        }
+        const node = new Node('NetBullet');
+        node.layer = Layers.Enum.UI_2D;
+        const sp = node.addComponent(Sprite);
+        sp.spriteFrame = this.bulletFrame;
+        const tr = node.addComponent(UITransform);
+        tr.setContentSize(16, 16);
+        this.fxLayer.addChild(node);
+        return node;
     }
 
     private createServerZombie(e: EnemySnapshot): ZombieEntity {
