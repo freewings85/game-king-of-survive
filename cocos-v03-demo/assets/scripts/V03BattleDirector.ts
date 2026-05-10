@@ -49,7 +49,7 @@ export class V03BattleDirector extends Component {
       this.visualStats = this.visualRuntime.buildVisualContract(this.classId, this.skillId);
     }
     if (this.artSpriteRuntime) {
-      this.artSpriteStats = await this.artSpriteRuntime.buildFromManifest(this.artManifest);
+      this.artSpriteStats = await this.artSpriteRuntime.buildFromManifest(this.artManifest, this.bridgeData.map);
     }
     this.hp = this.bridgeData.runtime.tuning.player.hp;
     this.alive = Math.max(18, this.bridgeData.map.zombieEntries.length * 8);
@@ -121,7 +121,7 @@ export class V03BattleDirector extends Component {
       ? `ART ${this.artManifest.assets.length} P${this.artManifest.counts.portraits} U${this.artManifest.counts.units} Z${this.artManifest.counts.zombies} S${this.artManifest.counts.skills} PR${this.artManifest.counts.props}`
       : 'art pending';
     const spriteStats = this.artSpriteStats
-      ? `SPRITES ${this.artSpriteStats.spriteNodes} UI${this.artSpriteStats.portraits} U${this.artSpriteStats.units} Z${this.artSpriteStats.zombies} S${this.artSpriteStats.skills} P${this.artSpriteStats.props}`
+      ? `SPRITES ${this.artSpriteStats.spriteNodes} M${this.artSpriteStats.mapBoundSprites} UI${this.artSpriteStats.portraits} U${this.artSpriteStats.units} Z${this.artSpriteStats.zombies} S${this.artSpriteStats.skills} P${this.artSpriteStats.props}`
       : 'sprites pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,

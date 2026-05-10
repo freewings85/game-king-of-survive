@@ -116,7 +116,7 @@ assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battl
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
 assert(battleDirectorSource.includes('loadV03ArtAssetManifest'), 'Battle director must load Cocos art asset manifest');
 assert(battleDirectorSource.includes('public artSpriteRuntime: V03ArtSpriteRuntime'), 'Battle director must expose V03ArtSpriteRuntime');
-assert(battleDirectorSource.includes('this.artSpriteRuntime.buildFromManifest(this.artManifest)'), 'Battle director must build art sprites from manifest');
+assert(battleDirectorSource.includes('this.artSpriteRuntime.buildFromManifest(this.artManifest, this.bridgeData.map)'), 'Battle director must build art sprites from manifest and map data');
 assert(sceneBootstrapSource.includes("@ccclass('V03SceneBootstrap')"), 'Cocos scene bootstrap component is missing');
 assert(sceneBootstrapSource.includes('buildRuntimeScene()'), 'Scene bootstrap must expose buildRuntimeScene');
 assert(sceneBootstrapSource.includes('Camera.ProjectionType.ORTHO'), 'Scene bootstrap must create an orthographic camera');
@@ -128,10 +128,14 @@ assert(sceneBootstrapSource.includes('director.visualRuntime = visualRuntime'), 
 assert(sceneBootstrapSource.includes('director.artSpriteRuntime = artSpriteRuntime'), 'Scene bootstrap must wire art sprite runtime into battle director');
 assert(sceneBootstrapSource.includes('director.statusLabel = statusLabel'), 'Scene bootstrap must wire status label into battle director');
 assert(artSpriteRuntimeSource.includes("@ccclass('V03ArtSpriteRuntime')"), 'Cocos art sprite runtime component is missing');
-assert(artSpriteRuntimeSource.includes('buildFromManifest(manifest: V03ArtAssetManifest)'), 'Art sprite runtime must build from art manifest');
+assert(artSpriteRuntimeSource.includes('buildFromManifest(manifest: V03ArtAssetManifest, map?: V03MapData)'), 'Art sprite runtime must build from art manifest and map data');
 assert(artSpriteRuntimeSource.includes('resources.load(spriteFramePath, SpriteFrame'), 'Art sprite runtime must load Cocos SpriteFrame resources');
 assert(artSpriteRuntimeSource.includes('node.addComponent(Sprite)'), 'Art sprite runtime must create Sprite components');
 assert(artSpriteRuntimeSource.includes("asset.spriteFramePath || `${asset.resourcePath}/spriteFrame`"), 'Art sprite runtime must use manifest sprite frame path');
+assert(artSpriteRuntimeSource.includes('map.spawnPoints[0]'), 'Art sprite runtime must bind unit and skill sprites to map spawn points');
+assert(artSpriteRuntimeSource.includes('map.zombieEntries'), 'Art sprite runtime must bind zombie sprites to map entry points');
+assert(artSpriteRuntimeSource.includes('structureForPropAsset(map, asset.id)'), 'Art sprite runtime must bind prop sprites to map structures');
+assert(artSpriteRuntimeSource.includes('mapBoundSprites'), 'Art sprite runtime must report map-bound sprite count');
 assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');

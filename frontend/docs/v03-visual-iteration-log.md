@@ -2289,3 +2289,44 @@ Next iteration direction:
 1. Replace the starter sprite placement with asset-backed nodes aligned to the map contract and combat actors.
 2. Add billboarding/scale rules for unit, zombie, prop, skill, and portrait groups.
 3. Run the first Cocos Creator visual capture as soon as the environment can open the project.
+
+## 2026-05-10 Cocos map-bound sprite placement pass
+
+Related work:
+
+- Follow-up to `70f7717`
+- `cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `e2e/v03-cocos-bridge-verify.js`
+- `frontend/docs/cocos-v03-first-playable-checklist.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `cocos-v03-demo/assets/resources/art/v03/`
+
+Current visual distance:
+
+- Cocos sprite placement is now tied to the shared map contract: unit sprites use player spawn, zombie sprites use zombie entry points, prop sprites use structure centers, and skill sprites anchor near the player.
+- This is closer to an actual battle screen than the previous starter lane placement, but it still needs Creator rendering, billboarding, scale tuning, and prefab composition before it can be visually judged against the target image.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- `V03ArtSpriteRuntime.buildFromManifest` now accepts `V03MapData`.
+- Added map-bound placement rules for unit, zombie, prop, and skill sprite groups.
+- Added `mapBoundSprites` runtime stats so the Cocos status output can distinguish map-placed sprites from UI-only portraits.
+
+What is still far from the reference:
+
+- The adapter still uses simple Sprite nodes rather than tuned 3D billboard planes with depth sorting and contact shadows.
+- Prop sprite selection is first-match by prop kind, not final prefab-authored placement for every cover instance.
+- A Cocos Creator phone screenshot is still required to compare the actual rendered result against the reference.
+
+Next iteration direction:
+
+1. Add per-group visual scale and billboard-facing rules for Cocos sprites.
+2. Bind prop cover sprites to multiple matching structures instead of one starter instance per asset family.
+3. Run or document the first Creator-side visual capture path once Cocos Creator is available.
