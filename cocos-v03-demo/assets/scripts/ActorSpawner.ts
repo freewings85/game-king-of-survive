@@ -125,6 +125,11 @@ export class ActorSpawner extends Component {
     private readonly ZOMBIE_HIT_RADIUS = 36;
     private spawnTimer = 0;
     private readonly SPAWN_INTERVAL = 2.5;
+    private waveStartTime = 0;
+    private waveNumber = 1;
+    private kills = 0;
+    private heroDeathTimer = 0;             // counts up after HP=0 for respawn delay
+    private readonly RESPAWN_DELAY = 4;
     private bulletFrame: SpriteFrame | null = null;
     private touchAnchor: CcVec2 | null = null;
     private touchId: number | null = null;
@@ -520,7 +525,23 @@ export class ActorSpawner extends Component {
             // counter-rotate to stay horizontal as hero rotates
             this.heroHpFill.angle = -(this.heroNode.angle || 0);
         }
-        if (this.heroHp <= 0) return;
+        if (this.heroHp <= 0) {
+            // Death + respawn: count down, then heal back at center
+            this.heroDeathTimer += dt;
+            if (this.heroSprite) {
+                const fadeAlpha = Math.max(60, 255 - Math.floor(this.heroDeathTimer * 80));
+                this.heroSprite.color = new Color(150, 150, 150, fadeAlpha);
+            }
+            if (this.heroDeathTimer >= this.RESPAWN_DELAY) {
+                this.heroHp = this.HERO_MAX_HP;
+                this.heroDeathTimer = 0;
+                this.heroIFrameTimer = this.HERO_IFRAME * 2;
+                this.heroNode.setPosition(0, 0, 0);
+                if (this.heroSprite) this.heroSprite.color = new Color(255, 255, 255, 255);
+                console.log('[Hero] respawn at center');
+            }
+            return;
+        }
         if (this.heroIFrameTimer > 0) {
             this.heroIFrameTimer -= dt;
             // blink: alternate visibility every 80ms during iframe
@@ -841,6 +862,7 @@ export class ActorSpawner extends Component {
             if (z.hp <= 0) {
                 // start dying
                 z.deathTimer = 0;
+                this.kills++;
                 if (z.hpBarFill) z.hpBarFill.active = false;
                 if (z.hpBarBg) z.hpBarBg.active = false;
                 continue;
