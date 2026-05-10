@@ -1,10 +1,13 @@
 import {
     _decorator,
     Camera,
+    Canvas,
     Color,
     Component,
     director,
     ImageAsset,
+    internal,
+    Layers,
     Node,
     Sprite,
     SpriteFrame,
@@ -42,6 +45,15 @@ export class BootstrapMain extends Component {
     private hudLayer!: Node;
 
     onLoad() {
+        // M2-X: disable dynamic atlas to avoid texSubImage2D upload failure
+        const cc: any = (globalThis as any).cc;
+        const dam = cc?.internal?.dynamicAtlasManager ?? (internal as any)?.dynamicAtlasManager;
+        if (dam) {
+            dam.enabled = false;
+            console.log('[BootstrapMain] dynamicAtlasManager disabled');
+        } else {
+            console.warn('[BootstrapMain] dynamicAtlasManager not found — atlas not disabled');
+        }
         this.applyRenderBudget();
         const layers = this.buildSceneGraph();
         this.worldLayer = layers.worldLayer;
@@ -50,17 +62,49 @@ export class BootstrapMain extends Component {
     }
 
     async start() {
-        const config = await loadSceneConfig();
-        this.applyClearColor(config);
-        attachWastelandTerrain(this.worldLayer, config.canvas.width, config.canvas.height);
+        try {
+            console.log('[BootstrapMain] start() begin');
 
-        const spawner = this.node.addComponent(ActorSpawner);
-        spawner.worldLayer = this.worldLayer;
-        spawner.fxLayer = this.fxLayer;
-        spawner.makeRadialAlpha = makeRadialGradientSpriteFrame;
-        spawner.config = config;
+            // CANARY: red 200x200 square at screen center
+            const canary = new Node('CANARY_RED');
+            canary.layer = Layers.Enum.UI_2D;
+            const cs = canary.addComponent(Sprite);
+            const W = 8, H = 8;
+            const buf = new Uint8Array(W * H * 4);
+            for (let i = 0; i < W * H; i++) {
+                buf[i * 4] = 255; buf[i * 4 + 1] = 0; buf[i * 4 + 2] = 0; buf[i * 4 + 3] = 255;
+            }
+            const img = new ImageAsset({ _data: buf, _compressed: false, width: W, height: H, format: Texture2D.PixelFormat.RGBA8888 });
+            const tex = new Texture2D();
+            tex.image = img;
+            const sf = new SpriteFrame();
+            sf.texture = tex;
+            (sf as any).packable = false;
+            cs.spriteFrame = sf;
+            const ctr = canary.addComponent(UITransform);
+            ctr.setContentSize(200, 200);
+            this.worldLayer.addChild(canary);
+            canary.setPosition(0, 0, 0);
+            console.log('[BootstrapMain] canary sprite added at (0,0) size 200x200');
 
-        attachHudSkeleton(this.hudLayer, config);
+            const config = await loadSceneConfig();
+            console.log('[BootstrapMain] config loaded', { canvas: config.canvas, zombies: config.zombies?.length, props: config.props?.length });
+            this.applyClearColor(config);
+            attachWastelandTerrain(this.worldLayer, config.canvas.width, config.canvas.height);
+            console.log('[BootstrapMain] terrain attached');
+
+            const spawner = this.node.addComponent(ActorSpawner);
+            spawner.worldLayer = this.worldLayer;
+            spawner.fxLayer = this.fxLayer;
+            spawner.makeRadialAlpha = makeRadialGradientSpriteFrame;
+            spawner.config = config;
+            console.log('[BootstrapMain] spawner attached');
+
+            attachHudSkeleton(this.hudLayer, config);
+            console.log('[BootstrapMain] start() done');
+        } catch (e) {
+            console.error('[BootstrapMain] start() FAILED', e);
+        }
     }
 
     private applyRenderBudget() {
@@ -83,19 +127,39 @@ export class BootstrapMain extends Component {
         if (!scene) throw new Error('[BootstrapMain] No active scene');
 
         const root = new Node('V03Root');
+        root.layer = Layers.Enum.UI_2D;
         scene.addChild(root);
 
         const cameraNode = new Node('MainCamera');
+        cameraNode.layer = Layers.Enum.UI_2D;
         const camera = cameraNode.addComponent(Camera);
         camera.projection = Camera.ProjectionType.ORTHO;
         camera.orthoHeight = this.targetHeight / 2;
         camera.clearColor = new Color(10, 12, 14, 255);
+        camera.clearFlags = Camera.ClearFlag.SOLID_COLOR;
+        camera.visibility = Layers.Enum.UI_2D;
+        camera.priority = 1073741823;
+        camera.near = 1;
+        camera.far = 2000;
         cameraNode.setPosition(0, 0, 1000);
         root.addChild(cameraNode);
+        console.log('[BootstrapMain] camera configured', { ortho: camera.orthoHeight, near: camera.near, far: camera.far, vis: camera.visibility });
+
+        // Canvas wires the camera to the UI render pipeline (required for Sprite to render in 3.x)
+        const canvas = root.addComponent(Canvas);
+        canvas.cameraComponent = camera;
+        const rootTr = root.addComponent(UITransform);
+        rootTr.setContentSize(this.targetWidth, this.targetHeight);
 
         const worldLayer = new Node('World');
         const fxLayer = new Node('FX');
         const hudLayer = new Node('HUD');
+        worldLayer.layer = Layers.Enum.UI_2D;
+        fxLayer.layer = Layers.Enum.UI_2D;
+        hudLayer.layer = Layers.Enum.UI_2D;
+        worldLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
+        fxLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
+        hudLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
         root.addChild(worldLayer);
         root.addChild(fxLayer);
         root.addChild(hudLayer);
@@ -415,4 +479,9 @@ export function makeRadialGradientSpriteFrame(
 
 function lerp(a: number, b: number, t: number): number {
     return Math.round(a + (b - a) * t);
+}
+
+export function forceLayerRecursive(node: Node, layer: number) {
+    node.layer = layer;
+    for (const c of node.children) forceLayerRecursive(c, layer);
 }

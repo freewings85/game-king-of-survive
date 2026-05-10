@@ -1,0 +1,54 @@
+{
+  "_schema": "m2-x-scene-template/v1",
+  "_about": "等价最小 Cocos 3.x 场景资产 — 不直接手写 V03Battle.scene/.meta (Cocos 3.8 _globals 字段链脆弱), 改给目标 hierarchy + component binding 模板, 由 Leo 在 Cocos Creator GUI 里 5 步重建. 入口组件是 BootstrapMain (cocos-v03-demo/assets/scripts/BootstrapMain.ts), 它在 onLoad / async start 里全部用 runtime API 自建 V03Root / MainCamera / World / FX / HUD layer 并加载 m2-visual-scene.json — 所以 .scene 只需挂这一个组件, 其余节点在 runtime 自动出现.",
+
+  "scenePath": "assets/scenes/V03Battle.scene",
+  "targetHierarchy": [
+    {
+      "node": "BootstrapHost",
+      "type": "cc.Node",
+      "parent": "<scene-root>",
+      "components": [
+        {
+          "type": "BootstrapMain",
+          "decoratorName": "BootstrapMain",
+          "sourcePath": "assets/scripts/BootstrapMain.ts",
+          "properties": {
+            "targetWidth": 390,
+            "targetHeight": 844,
+            "maxDevicePixelRatio": 2
+          }
+        }
+      ]
+    }
+  ],
+
+  "runtimeSpawnedNodes": {
+    "_about": "BootstrapMain.onLoad/start 跑完后会自动出现 (无需手摆), 验证 build 跑通的标志:",
+    "expected": [
+      "V03Root (scene 顶级)",
+      "V03Root/MainCamera (Camera ortho, orthoHeight 422)",
+      "V03Root/World (含 WastelandTerrain 6 tiles + Hero + 8 zombies + 7 props + contact shadows)",
+      "V03Root/FX (MuzzleCone + MuzzleBurst + 5 Bullet_* + 13 Spark_*_* + 18 Bolt_*_* + 4 LightningHub_*)",
+      "V03Root/HUD (8 panels + 9 skill nodes)"
+    ],
+    "expectedTotalNodes": 105,
+    "verificationToolNote": "等价 cocos-v03-demo/tools/runtime_smoke 在 Node 端跑出来的 dump (105 nodes), runtime_smoke 是 .ts spawn 决策的 mirror, Cocos engine 真 build 数节点应吻合."
+  },
+
+  "configFile": {
+    "path": "assets/resources/config/m2-visual-scene.json",
+    "loadedBy": "SceneConfigLoader.loadSceneConfig() via Cocos resources.load(JsonAsset)",
+    "_note": "BootstrapMain.start() 会自动 await loadSceneConfig() — Leo 不需要在 inspector 里手填配置, JSON 是 single source of truth"
+  },
+
+  "spriteResources": {
+    "_about": "Cocos 自动扫 assets/resources/ 下 .png 生成 SpriteFrame; ActorSpawner.loadAllFrames() 按 config.zombies/props 引用的 (bodyType, frame) / propKey 按需加载",
+    "paths": [
+      "assets/resources/art/v03/hero/{survivor-idle, survivor-shoot}.png",
+      "assets/resources/art/v03/zombie/{zombie-idle, zombie-move, zombie-attack}.png",
+      "assets/resources/art/v03/zombie2/{clint-idle, clint-move, clint-attack}.png",
+      "assets/resources/art/v03/props/{wreck-tank, barrel-rust, sandbag, tank-green, barrel-red, sandbag-beige, oil-splat}.png"
+    ]
+  }
+}

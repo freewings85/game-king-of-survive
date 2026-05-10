@@ -1,0 +1,11 @@
+# Cocos Creator GUI build artifacts (regenerated on import / preview / build)
+library/
+temp/
+build/
+profiles/
+.creator/
+
+# IDE / OS
+.DS_Store
+*.swp
+node_modules/

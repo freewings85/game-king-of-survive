@@ -2,6 +2,7 @@ import {
     _decorator,
     Color,
     Component,
+    Layers,
     Node,
     resources,
     Sprite,
@@ -9,6 +10,7 @@ import {
     UITransform,
     Vec3,
 } from 'cc';
+import { forceLayerRecursive } from './BootstrapMain';
 import {
     SceneConfig,
     HeroConfig,
@@ -49,31 +51,61 @@ export class ActorSpawner extends Component {
 
     private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null };
     private zombieFrames: Map<string, SpriteFrame> = new Map(); // key = `${bodyType}:${frame}`
-    private propFrames: Record<PropKey, SpriteFrame | null> = { wreckTank: null, barrelRust: null, sandbag: null };
+    private propFrames: Map<PropKey, SpriteFrame> = new Map();
+
+    private static readonly PROP_PATHS: Record<PropKey, string> = {
+        wreckTank:    'art/v03/props/wreck-tank',
+        barrelRust:   'art/v03/props/barrel-rust',
+        sandbag:      'art/v03/props/sandbag',
+        tankGreen:    'art/v03/props/tank-green',
+        barrelRed:    'art/v03/props/barrel-red',
+        sandbagBeige: 'art/v03/props/sandbag-beige',
+        oilSplat:     'art/v03/props/oil-splat',
+    };
 
     async start() {
-        if (!this.config) {
-            throw new Error('[ActorSpawner] config not injected — caller must set .config before adding the component');
+        try {
+            console.log('[ActorSpawner] start() begin');
+            if (!this.config) {
+                throw new Error('[ActorSpawner] config not injected — caller must set .config before adding the component');
+            }
+            console.log('[ActorSpawner] loading frames...');
+            await this.loadAllFrames();
+            console.log('[ActorSpawner] frames loaded, spawning...');
+            this.spawnProps(this.config.props);
+            this.spawnHero(this.config.hero);
+            this.spawnZombies(this.config.zombies, this.config.hero.pos);
+            this.spawnMuzzle(this.config.vfx.muzzleCone, this.config.hero.pos, 'MuzzleCone');
+            this.spawnMuzzle(this.config.vfx.muzzleBurst, this.config.hero.pos, 'MuzzleBurst');
+            this.spawnFanBullets(this.config.vfx.fanBullets, this.config.hero.pos);
+            for (let i = 0; i < this.config.vfx.hitSparkClusters.length; i++) {
+                this.spawnHitSparks(this.config.vfx.hitSparkClusters[i], i);
+            }
+            this.spawnLightningChain(this.config.vfx.lightningChain);
+            // force every spawned descendant to UI_2D so the camera sees them
+            forceLayerRecursive(this.worldLayer, Layers.Enum.UI_2D);
+            forceLayerRecursive(this.fxLayer, Layers.Enum.UI_2D);
+            const hudLayer = this.worldLayer.parent?.getChildByName('HUD');
+            if (hudLayer) forceLayerRecursive(hudLayer, Layers.Enum.UI_2D);
+            console.log('[ActorSpawner] start() done, all layers forced UI_2D');
+        } catch (e) {
+            console.error('[ActorSpawner] start() FAILED', e);
         }
-        await this.loadAllFrames();
-        this.spawnProps(this.config.props);
-        this.spawnHero(this.config.hero);
-        this.spawnZombies(this.config.zombies, this.config.hero.pos);
-        this.spawnMuzzle(this.config.vfx.muzzleCone, this.config.hero.pos, 'MuzzleCone');
-        this.spawnMuzzle(this.config.vfx.muzzleBurst, this.config.hero.pos, 'MuzzleBurst');
-        this.spawnFanBullets(this.config.vfx.fanBullets, this.config.hero.pos);
-        this.spawnHitSparks(this.config.vfx.hitSparks);
-        this.spawnLightningChain(this.config.vfx.lightningChain);
     }
 
     private async loadAllFrames(): Promise<void> {
         const paths: Array<[string, (sf: SpriteFrame) => void]> = [
             ['art/v03/hero/survivor-idle/spriteFrame', (sf) => (this.heroFrames.idle = sf)],
             ['art/v03/hero/survivor-shoot/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
-            ['art/v03/props/wreck-tank/spriteFrame', (sf) => (this.propFrames.wreckTank = sf)],
-            ['art/v03/props/barrel-rust/spriteFrame', (sf) => (this.propFrames.barrelRust = sf)],
-            ['art/v03/props/sandbag/spriteFrame', (sf) => (this.propFrames.sandbag = sf)],
         ];
+
+        const referencedPropKeys = new Set<PropKey>();
+        for (const p of this.config.props) referencedPropKeys.add(p.key);
+        for (const key of referencedPropKeys) {
+            const path = ActorSpawner.PROP_PATHS[key];
+            if (!path) throw new Error(`[ActorSpawner] no sprite path for prop key ${key}`);
+            paths.push([`${path}/spriteFrame`, (sf) => this.propFrames.set(key, sf)]);
+        }
 
         // Only load zombie packs / frames the config actually references — avoids
         // dragging clint sprites into builds that haven't enabled the silhouette gate yet.
@@ -98,6 +130,8 @@ export class ActorSpawner extends Component {
                                 reject(err);
                                 return;
                             }
+                            // M2-X: opt out of dynamic atlas per-frame (avoid texSubImage2D fail)
+                            (sf as any).packable = false;
                             assign(sf);
                             resolve();
                         });
@@ -111,7 +145,7 @@ export class ActorSpawner extends Component {
             this.spawnContactShadow(p.pos, p.shadow[0], p.shadow[1]);
             const node = new Node(p.name);
             const sprite = node.addComponent(Sprite);
-            sprite.spriteFrame = this.propFrames[p.key];
+            sprite.spriteFrame = this.propFrames.get(p.key) ?? null;
             if (p.tint) sprite.color = new Color(p.tint[0], p.tint[1], p.tint[2], p.tint[3]);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             tr.setContentSize(p.contentSize[0], p.contentSize[1]);
@@ -199,11 +233,11 @@ export class ActorSpawner extends Component {
         }
     }
 
-    private spawnHitSparks(cfg: HitSparksConfig) {
+    private spawnHitSparks(cfg: HitSparksConfig, clusterIdx: number) {
         const [tx, ty] = cfg.target;
         for (let i = 0; i < cfg.offsets.length; i++) {
             const [ox, oy, sz] = cfg.offsets[i];
-            const node = new Node(`Spark_${i}`);
+            const node = new Node(`Spark_${clusterIdx}_${i}`);
             const sprite = node.addComponent(Sprite);
             sprite.spriteFrame = this.makeRadialAlpha(64, cfg.inner, cfg.outer);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);

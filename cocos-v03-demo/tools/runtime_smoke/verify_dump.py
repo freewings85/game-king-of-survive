@@ -104,8 +104,9 @@ def main():
            f"Bullets count: {len(bullets)} vs {len(config['vfx']['fanBullets']['spread'])}")
 
     sparks = [n for n in flat if n["name"].startswith("Spark_")]
-    expect(len(sparks) == len(config["vfx"]["hitSparks"]["offsets"]),
-           f"Sparks count: {len(sparks)} vs {len(config['vfx']['hitSparks']['offsets'])}")
+    expected_sparks = sum(len(c["offsets"]) for c in config["vfx"]["hitSparkClusters"])
+    expect(len(sparks) == expected_sparks,
+           f"Sparks count: {len(sparks)} vs {expected_sparks} (across {len(config['vfx']['hitSparkClusters'])} clusters)")
 
     chain = config["vfx"]["lightningChain"]
     expected_bolts = (len(chain["nodes"]) - 1) * chain["segments"]

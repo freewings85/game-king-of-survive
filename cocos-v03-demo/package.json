@@ -2,5 +2,9 @@
   "name": "king-of-survive-cocos-v03-demo",
   "version": "0.1.0",
   "private": true,
-  "description": "Cocos Creator 3.x vertical slice scaffold for the V03 zombie battle royale target"
+  "description": "Cocos Creator 3.x vertical slice scaffold for the V03 zombie battle royale target",
+  "creator": {
+    "version": "3.8.8"
+  },
+  "uuid": "b4d224ad-befa-4214-9af8-28d6ae97c0af"
 }
