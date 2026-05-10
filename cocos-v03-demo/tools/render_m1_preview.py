@@ -19,13 +19,9 @@ CONFIG = os.path.join(ROOT, "cocos-v03-demo/assets/resources/config/m2-visual-sc
 OUT = os.path.join(ROOT, "can_delete/shots")
 
 PROP_FILE = {
-    "wreckTank":    "wreck-tank.png",
-    "barrelRust":   "barrel-rust.png",
-    "sandbag":      "sandbag.png",
-    "tankGreen":    "tank-green.png",
-    "barrelRed":    "barrel-red.png",
-    "sandbagBeige": "sandbag-beige.png",
-    "oilSplat":     "oil-splat.png",
+    "wreckTank": "wreck-tank.png",
+    "barrelRust": "barrel-rust.png",
+    "sandbag": "sandbag.png",
 }
 ZOMBIE_FILE = {
     "idle": "zombie-idle.png",
@@ -375,12 +371,12 @@ def render(config):
         place_radial(canvas, (cx, cy), (length, fb["contentH"]), fb["inner"], fb["outer"], W, H,
                      angle_deg=ang)
 
-    # Hit sparks (one or more clusters)
-    for hs in vfx["hitSparkClusters"]:
-        tx, ty = hs["target"]
-        for ox, oy, sz in hs["offsets"]:
-            place_radial(canvas, (tx + ox, ty + oy), (sz * 2, sz * 2),
-                         hs["inner"], hs["outer"], W, H, src_size=64)
+    # Hit sparks
+    hs = vfx["hitSparks"]
+    tx, ty = hs["target"]
+    for ox, oy, sz in hs["offsets"]:
+        place_radial(canvas, (tx + ox, ty + oy), (sz * 2, sz * 2),
+                     hs["inner"], hs["outer"], W, H, src_size=64)
 
     # Lightning chain
     lc = vfx["lightningChain"]

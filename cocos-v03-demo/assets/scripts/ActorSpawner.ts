@@ -35,7 +35,7 @@ export class ActorSpawner extends Component {
 
     private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null };
     private zombieFrames: Record<ZombieConfig['frame'], SpriteFrame | null> = { idle: null, move: null, attack: null };
-    private propFrames: Map<PropKey, SpriteFrame> = new Map();
+    private propFrames: Record<PropKey, SpriteFrame | null> = { wreckTank: null, barrelRust: null, sandbag: null };
 
     async start() {
         if (!this.config) {
@@ -48,42 +48,26 @@ export class ActorSpawner extends Component {
         this.spawnMuzzle(this.config.vfx.muzzleCone, this.config.hero.pos, 'MuzzleCone');
         this.spawnMuzzle(this.config.vfx.muzzleBurst, this.config.hero.pos, 'MuzzleBurst');
         this.spawnFanBullets(this.config.vfx.fanBullets, this.config.hero.pos);
-        for (let i = 0; i < this.config.vfx.hitSparkClusters.length; i++) {
-            this.spawnHitSparks(this.config.vfx.hitSparkClusters[i], i);
-        }
+        this.spawnHitSparks(this.config.vfx.hitSparks);
         this.spawnLightningChain(this.config.vfx.lightningChain);
     }
 
-    private static readonly PROP_PATHS: Record<PropKey, string> = {
-        wreckTank:    'art/v03/props/wreck-tank',
-        barrelRust:   'art/v03/props/barrel-rust',
-        sandbag:      'art/v03/props/sandbag',
-        tankGreen:    'art/v03/props/tank-green',
-        barrelRed:    'art/v03/props/barrel-red',
-        sandbagBeige: 'art/v03/props/sandbag-beige',
-        oilSplat:     'art/v03/props/oil-splat',
-    };
-
     private async loadAllFrames(): Promise<void> {
-        const ops: Array<[string, (sf: SpriteFrame) => void]> = [
-            ['art/v03/hero/survivor-idle', (sf) => (this.heroFrames.idle = sf)],
-            ['art/v03/hero/survivor-shoot', (sf) => (this.heroFrames.shoot = sf)],
-            ['art/v03/zombie/zombie-idle', (sf) => (this.zombieFrames.idle = sf)],
-            ['art/v03/zombie/zombie-move', (sf) => (this.zombieFrames.move = sf)],
-            ['art/v03/zombie/zombie-attack', (sf) => (this.zombieFrames.attack = sf)],
+        const paths: Array<[string, (sf: SpriteFrame) => void]> = [
+            ['art/v03/hero/survivor-idle/spriteFrame', (sf) => (this.heroFrames.idle = sf)],
+            ['art/v03/hero/survivor-shoot/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
+            ['art/v03/zombie/zombie-idle/spriteFrame', (sf) => (this.zombieFrames.idle = sf)],
+            ['art/v03/zombie/zombie-move/spriteFrame', (sf) => (this.zombieFrames.move = sf)],
+            ['art/v03/zombie/zombie-attack/spriteFrame', (sf) => (this.zombieFrames.attack = sf)],
+            ['art/v03/props/wreck-tank/spriteFrame', (sf) => (this.propFrames.wreckTank = sf)],
+            ['art/v03/props/barrel-rust/spriteFrame', (sf) => (this.propFrames.barrelRust = sf)],
+            ['art/v03/props/sandbag/spriteFrame', (sf) => (this.propFrames.sandbag = sf)],
         ];
-        const referencedPropKeys = new Set<PropKey>();
-        for (const p of this.config.props) referencedPropKeys.add(p.key);
-        for (const key of referencedPropKeys) {
-            const path = ActorSpawner.PROP_PATHS[key];
-            if (!path) throw new Error(`[ActorSpawner] no sprite path for prop key ${key}`);
-            ops.push([path, (sf) => this.propFrames.set(key, sf)]);
-        }
         await Promise.all(
-            ops.map(
+            paths.map(
                 ([p, assign]) =>
                     new Promise<void>((resolve, reject) => {
-                        resources.load(`${p}/spriteFrame`, SpriteFrame, (err, sf) => {
+                        resources.load(p, SpriteFrame, (err, sf) => {
                             if (err) {
                                 console.error('[ActorSpawner] load fail', p, err);
                                 reject(err);
@@ -102,7 +86,7 @@ export class ActorSpawner extends Component {
             this.spawnContactShadow(p.pos, p.shadow[0], p.shadow[1]);
             const node = new Node(p.name);
             const sprite = node.addComponent(Sprite);
-            sprite.spriteFrame = this.propFrames.get(p.key) ?? null;
+            sprite.spriteFrame = this.propFrames[p.key];
             if (p.tint) sprite.color = new Color(p.tint[0], p.tint[1], p.tint[2], p.tint[3]);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             tr.setContentSize(p.contentSize[0], p.contentSize[1]);
@@ -189,11 +173,11 @@ export class ActorSpawner extends Component {
         }
     }
 
-    private spawnHitSparks(cfg: HitSparksConfig, clusterIdx: number) {
+    private spawnHitSparks(cfg: HitSparksConfig) {
         const [tx, ty] = cfg.target;
         for (let i = 0; i < cfg.offsets.length; i++) {
             const [ox, oy, sz] = cfg.offsets[i];
-            const node = new Node(`Spark_${clusterIdx}_${i}`);
+            const node = new Node(`Spark_${i}`);
             const sprite = node.addComponent(Sprite);
             sprite.spriteFrame = this.makeRadialAlpha(64, cfg.inner, cfg.outer);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
