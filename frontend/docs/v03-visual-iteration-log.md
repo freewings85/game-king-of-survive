@@ -2412,3 +2412,51 @@ Next iteration direction:
 1. Add Cocos ground wash and safe-zone storm sprite/mesh runtime layers.
 2. Replace flat shadow boxes with authored shadow blob sprites when the art set is ready.
 3. Capture and audit the first Cocos phone screenshot when Creator is available.
+
+## 2026-05-10 Full class unit sprite pass
+
+Related work:
+
+- Follow-up to `800b077`
+- `tools/build-v03-unit-assets.js`
+- `frontend/engine-demo/assets/units/`
+- `tools/export-v03-cocos-art.js`
+- `cocos-v03-demo/assets/resources/art/v03/units/`
+- `cocos-v03-demo/assets/scripts/V03ArtSpriteRuntime.ts`
+- `cocos-v03-demo/assets/scripts/V03VisualRuntime.ts`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `can_delete/v03-gate/engine-demo-class-guardian.png`
+- `can_delete/v03-gate/engine-demo-class-tech.png`
+- `can_delete/v03-gate/engine-demo-class-ranger.png`
+- `frontend/engine-demo/assets/units/hero-guardian-0-isometric.png`
+- `frontend/engine-demo/assets/units/hero-tech-1-isometric.png`
+- `frontend/engine-demo/assets/units/hero-ranger-2-isometric.png`
+
+Current visual distance:
+
+- The battlefield no longer has a single Ranger-only unit sprite exception. Guardian, Tech, and Ranger now each have three in-match isometric unit sprites, so class/skin identity is visible in the actual combat view instead of only the HUD portrait.
+- This is closer to the reference image's class/skin readable composition, but the sprites are still first-pass generated bitmap assets rather than final painted production characters with animation frames.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added 9 transparent in-match unit sprites: Guardian 0-2, Tech 0-2, and Ranger 0-2.
+- The WebGL demo now reports and gates `classUnitSpriteVariantCount >= 9`; class review shots require each selected class/skin to use its matching unit sprite.
+- The Cocos art bridge exports all 9 unit sprites, and `V03ArtSpriteRuntime` separates their map-bound placements instead of stacking every unit on the player spawn.
+- `V03VisualContract` and `V03VisualRuntime` now track required hero unit sprites separately from portrait/skin card sprites.
+
+What is still far from the reference:
+
+- Unit sprites remain single-frame and procedural-looking. The reference implies stronger faces, costume folds, weapons, pose language, and skin-specific silhouette differences.
+- There are no run/attack/hit/death animation frames yet.
+- Cocos still needs a real Creator screenshot to judge whether the imported unit sprites read correctly on device.
+
+Next iteration direction:
+
+1. Push the unit sprites from generated placeholders toward authored production character sheets: cleaner faces, hands, weapon silhouettes, and skin-specific costume changes.
+2. Add matching zombie in-match sprites or animation-ready zombie frames so hero quality does not outpace enemy readability.
+3. Start capturing Cocos/WeChat phone screenshots as soon as the scene is runnable, because browser gates alone cannot prove final mini-game rendering quality.

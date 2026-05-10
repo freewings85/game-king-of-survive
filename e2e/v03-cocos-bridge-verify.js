@@ -89,13 +89,13 @@ assert(cocosMap.rivalPoints.length >= 2, 'Cocos map needs two rival points');
 assert(cocosMap.qualityChecks.every((check) => check.ok), 'Cocos map quality gate failed');
 assert(cocosArt.schemaVersion === 'v03-art-assets-1', 'Cocos art asset schema mismatch');
 assert(cocosArt.reference === 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png', 'Cocos art assets must cite target reference');
-assert(cocosArt.assets.length >= 25, 'Cocos art bridge needs imported V03 PNG assets');
+assert(cocosArt.assets.length >= 33, 'Cocos art bridge needs imported V03 PNG assets');
 assert(cocosArt.counts.portraits >= 12, 'Cocos art bridge needs class portrait assets');
-assert(cocosArt.counts.units >= 1, 'Cocos art bridge needs unit sprite assets');
+assert(cocosArt.counts.units >= 9, 'Cocos art bridge needs all class/skin unit sprite assets');
 assert(cocosArt.counts.zombies >= 3, 'Cocos art bridge needs zombie card assets');
 assert(cocosArt.counts.skills >= 3, 'Cocos art bridge needs skill card assets');
 assert(cocosArt.counts.props >= 6, 'Cocos art bridge needs prop cover assets');
-['hero-ranger-2-isometric', 'zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded', 'skill-card-arc', 'skill-card-boom', 'skill-card-fan', 'prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((id) => {
+['hero-guardian-0-isometric', 'hero-guardian-1-isometric', 'hero-guardian-2-isometric', 'hero-tech-0-isometric', 'hero-tech-1-isometric', 'hero-tech-2-isometric', 'hero-ranger-0-isometric', 'hero-ranger-1-isometric', 'hero-ranger-2-isometric', 'zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded', 'skill-card-arc', 'skill-card-boom', 'skill-card-fan', 'prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((id) => {
   const asset = cocosArt.assets.find((item) => item.id === id);
   assert(asset, `Cocos art manifest must include ${id}`);
   assert(asset.resourcePath.startsWith(`art/v03/${asset.group}/`), `Cocos art manifest resource path must be under art/v03 for ${id}`);
@@ -145,6 +145,7 @@ assert(artSpriteRuntimeSource.includes('resources.load(spriteFramePath, SpriteFr
 assert(artSpriteRuntimeSource.includes('node.addComponent(Sprite)'), 'Art sprite runtime must create Sprite components');
 assert(artSpriteRuntimeSource.includes("asset.spriteFramePath || `${asset.resourcePath}/spriteFrame`"), 'Art sprite runtime must use manifest sprite frame path');
 assert(artSpriteRuntimeSource.includes('map.spawnPoints[0]'), 'Art sprite runtime must bind unit and skill sprites to map spawn points');
+assert(artSpriteRuntimeSource.includes('unitVariantIndex(asset.id)'), 'Art sprite runtime must separate class/skin unit sprite placements');
 assert(artSpriteRuntimeSource.includes('map.zombieEntries'), 'Art sprite runtime must bind zombie sprites to map entry points');
 assert(artSpriteRuntimeSource.includes('structuresForPropAsset(map, asset.id)'), 'Art sprite runtime must bind prop sprites to map structures');
 assert(artSpriteRuntimeSource.includes('.slice(0, 6)'), 'Art sprite runtime must support multiple prop instances per asset family');
@@ -161,6 +162,7 @@ assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_GEAR'), 'Cocos visual run
 assert(visualRuntimeSource.includes('V03_REQUIRED_MATERIAL_BLEND_LAYERS'), 'Cocos visual runtime must consume material blend layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_PAINTERLY_CARD_LAYERS'), 'Cocos visual runtime must consume painterly card layer contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_SKIN_SPRITES'), 'Cocos visual runtime must consume hero skin sprite contract');
+assert(visualRuntimeSource.includes('V03_REQUIRED_HERO_UNIT_SPRITES'), 'Cocos visual runtime must consume hero unit sprite contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_ZOMBIE_CARD_SPRITES'), 'Cocos visual runtime must consume zombie card sprite contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_SKILL_CARD_SPRITES'), 'Cocos visual runtime must consume skill card sprite contract');
 assert(visualRuntimeSource.includes('V03_REQUIRED_OBJECT_RIM_LAYERS'), 'Cocos visual runtime must consume object rim layer contract');
@@ -189,6 +191,7 @@ assert(visualRuntimeSource.includes('objectRimLayers'), 'Cocos visual runtime mu
 assert(visualRuntimeSource.includes('materialBlendLayers'), 'Cocos visual runtime must report material blend layer stats');
 assert(visualRuntimeSource.includes('painterlyCardLayers'), 'Cocos visual runtime must report painterly card layer stats');
 assert(visualRuntimeSource.includes('heroSkinSprites'), 'Cocos visual runtime must report hero skin sprite stats');
+assert(visualRuntimeSource.includes('heroUnitSprites'), 'Cocos visual runtime must report hero unit sprite stats');
 assert(visualRuntimeSource.includes('zombieCardSprites'), 'Cocos visual runtime must report zombie card sprite stats');
 assert(visualRuntimeSource.includes('skillCardSprites'), 'Cocos visual runtime must report skill card sprite stats');
 assert(visualRuntimeSource.includes('fxLayers'), 'Cocos visual runtime must report FX layer stats');
@@ -263,6 +266,20 @@ assert(battleDirectorSource.includes('this.visualRuntime.buildVisualContract(thi
 ].forEach((sprite) => {
   assert(visualContractSource.includes(sprite), `Visual contract must include hero skin sprite ${sprite}`);
   assert(visualContractDoc.includes(sprite), `Visual contract doc must include hero skin sprite ${sprite}`);
+});
+[
+  'hero-guardian-0-isometric',
+  'hero-guardian-1-isometric',
+  'hero-guardian-2-isometric',
+  'hero-tech-0-isometric',
+  'hero-tech-1-isometric',
+  'hero-tech-2-isometric',
+  'hero-ranger-0-isometric',
+  'hero-ranger-1-isometric',
+  'hero-ranger-2-isometric'
+].forEach((sprite) => {
+  assert(visualContractSource.includes(sprite), `Visual contract must include hero unit sprite ${sprite}`);
+  assert(visualContractDoc.includes(sprite), `Visual contract doc must include hero unit sprite ${sprite}`);
 });
 ['zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded'].forEach((sprite) => {
   assert(visualContractSource.includes(sprite), `Visual contract must include zombie card sprite ${sprite}`);

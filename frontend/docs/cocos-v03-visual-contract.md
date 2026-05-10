@@ -188,6 +188,18 @@ Required hero skin sprites:
 - `class-skin-ranger-1`
 - `class-skin-ranger-2`
 
+Required in-match unit sprites:
+
+- `hero-guardian-0-isometric`
+- `hero-guardian-1-isometric`
+- `hero-guardian-2-isometric`
+- `hero-tech-0-isometric`
+- `hero-tech-1-isometric`
+- `hero-tech-2-isometric`
+- `hero-ranger-0-isometric`
+- `hero-ranger-1-isometric`
+- `hero-ranger-2-isometric`
+
 Required zombie card sprites:
 
 - `zombie-card-brute`

@@ -208,7 +208,19 @@ const skillCardAssets = {
   fan: '/frontend/engine-demo/assets/skills/skill-card-fan.png'
 };
 const classUnitAssets = {
+  guardian: {
+    0: '/frontend/engine-demo/assets/units/hero-guardian-0-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-guardian-1-isometric.png',
+    2: '/frontend/engine-demo/assets/units/hero-guardian-2-isometric.png'
+  },
+  tech: {
+    0: '/frontend/engine-demo/assets/units/hero-tech-0-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-tech-1-isometric.png',
+    2: '/frontend/engine-demo/assets/units/hero-tech-2-isometric.png'
+  },
   ranger: {
+    0: '/frontend/engine-demo/assets/units/hero-ranger-0-isometric.png',
+    1: '/frontend/engine-demo/assets/units/hero-ranger-1-isometric.png',
     2: '/frontend/engine-demo/assets/units/hero-ranger-2-isometric.png'
   }
 };
@@ -1975,6 +1987,7 @@ function applySkin(index) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activeClass}-${activeSkin}`;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitSpriteVariant = getClassUnitAsset(activeClass, activeSkin) ? `${activeClass}-${activeSkin}` : '';
   window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
+  window.__V03_ENGINE_DEMO_STATE.classUnitSpriteVariantCount = Object.values(classUnitAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;
@@ -2619,8 +2632,11 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinColor = activePainterlySkinColor;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyStyle = activePainterlyStyle;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesSpriteAsset = activePainterlyUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUsesUnitSpriteAsset = activePainterlyUsesUnitSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlySkinSpriteVariant = `${activePainterlyClass}-${activePainterlySkin}`;
+  window.__V03_ENGINE_DEMO_STATE.activePainterlyUnitSpriteVariant = getClassUnitAsset(activePainterlyClass, activePainterlySkin) ? `${activePainterlyClass}-${activePainterlySkin}` : '';
   window.__V03_ENGINE_DEMO_STATE.classSkinSpriteVariantCount = Object.values(classPortraitAssets).reduce((sum, assets) => sum + assets.length, 0);
+  window.__V03_ENGINE_DEMO_STATE.classUnitSpriteVariantCount = Object.values(classUnitAssets).reduce((sum, assets) => sum + Object.keys(assets).length, 0);
   window.__V03_ENGINE_DEMO_STATE.combatFocusDisplayed = getComputedStyle(combatFocus).display !== 'none';
   window.__V03_ENGINE_DEMO_STATE.combatFocusStyle = focusPortrait.dataset.classStyle;
   window.__V03_ENGINE_DEMO_STATE.combatFocusClassId = focusPortrait.dataset.classId;

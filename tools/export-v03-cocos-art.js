@@ -22,6 +22,14 @@ const groups = {
     'class-skin-ranger-2.png'
   ],
   units: [
+    'hero-guardian-0-isometric.png',
+    'hero-guardian-1-isometric.png',
+    'hero-guardian-2-isometric.png',
+    'hero-tech-0-isometric.png',
+    'hero-tech-1-isometric.png',
+    'hero-tech-2-isometric.png',
+    'hero-ranger-0-isometric.png',
+    'hero-ranger-1-isometric.png',
     'hero-ranger-2-isometric.png'
   ],
   zombies: [

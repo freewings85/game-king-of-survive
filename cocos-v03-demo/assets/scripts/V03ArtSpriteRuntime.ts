@@ -129,7 +129,11 @@ export class V03ArtSpriteRuntime extends Component {
     }
     if (asset.group === 'units') {
       const spawn = map.spawnPoints[0] || map.stormCenter;
-      return [this.makePlacement(this.mapPointToWorld(map, spawn, 1.05), true, this.scaleForAsset(asset), true)];
+      const position = this.mapPointToWorld(map, spawn, 1.05);
+      const unitIndex = Math.max(0, this.unitVariantIndex(asset.id));
+      position.x += (unitIndex % 3 - 1) * 0.52;
+      position.z += Math.floor(unitIndex / 3) * 0.30;
+      return [this.makePlacement(position, true, this.scaleForAsset(asset), true)];
     }
     if (asset.group === 'zombies') {
       const zombieIndex = Math.max(0, this.zombieIndex(asset.id));
@@ -196,7 +200,7 @@ export class V03ArtSpriteRuntime extends Component {
 
   private scaleForAsset(asset: V03ArtAssetEntry): number {
     if (asset.group === 'portraits') return 0.72;
-    if (asset.group === 'units') return 1.16;
+    if (asset.group === 'units') return 0.92;
     if (asset.group === 'zombies') return asset.id.includes('brute') ? 1.08 : 0.9;
     if (asset.group === 'props') return asset.id.includes('wall') ? 1.28 : 1.0;
     if (asset.group === 'skills') return 0.58;
@@ -218,6 +222,17 @@ export class V03ArtSpriteRuntime extends Component {
     if (id.includes('crawler')) return 1;
     if (id.includes('hooded')) return 2;
     return 0;
+  }
+
+  private unitVariantIndex(id: string): number {
+    const match = id.match(/hero-(guardian|tech|ranger)-(\d)-isometric/);
+    if (!match) return 0;
+    const classOffset: Record<string, number> = {
+      guardian: 0,
+      tech: 3,
+      ranger: 6
+    };
+    return classOffset[match[1]] + Number(match[2]);
   }
 
   private loadSpriteFrame(asset: V03ArtAssetEntry): Promise<SpriteFrame> {

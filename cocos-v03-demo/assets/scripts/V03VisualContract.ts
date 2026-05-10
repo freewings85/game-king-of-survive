@@ -110,6 +110,18 @@ export const V03_REQUIRED_HERO_SKIN_SPRITES = [
   'class-skin-ranger-2'
 ] as const;
 
+export const V03_REQUIRED_HERO_UNIT_SPRITES = [
+  'hero-guardian-0-isometric',
+  'hero-guardian-1-isometric',
+  'hero-guardian-2-isometric',
+  'hero-tech-0-isometric',
+  'hero-tech-1-isometric',
+  'hero-tech-2-isometric',
+  'hero-ranger-0-isometric',
+  'hero-ranger-1-isometric',
+  'hero-ranger-2-isometric'
+] as const;
+
 export const V03_REQUIRED_ZOMBIE_CARD_SPRITES = [
   'zombie-card-brute',
   'zombie-card-crawler',

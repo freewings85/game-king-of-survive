@@ -15,6 +15,7 @@ import {
   V03_REQUIRED_GROUND_WASH_LAYERS,
   V03_REQUIRED_HERO_GEAR,
   V03_REQUIRED_HERO_SKIN_SPRITES,
+  V03_REQUIRED_HERO_UNIT_SPRITES,
   V03_REQUIRED_MATERIAL_BLEND_LAYERS,
   V03_REQUIRED_OBJECT_RIM_LAYERS,
   V03_REQUIRED_PAINTERLY_CARD_LAYERS,
@@ -48,6 +49,7 @@ export interface V03VisualRuntimeStats {
   materialBlendLayers: number;
   painterlyCardLayers: number;
   heroSkinSprites: number;
+  heroUnitSprites: number;
   zombieCardSprites: number;
   skillCardSprites: number;
   fxLayers: number;
@@ -77,6 +79,7 @@ export class V03VisualRuntime extends Component {
     materialBlendLayers: 0,
     painterlyCardLayers: 0,
     heroSkinSprites: 0,
+    heroUnitSprites: 0,
     zombieCardSprites: 0,
     skillCardSprites: 0,
     fxLayers: 0
@@ -102,6 +105,7 @@ export class V03VisualRuntime extends Component {
     this.buildMaterialBlendLayers();
     this.buildPainterlyCardLayers();
     this.buildHeroSkinSprites();
+    this.buildHeroUnitSprites();
     this.buildZombieCardSprites();
     this.buildSkillCardSprites();
     this.buildFxLayers(skillId);
@@ -131,6 +135,7 @@ export class V03VisualRuntime extends Component {
     this.stats.materialBlendLayers = 0;
     this.stats.painterlyCardLayers = 0;
     this.stats.heroSkinSprites = 0;
+    this.stats.heroUnitSprites = 0;
     this.stats.zombieCardSprites = 0;
     this.stats.skillCardSprites = 0;
     this.stats.fxLayers = 0;
@@ -288,6 +293,16 @@ export class V03VisualRuntime extends Component {
       node.setPosition((index % 3) * 0.22 - 0.22, 1.42 + Math.floor(index / 3) * 0.07, 2.74);
       this.actorRoot!.addChild(node);
       this.stats.heroSkinSprites += 1;
+    });
+  }
+
+  private buildHeroUnitSprites(): void {
+    V03_REQUIRED_HERO_UNIT_SPRITES.forEach((sprite, index) => {
+      const color = sprite.includes('guardian') ? '#ff8b3d' : sprite.includes('tech') ? '#4ec9ff' : '#7cff4f';
+      const node = this.makeBox(`hero-unit-sprite-${sprite}`, 0.20 + (index % 3) * 0.025, 0.018, 0.22, color);
+      node.setPosition((index % 3) * 0.24 - 0.24, 1.60 + Math.floor(index / 3) * 0.07, 2.84);
+      this.actorRoot!.addChild(node);
+      this.stats.heroUnitSprites += 1;
     });
   }
 
