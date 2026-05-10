@@ -7,6 +7,7 @@
   "reference": "candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png",
   "browserProof": "frontend/engine-proof/index.html",
   "browserProofScreenshot": "can_delete/v03-gate/engine-proof-cocos-route.png",
+  "artManifest": "assets/resources/config/v03-art-assets.json",
   "productionRenderRoute": "orthographic-2.5d-sprite-billboard-plus-prop-depth",
   "cocosScene": "V03Battle.scene",
   "requiredComponents": [

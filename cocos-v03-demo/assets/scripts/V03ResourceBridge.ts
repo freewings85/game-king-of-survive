@@ -59,6 +59,23 @@ export interface V03BridgeData {
   map: V03MapData;
 }
 
+export interface V03ArtAssetEntry {
+  id: string;
+  group: 'portraits' | 'units' | 'zombies' | 'skills' | 'props';
+  source: string;
+  resourcePath: string;
+  file: string;
+}
+
+export interface V03ArtAssetManifest {
+  schemaVersion: 'v03-art-assets-1';
+  source: string;
+  target: string;
+  reference: string;
+  assets: V03ArtAssetEntry[];
+  counts: Record<V03ArtAssetEntry['group'], number>;
+}
+
 function loadJsonAsset<T>(path: string): Promise<T> {
   return new Promise((resolve, reject) => {
     resources.load(path, JsonAsset, (error, asset) => {
@@ -78,6 +95,12 @@ export async function loadV03BridgeData(): Promise<V03BridgeData> {
   ]);
   validateV03BridgeData(runtime, map);
   return { runtime, map };
+}
+
+export async function loadV03ArtAssetManifest(): Promise<V03ArtAssetManifest> {
+  const manifest = await loadJsonAsset<V03ArtAssetManifest>('config/v03-art-assets');
+  validateV03ArtAssetManifest(manifest);
+  return manifest;
 }
 
 export function validateV03BridgeData(runtime: V03RuntimeJson, map: V03MapData): void {
@@ -100,5 +123,34 @@ export function validateV03BridgeData(runtime: V03RuntimeJson, map: V03MapData):
   }
   if (map.structures.length < 20 || map.zombieEntries.length < 4 || map.rewardPoints.length < 8) {
     throw new Error('V03 map does not meet the combat layout gate');
+  }
+}
+
+export function validateV03ArtAssetManifest(manifest: V03ArtAssetManifest): void {
+  if (manifest.schemaVersion !== 'v03-art-assets-1') {
+    throw new Error(`Unexpected art manifest schema: ${manifest.schemaVersion}`);
+  }
+  if (manifest.reference !== 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png') {
+    throw new Error(`Unexpected art manifest reference: ${manifest.reference}`);
+  }
+  const requiredIds = [
+    'hero-ranger-2-isometric',
+    'zombie-card-brute',
+    'zombie-card-crawler',
+    'zombie-card-hooded',
+    'skill-card-arc',
+    'skill-card-boom',
+    'skill-card-fan',
+    'prop-cover-wreck',
+    'prop-cover-wall',
+    'prop-cover-crate'
+  ];
+  requiredIds.forEach((id) => {
+    if (!manifest.assets.some((asset) => asset.id === id && asset.resourcePath.startsWith('art/v03/'))) {
+      throw new Error(`Missing V03 art asset: ${id}`);
+    }
+  });
+  if (manifest.counts.portraits < 12 || manifest.counts.props < 6 || manifest.counts.skills < 3 || manifest.counts.zombies < 3 || manifest.counts.units < 1) {
+    throw new Error('V03 art manifest does not cover the required visual asset groups');
   }
 }

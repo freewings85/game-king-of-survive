@@ -33,6 +33,7 @@ assert(manifest.targetPlatform === 'WeChat Mini Game', 'Engine proof manifest mu
 assert(manifest.reference === 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png', 'Engine proof manifest must cite the V03 target image');
 assert(manifest.browserProof === 'frontend/engine-proof/index.html', 'Engine proof manifest must cite the browser proof page');
 assert(manifest.browserProofScreenshot === 'can_delete/v03-gate/engine-proof-cocos-route.png', 'Engine proof manifest must cite the proof screenshot');
+assert(manifest.artManifest === 'assets/resources/config/v03-art-assets.json', 'Engine proof manifest must cite the Cocos art asset manifest');
 assert(manifest.productionRenderRoute === 'orthographic-2.5d-sprite-billboard-plus-prop-depth', 'Engine proof manifest must lock the render route');
 assert(manifest.cocosScene === sceneManifest.scene && manifest.cocosScene === firstPlayableChecklist.scene, 'Engine proof scene must match the Cocos scene manifests');
 

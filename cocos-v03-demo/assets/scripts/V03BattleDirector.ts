@@ -1,6 +1,6 @@
 import { _decorator, Component, Label } from 'cc';
 import { V03_CLASSES, V03_SKILLS, V03_TUNING, type V03ClassId, type V03SkillId } from './V03Config';
-import { loadV03BridgeData, type V03BridgeData } from './V03ResourceBridge';
+import { loadV03ArtAssetManifest, loadV03BridgeData, type V03ArtAssetManifest, type V03BridgeData } from './V03ResourceBridge';
 import { V03MapRuntime, type V03MapRuntimeStats } from './V03MapRuntime';
 import { V03VisualRuntime, type V03VisualRuntimeStats } from './V03VisualRuntime';
 
@@ -26,11 +26,17 @@ export class V03BattleDirector extends Component {
   private hp = V03_TUNING.playerHp;
   private alive = 32;
   private bridgeData: V03BridgeData | null = null;
+  private artManifest: V03ArtAssetManifest | null = null;
   private mapStats: V03MapRuntimeStats | null = null;
   private visualStats: V03VisualRuntimeStats | null = null;
 
   async start(): Promise<void> {
-    this.bridgeData = await loadV03BridgeData();
+    const [bridgeData, artManifest] = await Promise.all([
+      loadV03BridgeData(),
+      loadV03ArtAssetManifest()
+    ]);
+    this.bridgeData = bridgeData;
+    this.artManifest = artManifest;
     if (this.mapRuntime) {
       this.mapStats = this.mapRuntime.buildFromMap(this.bridgeData.map);
     }
@@ -103,12 +109,16 @@ export class V03BattleDirector extends Component {
     const visualStats = this.visualStats
       ? `G${this.visualStats.heroGear} V${this.visualStats.zombieVariants} D${this.visualStats.unitDecals} PG${this.visualStats.propGroundLayers} PW${this.visualStats.propWearDecals} PS${this.visualStats.propShapeBlocks} PB${this.visualStats.propBreakShapes} GL${this.visualStats.globalLightLayers} OR${this.visualStats.objectRimLayers} MB${this.visualStats.materialBlendLayers} FX${this.visualStats.fxLayers}`
       : 'visual pending';
+    const artStats = this.artManifest
+      ? `ART ${this.artManifest.assets.length} P${this.artManifest.counts.portraits} U${this.artManifest.counts.units} Z${this.artManifest.counts.zombies} S${this.artManifest.counts.skills} PR${this.artManifest.counts.props}`
+      : 'art pending';
     this.statusLabel.string = [
       `V03 ${classDef.name} / ${skillDef.name}`,
       `HP ${Math.round(this.hp)}  LV ${this.level}  XP ${this.xp}`,
       `ALIVE ${this.alive}  T ${Math.floor(this.elapsed)}s`,
       `MAP ${mapName} ${mapStats}`,
-      `VISUAL ${visualStats}`
+      `VISUAL ${visualStats}`,
+      artStats
     ].join('\n');
   }
 }

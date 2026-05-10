@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "v03-art-assets-1",
+  "source": "frontend/engine-demo/assets",
+  "target": "cocos-v03-demo/assets/resources/art/v03",
+  "reference": "candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png",
+  "assets": [
+    {
+      "id": "class-focus-guardian",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-focus-guardian.png",
+      "resourcePath": "art/v03/portraits/class-focus-guardian",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-guardian.png"
+    },
+    {
+      "id": "class-focus-ranger",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-focus-ranger.png",
+      "resourcePath": "art/v03/portraits/class-focus-ranger",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-ranger.png"
+    },
+    {
+      "id": "class-focus-tech",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-focus-tech.png",
+      "resourcePath": "art/v03/portraits/class-focus-tech",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-focus-tech.png"
+    },
+    {
+      "id": "class-skin-guardian-0",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-0.png",
+      "resourcePath": "art/v03/portraits/class-skin-guardian-0",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-0.png"
+    },
+    {
+      "id": "class-skin-guardian-1",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-1.png",
+      "resourcePath": "art/v03/portraits/class-skin-guardian-1",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-1.png"
+    },
+    {
+      "id": "class-skin-guardian-2",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-guardian-2.png",
+      "resourcePath": "art/v03/portraits/class-skin-guardian-2",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-guardian-2.png"
+    },
+    {
+      "id": "class-skin-tech-0",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-tech-0.png",
+      "resourcePath": "art/v03/portraits/class-skin-tech-0",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-0.png"
+    },
+    {
+      "id": "class-skin-tech-1",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-tech-1.png",
+      "resourcePath": "art/v03/portraits/class-skin-tech-1",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-1.png"
+    },
+    {
+      "id": "class-skin-tech-2",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-tech-2.png",
+      "resourcePath": "art/v03/portraits/class-skin-tech-2",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-tech-2.png"
+    },
+    {
+      "id": "class-skin-ranger-0",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-0.png",
+      "resourcePath": "art/v03/portraits/class-skin-ranger-0",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-0.png"
+    },
+    {
+      "id": "class-skin-ranger-1",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-1.png",
+      "resourcePath": "art/v03/portraits/class-skin-ranger-1",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-1.png"
+    },
+    {
+      "id": "class-skin-ranger-2",
+      "group": "portraits",
+      "source": "frontend/engine-demo/assets/portraits/class-skin-ranger-2.png",
+      "resourcePath": "art/v03/portraits/class-skin-ranger-2",
+      "file": "cocos-v03-demo/assets/resources/art/v03/portraits/class-skin-ranger-2.png"
+    },
+    {
+      "id": "hero-ranger-2-isometric",
+      "group": "units",
+      "source": "frontend/engine-demo/assets/units/hero-ranger-2-isometric.png",
+      "resourcePath": "art/v03/units/hero-ranger-2-isometric",
+      "file": "cocos-v03-demo/assets/resources/art/v03/units/hero-ranger-2-isometric.png"
+    },
+    {
+      "id": "zombie-card-brute",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-brute.png",
+      "resourcePath": "art/v03/zombies/zombie-card-brute",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute.png"
+    },
+    {
+      "id": "zombie-card-crawler",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler.png",
+      "resourcePath": "art/v03/zombies/zombie-card-crawler",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler.png"
+    },
+    {
+      "id": "zombie-card-hooded",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded.png",
+      "resourcePath": "art/v03/zombies/zombie-card-hooded",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded.png"
+    },
+    {
+      "id": "skill-card-arc",
+      "group": "skills",
+      "source": "frontend/engine-demo/assets/skills/skill-card-arc.png",
+      "resourcePath": "art/v03/skills/skill-card-arc",
+      "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-arc.png"
+    },
+    {
+      "id": "skill-card-boom",
+      "group": "skills",
+      "source": "frontend/engine-demo/assets/skills/skill-card-boom.png",
+      "resourcePath": "art/v03/skills/skill-card-boom",
+      "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-boom.png"
+    },
+    {
+      "id": "skill-card-fan",
+      "group": "skills",
+      "source": "frontend/engine-demo/assets/skills/skill-card-fan.png",
+      "resourcePath": "art/v03/skills/skill-card-fan",
+      "file": "cocos-v03-demo/assets/resources/art/v03/skills/skill-card-fan.png"
+    },
+    {
+      "id": "prop-cover-wreck",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-wreck.png",
+      "resourcePath": "art/v03/props/prop-cover-wreck",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-wreck.png"
+    },
+    {
+      "id": "prop-cover-wall",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-wall.png",
+      "resourcePath": "art/v03/props/prop-cover-wall",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-wall.png"
+    },
+    {
+      "id": "prop-cover-crate",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-crate.png",
+      "resourcePath": "art/v03/props/prop-cover-crate",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-crate.png"
+    },
+    {
+      "id": "prop-cover-barrel",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-barrel.png",
+      "resourcePath": "art/v03/props/prop-cover-barrel",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-barrel.png"
+    },
+    {
+      "id": "prop-cover-tires",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-tires.png",
+      "resourcePath": "art/v03/props/prop-cover-tires",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-tires.png"
+    },
+    {
+      "id": "prop-cover-debris",
+      "group": "props",
+      "source": "frontend/engine-demo/assets/props/prop-cover-debris.png",
+      "resourcePath": "art/v03/props/prop-cover-debris",
+      "file": "cocos-v03-demo/assets/resources/art/v03/props/prop-cover-debris.png"
+    }
+  ],
+  "counts": {
+    "portraits": 12,
+    "units": 1,
+    "zombies": 3,
+    "skills": 3,
+    "props": 6
+  }
+}

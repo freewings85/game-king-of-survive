@@ -24,6 +24,7 @@ qa/rounds/*/screenshots/
 # Exception: committed game assets (runtime requires them)
 !demo/assets/**/*.png
 !demo/assets/**/*.jpg
+!cocos-v03-demo/assets/resources/art/**/*.png
 
 # Replay recordings
 server/replays/

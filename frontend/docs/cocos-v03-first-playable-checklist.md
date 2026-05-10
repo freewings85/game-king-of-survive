@@ -52,6 +52,8 @@ Required prefab groups:
 
 These names are placeholders until real Cocos prefabs exist, but the structure is intentional. Real asset work should replace these prefabs without changing the scene contract.
 
+The Cocos resource bridge also loads `assets/resources/config/v03-art-assets.json`, which maps imported PNGs under `assets/resources/art/v03/` to stable resource paths for portraits, the Ranger unit sprite, zombie cards, skill cards, and prop cover sprites.
+
 The checklist also requires visual contract coverage for `heroSkinSprites`, `zombieCardSprites`, `skillCardSprites`, `propCoverSprites`, `groundWashLayers`, and `safeZoneLayers` so the Cocos slice keeps pace with the current WebGL V03 reference.
 
 ## Acceptance

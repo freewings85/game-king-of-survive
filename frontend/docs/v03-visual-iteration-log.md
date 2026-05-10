@@ -2204,3 +2204,46 @@ Next iteration direction:
 1. Open `cocos-v03-demo/` in Cocos Creator 3.8.x and attach `V03SceneBootstrap` to the root scene node.
 2. Capture the first Cocos phone screenshot and add it to the V03 visual audit.
 3. Replace bootstrap placeholder geometry with the first real prop, unit, ground, storm, and skill prefabs.
+
+## 2026-05-10 Cocos V03 art asset bridge pass
+
+Related work:
+
+- Follow-up to `5a5eece`
+- `tools/export-v03-cocos-art.js`
+- `cocos-v03-demo/assets/resources/config/v03-art-assets.json`
+- `cocos-v03-demo/assets/resources/art/v03/`
+- `cocos-v03-demo/assets/scripts/V03ResourceBridge.ts`
+- `cocos-v03-demo/assets/scripts/V03BattleDirector.ts`
+- `e2e/v03-cocos-bridge-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/`
+
+Current visual distance:
+
+- The Cocos side now has the same first-pass V03 PNG families used by the browser reference: portraits, the Ranger unit sprite, zombie cards, skill cards, and prop cover sprites.
+- This reduces the risk that the first Cocos scene regresses to clean geometry while the browser proof already uses authored bitmap assets.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added `npm run export:cocos-v03-art` to copy 25 V03 PNGs into `cocos-v03-demo/assets/resources/art/v03/`.
+- Added `v03-art-assets.json` with stable Cocos resource paths such as `art/v03/units/hero-ranger-2-isometric`.
+- Cocos resource bridge and battle director now load and validate the art manifest.
+
+What is still far from the reference:
+
+- These are still first-pass bitmap assets, not final production sprites or Cocos prefabs.
+- Ground wash and storm textures are not imported as authored PNGs yet; they remain generated in the browser proof and contract placeholders in Cocos.
+- No Creator screenshot proves these assets rendered inside Cocos yet.
+
+Next iteration direction:
+
+1. Create Cocos sprite/material adapter code that turns `v03-art-assets.json` entries into billboard sprite nodes.
+2. Start replacing `V03VisualRuntime` placeholder boxes with imported sprite resources.
+3. Capture a Cocos phone screenshot once the first asset-backed nodes render in Creator.

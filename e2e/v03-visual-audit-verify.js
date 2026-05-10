@@ -41,6 +41,7 @@ assert(text.includes('Painterly safe-zone edge pass'), 'Visual iteration log mus
 assert(text.includes('Cocos route engine proof pass'), 'Visual iteration log must record the latest engine route proof pass');
 assert(text.includes('Cocos engine proof manifest sync'), 'Visual iteration log must record the latest Cocos engine proof manifest sync');
 assert(text.includes('Cocos runtime scene bootstrap pass'), 'Visual iteration log must record the latest Cocos runtime scene bootstrap pass');
+assert(text.includes('Cocos V03 art asset bridge pass'), 'Visual iteration log must record the latest Cocos art asset bridge pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

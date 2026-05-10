@@ -52,7 +52,8 @@
   ],
   "dataSources": [
     "assets/resources/config/v03-runtime-config.json",
-    "assets/resources/config/v03-standard-map.json"
+    "assets/resources/config/v03-standard-map.json",
+    "assets/resources/config/v03-art-assets.json"
   ],
   "scripts": [
     "assets/scripts/V03SceneBootstrap.ts",

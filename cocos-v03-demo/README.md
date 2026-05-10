@@ -65,6 +65,8 @@ V03Battle.scene
 - `assets/scripts/V03ResourceBridge.ts`: loads generated JSON from Cocos `resources/config`.
 - `assets/resources/config/v03-runtime-config.json`: generated runtime config bridge from `frontend/src/v03-runtime-config.js`.
 - `assets/resources/config/v03-standard-map.json`: generated standard V03 map bridge from `frontend/src/map-contract.js`.
+- `assets/resources/config/v03-art-assets.json`: generated art manifest for Cocos resource paths copied from the browser V03 proof assets.
+- `assets/resources/art/v03/`: imported PNG assets for Cocos prefabs and sprite materials.
 - `assets/resources/config/v03-vertical-slice.json`: data-only slice target for designers and programmers.
 - `settings/v03-engine-proof-manifest.json`: Cocos-side mapping from the browser engine proof to the production render route.
 - `settings/v03-first-playable-checklist.json`: structured first-playable scene, prefab, screenshot, and runtime gate checklist.
@@ -73,6 +75,7 @@ Regenerate the bridge files from the repo root:
 
 ```text
 npm run export:cocos-v03
+npm run export:cocos-v03-art
 ```
 
 Verify the browser reference and Cocos bridge stay in sync:

@@ -36,6 +36,7 @@ const sourceConfig = loadBrowserGlobal('frontend/src/v03-runtime-config.js', 'KO
 const sourceContract = loadBrowserGlobal('frontend/src/map-contract.js', 'KOS_MAP_CONTRACT');
 const cocosConfig = readJson('cocos-v03-demo/assets/resources/config/v03-runtime-config.json');
 const cocosMap = readJson('cocos-v03-demo/assets/resources/config/v03-standard-map.json');
+const cocosArt = readJson('cocos-v03-demo/assets/resources/config/v03-art-assets.json');
 const firstPlayableChecklist = readJson('cocos-v03-demo/settings/v03-first-playable-checklist.json');
 const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
@@ -84,9 +85,25 @@ assert(cocosMap.zombieEntries.length >= 4, 'Cocos map needs four zombie entries'
 assert(cocosMap.rewardPoints.length >= 8, 'Cocos map needs eight reward points');
 assert(cocosMap.rivalPoints.length >= 2, 'Cocos map needs two rival points');
 assert(cocosMap.qualityChecks.every((check) => check.ok), 'Cocos map quality gate failed');
+assert(cocosArt.schemaVersion === 'v03-art-assets-1', 'Cocos art asset schema mismatch');
+assert(cocosArt.reference === 'candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png', 'Cocos art assets must cite target reference');
+assert(cocosArt.assets.length >= 25, 'Cocos art bridge needs imported V03 PNG assets');
+assert(cocosArt.counts.portraits >= 12, 'Cocos art bridge needs class portrait assets');
+assert(cocosArt.counts.units >= 1, 'Cocos art bridge needs unit sprite assets');
+assert(cocosArt.counts.zombies >= 3, 'Cocos art bridge needs zombie card assets');
+assert(cocosArt.counts.skills >= 3, 'Cocos art bridge needs skill card assets');
+assert(cocosArt.counts.props >= 6, 'Cocos art bridge needs prop cover assets');
+['hero-ranger-2-isometric', 'zombie-card-brute', 'zombie-card-crawler', 'zombie-card-hooded', 'skill-card-arc', 'skill-card-boom', 'skill-card-fan', 'prop-cover-wreck', 'prop-cover-wall', 'prop-cover-crate', 'prop-cover-barrel', 'prop-cover-tires', 'prop-cover-debris'].forEach((id) => {
+  const asset = cocosArt.assets.find((item) => item.id === id);
+  assert(asset, `Cocos art manifest must include ${id}`);
+  assert(asset.resourcePath.startsWith(`art/v03/${asset.group}/`), `Cocos art manifest resource path must be under art/v03 for ${id}`);
+  assert(fs.existsSync(path.join(repoRoot, asset.file)), `Cocos art file must exist for ${id}`);
+});
 assert(resourceBridgeSource.includes("resources.load(path, JsonAsset"), 'Cocos bridge must load resources JsonAsset files');
 assert(resourceBridgeSource.includes("'config/v03-runtime-config'"), 'Cocos bridge must load runtime config JSON');
 assert(resourceBridgeSource.includes("'config/v03-standard-map'"), 'Cocos bridge must load standard map JSON');
+assert(resourceBridgeSource.includes("'config/v03-art-assets'"), 'Cocos bridge must load art asset manifest JSON');
+assert(resourceBridgeSource.includes('validateV03ArtAssetManifest'), 'Cocos bridge must validate art asset manifest JSON');
 assert(mapRuntimeSource.includes("@ccclass('V03MapRuntime')"), 'Cocos map runtime component is missing');
 assert(mapRuntimeSource.includes('buildFromMap(map: V03MapData)'), 'Cocos map runtime must build from bridge map data');
 assert(mapRuntimeSource.includes('map.tiles.forEach'), 'Cocos map runtime must instantiate tiles');
@@ -95,6 +112,7 @@ assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must e
 assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
+assert(battleDirectorSource.includes('loadV03ArtAssetManifest'), 'Battle director must load Cocos art asset manifest');
 assert(sceneBootstrapSource.includes("@ccclass('V03SceneBootstrap')"), 'Cocos scene bootstrap component is missing');
 assert(sceneBootstrapSource.includes('buildRuntimeScene()'), 'Scene bootstrap must expose buildRuntimeScene');
 assert(sceneBootstrapSource.includes('Camera.ProjectionType.ORTHO'), 'Scene bootstrap must create an orthographic camera');
