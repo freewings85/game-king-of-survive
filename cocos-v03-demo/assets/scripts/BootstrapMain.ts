@@ -9,6 +9,7 @@ import {
     internal,
     Layers,
     Node,
+    resources,
     Sprite,
     SpriteFrame,
     Texture2D,
@@ -65,28 +66,6 @@ export class BootstrapMain extends Component {
         try {
             console.log('[BootstrapMain] start() begin');
 
-            // CANARY: red 200x200 square at screen center
-            const canary = new Node('CANARY_RED');
-            canary.layer = Layers.Enum.UI_2D;
-            const cs = canary.addComponent(Sprite);
-            const W = 8, H = 8;
-            const buf = new Uint8Array(W * H * 4);
-            for (let i = 0; i < W * H; i++) {
-                buf[i * 4] = 255; buf[i * 4 + 1] = 0; buf[i * 4 + 2] = 0; buf[i * 4 + 3] = 255;
-            }
-            const img = new ImageAsset({ _data: buf, _compressed: false, width: W, height: H, format: Texture2D.PixelFormat.RGBA8888 });
-            const tex = new Texture2D();
-            tex.image = img;
-            const sf = new SpriteFrame();
-            sf.texture = tex;
-            (sf as any).packable = false;
-            cs.spriteFrame = sf;
-            const ctr = canary.addComponent(UITransform);
-            ctr.setContentSize(200, 200);
-            this.worldLayer.addChild(canary);
-            canary.setPosition(0, 0, 0);
-            console.log('[BootstrapMain] canary sprite added at (0,0) size 200x200');
-
             const config = await loadSceneConfig();
             console.log('[BootstrapMain] config loaded', { canvas: config.canvas, zombies: config.zombies?.length, props: config.props?.length });
             this.applyClearColor(config);
@@ -100,7 +79,11 @@ export class BootstrapMain extends Component {
             spawner.config = config;
             console.log('[BootstrapMain] spawner attached');
 
-            attachHudSkeleton(this.hudLayer, config);
+            // Preload painterly HUD icons (skill + portrait/minimap frame) before attachHud
+            const hudIcons = await preloadHudIcons();
+            console.log('[BootstrapMain] hud icons loaded', Object.keys(hudIcons));
+
+            attachHudSkeleton(this.hudLayer, config, hudIcons);
             console.log('[BootstrapMain] start() done');
         } catch (e) {
             console.error('[BootstrapMain] start() FAILED', e);
@@ -167,17 +150,69 @@ export class BootstrapMain extends Component {
     }
 }
 
-function attachHudSkeleton(parent: Node, config: SceneConfig) {
+interface HudIconSet {
+    skillFire: SpriteFrame | null;
+    skillLightning: SpriteFrame | null;
+    skillShield: SpriteFrame | null;
+    portraitFrame: SpriteFrame | null;
+    minimapFrame: SpriteFrame | null;
+}
+
+async function preloadHudIcons(): Promise<HudIconSet> {
+    const out: HudIconSet = {
+        skillFire: null, skillLightning: null, skillShield: null,
+        portraitFrame: null, minimapFrame: null,
+    };
+    const paths: Array<[string, keyof HudIconSet]> = [
+        ['art/v03/hud/skill-fire/spriteFrame', 'skillFire'],
+        ['art/v03/hud/skill-lightning/spriteFrame', 'skillLightning'],
+        ['art/v03/hud/skill-shield/spriteFrame', 'skillShield'],
+        ['art/v03/hud/portrait-frame/spriteFrame', 'portraitFrame'],
+        ['art/v03/hud/minimap-frame/spriteFrame', 'minimapFrame'],
+    ];
+    await Promise.all(paths.map(([p, key]) =>
+        new Promise<void>((resolve) => {
+            resources.load(p, SpriteFrame, (err, sf) => {
+                if (err) { console.warn('[hud] miss:', p); resolve(); return; }
+                (sf as any).packable = false;
+                out[key] = sf;
+                resolve();
+            });
+        })
+    ));
+    return out;
+}
+
+function attachHudSkeleton(parent: Node, config: SceneConfig, icons: HudIconSet) {
     const hud: HudConfig = config.hud;
 
-    paintDisc(parent, 'HUD_Portrait_Frame', hud.portrait.frame);
+    // Portrait: painterly frame on top of programmatic disc fill
     paintDisc(parent, 'HUD_Portrait_Fill', hud.portrait.fill);
+    if (icons.portraitFrame) {
+        addSprite(parent, 'HUD_Portrait_Frame_Painterly',
+            hud.portrait.frame.pos[0], hud.portrait.frame.pos[1],
+            hud.portrait.frame.contentSize[0], hud.portrait.frame.contentSize[1],
+            icons.portraitFrame);
+    } else {
+        paintDisc(parent, 'HUD_Portrait_Frame', hud.portrait.frame);
+    }
+
     paintBar(parent, 'HUD_HP_Bar', hud.hpBar);
     paintBar(parent, 'HUD_Armor_Bar', hud.armorBar);
     paintBar(parent, 'HUD_EXP_Bar', hud.expBar);
+
+    // Minimap: painterly frame on top of programmatic dotted ground
     paintMinimap(parent, hud.minimap);
+    if (icons.minimapFrame) {
+        addSprite(parent, 'HUD_Minimap_Frame_Painterly',
+            hud.minimap.pos[0], hud.minimap.pos[1],
+            hud.minimap.contentSize[0], hud.minimap.contentSize[1],
+            icons.minimapFrame);
+    }
+
     paintJoystick(parent, hud.joystick);
-    for (const sk of hud.skills) paintSkill(parent, sk);
+
+    for (const sk of hud.skills) paintSkill(parent, sk, icons);
 }
 
 function paintDisc(parent: Node, name: string, c: DiscConfig) {
@@ -201,14 +236,23 @@ function paintJoystick(parent: Node, c: JoystickConfig) {
     paintDisc(parent, 'HUD_Stick_Thumb', c.thumb);
 }
 
-function paintSkill(parent: Node, sk: SkillConfig) {
+function paintSkill(parent: Node, sk: SkillConfig, icons: HudIconSet) {
+    // Glow halo (kept for atmosphere — programmatic radial gradient)
     addSprite(parent, sk.name + '_Glow', sk.pos[0], sk.pos[1], sk.size + 16, sk.size + 16,
         makeRadialGradientSpriteFrame(64, [sk.base[0], sk.base[1], sk.base[2], sk.glowAlpha], [sk.base[0], sk.base[1], sk.base[2], 0]));
-    addSprite(parent, sk.name + '_Disc', sk.pos[0], sk.pos[1], sk.size, sk.size,
-        makeSkillDisc(96, sk.base));
-    const glyphSize = Math.floor(sk.size * 0.55);
-    addSprite(parent, sk.name + '_Glyph', sk.pos[0], sk.pos[1], glyphSize, glyphSize,
-        makeGlyphFrame(64, sk.glyph));
+    // Painterly icon if available, else fallback to programmatic disc + glyph
+    const painterly = sk.glyph === 'flame' ? icons.skillFire
+        : sk.glyph === 'bolt' ? icons.skillLightning
+        : icons.skillShield;
+    if (painterly) {
+        addSprite(parent, sk.name + '_Painterly', sk.pos[0], sk.pos[1], sk.size, sk.size, painterly);
+    } else {
+        addSprite(parent, sk.name + '_Disc', sk.pos[0], sk.pos[1], sk.size, sk.size,
+            makeSkillDisc(96, sk.base));
+        const glyphSize = Math.floor(sk.size * 0.55);
+        addSprite(parent, sk.name + '_Glyph', sk.pos[0], sk.pos[1], glyphSize, glyphSize,
+            makeGlyphFrame(64, sk.glyph));
+    }
 }
 
 function addSprite(parent: Node, name: string, cx: number, cy: number, w: number, h: number, frame: SpriteFrame) {
