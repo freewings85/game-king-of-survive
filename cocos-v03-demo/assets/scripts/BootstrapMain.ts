@@ -142,7 +142,8 @@ function paintSkill(parent: Node, sk: SkillConfig) {
         makeRadialGradientSpriteFrame(64, [sk.base[0], sk.base[1], sk.base[2], sk.glowAlpha], [sk.base[0], sk.base[1], sk.base[2], 0]));
     addSprite(parent, sk.name + '_Disc', sk.pos[0], sk.pos[1], sk.size, sk.size,
         makeSkillDisc(96, sk.base));
-    addSprite(parent, sk.name + '_Glyph', sk.pos[0], sk.pos[1], sk.size * 0.55, sk.size * 0.55,
+    const glyphSize = Math.floor(sk.size * 0.55);
+    addSprite(parent, sk.name + '_Glyph', sk.pos[0], sk.pos[1], glyphSize, glyphSize,
         makeGlyphFrame(64, sk.glyph));
 }
 

@@ -114,14 +114,14 @@ export class ActorSpawner extends Component {
                 ? (Math.atan2(heroPos[1] - z.pos[1], heroPos[0] - z.pos[0]) * 180) / Math.PI
                 : 0;
 
-            this.spawnContactShadow(z.pos, z.shadow[0] * z.scale, z.shadow[1] * z.scale);
+            this.spawnContactShadow(z.pos, Math.floor(z.shadow[0] * z.scale), Math.floor(z.shadow[1] * z.scale));
 
             const node = new Node(z.name);
             const sprite = node.addComponent(Sprite);
             sprite.spriteFrame = this.zombieFrames[z.frame];
             sprite.color = new Color(z.tint[0], z.tint[1], z.tint[2], z.tint[3]);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
-            const baseSize = z.baseSize * z.scale;
+            const baseSize = Math.floor(z.baseSize * z.scale);
             tr.setContentSize(baseSize, baseSize);
             node.setPosition(new Vec3(z.pos[0], z.pos[1], 0));
             node.angle = angleDeg;

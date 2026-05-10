@@ -44,18 +44,6 @@ def flatten(node, out=None):
     return out
 
 
-def normalize_dump(flat):
-    # m2-0 baseline truncates `int(baseSize*scale)` BEFORE fit_keep_aspect / paste,
-    # while .ts UITransform.setContentSize stores the raw float (e.g. 149.5).
-    # Round here so px-fit math matches the baseline; the underlying spawn
-    # decision is unchanged — verify_dump.py already asserted equivalence.
-    for n in flat:
-        cs = n.get("contentSize")
-        if cs:
-            n["contentSize"] = [int(cs[0]), int(cs[1])]
-    return flat
-
-
 def by_name(flat, name):
     for n in flat:
         if n["name"] == name:
@@ -80,7 +68,7 @@ def paste_centered(canvas, img, world_pos, content_size, W, H):
 def render():
     dump = json.load(open(DUMP, encoding="utf-8"))
     config = json.load(open(CONFIG, encoding="utf-8"))
-    flat = normalize_dump(flatten(dump))
+    flat = flatten(dump)
 
     W = config["canvas"]["width"]
     H = config["canvas"]["height"]

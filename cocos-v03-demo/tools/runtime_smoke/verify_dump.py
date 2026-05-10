@@ -66,8 +66,11 @@ def main():
                f"Zombie {z_cfg['name']} pos: {n['pos'][:2]} vs {z_cfg['pos']}")
         expect(n["color"] == z_cfg["tint"],
                f"Zombie {z_cfg['name']} tint: dump={n['color']} cfg={z_cfg['tint']}")
-        expected_size = z_cfg["baseSize"] * z_cfg["scale"]
-        expect(approx(n["contentSize"][0], expected_size) and approx(n["contentSize"][1], expected_size),
+        # ActorSpawner.ts floors baseSize*scale before setContentSize so
+        # runtime / preview / harness all agree on the same integer pixel
+        # extent (see fix(cocos): normalize visual node sizes).
+        expected_size = math.floor(z_cfg["baseSize"] * z_cfg["scale"])
+        expect(n["contentSize"][0] == expected_size and n["contentSize"][1] == expected_size,
                f"Zombie {z_cfg['name']} contentSize: {n['contentSize']} vs {expected_size}")
         if z_cfg["rotateTowardHero"]:
             hero = config["hero"]["pos"]
