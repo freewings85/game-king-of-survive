@@ -102,7 +102,13 @@ export class ActorSpawner extends Component {
 
     // === gameplay state ===
     private heroNode: Node | null = null;
+    private heroSprite: Sprite | null = null;
     private heroHp = 100;
+    private readonly HERO_MAX_HP = 100;
+    private heroIFrameTimer = 0;            // post-hit invincibility
+    private readonly HERO_IFRAME = 0.6;
+    private readonly HERO_TOUCH_DAMAGE = 12;
+    private shakeAmp = 0;                   // current screen shake amplitude
     private readonly HERO_SPEED = 220;        // px/sec
     private readonly HERO_SCREEN_HALF_W = 195;
     private readonly HERO_SCREEN_HALF_H = 422;
@@ -248,6 +254,8 @@ export class ActorSpawner extends Component {
         node.angle = hero.angleDeg;
         this.worldLayer.addChild(node);
         this.heroNode = node;
+        this.heroSprite = sprite;
+        this.heroHp = this.HERO_MAX_HP;
     }
 
     private spawnZombies(zombies: ZombieConfig[], heroPos: Vec2) {
@@ -468,6 +476,54 @@ export class ActorSpawner extends Component {
         this.updateAutoFire(dt);
         this.updateBullets(dt);
         this.updateSpawn(dt);
+        this.updateHeroDamage(dt);
+        this.updateShake(dt);
+    }
+
+    private updateHeroDamage(dt: number) {
+        if (!this.heroNode || this.heroHp <= 0) return;
+        if (this.heroIFrameTimer > 0) {
+            this.heroIFrameTimer -= dt;
+            // blink: alternate visibility every 80ms during iframe
+            if (this.heroSprite) {
+                const blink = Math.floor(this.heroIFrameTimer * 12) % 2 === 0;
+                this.heroSprite.color = blink
+                    ? new Color(255, 255, 255, 255)
+                    : new Color(255, 100, 100, 200);
+            }
+            return;
+        }
+        // restore color when iframe expires
+        if (this.heroSprite) this.heroSprite.color = new Color(255, 255, 255, 255);
+        // contact-damage check
+        const hp = this.heroNode.position;
+        const HIT_R = 32;
+        for (const z of this.zombies) {
+            if (z.deathTimer >= 0 || z.hp <= 0) continue;
+            const dx = z.node.position.x - hp.x;
+            const dy = z.node.position.y - hp.y;
+            if (dx * dx + dy * dy < HIT_R * HIT_R) {
+                this.heroHp = Math.max(0, this.heroHp - this.HERO_TOUCH_DAMAGE);
+                this.heroIFrameTimer = this.HERO_IFRAME;
+                this.shakeAmp = 12;
+                console.log('[Hero] hit, HP:', this.heroHp);
+                if (this.heroHp <= 0) console.log('[Hero] DOWN');
+                break;
+            }
+        }
+    }
+
+    private updateShake(dt: number) {
+        if (this.shakeAmp <= 0.1) {
+            this.shakeAmp = 0;
+            // reset world layer position
+            if (this.worldLayer) this.worldLayer.setPosition(0, 0, 0);
+            return;
+        }
+        const ox = (Math.random() - 0.5) * 2 * this.shakeAmp;
+        const oy = (Math.random() - 0.5) * 2 * this.shakeAmp;
+        if (this.worldLayer) this.worldLayer.setPosition(ox, oy, 0);
+        this.shakeAmp *= Math.exp(-dt * 6); // decay ~6/sec
     }
 
     // ----- network-mode helpers -----
