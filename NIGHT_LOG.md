@@ -42,8 +42,9 @@
 - ✅ HUD portrait frame overlay (painterly metal ring)
 - ✅ Combat feedback: hit flash + HP bars + death fade
 - ✅ Vignette + horizon haze atmospheric polish
-- ⏳ Pending: minimap-frame.png (ZombieArtist still on brick #5, ~80min in, only portrait done)
-- ⏳ Pending Brick #6: hero shoot frame + 3 zombie attack frames (gates after #5)
+- ✅ minimap-frame.png landed + portrait-frame.png (brick #5)
+- ✅ Brick #6 landed + wired (hero idle/walk/shoot + 3 zombie idle↔attack frame-switch active)
+- ✅ Brick #7 landed + wired (3 painterly terrain tiles, asphalt tiles current floor)
 
 ### Goal 2 — Java server (multiplayer authoritative)
 
@@ -63,7 +64,7 @@
      spawner.enableNetwork('ws://localhost:8080/ws/game', 'leo-' + Date.now(), 'Leo');
      ```
    * Then re-Preview. Hero pos should come from server, zombies from server snapshot.
-4. **Check ZombieArtist**: it's been on brick #5 for ~80min when this was written. If still WORKING with no minimap-frame.png, run `tail -20 /tmp/botermanager.log` — may need restart.
+4. **ZombieArtist** is standby (delivered brick #5/6/7, baseline 21). Nothing required from you — re-dispatch only if you want more art.
 
 ## Risks / known gaps
 
