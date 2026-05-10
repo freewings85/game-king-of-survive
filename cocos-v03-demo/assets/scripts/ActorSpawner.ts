@@ -98,7 +98,8 @@ export class ActorSpawner extends Component {
     public makeRadialAlpha!: (size: number, inner: RGBA, outer: RGBA) => SpriteFrame;
     public config!: SceneConfig;
 
-    private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null };
+    private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null, walk: null };
+    private heroShootFlash = 0;
     private zombieFrames: Map<string, SpriteFrame> = new Map(); // key = `${bodyType}:${frame}`
     private propFrames: Map<PropKey, SpriteFrame> = new Map();
 
@@ -199,7 +200,8 @@ export class ActorSpawner extends Component {
         const paths: Array<[string, (sf: SpriteFrame) => void]> = [
             // M2-X+ painterly baseline: hero v2 from ZombieArtist (overhead oblique view, painterly tier)
             ['art/v03/hero/survivor-idle-v2/spriteFrame', (sf) => (this.heroFrames.idle = sf)],
-            ['art/v03/hero/survivor-idle-v2/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
+            ['art/v03/hero/survivor-shoot-v2/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
+            ['art/v03/hero/survivor-walk-v2/spriteFrame', (sf) => (this.heroFrames.walk = sf)],
         ];
 
         const referencedPropKeys = new Set<PropKey>();
@@ -833,20 +835,29 @@ export class ActorSpawner extends Component {
 
     private updateHero(dt: number) {
         if (!this.heroNode) return;
+        if (this.heroShootFlash > 0) this.heroShootFlash -= dt;
         let dx = this.joystickDir.x + this.keyDir.x;
         let dy = this.joystickDir.y + this.keyDir.y;
         const m = Math.hypot(dx, dy);
         if (m > 1) { dx /= m; dy /= m; }
-        else if (m < 0.05) return;
-        const p = this.heroNode.position;
-        let nx = p.x + dx * this.HERO_SPEED * dt;
-        let ny = p.y + dy * this.HERO_SPEED * dt;
-        // clamp inside design canvas (390x844 portrait, origin at center)
-        nx = Math.max(-this.HERO_SCREEN_HALF_W + 30, Math.min(this.HERO_SCREEN_HALF_W - 30, nx));
-        ny = Math.max(-this.HERO_SCREEN_HALF_H + 60, Math.min(this.HERO_SCREEN_HALF_H - 60, ny));
-        this.heroNode.setPosition(nx, ny, 0);
-        // face movement direction
-        if (m > 0.05) this.heroNode.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const moving = m >= 0.05;
+        if (moving) {
+            const p = this.heroNode.position;
+            let nx = p.x + dx * this.HERO_SPEED * dt;
+            let ny = p.y + dy * this.HERO_SPEED * dt;
+            nx = Math.max(-this.HERO_SCREEN_HALF_W + 30, Math.min(this.HERO_SCREEN_HALF_W - 30, nx));
+            ny = Math.max(-this.HERO_SCREEN_HALF_H + 60, Math.min(this.HERO_SCREEN_HALF_H - 60, ny));
+            this.heroNode.setPosition(nx, ny, 0);
+            this.heroNode.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        }
+        if (this.heroSprite) {
+            const next = this.heroShootFlash > 0
+                ? (this.heroFrames.shoot ?? this.heroFrames.idle)
+                : moving
+                    ? (this.heroFrames.walk ?? this.heroFrames.idle)
+                    : this.heroFrames.idle;
+            if (next && this.heroSprite.spriteFrame !== next) this.heroSprite.spriteFrame = next;
+        }
     }
 
     private updateZombies(dt: number) {
@@ -933,6 +944,7 @@ export class ActorSpawner extends Component {
         const len = Math.hypot(dx, dy) || 1;
         this.spawnBullet(hp.x, hp.y, dx / len, dy / len);
         this.heroFireTimer = 0;
+        this.heroShootFlash = 0.12;
     }
 
     private spawnBullet(fx: number, fy: number, dirX: number, dirY: number) {
