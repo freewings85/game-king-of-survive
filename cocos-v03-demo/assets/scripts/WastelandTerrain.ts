@@ -29,10 +29,29 @@ const STAIN: RGBA = { r: 24, g: 18, b: 14, a: 180 };
 const RUST: RGBA = { r: 80, g: 38, b: 22, a: 130 };
 const BURN: RGBA = { r: 14, g: 10, b: 8, a: 200 };
 
-export function attachWastelandTerrain(parent: Node, viewportWidth: number, viewportHeight: number, painterlyTile?: SpriteFrame | null): Node {
-    // Painterly tile from brick #7 (256px tileable). Falls back to programmatic 512 tile.
-    const tile = painterlyTile ?? generateTile(512, Date.now() & 0xffff);
-    const tileSize = painterlyTile ? 256 : 512;
+export interface PainterlyTerrainTiles {
+    asphalt?: SpriteFrame | null;
+    sand?: SpriteFrame | null;
+    concrete?: SpriteFrame | null;
+}
+
+export function attachWastelandTerrain(parent: Node, viewportWidth: number, viewportHeight: number, painterly?: SpriteFrame | PainterlyTerrainTiles | null): Node {
+    // Painterly tiles from brick #7 (256px tileable). Falls back to programmatic 512 tile.
+    let tileSet: PainterlyTerrainTiles | null = null;
+    if (painterly && (painterly as any).asphalt !== undefined) {
+        tileSet = painterly as PainterlyTerrainTiles;
+    } else if (painterly) {
+        tileSet = { asphalt: painterly as SpriteFrame };
+    }
+    const fallback = tileSet ? null : generateTile(512, Date.now() & 0xffff);
+    const tileSize = tileSet ? 256 : 512;
+
+    // Pick a primary tile (asphalt > sand > concrete > fallback)
+    const primary = tileSet?.asphalt ?? tileSet?.sand ?? tileSet?.concrete ?? fallback;
+    if (!primary) {
+        console.warn('[terrain] no usable tile, skipping');
+        return new Node('WastelandTerrain');
+    }
 
     const root = new Node('WastelandTerrain');
     parent.addChild(root);
@@ -43,11 +62,19 @@ export function attachWastelandTerrain(parent: Node, viewportWidth: number, view
     const startX = -((cols - 1) * tileSize) / 2;
     const startY = -((rows - 1) * tileSize) / 2;
 
+    // Variant pool — sprinkles concrete/sand patches into asphalt sea so the
+    // map doesn't read as one uniform texture. Hash-based, stable per cell.
+    const variants: SpriteFrame[] = tileSet
+        ? [primary, primary, primary, primary, primary, primary,
+           tileSet.concrete ?? primary, tileSet.sand ?? primary]
+        : [primary];
+
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             const node = new Node(`tile_${r}_${c}`);
             const sprite = node.addComponent(Sprite);
-            sprite.spriteFrame = tile;
+            const h = (r * 73856093 ^ c * 19349663) >>> 0;
+            sprite.spriteFrame = variants[h % variants.length];
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             tr.setContentSize(tileSize, tileSize);
             node.setPosition(new Vec3(startX + c * tileSize, startY + r * tileSize, -10));

@@ -197,14 +197,25 @@ interface HudIconSet {
     minimapFrame: SpriteFrame | null;
 }
 
-async function preloadTerrainTile(): Promise<SpriteFrame | null> {
-    return new Promise<SpriteFrame | null>((resolve) => {
-        resources.load('art/v03/terrain/asphalt-tile/spriteFrame', SpriteFrame, (err, sf) => {
-            if (err) { console.warn('[terrain] painterly tile miss, fallback to programmatic'); resolve(null); return; }
-            (sf as any).packable = false;
-            resolve(sf);
-        });
-    });
+async function preloadTerrainTile(): Promise<{ asphalt: SpriteFrame | null; sand: SpriteFrame | null; concrete: SpriteFrame | null } | null> {
+    const out = { asphalt: null as SpriteFrame | null, sand: null as SpriteFrame | null, concrete: null as SpriteFrame | null };
+    const paths: Array<[string, 'asphalt' | 'sand' | 'concrete']> = [
+        ['art/v03/terrain/asphalt-tile/spriteFrame', 'asphalt'],
+        ['art/v03/terrain/sand-tile/spriteFrame', 'sand'],
+        ['art/v03/terrain/concrete-tile/spriteFrame', 'concrete'],
+    ];
+    await Promise.all(paths.map(([p, key]) =>
+        new Promise<void>((resolve) => {
+            resources.load(p, SpriteFrame, (err, sf) => {
+                if (err) { console.warn('[terrain] miss:', p); resolve(); return; }
+                (sf as any).packable = false;
+                out[key] = sf;
+                resolve();
+            });
+        })
+    ));
+    if (!out.asphalt && !out.sand && !out.concrete) return null;
+    return out;
 }
 
 async function preloadHudIcons(): Promise<HudIconSet> {
