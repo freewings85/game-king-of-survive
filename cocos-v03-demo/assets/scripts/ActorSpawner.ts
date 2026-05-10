@@ -103,6 +103,7 @@ export class ActorSpawner extends Component {
     // === gameplay state ===
     private heroNode: Node | null = null;
     private heroSprite: Sprite | null = null;
+    private heroHpFill: Node | null = null;
     private heroHp = 100;
     private readonly HERO_MAX_HP = 100;
     private heroIFrameTimer = 0;            // post-hit invincibility
@@ -256,6 +257,28 @@ export class ActorSpawner extends Component {
         this.heroNode = node;
         this.heroSprite = sprite;
         this.heroHp = this.HERO_MAX_HP;
+
+        // Hero HP indicator above head (green bar, slightly larger than zombie's)
+        const hpBg = new Node('HeroHPBg');
+        hpBg.layer = Layers.Enum.UI_2D;
+        const hpBgSp = hpBg.addComponent(Sprite);
+        hpBgSp.spriteFrame = this.makeRadialAlpha(8, [255, 255, 255, 255], [255, 255, 255, 255]);
+        hpBgSp.color = new Color(20, 20, 20, 220);
+        const hpBgTr = hpBg.addComponent(UITransform);
+        hpBgTr.setContentSize(64, 6);
+        hpBg.setPosition(0, hero.contentSize[1] * 0.55, 0);
+        node.addChild(hpBg);
+
+        const hpFill = new Node('HeroHPFill');
+        hpFill.layer = Layers.Enum.UI_2D;
+        const hpFillSp = hpFill.addComponent(Sprite);
+        hpFillSp.spriteFrame = this.makeRadialAlpha(8, [255, 255, 255, 255], [255, 255, 255, 255]);
+        hpFillSp.color = new Color(80, 220, 100, 255);
+        const hpFillTr = hpFill.addComponent(UITransform);
+        hpFillTr.setContentSize(64, 6);
+        hpFill.setPosition(0, hero.contentSize[1] * 0.55, 0);
+        node.addChild(hpFill);
+        this.heroHpFill = hpFill;
     }
 
     private spawnZombies(zombies: ZombieConfig[], heroPos: Vec2) {
@@ -481,7 +504,15 @@ export class ActorSpawner extends Component {
     }
 
     private updateHeroDamage(dt: number) {
-        if (!this.heroNode || this.heroHp <= 0) return;
+        if (!this.heroNode) return;
+        // Update HP bar each frame so heal/regen would also reflect immediately
+        if (this.heroHpFill) {
+            const ratio = Math.max(0, this.heroHp / this.HERO_MAX_HP);
+            this.heroHpFill.setScale(ratio, 1, 1);
+            // counter-rotate to stay horizontal as hero rotates
+            this.heroHpFill.angle = -(this.heroNode.angle || 0);
+        }
+        if (this.heroHp <= 0) return;
         if (this.heroIFrameTimer > 0) {
             this.heroIFrameTimer -= dt;
             // blink: alternate visibility every 80ms during iframe
