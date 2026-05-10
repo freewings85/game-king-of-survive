@@ -44,10 +44,13 @@ const groups = {
   zombies: [
     'zombie-card-brute.png',
     'zombie-card-brute-hit.png',
+    'zombie-card-brute-walk.png',
     'zombie-card-crawler.png',
     'zombie-card-crawler-hit.png',
+    'zombie-card-crawler-walk.png',
     'zombie-card-hooded.png',
-    'zombie-card-hooded-hit.png'
+    'zombie-card-hooded-hit.png',
+    'zombie-card-hooded-walk.png'
   ],
   skills: [
     'skill-card-arc.png',

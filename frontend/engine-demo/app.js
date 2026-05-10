@@ -170,6 +170,8 @@ let unitAnimationFrameSwitchCount = 0;
 let zombiePainterlyUsesSpriteAsset = false;
 let zombieHitFrameUsesSpriteAsset = false;
 let zombieHitFrameSwitchCount = 0;
+let zombieWalkFrameUsesSpriteAsset = false;
+let zombieWalkFrameSwitchCount = 0;
 let skillPainterlyUsesSpriteAsset = false;
 let propCoverUsesSpriteAsset = false;
 let playerPainterlyCard = null;
@@ -211,6 +213,11 @@ const zombieHitCardAssets = {
   0: '/frontend/engine-demo/assets/zombies/zombie-card-brute-hit.png',
   1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler-hit.png',
   2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded-hit.png'
+};
+const zombieWalkCardAssets = {
+  0: '/frontend/engine-demo/assets/zombies/zombie-card-brute-walk.png',
+  1: '/frontend/engine-demo/assets/zombies/zombie-card-crawler-walk.png',
+  2: '/frontend/engine-demo/assets/zombies/zombie-card-hooded-walk.png'
 };
 const skillCardAssets = {
   arc: '/frontend/engine-demo/assets/skills/skill-card-arc.png',
@@ -603,7 +610,11 @@ function getClassUnitTexture(classId, skinIndex = 0, frame = 'idle') {
 }
 
 function getZombieSpriteTexture(variant, frame = 'idle') {
-  const asset = frame === 'hit' ? zombieHitCardAssets[variant] : zombieCardAssets[variant];
+  const asset = frame === 'hit'
+    ? zombieHitCardAssets[variant]
+    : frame === 'walk'
+      ? zombieWalkCardAssets[variant]
+      : zombieCardAssets[variant];
   if (!asset) return null;
   const cacheKey = `${variant}:${frame}`;
   if (!zombieTextureCache.has(cacheKey)) {
@@ -812,6 +823,7 @@ const painterlyMaterials = {
 };
 skillPainterlyUsesSpriteAsset = ['arc', 'boom', 'fan'].every((kind) => !!getSkillSpriteTexture(kind));
 zombieHitFrameUsesSpriteAsset = [0, 1, 2].every((variant) => !!getZombieSpriteTexture(variant, 'hit'));
+zombieWalkFrameUsesSpriteAsset = [0, 1, 2].every((variant) => !!getZombieSpriteTexture(variant, 'walk'));
 propCoverUsesSpriteAsset = ['wreck', 'wall', 'crate', 'barrel', 'tires', 'debris'].every((kind) => !!getPropCoverTexture(kind));
 
 function addPainterlyCard(root, material, width, height, x, y, z, kind) {
@@ -1764,7 +1776,8 @@ function updateZombieSpriteFrame(z, frame) {
   z.userData.painterlyCard.material.map = texture;
   z.userData.painterlyCard.material.needsUpdate = true;
   z.userData.painterlyFrame = frame;
-  zombieHitFrameSwitchCount += 1;
+  if (frame === 'hit') zombieHitFrameSwitchCount += 1;
+  if (frame === 'walk') zombieWalkFrameSwitchCount += 1;
 }
 
 function setCharacterGear(root, id) {
@@ -2448,7 +2461,8 @@ function animate(now) {
     z.position.z += Math.cos(ang) * (z.userData.fast ? demoTuning.zombie.fastSpeed : demoTuning.zombie.normalSpeed) * dt;
     z.position.y = Math.abs(Math.sin(t * (z.userData.fast ? 9 : 4) + z.userData.phase)) * 0.045;
     z.userData.hitPulse = Math.max(0, (z.userData.hitPulse || 0) - dt);
-    updateZombieSpriteFrame(z, z.userData.hitPulse > 0 ? 'hit' : 'idle');
+    const walkFrame = Math.sin(t * (z.userData.fast ? 10 : 6) + z.userData.phase) > 0 ? 'walk' : 'idle';
+    updateZombieSpriteFrame(z, z.userData.hitPulse > 0 ? 'hit' : walkFrame);
     const hitScale = z.userData.hitPulse > 0 ? 0.18 * (z.userData.hitPulse / 0.46) : 0;
     z.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.025 + hitScale);
     if (dist < 0.75 && game.hitTimer <= 0) {
@@ -2687,6 +2701,8 @@ function animate(now) {
   window.__V03_ENGINE_DEMO_STATE.zombiePainterlyUsesSpriteAsset = zombiePainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.zombieHitFrameUsesSpriteAsset = zombieHitFrameUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.zombieHitFrameSwitchCount = zombieHitFrameSwitchCount;
+  window.__V03_ENGINE_DEMO_STATE.zombieWalkFrameUsesSpriteAsset = zombieWalkFrameUsesSpriteAsset;
+  window.__V03_ENGINE_DEMO_STATE.zombieWalkFrameSwitchCount = zombieWalkFrameSwitchCount;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyCardCount = skillPainterlyCardCount;
   window.__V03_ENGINE_DEMO_STATE.skillPainterlyUsesSpriteAsset = skillPainterlyUsesSpriteAsset;
   window.__V03_ENGINE_DEMO_STATE.activePainterlyClass = activePainterlyClass;

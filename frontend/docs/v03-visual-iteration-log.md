@@ -2588,3 +2588,45 @@ Next iteration direction:
 1. Add walk-frame zombie variants and make movement swap frames while zombies close on the player.
 2. Add death or dissolve frames that play before XP drops.
 3. Start tuning enemy scale/spacing against the reference phone combat screenshot so the crowd reads less pasted-on.
+
+## 2026-05-10 Zombie walk frame pass
+
+Related work:
+
+- Follow-up to `6c09872`
+- `tools/build-v03-zombie-animation-assets.js`
+- `frontend/engine-demo/app.js`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute-walk.png`
+- `cocos-v03-demo/assets/resources/config/v03-art-assets.json`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-brute-walk.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-crawler-walk.png`
+- `frontend/engine-demo/assets/zombies/zombie-card-hooded-walk.png`
+
+Current visual distance:
+
+- Zombies now have idle, walk, and hit card families, and moving zombies swap between idle/walk while closing on the player.
+- This makes the enemy crowd less static and closer to the reference's active horde feel, but the walk frames are still derived poses rather than authored multi-frame locomotion.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added walk-frame zombie card sprites for brute, crawler, and hooded variants.
+- Runtime now tracks `zombieWalkFrameUsesSpriteAsset` and `zombieWalkFrameSwitchCount >= 8`, proving walk frames are exercised during verification.
+- Cocos art export and visual contract now include idle, hit, and walk zombie card variants.
+
+What is still far from the reference:
+
+- Walk frames are a two-pose card swap, not a full gait cycle.
+- Zombie death/dissolve feedback is still missing.
+- Enemy scale and depth ordering still need tuning so the crowd feels integrated into the map instead of layered over it.
+
+Next iteration direction:
+
+1. Add zombie death/dissolve frames and delay XP drops until the death feedback is visible.
+2. Tune zombie placement/depth so enemies do not appear on top of cover in screenshots.
+3. Start carrying this animation contract into the Cocos runtime scene instead of only the WebGL proof.

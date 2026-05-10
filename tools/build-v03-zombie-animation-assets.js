@@ -14,7 +14,7 @@ async function main() {
   for (const variant of variants) {
     const sourcePath = path.join(outDir, `zombie-card-${variant}.png`);
     const sourceDataUrl = `data:image/png;base64,${fs.readFileSync(sourcePath).toString('base64')}`;
-    const dataUrl = await page.evaluate(async ({ sourceDataUrl, variant }) => {
+    const hitDataUrl = await page.evaluate(async ({ sourceDataUrl, variant }) => {
       const canvas = document.getElementById('c');
       const ctx = canvas.getContext('2d');
       const img = await new Promise((resolve, reject) => {
@@ -52,11 +52,45 @@ async function main() {
     }, { sourceDataUrl, variant });
     fs.writeFileSync(
       path.join(outDir, `zombie-card-${variant}-hit.png`),
-      Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ''), 'base64')
+      Buffer.from(hitDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64')
+    );
+
+    const walkDataUrl = await page.evaluate(async ({ sourceDataUrl, variant }) => {
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = sourceDataUrl;
+      });
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(variant === 'crawler' ? -18 : 14, variant === 'hooded' ? -4 : 3);
+      ctx.rotate(variant === 'crawler' ? -0.055 : 0.045);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      ctx.globalCompositeOperation = 'screen';
+      ctx.strokeStyle = 'rgba(210, 255, 148, 0.34)';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(58, 420);
+      ctx.lineTo(142, 392);
+      ctx.moveTo(276, 410);
+      ctx.lineTo(354, 374);
+      ctx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      return canvas.toDataURL('image/png');
+    }, { sourceDataUrl, variant });
+    fs.writeFileSync(
+      path.join(outDir, `zombie-card-${variant}-walk.png`),
+      Buffer.from(walkDataUrl.replace(/^data:image\/png;base64,/, ''), 'base64')
     );
   }
   await browser.close();
-  console.log('Built 3 V03 zombie hit-frame assets.');
+  console.log('Built 6 V03 zombie animation assets.');
 }
 
 main().catch((error) => {

@@ -106,6 +106,8 @@ requiredText.forEach((text) => {
   'zombiePainterlyUsesSpriteAsset',
   'zombieHitFrameUsesSpriteAsset',
   'zombieHitFrameSwitchCount >= 4',
+  'zombieWalkFrameUsesSpriteAsset',
+  'zombieWalkFrameSwitchCount >= 8',
   'zombieSpriteBodyHiddenForAll',
   'zombieSpriteBodyHiddenCount >= 240',
   'skillPainterlyCardCount >= 30',

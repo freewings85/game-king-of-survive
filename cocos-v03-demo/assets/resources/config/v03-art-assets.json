@@ -261,6 +261,14 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute-hit.png"
     },
     {
+      "id": "zombie-card-brute-walk",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-brute-walk.png",
+      "resourcePath": "art/v03/zombies/zombie-card-brute-walk",
+      "spriteFramePath": "art/v03/zombies/zombie-card-brute-walk/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-brute-walk.png"
+    },
+    {
       "id": "zombie-card-crawler",
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler.png",
@@ -277,6 +285,14 @@
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler-hit.png"
     },
     {
+      "id": "zombie-card-crawler-walk",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-crawler-walk.png",
+      "resourcePath": "art/v03/zombies/zombie-card-crawler-walk",
+      "spriteFramePath": "art/v03/zombies/zombie-card-crawler-walk/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-crawler-walk.png"
+    },
+    {
       "id": "zombie-card-hooded",
       "group": "zombies",
       "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded.png",
@@ -291,6 +307,14 @@
       "resourcePath": "art/v03/zombies/zombie-card-hooded-hit",
       "spriteFramePath": "art/v03/zombies/zombie-card-hooded-hit/spriteFrame",
       "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded-hit.png"
+    },
+    {
+      "id": "zombie-card-hooded-walk",
+      "group": "zombies",
+      "source": "frontend/engine-demo/assets/zombies/zombie-card-hooded-walk.png",
+      "resourcePath": "art/v03/zombies/zombie-card-hooded-walk",
+      "spriteFramePath": "art/v03/zombies/zombie-card-hooded-walk/spriteFrame",
+      "file": "cocos-v03-demo/assets/resources/art/v03/zombies/zombie-card-hooded-walk.png"
     },
     {
       "id": "skill-card-arc",
@@ -368,7 +392,7 @@
   "counts": {
     "portraits": 12,
     "units": 18,
-    "zombies": 6,
+    "zombies": 9,
     "skills": 3,
     "props": 6
   }

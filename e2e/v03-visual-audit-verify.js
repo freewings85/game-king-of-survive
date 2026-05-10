@@ -50,6 +50,7 @@ assert(text.includes('Full class unit sprite pass'), 'Visual iteration log must 
 assert(text.includes('Portrait-backed unit sprite repair pass'), 'Visual iteration log must record the latest portrait-backed unit sprite repair pass');
 assert(text.includes('Unit attack frame pass'), 'Visual iteration log must record the latest unit attack frame pass');
 assert(text.includes('Zombie hit frame pass'), 'Visual iteration log must record the latest zombie hit frame pass');
+assert(text.includes('Zombie walk frame pass'), 'Visual iteration log must record the latest zombie walk frame pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

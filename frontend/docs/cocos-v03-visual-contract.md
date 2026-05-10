@@ -213,10 +213,13 @@ Required zombie card sprites:
 
 - `zombie-card-brute`
 - `zombie-card-brute-hit`
+- `zombie-card-brute-walk`
 - `zombie-card-crawler`
 - `zombie-card-crawler-hit`
+- `zombie-card-crawler-walk`
 - `zombie-card-hooded`
 - `zombie-card-hooded-hit`
+- `zombie-card-hooded-walk`
 
 Required skill card sprites:
 
