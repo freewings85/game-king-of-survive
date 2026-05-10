@@ -1,0 +1,8 @@
+{
+  "name": "v03-runtime-smoke",
+  "private": true,
+  "description": "Node-side smoke harness: drives BootstrapMain.ts -> ActorSpawner.ts via esbuild + cc-shim, dumps the spawned scene for the Python preview to render.",
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}
