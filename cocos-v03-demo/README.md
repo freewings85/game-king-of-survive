@@ -56,6 +56,7 @@ V03Battle.scene
 ## Source Files
 
 - `assets/scripts/V03BattleDirector.ts`: first-playable component boundary and loop notes.
+- `assets/scripts/V03SceneBootstrap.ts`: runtime scene bootstrap that creates the V03 node graph and wires Cocos components before hand-authored scene assets exist.
 - `assets/scripts/V03MapRuntime.ts`: converts exported V03 map data into Cocos tile, prop, and gameplay pin nodes.
 - `assets/scripts/V03VisualContract.ts`: names the required class gear, zombie variants, unit decals, FX layers, and review screenshots from the WebGL target.
 - `assets/scripts/V03VisualRuntime.ts`: builds placeholder Cocos nodes from the visual contract so prefab work can replace structure without losing the target layers.

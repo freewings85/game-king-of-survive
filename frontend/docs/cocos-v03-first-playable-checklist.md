@@ -36,6 +36,7 @@ Required node groups:
 Required component bindings:
 
 - `V03BattleDirector` on `Root`, wired to `V03MapRuntime`, `V03VisualRuntime`, and `statusLabel`.
+- `V03SceneBootstrap` on `Root`, able to create the required camera, world, actor, FX, and UI roots when the hand-authored scene asset is not available yet.
 - `V03MapRuntime` on `World`, wired to ground, prop, spawn, and reward roots.
 - `V03VisualRuntime` on `Actors`, wired to visual actor and FX roots and backed by `V03VisualContract`.
 

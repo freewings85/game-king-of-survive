@@ -2163,3 +2163,44 @@ Next iteration direction:
 1. Start the real Cocos scene slice by turning the proof layers into Creator nodes/prefabs or an importable scene asset plan.
 2. Keep the browser proof as a visual regression target while Cocos catches up.
 3. Run the WeChat package/runtime gate as soon as a Creator build can be produced.
+
+## 2026-05-10 Cocos runtime scene bootstrap pass
+
+Related work:
+
+- Follow-up to `555b1b0`
+- `cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts`
+- `cocos-v03-demo/settings/v03-scene-assembly-manifest.json`
+- `cocos-v03-demo/settings/v03-first-playable-checklist.json`
+- `e2e/v03-cocos-bridge-verify.js`
+- `e2e/v03-cocos-scene-assembly-verify.js`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The Cocos side now has executable bootstrap code for the V03 scene graph instead of only source manifests. This is a practical step toward making the production engine catch up to the browser reference.
+- The visual result is still not a real Creator screenshot in this environment, so the target image gap remains unresolved until the bootstrap is opened and run in Cocos Creator.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added `V03SceneBootstrap` to create `CameraRig`, `World`, `Actors`, `FX`, and `UI` roots at runtime.
+- The bootstrap wires `V03BattleDirector`, `V03MapRuntime`, `V03VisualRuntime`, the orthographic camera, and the status label so the scene can start without a hand-authored `.scene` asset.
+- Cocos bridge and scene assembly gates now verify this bootstrap wiring.
+
+What is still far from the reference:
+
+- The bootstrap still creates placeholder nodes and generated geometry, not final Cocos prefabs with authored art.
+- It has not been verified inside Cocos Creator or a WeChat Mini Game build because this environment does not include the Creator executable.
+- The next visual leap requires running this bootstrap in Creator, taking the first Cocos phone screenshot, and comparing it to the target image.
+
+Next iteration direction:
+
+1. Open `cocos-v03-demo/` in Cocos Creator 3.8.x and attach `V03SceneBootstrap` to the root scene node.
+2. Capture the first Cocos phone screenshot and add it to the V03 visual audit.
+3. Replace bootstrap placeholder geometry with the first real prop, unit, ground, storm, and skill prefabs.

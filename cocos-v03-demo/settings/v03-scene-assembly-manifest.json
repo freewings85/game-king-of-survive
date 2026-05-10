@@ -16,7 +16,7 @@
   "rootNodes": [
     {
       "path": "Root",
-      "components": ["V03BattleDirector"],
+      "components": ["V03SceneBootstrap", "V03BattleDirector"],
       "bindings": ["World", "Actors", "FX", "UI", "statusLabel"]
     },
     {
@@ -55,6 +55,7 @@
     "assets/resources/config/v03-standard-map.json"
   ],
   "scripts": [
+    "assets/scripts/V03SceneBootstrap.ts",
     "assets/scripts/V03BattleDirector.ts",
     "assets/scripts/V03ResourceBridge.ts",
     "assets/scripts/V03MapRuntime.ts",

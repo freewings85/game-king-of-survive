@@ -27,6 +27,7 @@ const requiredText = [
   'node e2e/v03-presentation-audit-verify.js',
   'cocos-v03-demo/settings/v03-scene-assembly-manifest.json',
   'cocos-v03-demo/settings/v03-engine-proof-manifest.json',
+  'V03SceneBootstrap',
   'source-manifest-only',
   'Art quality: far',
   'No real Cocos Creator scene has been opened',

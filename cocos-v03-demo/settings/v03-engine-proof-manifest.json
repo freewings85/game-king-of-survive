@@ -10,6 +10,7 @@
   "productionRenderRoute": "orthographic-2.5d-sprite-billboard-plus-prop-depth",
   "cocosScene": "V03Battle.scene",
   "requiredComponents": [
+    "V03SceneBootstrap",
     "V03BattleDirector",
     "V03MapRuntime",
     "V03VisualRuntime",

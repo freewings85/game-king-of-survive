@@ -29,6 +29,11 @@
   ],
   "componentBindings": [
     {
+      "component": "V03SceneBootstrap",
+      "node": "Root",
+      "requires": ["CameraRig/MainCamera", "World", "Actors", "FX", "UI"]
+    },
+    {
       "component": "V03BattleDirector",
       "node": "Root",
       "requires": ["V03MapRuntime", "V03VisualRuntime", "statusLabel"]

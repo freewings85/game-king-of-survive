@@ -36,7 +36,7 @@ assert(manifest.browserProofScreenshot === 'can_delete/v03-gate/engine-proof-coc
 assert(manifest.productionRenderRoute === 'orthographic-2.5d-sprite-billboard-plus-prop-depth', 'Engine proof manifest must lock the render route');
 assert(manifest.cocosScene === sceneManifest.scene && manifest.cocosScene === firstPlayableChecklist.scene, 'Engine proof scene must match the Cocos scene manifests');
 
-['V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime', 'V03ResourceBridge', 'V03VisualContract'].forEach((component) => {
+['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime', 'V03ResourceBridge', 'V03VisualContract'].forEach((component) => {
   assert(manifest.requiredComponents.includes(component), `Engine proof manifest must include component ${component}`);
   assert(sceneManifest.scripts.some((script) => script.includes(component)), `Scene manifest must include script ${component}`);
 });

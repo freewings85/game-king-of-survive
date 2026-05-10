@@ -92,6 +92,7 @@ checklist.requiredNodes.forEach((node) => {
 });
 
 [
+  ['Root', 'V03SceneBootstrap'],
   ['Root', 'V03BattleDirector'],
   ['World', 'V03MapRuntime'],
   ['Actors', 'V03VisualRuntime'],
@@ -115,6 +116,7 @@ assertIncludesAll(
   manifest.scripts,
   [
     'assets/scripts/V03BattleDirector.ts',
+    'assets/scripts/V03SceneBootstrap.ts',
     'assets/scripts/V03ResourceBridge.ts',
     'assets/scripts/V03MapRuntime.ts',
     'assets/scripts/V03VisualRuntime.ts',

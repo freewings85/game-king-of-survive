@@ -40,6 +40,7 @@ const firstPlayableChecklist = readJson('cocos-v03-demo/settings/v03-first-playa
 const resourceBridgeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03ResourceBridge.ts'), 'utf8');
 const mapRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03MapRuntime.ts'), 'utf8');
 const battleDirectorSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03BattleDirector.ts'), 'utf8');
+const sceneBootstrapSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03SceneBootstrap.ts'), 'utf8');
 const visualContractSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualContract.ts'), 'utf8');
 const visualRuntimeSource = fs.readFileSync(path.join(repoRoot, 'cocos-v03-demo/assets/scripts/V03VisualRuntime.ts'), 'utf8');
 const visualContractDoc = fs.readFileSync(path.join(repoRoot, 'frontend/docs/cocos-v03-visual-contract.md'), 'utf8');
@@ -94,6 +95,15 @@ assert(mapRuntimeSource.includes('map.zombieEntries'), 'Cocos map runtime must e
 assert(mapRuntimeSource.includes('map.rewardPoints'), 'Cocos map runtime must expose reward points');
 assert(battleDirectorSource.includes('public mapRuntime: V03MapRuntime'), 'Battle director must expose V03MapRuntime');
 assert(battleDirectorSource.includes('this.mapRuntime.buildFromMap(this.bridgeData.map)'), 'Battle director must build map runtime from bridge data');
+assert(sceneBootstrapSource.includes("@ccclass('V03SceneBootstrap')"), 'Cocos scene bootstrap component is missing');
+assert(sceneBootstrapSource.includes('buildRuntimeScene()'), 'Scene bootstrap must expose buildRuntimeScene');
+assert(sceneBootstrapSource.includes('Camera.ProjectionType.ORTHO'), 'Scene bootstrap must create an orthographic camera');
+assert(sceneBootstrapSource.includes("this.ensurePath('World/GroundTiles')"), 'Scene bootstrap must create ground tile root');
+assert(sceneBootstrapSource.includes("this.ensurePath('Actors/VisualActors')"), 'Scene bootstrap must create visual actor root');
+assert(sceneBootstrapSource.includes("this.ensurePath('FX/VisualFX')"), 'Scene bootstrap must create visual FX root');
+assert(sceneBootstrapSource.includes('director.mapRuntime = mapRuntime'), 'Scene bootstrap must wire map runtime into battle director');
+assert(sceneBootstrapSource.includes('director.visualRuntime = visualRuntime'), 'Scene bootstrap must wire visual runtime into battle director');
+assert(sceneBootstrapSource.includes('director.statusLabel = statusLabel'), 'Scene bootstrap must wire status label into battle director');
 assert(visualRuntimeSource.includes("@ccclass('V03VisualRuntime')"), 'Cocos visual runtime component is missing');
 assert(visualRuntimeSource.includes('buildVisualContract(classId: V03ClassId'), 'Cocos visual runtime must build from visual contract data');
 assert(visualRuntimeSource.includes('V03_REQUIRED_GLOBAL_LIGHT_LAYERS'), 'Cocos visual runtime must consume global light layer contract');
@@ -223,7 +233,7 @@ assert(firstPlayableChecklist.scene === 'V03Battle.scene', 'First playable check
 ['CameraRig/MainCamera', 'World/GroundTiles', 'World/Props', 'Actors/Player', 'Actors/Zombies', 'FX/CardLayers', 'UI/MiniMap', 'UI/SkillButtons'].forEach((node) => {
   assert(firstPlayableChecklist.requiredNodes.includes(node), `First playable checklist must include node ${node}`);
 });
-['V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime'].forEach((component) => {
+['V03SceneBootstrap', 'V03BattleDirector', 'V03MapRuntime', 'V03VisualRuntime'].forEach((component) => {
   assert(firstPlayableChecklist.componentBindings.some((binding) => binding.component === component), `First playable checklist must bind ${component}`);
 });
 ['Guardian.prefab', 'TechEngineer.prefab', 'Ranger.prefab'].forEach((prefab) => {
