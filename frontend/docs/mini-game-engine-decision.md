@@ -6,6 +6,16 @@ Use Cocos Creator 3.x for the production WeChat Mini Game client.
 
 The current Three.js demo remains the visual and interaction reference. It proves the target look, but it should not become the final mini-game runtime.
 
+## Latest Proof
+
+The current engine proof page is:
+
+```text
+http://localhost:8081/frontend/engine-proof/index.html
+```
+
+It isolates the rendering contract that the production engine must carry: orthographic 2.5D camera, bitmap/billboard hero and zombies, real prop depth roots, painterly ground splats, skill FX cards, and layered safe-zone storm art. `e2e/v03-engine-proof-verify.js` keeps this proof tied to the V03 reference image and asserts `engineRecommendation === 'cocos-creator-3.x'`.
+
 ## Why Cocos Creator
 
 - It has an official WeChat Mini Game build path that generates the WeChat project output and can launch WeChat DevTools.

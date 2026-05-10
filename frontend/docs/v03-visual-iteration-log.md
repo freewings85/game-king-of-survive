@@ -2081,3 +2081,44 @@ Next iteration direction:
 1. Decide the concrete mobile engine/rendering path that can support the target image's 2.5D painterly depth in WeChat Mini Game.
 2. Build a small Cocos-side or engine-specific render demo that proves authored sprites, ground splats, billboards, skill FX, and storm layers can match the V03 image direction.
 3. Replace procedural storm/ground textures with authored assets once the engine path is confirmed.
+
+## 2026-05-10 Cocos route engine proof pass
+
+Related work:
+
+- Follow-up to `0c7cfad`
+- `frontend/engine-proof/index.html`
+- `frontend/engine-proof/app.js`
+- `e2e/v03-engine-proof-verify.js`
+- `frontend/docs/mini-game-engine-decision.md`
+- `frontend/docs/engine-evaluation.md`
+
+Reviewed screenshots and assets:
+
+- `candidate_pics/zombie-battle-royale-visual-direction-03-classes-skills-skins.png`
+- `can_delete/v03-gate/engine-proof-cocos-route.png`
+- `can_delete/v03-gate/engine-demo-mobile.png`
+
+Current visual distance:
+
+- The proof page confirms the required engine route more directly than the full gameplay demo: orthographic 2.5D camera, bitmap/billboard units, real prop depth roots, painterly ground splats, skill FX cards, and safe-zone storm layers can coexist in the phone viewport.
+- It is still a route proof, not a finished game screen. The target image remains ahead in composition density, authored asset consistency, and production-grade Cocos integration.
+- Every meaningful visual iteration must record this comparison before the next pass is considered accepted.
+
+What moved closer:
+
+- Added a small `frontend/engine-proof` page focused on the Cocos production rendering contract.
+- Runtime gate now requires `engineRecommendation === 'cocos-creator-3.x'`, WebGL orthographic rendering, at least 8 billboard sprites, 4 prop depth roots, 5 ground splats, 2 storm layers, and 5 skill FX layers.
+- Engine decision docs now separate the Three.js proof role from the Cocos Creator 3.x production route.
+
+What is still far from the reference:
+
+- The proof still uses browser Three.js as a fast stand-in; the real target is a Cocos Creator 3.8.x scene and WeChat Mini Game preview.
+- The UI in the proof is intentionally oversized to validate layer interaction, so it is not the final combat composition.
+- The next visual leap depends on importing this route into Cocos instead of continuing to improve browser-only rendering.
+
+Next iteration direction:
+
+1. Create the first real Cocos Creator scene/prefab slice that mirrors the proof's layer contract.
+2. Verify package/runtime constraints early: WeChat preview, main package budget, 390x844 HUD, and 30 FPS target.
+3. Keep `frontend/engine-demo` and `frontend/engine-proof` as visual regression references while the production Cocos slice catches up.

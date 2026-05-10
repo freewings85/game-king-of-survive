@@ -19,6 +19,7 @@ const requiredText = [
   'Prompt-To-Artifact Checklist',
   'npm run verify:v03',
   'node e2e/v03-contract-verify.js',
+  'node e2e/v03-engine-proof-verify.js',
   'node e2e/v03-cocos-bridge-verify.js',
   'node e2e/v03-cocos-scene-assembly-verify.js',
   'node e2e/v03-visual-audit-verify.js',
@@ -47,6 +48,7 @@ requiredText.forEach((text) => {
   'can_delete/v03-gate/engine-demo-skill-arc.png',
   'can_delete/v03-gate/editor-standard-map.png',
   'can_delete/v03-gate/runtime-contract-map-mobile.png',
+  'can_delete/v03-gate/engine-proof-cocos-route.png',
   'can_delete/v03-gate/v03-shell-framework.png'
 ].forEach((screenshot) => {
   assert(audit.includes(screenshot), `Presentation audit must cite screenshot ${screenshot}`);
@@ -64,6 +66,7 @@ requiredText.forEach((text) => {
   'Zombie/class visual readability',
   'Skills and combat FX',
   'Smooth early combat pacing',
+  'Engine route proof',
   'Cocos production path',
   'Visual iteration discipline',
   'Staged rollback points'
@@ -86,6 +89,7 @@ requiredText.forEach((text) => {
   'globalLightCount >= 8',
   'objectRimCount >= 60',
   'materialBlendCount >= 70',
+  "engineRecommendation === 'cocos-creator-3.x'",
   'groundWashLayerCount >= 3',
   'groundTileBlendCount >= 572',
   'safeZonePainterlyLayerCount >= 2',

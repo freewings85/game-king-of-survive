@@ -38,6 +38,7 @@ assert(text.includes('Prop sprite body cleanup pass'), 'Visual iteration log mus
 assert(text.includes('Secondary prop bitmap asset pass'), 'Visual iteration log must record the latest secondary prop bitmap asset pass');
 assert(text.includes('Painterly ground integration pass'), 'Visual iteration log must record the latest painterly ground integration pass');
 assert(text.includes('Painterly safe-zone edge pass'), 'Visual iteration log must record the latest painterly safe-zone edge pass');
+assert(text.includes('Cocos route engine proof pass'), 'Visual iteration log must record the latest engine route proof pass');
 
 console.log(JSON.stringify({
   reference: referencePath,

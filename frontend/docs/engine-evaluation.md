@@ -13,6 +13,14 @@ The current project is a Web/HTML canvas prototype. It is useful for gameplay va
 - It supports 2D and 3D rendering, which fits the V03 target: 2.5D top-down battle with real height, shadows, particles, and layered UI.
 - It is a better long-term production fit than continuing to hand-roll rendering inside one HTML canvas file.
 
+Current local proof:
+
+```text
+http://localhost:8081/frontend/engine-proof/index.html
+```
+
+This proof intentionally uses Three.js only as a fast browser stand-in for the Cocos render target. The route it validates is `orthographic-2.5d-sprite-billboard-plus-prop-depth`: authored sprites/billboards for characters and FX, simple 3D roots for prop depth and shadows, painterly ground splats, and layered storm boundaries.
+
 Official references:
 
 - Cocos WeChat Mini Game publishing: https://docs.cocos.com/creator/3.8/manual/en/editor/publish/publish-wechatgame.html

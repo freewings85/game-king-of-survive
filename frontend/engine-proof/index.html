@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>V03 Engine Proof</title>
+<link rel="stylesheet" href="/frontend/engine-proof/styles.css">
+</head>
+<body>
+<main class="proof-shell">
+  <canvas id="proofCanvas"></canvas>
+  <section class="hud top">
+    <div class="avatar">R</div>
+    <div class="bars">
+      <strong>Ranger</strong>
+      <i class="hp"><b></b></i>
+      <i class="xp"><b></b></i>
+    </div>
+    <div class="alive">ALIVE<br><b>18</b></div>
+  </section>
+  <section class="loadout">
+    <img src="/frontend/engine-demo/assets/portraits/class-focus-ranger.png" alt="">
+    <div>
+      <strong>Ranger</strong>
+      <span>SKIN 03 / HOOD-RIFLE</span>
+    </div>
+    <nav>
+      <img src="/frontend/engine-demo/assets/skills/skill-card-arc.png" alt="">
+      <img src="/frontend/engine-demo/assets/skills/skill-card-boom.png" alt="">
+      <img src="/frontend/engine-demo/assets/skills/skill-card-fan.png" alt="">
+    </nav>
+  </section>
+  <section class="skills">
+    <button><img src="/frontend/engine-demo/assets/skills/skill-card-arc.png" alt=""><span>ARC</span></button>
+    <button><img src="/frontend/engine-demo/assets/skills/skill-card-boom.png" alt=""><span>BOOM</span></button>
+    <button class="active"><img src="/frontend/engine-demo/assets/skills/skill-card-fan.png" alt=""><span>FAN</span></button>
+  </section>
+  <div class="stick"><i></i></div>
+</main>
+<script type="module" src="/frontend/engine-proof/app.js"></script>
+</body>
+</html>
