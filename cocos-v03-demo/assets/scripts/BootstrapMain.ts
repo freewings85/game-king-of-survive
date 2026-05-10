@@ -84,6 +84,9 @@ export class BootstrapMain extends Component {
             console.log('[BootstrapMain] hud icons loaded', Object.keys(hudIcons));
 
             attachHudSkeleton(this.hudLayer, config, hudIcons);
+
+            // Atmospheric polish: heavy vignette + ground-shadow edge for end-of-world mood
+            this.attachVignette(config.canvas.width, config.canvas.height);
             console.log('[BootstrapMain] start() done');
         } catch (e) {
             console.error('[BootstrapMain] start() FAILED', e);
@@ -95,6 +98,34 @@ export class BootstrapMain extends Component {
         view.setDesignResolutionSize(this.targetWidth, this.targetHeight, 4);
         const dpr = Math.min(window.devicePixelRatio || 1, this.maxDevicePixelRatio);
         view.setDevicePixelRatio?.(dpr);
+    }
+
+    private attachVignette(width: number, height: number) {
+        // 1) Wide outer vignette: dark corners, bright center -- adds end-of-world mood
+        const vignette = new Node('VignetteOverlay');
+        vignette.layer = Layers.Enum.UI_2D;
+        const vsp = vignette.addComponent(Sprite);
+        // Build a radial gradient sprite that's transparent in center, dark at edges.
+        const vSize = 256;
+        vsp.spriteFrame = makeRadialGradientSpriteFrame(vSize, [0, 0, 0, 0], [0, 0, 0, 230]);
+        (vsp.spriteFrame as any).packable = false;
+        const tr = vignette.addComponent(UITransform);
+        // Stretch beyond canvas so the dark falloff is fully off-screen on edges
+        tr.setContentSize(Math.floor(width * 1.3), Math.floor(height * 1.15));
+        vignette.setPosition(0, 0, 0);
+        // FX layer renders above world but below HUD
+        this.fxLayer.addChild(vignette);
+
+        // 2) Bottom haze band: warm-orange dust glow at horizon line for atmosphere
+        const haze = new Node('HorizonHaze');
+        haze.layer = Layers.Enum.UI_2D;
+        const hsp = haze.addComponent(Sprite);
+        hsp.spriteFrame = makeRadialGradientSpriteFrame(128, [180, 100, 50, 60], [180, 100, 50, 0]);
+        (hsp.spriteFrame as any).packable = false;
+        const htr = haze.addComponent(UITransform);
+        htr.setContentSize(width + 80, 240);
+        haze.setPosition(0, -height * 0.30, 0);
+        this.fxLayer.addChild(haze);
     }
 
     private applyClearColor(config: SceneConfig) {
