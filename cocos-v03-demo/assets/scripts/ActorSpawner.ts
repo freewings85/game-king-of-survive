@@ -151,6 +151,10 @@ export class ActorSpawner extends Component {
     private minimapHeroDot: Node | null = null;
     private minimapEnemyDots: Node[] = [];
 
+    // === prop circle blockers (Leo 05-11: 桶/车/沙袋挡路) ===
+    private propBlocks: { x: number; y: number; r: number }[] = [];
+    private heroCollideR = 14;
+
     private static readonly PROP_PATHS: Record<PropKey, string> = {
         wreckTank:    'art/v03/props/wreck-tank',
         barrelRust:   'art/v03/props/barrel-rust',
@@ -248,7 +252,7 @@ export class ActorSpawner extends Component {
 
     private spawnProps(props: PropConfig[]) {
         for (const p of props) {
-            this.spawnContactShadow(p.pos, p.shadow[0], p.shadow[1]);
+            this.spawnContactShadow(p.pos, p.shadow[0], p.shadow[1], p.contentSize[1]);
             const node = new Node(p.name);
             const sprite = node.addComponent(Sprite);
             sprite.spriteFrame = this.propFrames.get(p.key) ?? null;
@@ -258,11 +262,14 @@ export class ActorSpawner extends Component {
             node.setPosition(new Vec3(p.pos[0], p.pos[1], 0));
             node.angle = p.angleDeg;
             this.worldLayer.addChild(node);
+            const r = p.collideRadius ?? 0;
+            if (r > 0) this.propBlocks.push({ x: p.pos[0], y: p.pos[1], r });
         }
     }
 
     private spawnHero(hero: HeroConfig) {
-        this.spawnContactShadow(hero.pos, hero.shadow[0], hero.shadow[1]);
+        this.spawnContactShadow(hero.pos, hero.shadow[0], hero.shadow[1], hero.contentSize[1]);
+        if (hero.collideRadius && hero.collideRadius > 0) this.heroCollideR = hero.collideRadius;
         const node = new Node('Hero');
         const sprite = node.addComponent(Sprite);
         sprite.spriteFrame = (hero.frame === 'shoot' ? this.heroFrames.shoot : this.heroFrames.idle) ?? this.heroFrames.idle;
@@ -304,7 +311,7 @@ export class ActorSpawner extends Component {
                 ? (Math.atan2(heroPos[1] - z.pos[1], heroPos[0] - z.pos[0]) * 180) / Math.PI
                 : 0;
 
-            this.spawnContactShadow(z.pos, Math.floor(z.shadow[0] * z.scale), Math.floor(z.shadow[1] * z.scale));
+            this.spawnContactShadow(z.pos, Math.floor(z.shadow[0] * z.scale), Math.floor(z.shadow[1] * z.scale), Math.floor(z.baseSize * z.scale));
 
             const node = new Node(z.name);
             node.layer = Layers.Enum.UI_2D;
@@ -369,14 +376,45 @@ export class ActorSpawner extends Component {
         return node;
     }
 
-    private spawnContactShadow(pos: Vec2, w: number, h: number) {
+    /**
+     * Push (x,y) outside every prop blocker by min-translation. Actors carry an
+     * effective collision radius `actorR`. Returns nearest non-overlapping point.
+     * Leo 05-11: 桶/车/沙袋应该挡路, 不能穿过. 多个 prop 重叠时迭代两次足够稳定.
+     */
+    private resolveBlockers(x: number, y: number, actorR: number): { x: number; y: number } {
+        if (this.propBlocks.length === 0) return { x, y };
+        for (let iter = 0; iter < 2; iter++) {
+            let moved = false;
+            for (const b of this.propBlocks) {
+                const dx = x - b.x;
+                const dy = y - b.y;
+                const min = b.r + actorR;
+                const d2 = dx * dx + dy * dy;
+                if (d2 >= min * min) continue;
+                const d = Math.max(0.001, Math.sqrt(d2));
+                const push = (min - d) / d;
+                x += dx * push;
+                y += dy * push;
+                moved = true;
+            }
+            if (!moved) break;
+        }
+        return { x, y };
+    }
+
+    private spawnContactShadow(pos: Vec2, w: number, h: number, spriteH = 0) {
+        if (w <= 0 || h <= 0) return;
         const node = new Node('ContactShadow');
         node.layer = Layers.Enum.UI_2D;
         const sprite = node.addComponent(Sprite);
-        sprite.spriteFrame = this.makeRadialAlpha(128, [0, 0, 0, 205], [0, 0, 0, 0]);
+        // Darker shadow (alpha 235) + wide fade so it actually anchors the actor.
+        // Leo 05-11: actor 不能"飘"在地图上 → 阴影要明显 + 在脚底.
+        sprite.spriteFrame = this.makeRadialAlpha(128, [0, 0, 0, 235], [0, 0, 0, 0]);
         const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
         tr.setContentSize(w, h);
-        node.setPosition(new Vec3(pos[0], pos[1] - 6, -1));
+        // Offset shadow to feet (bottom of sprite), not actor center.
+        const yOffset = spriteH > 0 ? -spriteH * 0.4 : -6;
+        node.setPosition(new Vec3(pos[0], pos[1] + yOffset, -1));
         this.worldLayer.addChild(node);
     }
 
@@ -847,7 +885,8 @@ export class ActorSpawner extends Component {
             let ny = p.y + dy * this.HERO_SPEED * dt;
             nx = Math.max(-this.HERO_SCREEN_HALF_W + 30, Math.min(this.HERO_SCREEN_HALF_W - 30, nx));
             ny = Math.max(-this.HERO_SCREEN_HALF_H + 60, Math.min(this.HERO_SCREEN_HALF_H - 60, ny));
-            this.heroNode.setPosition(nx, ny, 0);
+            const resolved = this.resolveBlockers(nx, ny, this.heroCollideR);
+            this.heroNode.setPosition(resolved.x, resolved.y, 0);
             this.heroNode.angle = Math.atan2(dy, dx) * 180 / Math.PI;
         }
         if (this.heroSprite) {
@@ -913,7 +952,9 @@ export class ActorSpawner extends Component {
             }
             if (len < 1) continue;
             const nx = dx / len, ny = dy / len;
-            z.node.setPosition(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, 0);
+            const zr = Math.max(10, (z.baseSize ?? 70) * (z.scale ?? 1) * 0.22);
+            const resolved = this.resolveBlockers(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, zr);
+            z.node.setPosition(resolved.x, resolved.y, 0);
             z.node.angle = Math.atan2(dy, dx) * 180 / Math.PI;
             // HP bar fill scale by hp ratio
             if (z.hpBarFill) {

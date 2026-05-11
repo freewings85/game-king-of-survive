@@ -10,6 +10,8 @@ export interface HeroConfig {
     frame: 'idle' | 'shoot';
     contentSize: Vec2;
     shadow: Vec2;
+    /** Half-radius for prop circle collision (Leo 05-11: 桶/车/沙袋应该挡路) */
+    collideRadius?: number;
 }
 
 export type ZombieBodyType = 'riley' | 'clint' | 'runner' | 'brute' | 'crawler';
@@ -40,6 +42,8 @@ export interface PropConfig {
     contentSize: Vec2;
     shadow: Vec2;
     tint: RGBA | null;
+    /** >0 means actors are pushed out of this radius (in px) around prop.pos. 0/undefined = pass-through. */
+    collideRadius?: number;
 }
 
 export interface MuzzleConfig {

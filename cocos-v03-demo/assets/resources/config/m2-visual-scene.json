@@ -12,29 +12,30 @@
     "pos": [-90, -260],
     "angleDeg": 30,
     "frame": "shoot",
-    "contentSize": [160, 105],
-    "shadow": [110, 36]
+    "contentSize": [80, 60],
+    "shadow": [56, 18],
+    "collideRadius": 14
   },
 
   "zombies": [
-    { "name": "lead",     "pos": [60, -150],   "scale": 1.20, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "rusher",   "pos": [10, -180],   "scale": 1.15, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "sneak",    "pos": [130, -100],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "crawler", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "flank",    "pos": [200, -50],   "scale": 1.00, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "backrush", "pos": [-30, -120],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "pack",     "pos": [180, 50],    "scale": 0.95, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "far",      "pos": [220, 200],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "crawler", "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true },
-    { "name": "distant",  "pos": [-180, 80],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "brute",   "baseSize": 130, "shadow": [80, 26], "rotateTowardHero": true }
+    { "name": "lead",     "pos": [60, -150],   "scale": 1.20, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "rusher",   "pos": [10, -180],   "scale": 1.15, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "sneak",    "pos": [130, -100],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "crawler", "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "flank",    "pos": [200, -50],   "scale": 1.00, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "backrush", "pos": [-30, -120],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "pack",     "pos": [180, 50],    "scale": 0.95, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "far",      "pos": [220, 200],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "crawler", "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
+    { "name": "distant",  "pos": [-180, 80],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true }
   ],
 
   "props": [
-    { "name": "WreckCar",     "key": "wreckCarPainterly",    "pos": [-50, -50],   "angleDeg": 65,  "contentSize": [130, 110], "shadow": [150, 50], "tint": null },
-    { "name": "BarrelRust1",  "key": "barrelRustPainterly",  "pos": [-10, -90],   "angleDeg": 0,   "contentSize": [56, 56],   "shadow": [60, 18],  "tint": null },
-    { "name": "WreckCar2",    "key": "wreckCarPainterly",    "pos": [220, 220],   "angleDeg": -25, "contentSize": [110, 95],  "shadow": [125, 42], "tint": null },
-    { "name": "SandbagPile1", "key": "sandbagPilePainterly", "pos": [-180, -240], "angleDeg": -8,  "contentSize": [80, 40],   "shadow": [85, 24],  "tint": null },
-    { "name": "SandbagPile2", "key": "sandbagPilePainterly", "pos": [10, -230],   "angleDeg": 10,  "contentSize": [80, 40],   "shadow": [85, 24],  "tint": null },
-    { "name": "BarrelRust2",  "key": "barrelRustPainterly",  "pos": [90, -40],    "angleDeg": 0,   "contentSize": [48, 56],   "shadow": [52, 20],  "tint": null },
-    { "name": "OilSplat",     "key": "oilSplatPainterly",    "pos": [-220, -310], "angleDeg": 15,  "contentSize": [100, 60],  "shadow": [0, 0],    "tint": null }
+    { "name": "WreckCar",     "key": "wreckCarPainterly",    "pos": [-50, -50],   "angleDeg": 65,  "contentSize": [80, 64], "shadow": [90, 30], "tint": null, "collideRadius": 30 },
+    { "name": "BarrelRust1",  "key": "barrelRustPainterly",  "pos": [-10, -90],   "angleDeg": 0,   "contentSize": [36, 36], "shadow": [38, 12], "tint": null, "collideRadius": 14 },
+    { "name": "WreckCar2",    "key": "wreckCarPainterly",    "pos": [220, 220],   "angleDeg": -25, "contentSize": [70, 58], "shadow": [78, 26], "tint": null, "collideRadius": 28 },
+    { "name": "SandbagPile1", "key": "sandbagPilePainterly", "pos": [-180, -240], "angleDeg": -8,  "contentSize": [54, 26], "shadow": [56, 14], "tint": null, "collideRadius": 20 },
+    { "name": "SandbagPile2", "key": "sandbagPilePainterly", "pos": [10, -230],   "angleDeg": 10,  "contentSize": [54, 26], "shadow": [56, 14], "tint": null, "collideRadius": 20 },
+    { "name": "BarrelRust2",  "key": "barrelRustPainterly",  "pos": [90, -40],    "angleDeg": 0,   "contentSize": [30, 36], "shadow": [32, 12], "tint": null, "collideRadius": 14 },
+    { "name": "OilSplat",     "key": "oilSplatPainterly",    "pos": [-220, -310], "angleDeg": 15,  "contentSize": [70, 42], "shadow": [0, 0],   "tint": null, "collideRadius": 0 }
   ],
 
   "vfx": {
