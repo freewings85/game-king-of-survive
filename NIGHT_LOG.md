@@ -1,3 +1,45 @@
+# Update — 2026-05-12 (Leo playtest pivot)
+
+## TL;DR
+
+- 🛑 **昨晚 baseline 21 张 view angle 全错**: 我做的 PM gate 只比了 painterly 质感, 没核 view angle. Target (candidate_pics/...03) 是 3/4 isometric, 我们 baseline 是 top-down 90°. Leo 实测说"角色倒立、怪物飘"反馈正确, 这是根因.
+- ✅ **Phase 2a 已 commit + push** (`8cc05c7`): hero/zombie/prop 全部缩 ~50%; 加 prop 圆形碰撞 (桶/车/沙袋挡路); 阴影 alpha 加深 + 锚到脚底. **不修 view angle**, 只缓解"太大 + 飘"症状.
+- ✅ **Tester 通路就绪** (`7b91add` + `8b3397a`): `scripts/build-and-publish.bat` 跑通 Cocos CLI build → 镜像 `docs/` → push. 我自己从 WSL 调 `cmd.exe /C` 跑.
+- ⏳ **ZombieArtist brick #8 进行中**: 3/4 view 重做 9 张 (hero idle/walk/shoot + brute/runner/crawler 各 idle/walk). 已 WORKING, 预估 1-2h.
+
+## 你醒来要做的唯一一件事 (30 秒)
+
+**开启 GitHub Pages** — 一次性, 之后所有刷新自动:
+1. https://github.com/freewings85/game-king-of-survive/settings/pages
+2. Source: `Deploy from a branch` → Branch: `main` → Folder: `/docs` → **Save**
+
+之后 tester URL 永久:
+**https://freewings85.github.io/game-king-of-survive/**
+
+每次我跑完 `scripts/build-and-publish.bat`, 这 URL 自动刷新 (~1min 后).
+
+## 视觉验收硬指标 (写进我的长期记忆, 以后不再漏)
+
+1. **角色必须"走"不能"飘"** — walk 帧切换 + 阴影 + 碰撞, 缺一不可
+2. **最终对照 candidate_pics/...03-classes-skills-skins.png** 5 大块 (HP 条 / 技能按钮 / 摇杆 / minimap / 角色姿势比例), 不达标不交付
+
+## 今晚 commits (新→旧)
+
+| Commit | What |
+|---|---|
+| `8b3397a` | chore(build): build-and-publish.bat + docs/README.md (one-click pages instr) |
+| `7b91add` | build(web-mobile): refresh tester bundle (含 Phase 2a) |
+| `8cc05c7` | feat(cocos): Phase 2a — shrink + prop collision + shadow-at-feet |
+| `f2b73ac` | chore: save Cocos editor-imported .meta + settings/v2 snapshot |
+
+## 风险 / 已知坑
+
+- **Brick #8 也可能漏角度** — 我现在改了规格, 明确写"必须能看到角色的脸 + 脚底贴近图底"才算合规. 落盘后我会自己 Read 每张 + Read target 对比, 不合规直接退回. Self-check 表 ≠ PASS.
+- **Phase 2a 没解决"飘"的根本** — view angle 错, 缩小+阴影只是缓解. Brick #8 + walk 帧动画 (后续 Phase 2c) 才是根治.
+- **WSL interop** 我手动用 sudo 注册了 binfmt_misc (跨 reboot 会失效). 如果 reboot 后再用, 可能要你在 `/etc/wsl.conf` 加 `[interop]\nenabled=true` 持久化.
+
+---
+
 # Night session log — 2026-05-10 (Leo asleep, Claude PM driving)
 
 > Leo went to sleep saying "接通 java 后端，并且游戏效果达到 candidate_pics 中的效果".
