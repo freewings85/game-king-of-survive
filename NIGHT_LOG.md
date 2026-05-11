@@ -1,3 +1,11 @@
+# Update — 2026-05-12 凌晨追加 (3/4 view 集成 done)
+
+## TL;DR (今早醒来看这个)
+
+- ✅ **3/4 view 全部 4 张 idle 落地 + push 到 tester** (`d71d055`): hero / brute / runner / crawler 全是 3/4 isometric, 跟 candidate_pics/...03 视角一致. **打开 https://freewings85.github.io/game-king-of-survive/ 看新版** (1min Pages 刷新).
+- ⏸️ **Walk 帧今晚没做出来**: ZombieArtist tool exec 状态从 brute-walk 开始连续 4 次拒 (非内容审核, 非 spec), 其官方建议放弃, 用 idle 帧 fallback. 已暂停, 等下次它工具状态恢复.
+- ✅ Phase 2a 阴影+碰撞依然在; idle 3/4 view + 阴影组合, "飘"感比 top-down 旧版好太多了. 实测看下你能不能接受现状.
+
 # Update — 2026-05-12 (Leo playtest pivot)
 
 ## TL;DR
@@ -5,7 +13,7 @@
 - 🛑 **昨晚 baseline 21 张 view angle 全错**: 我做的 PM gate 只比了 painterly 质感, 没核 view angle. Target (candidate_pics/...03) 是 3/4 isometric, 我们 baseline 是 top-down 90°. Leo 实测说"角色倒立、怪物飘"反馈正确, 这是根因.
 - ✅ **Phase 2a 已 commit + push** (`8cc05c7`): hero/zombie/prop 全部缩 ~50%; 加 prop 圆形碰撞 (桶/车/沙袋挡路); 阴影 alpha 加深 + 锚到脚底. **不修 view angle**, 只缓解"太大 + 飘"症状.
 - ✅ **Tester 通路就绪** (`7b91add` + `8b3397a`): `scripts/build-and-publish.bat` 跑通 Cocos CLI build → 镜像 `docs/` → push. 我自己从 WSL 调 `cmd.exe /C` 跑.
-- ⏳ **ZombieArtist brick #8 进行中**: 3/4 view 重做 9 张 (hero idle/walk/shoot + brute/runner/crawler 各 idle/walk). 已 WORKING, 预估 1-2h.
+- ✅ **ZombieArtist brick #8 落地 4/9**: hero idle/walk/shoot (#8a) + brute/runner/crawler idle (#8b₁/₂/₃) 全 3/4 view. Walk 帧 (#8c) 因 bot 工具异常放弃.
 
 ## 你醒来要做的唯一一件事 (30 秒)
 
