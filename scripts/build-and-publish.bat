@@ -39,6 +39,10 @@ if errorlevel 8 (
   exit /b 1
 )
 
+REM /MIR deletes files not in source, including .nojekyll. Recreate so Pages
+REM serves Cocos _virtual_*.js (Jekyll otherwise skips underscore files).
+type nul > "%DOCS%\.nojekyll"
+
 echo === [3/4] git add + commit ===
 cd /d "%REPO%"
 git add docs
