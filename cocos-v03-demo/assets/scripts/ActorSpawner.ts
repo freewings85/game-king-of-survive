@@ -132,7 +132,7 @@ export class ActorSpawner extends Component {
     private readonly BULLET_TTL = 1.4;
     private readonly ZOMBIE_HIT_RADIUS = 36;
     private spawnTimer = 0;
-    private readonly SPAWN_INTERVAL = 2.5;
+    private readonly SPAWN_INTERVAL = 1.2;
     private waveStartTime = 0;
     private waveNumber = 1;
     private kills = 0;
@@ -923,11 +923,20 @@ export class ActorSpawner extends Component {
             this.heroNode.angle = 0;
         }
         if (this.heroSprite) {
-            const next = this.heroShootFlash > 0
-                ? (this.heroFrames.shoot ?? this.heroFrames.idle)
-                : moving
+            // Walk cycle: alternate walk1 (walk-v2.png) and walk2 (= idle as second pose)
+            // every 0.25s so the sprite visibly cycles two distinct frames while moving.
+            // When ZombieArtist delivers a real walk2 PNG, swap heroFrames.walk2 in.
+            let next: SpriteFrame | null;
+            if (this.heroShootFlash > 0) {
+                next = this.heroFrames.shoot ?? this.heroFrames.idle;
+            } else if (moving) {
+                const cycle = Math.floor(this.heroBobPhase / Math.PI) % 2;
+                next = cycle === 0
                     ? (this.heroFrames.walk ?? this.heroFrames.idle)
-                    : this.heroFrames.idle;
+                    : (this.heroFrames.idle);
+            } else {
+                next = this.heroFrames.idle;
+            }
             if (next && this.heroSprite.spriteFrame !== next) this.heroSprite.spriteFrame = next;
         }
     }
