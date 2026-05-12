@@ -110,6 +110,7 @@ export class ActorSpawner extends Component {
     private heroSprite: Sprite | null = null;
     private heroFacingLeft = false;
     private heroBobPhase = 0;
+    private heroLastHop = 0;
     private heroHpFill: Node | null = null;
     private heroHp = 100;
     private readonly HERO_MAX_HP = 100;
@@ -897,11 +898,28 @@ export class ActorSpawner extends Component {
             if (Math.abs(dx) > 0.1) this.heroFacingLeft = dx < 0;
             this.heroBobPhase += dt * 9;
         }
-        // Apply facing (flipX) + bob (vertical bounce while moving)
+        // Apply facing (flipX) + fake step cycle (squash-stretch + sub-pixel offset)
         if (this.heroNode) {
             const sx = this.heroFacingLeft ? -1 : 1;
-            const bob = moving ? Math.abs(Math.sin(this.heroBobPhase)) * 3 : 0;
-            this.heroNode.setScale(sx, 1 + bob * 0.01, 1);
+            if (moving) {
+                // step cycle: scale.y oscillates ±6%, alternating x-shift for "weight shift" feel
+                const step = Math.sin(this.heroBobPhase);
+                const sy = 1 + step * 0.06;
+                const sxFinal = sx * (1 - Math.abs(step) * 0.03);
+                this.heroNode.setScale(sxFinal, sy, 1);
+                // tiny vertical hop so foot doesn't seem frozen
+                const p = this.heroNode.position;
+                const hop = Math.max(0, Math.abs(step)) * 2;
+                this.heroNode.setPosition(p.x, p.y + (this.heroLastHop ? -this.heroLastHop : 0) + hop, 0);
+                this.heroLastHop = hop;
+            } else {
+                this.heroNode.setScale(sx, 1, 1);
+                if (this.heroLastHop) {
+                    const p = this.heroNode.position;
+                    this.heroNode.setPosition(p.x, p.y - this.heroLastHop, 0);
+                    this.heroLastHop = 0;
+                }
+            }
             this.heroNode.angle = 0;
         }
         if (this.heroSprite) {
@@ -970,12 +988,14 @@ export class ActorSpawner extends Component {
             const zr = Math.max(10, (z.baseSize ?? 70) * (z.scale ?? 1) * 0.22);
             const resolved = this.resolveBlockers(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, zr);
             z.node.setPosition(resolved.x, resolved.y, 0);
-            // 3/4 view: no rotation. Face hero via flipX.
+            // 3/4 view: no rotation. Face hero via flipX. Fake walk = step squash.
             if (Math.abs(dx) > 0.1) z.facingLeft = dx < 0;
             z.bobPhase += dt * 7;
-            const zs = (z.scale ?? 1) * (z.facingLeft ? -1 : 1);
-            const zbob = Math.abs(Math.sin(z.bobPhase)) * 3;
-            z.node.setScale(zs, (z.scale ?? 1) * (1 + zbob * 0.01), 1);
+            const zstep = Math.sin(z.bobPhase);
+            const zbase = z.scale ?? 1;
+            const zsx = zbase * (z.facingLeft ? -1 : 1) * (1 - Math.abs(zstep) * 0.03);
+            const zsy = zbase * (1 + zstep * 0.06);
+            z.node.setScale(zsx, zsy, 1);
             z.node.angle = 0;
             // HP bar fill scale by hp ratio
             if (z.hpBarFill) {
