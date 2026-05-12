@@ -36,6 +36,7 @@ interface ZombieEntity {
     currentFrame: 'idle' | 'move' | 'attack';
     facingLeft: boolean;
     bobPhase: number;
+    attackPhase: number; // 0..1 lunge cycle when within range
 }
 
 interface BulletEntity {
@@ -370,6 +371,7 @@ export class ActorSpawner extends Component {
                 currentFrame: z.frame,
                 facingLeft: false,
                 bobPhase: Math.random() * Math.PI * 2,
+                attackPhase: 0,
             });
         }
     }
@@ -989,26 +991,38 @@ export class ActorSpawner extends Component {
             const dx = hp.x - zp.x, dy = hp.y - zp.y;
             const len = Math.hypot(dx, dy);
             // Frame switch: close to hero -> attack pose, else move/idle
-            const wantFrame: 'idle' | 'move' | 'attack' = len < 50 ? 'attack' : 'move';
+            const inAttackRange = len < 60;
+            const wantFrame: 'idle' | 'move' | 'attack' = inAttackRange ? 'attack' : 'move';
             if (wantFrame !== z.currentFrame) {
                 const nextSf = this.zombieFrames.get(`${z.bodyType}:${wantFrame}`)
                     ?? this.zombieFrames.get(`${z.bodyType}:idle`);
                 if (nextSf) z.sprite.spriteFrame = nextSf;
                 z.currentFrame = wantFrame;
             }
-            if (len < 1) continue;
-            const nx = dx / len, ny = dy / len;
-            const zr = Math.max(10, (z.baseSize ?? 70) * (z.scale ?? 1) * 0.22);
-            const resolved = this.resolveBlockers(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, zr);
-            z.node.setPosition(resolved.x, resolved.y, 0);
-            // 3/4 view: no rotation. Face hero via flipX. Fake walk = step squash.
+            // 3/4 view: no rotation. Face hero via flipX.
             if (Math.abs(dx) > 0.1) z.facingLeft = dx < 0;
-            z.bobPhase += dt * 7;
-            const zstep = Math.sin(z.bobPhase);
             const zbase = z.scale ?? 1;
-            const zsx = zbase * (z.facingLeft ? -1 : 1) * (1 - Math.abs(zstep) * 0.03);
-            const zsy = zbase * (1 + zstep * 0.06);
-            z.node.setScale(zsx, zsy, 1);
+            if (inAttackRange) {
+                // Attack lunge cycle: forward push + back, scale.y squash on impact
+                z.attackPhase = (z.attackPhase + dt * 2.5) % 1; // 0.4s per swing
+                const lungeStrength = Math.sin(z.attackPhase * Math.PI * 2); // -1..1
+                const nx = dx / Math.max(len, 1), ny = dy / Math.max(len, 1);
+                const lungePx = lungeStrength * 8; // ±8px lunge toward hero
+                z.node.setPosition(zp.x + nx * lungePx * 0.4, zp.y + ny * lungePx * 0.4, 0);
+                const squash = 1 - Math.max(0, lungeStrength) * 0.15;
+                z.node.setScale(zbase * (z.facingLeft ? -1 : 1) * (1 + Math.max(0, lungeStrength) * 0.12),
+                                zbase * squash, 1);
+            } else if (len >= 1) {
+                const nx = dx / len, ny = dy / len;
+                const zr = Math.max(10, (z.baseSize ?? 70) * zbase * 0.22);
+                const resolved = this.resolveBlockers(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, zr);
+                z.node.setPosition(resolved.x, resolved.y, 0);
+                z.bobPhase += dt * 7;
+                z.attackPhase = 0;
+                const zstep = Math.sin(z.bobPhase);
+                z.node.setScale(zbase * (z.facingLeft ? -1 : 1) * (1 - Math.abs(zstep) * 0.03),
+                                zbase * (1 + zstep * 0.06), 1);
+            }
             z.node.angle = 0;
             // HP bar fill scale by hp ratio
             if (z.hpBarFill) {
@@ -1034,7 +1048,13 @@ export class ActorSpawner extends Component {
         if (!best) return;
         const dx = best.node.position.x - hp.x, dy = best.node.position.y - hp.y;
         const len = Math.hypot(dx, dy) || 1;
-        this.spawnBullet(hp.x, hp.y, dx / len, dy / len);
+        const baseAng = Math.atan2(dy, dx);
+        // Fan of 5 bullets spanning ~24deg, matching candidate_pics ...03 hero fire pattern.
+        const spreadDeg = [-12, -6, 0, 6, 12];
+        for (const d of spreadDeg) {
+            const a = baseAng + (d * Math.PI / 180);
+            this.spawnBullet(hp.x, hp.y, Math.cos(a), Math.sin(a));
+        }
         this.heroFireTimer = 0;
         this.heroShootFlash = 0.12;
     }
