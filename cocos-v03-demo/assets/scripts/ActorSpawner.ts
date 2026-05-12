@@ -100,7 +100,7 @@ export class ActorSpawner extends Component {
     public makeRadialAlpha!: (size: number, inner: RGBA, outer: RGBA) => SpriteFrame;
     public config!: SceneConfig;
 
-    private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null, walk: null };
+    private heroFrames: Record<string, SpriteFrame | null> = { idle: null, shoot: null, walk: null, walk2: null };
     private heroShootFlash = 0;
     private zombieFrames: Map<string, SpriteFrame> = new Map(); // key = `${bodyType}:${frame}`
     private propFrames: Map<PropKey, SpriteFrame> = new Map();
@@ -211,6 +211,7 @@ export class ActorSpawner extends Component {
             ['art/v03/hero/survivor-idle-v2/spriteFrame', (sf) => (this.heroFrames.idle = sf)],
             ['art/v03/hero/survivor-shoot-v2/spriteFrame', (sf) => (this.heroFrames.shoot = sf)],
             ['art/v03/hero/survivor-walk-v2/spriteFrame', (sf) => (this.heroFrames.walk = sf)],
+            ['art/v03/hero/survivor-walk2/spriteFrame', (sf) => (this.heroFrames.walk2 = sf)],
         ];
 
         const referencedPropKeys = new Set<PropKey>();
@@ -930,10 +931,13 @@ export class ActorSpawner extends Component {
             if (this.heroShootFlash > 0) {
                 next = this.heroFrames.shoot ?? this.heroFrames.idle;
             } else if (moving) {
-                const cycle = Math.floor(this.heroBobPhase / Math.PI) % 2;
-                next = cycle === 0
-                    ? (this.heroFrames.walk ?? this.heroFrames.idle)
-                    : (this.heroFrames.idle);
+                // 3-frame walk cycle: idle -> walk1 -> walk2 -> idle ...
+                const phase = Math.floor(this.heroBobPhase / (Math.PI * 0.66)) % 3;
+                next = phase === 0
+                    ? this.heroFrames.idle
+                    : phase === 1
+                        ? (this.heroFrames.walk ?? this.heroFrames.idle)
+                        : (this.heroFrames.walk2 ?? this.heroFrames.walk ?? this.heroFrames.idle);
             } else {
                 next = this.heroFrames.idle;
             }
