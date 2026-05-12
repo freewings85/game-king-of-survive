@@ -25,6 +25,9 @@ qa/rounds/*/screenshots/
 !demo/assets/**/*.png
 !demo/assets/**/*.jpg
 !cocos-v03-demo/assets/resources/art/**/*.png
+# Exception: GitHub Pages build output (tester URL needs every PNG)
+!docs/**/*.png
+!docs/**/*.jpg
 
 
 # Replay recordings
