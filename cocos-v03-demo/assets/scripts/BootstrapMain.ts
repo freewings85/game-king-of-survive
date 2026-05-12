@@ -102,8 +102,10 @@ export class BootstrapMain extends Component {
     }
 
     private applyRenderBudget() {
-        view.setResolutionPolicy(4);
-        view.setDesignResolutionSize(this.targetWidth, this.targetHeight, 4);
+        // Cocos 3.8 ResolutionPolicy: 0=EXACT 1=NO_BORDER 2=SHOW_ALL 3=FIXED_HEIGHT 4=FIXED_WIDTH.
+        // SHOW_ALL letterboxes both axes so HUD anchored at design edges stays on-screen.
+        view.setResolutionPolicy(2);
+        view.setDesignResolutionSize(this.targetWidth, this.targetHeight, 2);
         const dpr = Math.min(window.devicePixelRatio || 1, this.maxDevicePixelRatio);
         view.setDevicePixelRatio?.(dpr);
     }
@@ -115,7 +117,7 @@ export class BootstrapMain extends Component {
         const vsp = vignette.addComponent(Sprite);
         // Build a radial gradient sprite that's transparent in center, dark at edges.
         const vSize = 256;
-        vsp.spriteFrame = makeRadialGradientSpriteFrame(vSize, [0, 0, 0, 0], [0, 0, 0, 230]);
+        vsp.spriteFrame = makeRadialGradientSpriteFrame(vSize, [0, 0, 0, 0], [0, 0, 0, 140]);
         (vsp.spriteFrame as any).packable = false;
         const tr = vignette.addComponent(UITransform);
         // Stretch beyond canvas so the dark falloff is fully off-screen on edges

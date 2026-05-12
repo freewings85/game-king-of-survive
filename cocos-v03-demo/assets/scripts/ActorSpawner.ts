@@ -34,6 +34,8 @@ interface ZombieEntity {
     hpBarFill: Node | null;
     hpBarBg: Node | null;
     currentFrame: 'idle' | 'move' | 'attack';
+    facingLeft: boolean;
+    bobPhase: number;
 }
 
 interface BulletEntity {
@@ -106,6 +108,8 @@ export class ActorSpawner extends Component {
     // === gameplay state ===
     private heroNode: Node | null = null;
     private heroSprite: Sprite | null = null;
+    private heroFacingLeft = false;
+    private heroBobPhase = 0;
     private heroHpFill: Node | null = null;
     private heroHp = 100;
     private readonly HERO_MAX_HP = 100;
@@ -328,7 +332,9 @@ export class ActorSpawner extends Component {
             const baseSize = Math.floor(z.baseSize * z.scale);
             tr.setContentSize(baseSize, baseSize);
             node.setPosition(new Vec3(z.pos[0], z.pos[1], 0));
-            node.angle = angleDeg;
+            // 3/4 view sprites must not rotate (would go upside-down). Heading handled by flipX in update.
+            node.angle = 0;
+            void angleDeg;
             this.worldLayer.addChild(node);
             // HP bar above zombie
             const hpBarBg = this.makeHpBar(baseSize, false);
@@ -360,6 +366,8 @@ export class ActorSpawner extends Component {
                 hpBarFill,
                 hpBarBg,
                 currentFrame: z.frame,
+                facingLeft: false,
+                bobPhase: Math.random() * Math.PI * 2,
             });
         }
     }
@@ -570,8 +578,6 @@ export class ActorSpawner extends Component {
         if (this.heroHpFill) {
             const ratio = Math.max(0, this.heroHp / this.HERO_MAX_HP);
             this.heroHpFill.setScale(ratio, 1, 1);
-            // counter-rotate to stay horizontal as hero rotates
-            this.heroHpFill.angle = -(this.heroNode.angle || 0);
         }
         if (this.heroHp <= 0) {
             // Death + respawn: count down, then heal back at center
@@ -887,7 +893,16 @@ export class ActorSpawner extends Component {
             ny = Math.max(-this.HERO_SCREEN_HALF_H + 60, Math.min(this.HERO_SCREEN_HALF_H - 60, ny));
             const resolved = this.resolveBlockers(nx, ny, this.heroCollideR);
             this.heroNode.setPosition(resolved.x, resolved.y, 0);
-            this.heroNode.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            // 3/4 view: never rotate sprite (would flip upside down). Face left/right via scale.x.
+            if (Math.abs(dx) > 0.1) this.heroFacingLeft = dx < 0;
+            this.heroBobPhase += dt * 9;
+        }
+        // Apply facing (flipX) + bob (vertical bounce while moving)
+        if (this.heroNode) {
+            const sx = this.heroFacingLeft ? -1 : 1;
+            const bob = moving ? Math.abs(Math.sin(this.heroBobPhase)) * 3 : 0;
+            this.heroNode.setScale(sx, 1 + bob * 0.01, 1);
+            this.heroNode.angle = 0;
         }
         if (this.heroSprite) {
             const next = this.heroShootFlash > 0
@@ -955,15 +970,18 @@ export class ActorSpawner extends Component {
             const zr = Math.max(10, (z.baseSize ?? 70) * (z.scale ?? 1) * 0.22);
             const resolved = this.resolveBlockers(zp.x + nx * z.speed * dt, zp.y + ny * z.speed * dt, zr);
             z.node.setPosition(resolved.x, resolved.y, 0);
-            z.node.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            // 3/4 view: no rotation. Face hero via flipX.
+            if (Math.abs(dx) > 0.1) z.facingLeft = dx < 0;
+            z.bobPhase += dt * 7;
+            const zs = (z.scale ?? 1) * (z.facingLeft ? -1 : 1);
+            const zbob = Math.abs(Math.sin(z.bobPhase)) * 3;
+            z.node.setScale(zs, (z.scale ?? 1) * (1 + zbob * 0.01), 1);
+            z.node.angle = 0;
             // HP bar fill scale by hp ratio
             if (z.hpBarFill) {
                 const ratio = Math.max(0, Math.min(1, z.hp / z.maxHp));
                 z.hpBarFill.setScale(ratio, 1, 1);
-                // counter-rotate so HP bar stays horizontal regardless of zombie rotation
-                z.hpBarFill.angle = -z.node.angle;
             }
-            if (z.hpBarBg) z.hpBarBg.angle = -z.node.angle;
         }
     }
 

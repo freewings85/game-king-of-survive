@@ -1,107 +1,801 @@
 {
   "_schema": "m2-visual-scene/v3",
   "_about": "M2-1C prop street pass: zombie/VFX/UI 完全不动 (M2-1B 主体保留); 仅修 prop 资产选择/摆位/尺寸/tint — wreck-tank.png 换 tankBlack 源 (烧毁残骸感, 不再像沙黄木箱), BarrelRust 放大到 56² 加锈红 tint 移到 wreck 旁做破损边界, BarrelRed/SandbagBeige 上移到 hero 前方怪群间做街道堵点.",
-
   "canvas": {
     "width": 390,
     "height": 844,
-    "clearColor": [10, 12, 14, 255]
+    "clearColor": [
+      10,
+      12,
+      14,
+      255
+    ]
   },
-
   "hero": {
-    "pos": [-90, -260],
+    "pos": [
+      -90,
+      -260
+    ],
     "angleDeg": 30,
     "frame": "shoot",
-    "contentSize": [80, 60],
-    "shadow": [56, 18],
+    "contentSize": [
+      80,
+      60
+    ],
+    "shadow": [
+      56,
+      18
+    ],
     "collideRadius": 14
   },
-
   "zombies": [
-    { "name": "lead",     "pos": [60, -150],   "scale": 1.20, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "rusher",   "pos": [10, -180],   "scale": 1.15, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "sneak",    "pos": [130, -100],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "crawler", "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "flank",    "pos": [200, -50],   "scale": 1.00, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "backrush", "pos": [-30, -120],  "scale": 1.05, "tint": [255, 255, 255, 255], "frame": "attack", "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "pack",     "pos": [180, 50],    "scale": 0.95, "tint": [255, 255, 255, 255], "frame": "move",   "bodyType": "runner",  "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "far",      "pos": [220, 200],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "crawler", "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true },
-    { "name": "distant",  "pos": [-180, 80],   "scale": 0.78, "tint": [255, 255, 255, 255], "frame": "idle",   "bodyType": "brute",   "baseSize": 70, "shadow": [44, 14], "rotateTowardHero": true }
+    {
+      "name": "lead",
+      "pos": [
+        60,
+        -150
+      ],
+      "scale": 0.66,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "brute",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "rusher",
+      "pos": [
+        10,
+        -180
+      ],
+      "scale": 0.63,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "runner",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "sneak",
+      "pos": [
+        130,
+        -100
+      ],
+      "scale": 0.58,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "crawler",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "flank",
+      "pos": [
+        200,
+        -50
+      ],
+      "scale": 0.55,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "runner",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "backrush",
+      "pos": [
+        -30,
+        -120
+      ],
+      "scale": 0.58,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "brute",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "pack",
+      "pos": [
+        180,
+        50
+      ],
+      "scale": 0.52,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "runner",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "far",
+      "pos": [
+        220,
+        200
+      ],
+      "scale": 0.43,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "idle",
+      "bodyType": "crawler",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "distant",
+      "pos": [
+        -180,
+        80
+      ],
+      "scale": 0.43,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "idle",
+      "bodyType": "brute",
+      "baseSize": 59,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    }
   ],
-
   "props": [
-    { "name": "WreckCar",     "key": "wreckCarPainterly",    "pos": [-50, -50],   "angleDeg": 65,  "contentSize": [80, 64], "shadow": [90, 30], "tint": null, "collideRadius": 30 },
-    { "name": "BarrelRust1",  "key": "barrelRustPainterly",  "pos": [-10, -90],   "angleDeg": 0,   "contentSize": [36, 36], "shadow": [38, 12], "tint": null, "collideRadius": 14 },
-    { "name": "WreckCar2",    "key": "wreckCarPainterly",    "pos": [220, 220],   "angleDeg": -25, "contentSize": [70, 58], "shadow": [78, 26], "tint": null, "collideRadius": 28 },
-    { "name": "SandbagPile1", "key": "sandbagPilePainterly", "pos": [-180, -240], "angleDeg": -8,  "contentSize": [54, 26], "shadow": [56, 14], "tint": null, "collideRadius": 20 },
-    { "name": "SandbagPile2", "key": "sandbagPilePainterly", "pos": [10, -230],   "angleDeg": 10,  "contentSize": [54, 26], "shadow": [56, 14], "tint": null, "collideRadius": 20 },
-    { "name": "BarrelRust2",  "key": "barrelRustPainterly",  "pos": [90, -40],    "angleDeg": 0,   "contentSize": [30, 36], "shadow": [32, 12], "tint": null, "collideRadius": 14 },
-    { "name": "OilSplat",     "key": "oilSplatPainterly",    "pos": [-220, -310], "angleDeg": 15,  "contentSize": [70, 42], "shadow": [0, 0],   "tint": null, "collideRadius": 0 }
+    {
+      "name": "WreckCar",
+      "key": "wreckCarPainterly",
+      "pos": [
+        -50,
+        -50
+      ],
+      "angleDeg": 65,
+      "contentSize": [
+        80,
+        64
+      ],
+      "shadow": [
+        90,
+        30
+      ],
+      "tint": null,
+      "collideRadius": 30
+    },
+    {
+      "name": "BarrelRust1",
+      "key": "barrelRustPainterly",
+      "pos": [
+        -10,
+        -90
+      ],
+      "angleDeg": 0,
+      "contentSize": [
+        36,
+        36
+      ],
+      "shadow": [
+        38,
+        12
+      ],
+      "tint": null,
+      "collideRadius": 14
+    },
+    {
+      "name": "WreckCar2",
+      "key": "wreckCarPainterly",
+      "pos": [
+        220,
+        220
+      ],
+      "angleDeg": -25,
+      "contentSize": [
+        70,
+        58
+      ],
+      "shadow": [
+        78,
+        26
+      ],
+      "tint": null,
+      "collideRadius": 28
+    },
+    {
+      "name": "SandbagPile1",
+      "key": "sandbagPilePainterly",
+      "pos": [
+        -180,
+        -240
+      ],
+      "angleDeg": -8,
+      "contentSize": [
+        54,
+        26
+      ],
+      "shadow": [
+        56,
+        14
+      ],
+      "tint": null,
+      "collideRadius": 20
+    },
+    {
+      "name": "SandbagPile2",
+      "key": "sandbagPilePainterly",
+      "pos": [
+        10,
+        -230
+      ],
+      "angleDeg": 10,
+      "contentSize": [
+        54,
+        26
+      ],
+      "shadow": [
+        56,
+        14
+      ],
+      "tint": null,
+      "collideRadius": 20
+    },
+    {
+      "name": "BarrelRust2",
+      "key": "barrelRustPainterly",
+      "pos": [
+        90,
+        -40
+      ],
+      "angleDeg": 0,
+      "contentSize": [
+        30,
+        36
+      ],
+      "shadow": [
+        32,
+        12
+      ],
+      "tint": null,
+      "collideRadius": 14
+    },
+    {
+      "name": "OilSplat",
+      "key": "oilSplatPainterly",
+      "pos": [
+        -220,
+        -310
+      ],
+      "angleDeg": 15,
+      "contentSize": [
+        70,
+        42
+      ],
+      "shadow": [
+        0,
+        0
+      ],
+      "tint": null,
+      "collideRadius": 0
+    }
   ],
-
   "vfx": {
-    "muzzleCone":  { "anchor": "hero", "distance": 90, "angleDeg": 30, "contentSize": [180, 80],  "inner": [255, 230, 140, 130], "outer": [255, 180, 60, 0],  "rotateDeg": 30, "srcSize": 256 },
-    "muzzleBurst": { "anchor": "hero", "distance": 60, "angleDeg": 30, "contentSize": [110, 110], "inner": [255, 250, 220, 250], "outer": [255, 200, 90, 0], "srcSize": 128 },
-
+    "muzzleCone": {
+      "anchor": "hero",
+      "distance": 90,
+      "angleDeg": 30,
+      "contentSize": [
+        180,
+        80
+      ],
+      "inner": [
+        255,
+        230,
+        140,
+        130
+      ],
+      "outer": [
+        255,
+        180,
+        60,
+        0
+      ],
+      "rotateDeg": 30,
+      "srcSize": 256
+    },
+    "muzzleBurst": {
+      "anchor": "hero",
+      "distance": 60,
+      "angleDeg": 30,
+      "contentSize": [
+        110,
+        110
+      ],
+      "inner": [
+        255,
+        250,
+        220,
+        250
+      ],
+      "outer": [
+        255,
+        200,
+        90,
+        0
+      ],
+      "srcSize": 128
+    },
     "fanBullets": {
       "anchor": "hero",
       "startDistance": 80,
       "baseDeg": 30,
-      "spread": [-14, -7, 0, 7, 14],
+      "spread": [
+        -14,
+        -7,
+        0,
+        7,
+        14
+      ],
       "lengthBase": 130,
       "lengthAltAdd": 30,
       "contentH": 8,
-      "inner": [255, 240, 180, 230],
-      "outer": [255, 200, 80, 0]
+      "inner": [
+        255,
+        240,
+        180,
+        230
+      ],
+      "outer": [
+        255,
+        200,
+        80,
+        0
+      ]
     },
-
     "hitSparkClusters": [
       {
         "_target_actor": "lead (Clint)",
-        "target": [60, -150],
-        "offsets": [[-12, 8, 14], [10, 14, 12], [18, -6, 10], [-6, -14, 11], [4, 22, 9], [22, 4, 8], [-18, -2, 7]],
-        "inner": [255, 250, 220, 240],
-        "outer": [255, 180, 60, 0]
+        "target": [
+          60,
+          -150
+        ],
+        "offsets": [
+          [
+            -12,
+            8,
+            14
+          ],
+          [
+            10,
+            14,
+            12
+          ],
+          [
+            18,
+            -6,
+            10
+          ],
+          [
+            -6,
+            -14,
+            11
+          ],
+          [
+            4,
+            22,
+            9
+          ],
+          [
+            22,
+            4,
+            8
+          ],
+          [
+            -18,
+            -2,
+            7
+          ]
+        ],
+        "inner": [
+          255,
+          250,
+          220,
+          240
+        ],
+        "outer": [
+          255,
+          180,
+          60,
+          0
+        ]
       },
       {
         "_target_actor": "rusher (Riley)",
-        "target": [10, -180],
-        "offsets": [[-10, 6, 11], [8, 10, 10], [14, -8, 9], [-4, -12, 8], [2, 18, 7], [18, 2, 7]],
-        "inner": [255, 250, 220, 235],
-        "outer": [255, 180, 60, 0]
+        "target": [
+          10,
+          -180
+        ],
+        "offsets": [
+          [
+            -10,
+            6,
+            11
+          ],
+          [
+            8,
+            10,
+            10
+          ],
+          [
+            14,
+            -8,
+            9
+          ],
+          [
+            -4,
+            -12,
+            8
+          ],
+          [
+            2,
+            18,
+            7
+          ],
+          [
+            18,
+            2,
+            7
+          ]
+        ],
+        "inner": [
+          255,
+          250,
+          220,
+          235
+        ],
+        "outer": [
+          255,
+          180,
+          60,
+          0
+        ]
       }
     ],
-
     "lightningChain": {
       "_path_actors": "lead(Clint) -> flank(Riley) -> pack(Riley) -> far(Clint), 跨 2 body type",
-      "nodes": [[60, -150], [200, -50], [180, 50], [220, 200]],
+      "nodes": [
+        [
+          60,
+          -150
+        ],
+        [
+          200,
+          -50
+        ],
+        [
+          180,
+          50
+        ],
+        [
+          220,
+          200
+        ]
+      ],
       "segments": 6,
       "jitterAmp": 14,
       "boltContentH": 6,
-      "boltInner": [240, 250, 255, 235],
-      "boltOuter": [120, 180, 255, 0],
+      "boltInner": [
+        240,
+        250,
+        255,
+        235
+      ],
+      "boltOuter": [
+        120,
+        180,
+        255,
+        0
+      ],
       "hubSize": 28,
-      "hubInner": [220, 240, 255, 230],
-      "hubOuter": [120, 180, 255, 0]
+      "hubInner": [
+        220,
+        240,
+        255,
+        230
+      ],
+      "hubOuter": [
+        120,
+        180,
+        255,
+        0
+      ]
     }
   },
-
   "hud": {
     "portrait": {
-      "frame": { "pos": [-159, 386], "contentSize": [64, 64], "discSize": 96, "fill": [40, 48, 60, 240], "edge": [205, 215, 230, 250], "edgeWidth": 4 },
-      "fill":  { "pos": [-159, 386], "contentSize": [52, 52], "discSize": 80, "fill": [120, 160, 175, 255], "edge": null, "edgeWidth": 0 }
+      "frame": {
+        "pos": [
+          -159,
+          386
+        ],
+        "contentSize": [
+          64,
+          64
+        ],
+        "discSize": 96,
+        "fill": [
+          40,
+          48,
+          60,
+          240
+        ],
+        "edge": [
+          205,
+          215,
+          230,
+          250
+        ],
+        "edgeWidth": 4
+      },
+      "fill": {
+        "pos": [
+          -159,
+          386
+        ],
+        "contentSize": [
+          52,
+          52
+        ],
+        "discSize": 80,
+        "fill": [
+          120,
+          160,
+          175,
+          255
+        ],
+        "edge": null,
+        "edgeWidth": 0
+      }
     },
-    "hpBar":    { "pos": [-63, 390], "contentSize": [112, 16], "barW": 160, "barH": 24, "fill": [205, 55, 50, 250],  "bg": [20, 22, 28, 230], "fillFrac": 0.78 },
-    "armorBar": { "pos": [-63, 374], "contentSize": [112, 8],  "barW": 160, "barH": 12, "fill": [180, 195, 210, 250], "bg": [20, 22, 28, 220], "fillFrac": 0.70 },
-    "expBar":   { "pos": [-63, 358], "contentSize": [112, 8],  "barW": 160, "barH": 12, "fill": [120, 220, 255, 250], "bg": [18, 22, 28, 220], "fillFrac": 0.45 },
-    "minimap":  { "pos": [143, 370], "contentSize": [96, 96], "size": 160 },
+    "hpBar": {
+      "pos": [
+        -63,
+        390
+      ],
+      "contentSize": [
+        112,
+        16
+      ],
+      "barW": 160,
+      "barH": 24,
+      "fill": [
+        205,
+        55,
+        50,
+        250
+      ],
+      "bg": [
+        20,
+        22,
+        28,
+        230
+      ],
+      "fillFrac": 0.78
+    },
+    "armorBar": {
+      "pos": [
+        -63,
+        374
+      ],
+      "contentSize": [
+        112,
+        8
+      ],
+      "barW": 160,
+      "barH": 12,
+      "fill": [
+        180,
+        195,
+        210,
+        250
+      ],
+      "bg": [
+        20,
+        22,
+        28,
+        220
+      ],
+      "fillFrac": 0.7
+    },
+    "expBar": {
+      "pos": [
+        -63,
+        358
+      ],
+      "contentSize": [
+        112,
+        8
+      ],
+      "barW": 160,
+      "barH": 12,
+      "fill": [
+        120,
+        220,
+        255,
+        250
+      ],
+      "bg": [
+        18,
+        22,
+        28,
+        220
+      ],
+      "fillFrac": 0.45
+    },
+    "minimap": {
+      "pos": [
+        143,
+        370
+      ],
+      "contentSize": [
+        96,
+        96
+      ],
+      "size": 160
+    },
     "joystick": {
-      "ring":  { "pos": [-115, -322], "contentSize": [110, 110], "size": 160, "outerR": 78, "innerR": 64, "fill": [200, 220, 230, 110] },
-      "thumb": { "pos": [-103, -316], "contentSize": [50, 50],   "discSize": 96, "fill": [220, 235, 245, 200], "edge": [40, 50, 65, 230], "edgeWidth": 3 }
+      "ring": {
+        "pos": [
+          -115,
+          -322
+        ],
+        "contentSize": [
+          110,
+          110
+        ],
+        "size": 160,
+        "outerR": 78,
+        "innerR": 64,
+        "fill": [
+          200,
+          220,
+          230,
+          110
+        ]
+      },
+      "thumb": {
+        "pos": [
+          -103,
+          -316
+        ],
+        "contentSize": [
+          50,
+          50
+        ],
+        "discSize": 96,
+        "fill": [
+          220,
+          235,
+          245,
+          200
+        ],
+        "edge": [
+          40,
+          50,
+          65,
+          230
+        ],
+        "edgeWidth": 3
+      }
     },
     "skills": [
-      { "name": "SkillBolt",  "pos": [57, -326],  "size": 62, "base": [180, 130, 230], "glyph": "bolt",  "glowAlpha": 110 },
-      { "name": "SkillStar",  "pos": [117, -270], "size": 62, "base": [255, 220, 100], "glyph": "star",  "glowAlpha": 110 },
-      { "name": "SkillFlame", "pos": [145, -344], "size": 84, "base": [255, 150, 80],  "glyph": "flame", "glowAlpha": 110 }
+      {
+        "name": "SkillBolt",
+        "pos": [
+          57,
+          -326
+        ],
+        "size": 62,
+        "base": [
+          180,
+          130,
+          230
+        ],
+        "glyph": "bolt",
+        "glowAlpha": 110
+      },
+      {
+        "name": "SkillStar",
+        "pos": [
+          117,
+          -270
+        ],
+        "size": 62,
+        "base": [
+          255,
+          220,
+          100
+        ],
+        "glyph": "star",
+        "glowAlpha": 110
+      },
+      {
+        "name": "SkillFlame",
+        "pos": [
+          145,
+          -344
+        ],
+        "size": 84,
+        "base": [
+          255,
+          150,
+          80
+        ],
+        "glyph": "flame",
+        "glowAlpha": 110
+      }
     ]
   }
 }
