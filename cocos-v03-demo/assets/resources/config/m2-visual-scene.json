@@ -35,7 +35,7 @@
         60,
         -150
       ],
-      "scale": 0.66,
+      "scale": 0.49,
       "tint": [
         255,
         255,
@@ -44,7 +44,7 @@
       ],
       "frame": "attack",
       "bodyType": "brute",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -57,7 +57,7 @@
         10,
         -180
       ],
-      "scale": 0.63,
+      "scale": 0.47,
       "tint": [
         255,
         255,
@@ -66,7 +66,7 @@
       ],
       "frame": "attack",
       "bodyType": "runner",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -79,7 +79,7 @@
         130,
         -100
       ],
-      "scale": 0.58,
+      "scale": 0.43,
       "tint": [
         255,
         255,
@@ -88,7 +88,7 @@
       ],
       "frame": "move",
       "bodyType": "crawler",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -101,7 +101,7 @@
         200,
         -50
       ],
-      "scale": 0.55,
+      "scale": 0.41,
       "tint": [
         255,
         255,
@@ -110,7 +110,7 @@
       ],
       "frame": "move",
       "bodyType": "runner",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -123,7 +123,7 @@
         -30,
         -120
       ],
-      "scale": 0.58,
+      "scale": 0.43,
       "tint": [
         255,
         255,
@@ -132,7 +132,7 @@
       ],
       "frame": "attack",
       "bodyType": "brute",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -145,7 +145,7 @@
         180,
         50
       ],
-      "scale": 0.52,
+      "scale": 0.39,
       "tint": [
         255,
         255,
@@ -154,7 +154,7 @@
       ],
       "frame": "move",
       "bodyType": "runner",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -167,7 +167,7 @@
         220,
         200
       ],
-      "scale": 0.43,
+      "scale": 0.32,
       "tint": [
         255,
         255,
@@ -176,7 +176,7 @@
       ],
       "frame": "idle",
       "bodyType": "crawler",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -189,7 +189,7 @@
         -180,
         80
       ],
-      "scale": 0.43,
+      "scale": 0.32,
       "tint": [
         255,
         255,
@@ -198,7 +198,7 @@
       ],
       "frame": "idle",
       "bodyType": "brute",
-      "baseSize": 59,
+      "baseSize": 50,
       "shadow": [
         44,
         14
@@ -757,7 +757,7 @@
           57,
           -326
         ],
-        "size": 62,
+        "size": 86,
         "base": [
           180,
           130,
@@ -772,7 +772,7 @@
           117,
           -270
         ],
-        "size": 62,
+        "size": 86,
         "base": [
           255,
           220,
@@ -787,7 +787,7 @@
           145,
           -344
         ],
-        "size": 84,
+        "size": 117,
         "base": [
           255,
           150,

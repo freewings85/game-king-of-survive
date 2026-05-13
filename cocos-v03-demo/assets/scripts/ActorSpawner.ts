@@ -133,7 +133,7 @@ export class ActorSpawner extends Component {
     private readonly BULLET_TTL = 1.4;
     private readonly ZOMBIE_HIT_RADIUS = 36;
     private spawnTimer = 0;
-    private readonly SPAWN_INTERVAL = 1.2;
+    private readonly SPAWN_INTERVAL = 0.6;
     private waveStartTime = 0;
     private waveNumber = 1;
     private kills = 0;
@@ -1101,13 +1101,14 @@ export class ActorSpawner extends Component {
     private updateSpawn(dt: number) {
         this.spawnTimer += dt;
         if (this.spawnTimer < this.SPAWN_INTERVAL) return;
-        if (this.zombies.length >= 24) { this.spawnTimer = 0; return; } // soft cap
+        if (this.zombies.length >= 40) { this.spawnTimer = 0; return; } // soft cap
         // pick a random zombie config from current scene config as template
         const tpl = this.config.zombies[Math.floor(Math.random() * this.config.zombies.length)];
         // spawn at random screen edge
         const edge = Math.floor(Math.random() * 4);
         let sx = 0, sy = 0;
-        const W = this.HERO_SCREEN_HALF_W + 50, H = this.HERO_SCREEN_HALF_H + 50;
+        // Spawn closer to hero so zombies appear in screen quickly (matches candidate_pics density)
+        const W = this.HERO_SCREEN_HALF_W - 20, H = this.HERO_SCREEN_HALF_H - 60;
         if (edge === 0) { sx = -W + Math.random() * (2 * W); sy = -H; }
         else if (edge === 1) { sx = -W + Math.random() * (2 * W); sy = H; }
         else if (edge === 2) { sx = -W; sy = -H + Math.random() * (2 * H); }
