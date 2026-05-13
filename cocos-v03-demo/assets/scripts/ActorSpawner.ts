@@ -1049,8 +1049,8 @@ export class ActorSpawner extends Component {
         const dx = best.node.position.x - hp.x, dy = best.node.position.y - hp.y;
         const len = Math.hypot(dx, dy) || 1;
         const baseAng = Math.atan2(dy, dx);
-        // Fan of 5 bullets spanning ~24deg, matching candidate_pics ...03 hero fire pattern.
-        const spreadDeg = [-12, -6, 0, 6, 12];
+        // Fan of 5 bullets in tight ~14deg cone, matching candidate_pics ...03 hero fire pattern.
+        const spreadDeg = [-7, -3.5, 0, 3.5, 7];
         for (const d of spreadDeg) {
             const a = baseAng + (d * Math.PI / 180);
             this.spawnBullet(hp.x, hp.y, Math.cos(a), Math.sin(a));

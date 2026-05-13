@@ -204,6 +204,182 @@
         14
       ],
       "rotateTowardHero": true
+    },
+    {
+      "name": "extra_0",
+      "pos": [
+        140,
+        0
+      ],
+      "scale": 0.49,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "brute",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_1",
+      "pos": [
+        98,
+        91
+      ],
+      "scale": 0.47,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "runner",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_2",
+      "pos": [
+        0,
+        130
+      ],
+      "scale": 0.43,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "crawler",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_3",
+      "pos": [
+        -98,
+        91
+      ],
+      "scale": 0.41,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "runner",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_4",
+      "pos": [
+        -140,
+        0
+      ],
+      "scale": 0.43,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "attack",
+      "bodyType": "brute",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_5",
+      "pos": [
+        -98,
+        -91
+      ],
+      "scale": 0.39,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "move",
+      "bodyType": "runner",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_6",
+      "pos": [
+        0,
+        -130
+      ],
+      "scale": 0.32,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "idle",
+      "bodyType": "crawler",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
+    },
+    {
+      "name": "extra_7",
+      "pos": [
+        98,
+        -91
+      ],
+      "scale": 0.32,
+      "tint": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "frame": "idle",
+      "bodyType": "brute",
+      "baseSize": 50,
+      "shadow": [
+        44,
+        14
+      ],
+      "rotateTowardHero": true
     }
   ],
   "props": [
@@ -757,7 +933,7 @@
           57,
           -326
         ],
-        "size": 86,
+        "size": 111,
         "base": [
           180,
           130,
@@ -772,7 +948,7 @@
           117,
           -270
         ],
-        "size": 86,
+        "size": 111,
         "base": [
           255,
           220,
@@ -787,7 +963,7 @@
           145,
           -344
         ],
-        "size": 117,
+        "size": 152,
         "base": [
           255,
           150,
