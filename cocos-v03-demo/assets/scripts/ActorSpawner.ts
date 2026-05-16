@@ -550,19 +550,16 @@ export class ActorSpawner extends Component {
     update(dt: number) {
         if (!this.heroNode || !this.config) return;
         if (this.netClient && this.netClient.isConnected()) {
-            // Network mode: server is authoritative. We only send our input;
-            // hero/zombie positions arrive via onSnapshot.
             const dx = this.joystickDir.x + this.keyDir.x;
             const dy = this.joystickDir.y + this.keyDir.y;
             const m = Math.hypot(dx, dy);
             const nx = m > 1 ? dx / m : dx;
             const ny = m > 1 ? dy / m : dy;
             this.netClient.sendInput(nx, ny);
-            // Death-fade animation still ticks for visuals; movement does not.
             this.tickDeathFadesOnly(dt);
+            this.applyYSort();
             return;
         }
-        // Local sim path
         this.updateHero(dt);
         this.updateZombies(dt);
         this.updateAutoFire(dt);
@@ -571,6 +568,21 @@ export class ActorSpawner extends Component {
         this.updateHeroDamage(dt);
         this.updateShake(dt);
         this.updateMinimap();
+        this.applyYSort();
+    }
+
+    private applyYSort() {
+        if (!this.worldLayer) return;
+        const kids = this.worldLayer.children.slice();
+        kids.sort((a, b) => {
+            if (a.name === 'WastelandTerrain') return -1;
+            if (b.name === 'WastelandTerrain') return 1;
+            const az = a.name === 'ContactShadow' ? 0 : 1;
+            const bz = b.name === 'ContactShadow' ? 0 : 1;
+            if (az !== bz) return az - bz;
+            return b.position.y - a.position.y;
+        });
+        for (let i = 0; i < kids.length; i++) kids[i].setSiblingIndex(i);
     }
 
     private updateHeroDamage(dt: number) {
