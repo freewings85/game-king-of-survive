@@ -46,9 +46,12 @@ class JsonAsset {
 }
 
 class UITransform {
-    constructor() { this.contentSize = [0, 0]; }
+    constructor() { this.contentSize = [0, 0]; this.anchorPoint = [0.5, 0.5]; }
     setContentSize(w, h) { this.contentSize = [w, h]; }
+    setAnchorPoint(x, y) { this.anchorPoint = [x, y]; }
 }
+
+const Layers = { Enum: { UI_2D: 'UI_2D', UI_3D: 'UI_3D', DEFAULT: 'DEFAULT' } };
 
 class Sprite {
     constructor() { this.spriteFrame = null; this.color = new Color(255, 255, 255, 255); }
@@ -225,6 +228,7 @@ global.window = global.window || { devicePixelRatio: 1 };
 module.exports = {
     Vec3, Color, SpriteFrame, Texture2D, ImageAsset, JsonAsset,
     UITransform, Sprite, Component, Node, Camera, view, director,
+    Layers,
     resources, _decorator,
     __flushStarts: flushStarts,
     __dumpScene: dumpScene,

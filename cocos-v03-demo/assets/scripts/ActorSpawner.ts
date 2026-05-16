@@ -266,6 +266,7 @@ export class ActorSpawner extends Component {
             if (p.tint) sprite.color = new Color(p.tint[0], p.tint[1], p.tint[2], p.tint[3]);
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             tr.setContentSize(p.contentSize[0], p.contentSize[1]);
+            tr.setAnchorPoint(0.5, 0);
             node.setPosition(new Vec3(p.pos[0], p.pos[1], 0));
             node.angle = p.angleDeg;
             this.worldLayer.addChild(node);
@@ -282,6 +283,7 @@ export class ActorSpawner extends Component {
         sprite.spriteFrame = (hero.frame === 'shoot' ? this.heroFrames.shoot : this.heroFrames.idle) ?? this.heroFrames.idle;
         const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
         tr.setContentSize(hero.contentSize[0], hero.contentSize[1]);
+        tr.setAnchorPoint(0.5, 0);
         node.setPosition(new Vec3(hero.pos[0], hero.pos[1], 0));
         node.angle = hero.angleDeg;
         this.worldLayer.addChild(node);
@@ -289,7 +291,6 @@ export class ActorSpawner extends Component {
         this.heroSprite = sprite;
         this.heroHp = this.HERO_MAX_HP;
 
-        // Hero HP indicator above head (green bar, slightly larger than zombie's)
         const hpBg = new Node('HeroHPBg');
         hpBg.layer = Layers.Enum.UI_2D;
         const hpBgSp = hpBg.addComponent(Sprite);
@@ -297,7 +298,7 @@ export class ActorSpawner extends Component {
         hpBgSp.color = new Color(20, 20, 20, 220);
         const hpBgTr = hpBg.addComponent(UITransform);
         hpBgTr.setContentSize(64, 6);
-        hpBg.setPosition(0, hero.contentSize[1] * 0.55, 0);
+        hpBg.setPosition(0, hero.contentSize[1] + 6, 0);
         node.addChild(hpBg);
 
         const hpFill = new Node('HeroHPFill');
@@ -307,7 +308,7 @@ export class ActorSpawner extends Component {
         hpFillSp.color = new Color(80, 220, 100, 255);
         const hpFillTr = hpFill.addComponent(UITransform);
         hpFillTr.setContentSize(64, 6);
-        hpFill.setPosition(0, hero.contentSize[1] * 0.55, 0);
+        hpFill.setPosition(0, hero.contentSize[1] + 6, 0);
         node.addChild(hpFill);
         this.heroHpFill = hpFill;
     }
@@ -334,15 +335,15 @@ export class ActorSpawner extends Component {
             const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
             const baseSize = Math.floor(z.baseSize * z.scale);
             tr.setContentSize(baseSize, baseSize);
+            tr.setAnchorPoint(0.5, 0);
             node.setPosition(new Vec3(z.pos[0], z.pos[1], 0));
             // 3/4 view sprites must not rotate (would go upside-down). Heading handled by flipX in update.
             node.angle = 0;
             void angleDeg;
             this.worldLayer.addChild(node);
-            // HP bar above zombie
             const hpBarBg = this.makeHpBar(baseSize, false);
             const hpBarFill = this.makeHpBar(baseSize, true);
-            const yOff = baseSize * 0.55;
+            const yOff = baseSize + 6;
             hpBarBg.setPosition(0, yOff, 0);
             hpBarFill.setPosition(0, yOff, 0);
             node.addChild(hpBarBg);
@@ -414,19 +415,15 @@ export class ActorSpawner extends Component {
         return { x, y };
     }
 
-    private spawnContactShadow(pos: Vec2, w: number, h: number, spriteH = 0) {
+    private spawnContactShadow(pos: Vec2, w: number, h: number, _spriteH = 0) {
         if (w <= 0 || h <= 0) return;
         const node = new Node('ContactShadow');
         node.layer = Layers.Enum.UI_2D;
         const sprite = node.addComponent(Sprite);
-        // Darker shadow (alpha 235) + wide fade so it actually anchors the actor.
-        // Leo 05-11: actor 不能"飘"在地图上 → 阴影要明显 + 在脚底.
         sprite.spriteFrame = this.makeRadialAlpha(128, [0, 0, 0, 235], [0, 0, 0, 0]);
         const tr = node.getComponent(UITransform) ?? node.addComponent(UITransform);
         tr.setContentSize(w, h);
-        // Offset shadow to feet (bottom of sprite), not actor center.
-        const yOffset = spriteH > 0 ? -spriteH * 0.4 : -6;
-        node.setPosition(new Vec3(pos[0], pos[1] + yOffset, -1));
+        node.setPosition(new Vec3(pos[0], pos[1], -1));
         this.worldLayer.addChild(node);
     }
 
@@ -743,11 +740,12 @@ export class ActorSpawner extends Component {
         const tr = node.addComponent(UITransform);
         const baseSize = 130;
         tr.setContentSize(baseSize, baseSize);
+        tr.setAnchorPoint(0.5, 0);
         node.setPosition(e.x, e.y, 0);
         this.worldLayer.addChild(node);
         const hpBarBg = this.makeHpBar(baseSize, false);
         const hpBarFill = this.makeHpBar(baseSize, true);
-        const yOff = baseSize * 0.55;
+        const yOff = baseSize + 6;
         hpBarBg.setPosition(0, yOff, 0);
         hpBarFill.setPosition(0, yOff, 0);
         node.addChild(hpBarBg);
