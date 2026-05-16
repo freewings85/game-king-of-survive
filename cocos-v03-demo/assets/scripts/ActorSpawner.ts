@@ -119,6 +119,8 @@ export class ActorSpawner extends Component {
     private readonly HERO_IFRAME = 0.6;
     private readonly HERO_TOUCH_DAMAGE = 12;
     private shakeAmp = 0;                   // current screen shake amplitude
+    private shakeOffsetX = 0;
+    private shakeOffsetY = 0;
     private readonly HERO_SPEED = 220;        // px/sec
     // Half-extents in world coords; defaults to canvas size if config.world missing.
     private worldHalfW = 1000;
@@ -589,8 +591,10 @@ export class ActorSpawner extends Component {
     private applyCameraFollow() {
         if (!this.worldLayer || !this.heroNode) return;
         const h = this.heroNode.position;
-        this.worldLayer.setPosition(-h.x, -h.y, 0);
-        if (this.fxLayer) this.fxLayer.setPosition(-h.x, -h.y, 0);
+        const ox = -h.x + this.shakeOffsetX;
+        const oy = -h.y + this.shakeOffsetY;
+        this.worldLayer.setPosition(ox, oy, 0);
+        if (this.fxLayer) this.fxLayer.setPosition(ox, oy, 0);
     }
 
     private applyYSort() {
@@ -665,13 +669,12 @@ export class ActorSpawner extends Component {
     private updateShake(dt: number) {
         if (this.shakeAmp <= 0.1) {
             this.shakeAmp = 0;
-            // reset world layer position
-            if (this.worldLayer) this.worldLayer.setPosition(0, 0, 0);
+            this.shakeOffsetX = 0;
+            this.shakeOffsetY = 0;
             return;
         }
-        const ox = (Math.random() - 0.5) * 2 * this.shakeAmp;
-        const oy = (Math.random() - 0.5) * 2 * this.shakeAmp;
-        if (this.worldLayer) this.worldLayer.setPosition(ox, oy, 0);
+        this.shakeOffsetX = (Math.random() - 0.5) * 2 * this.shakeAmp;
+        this.shakeOffsetY = (Math.random() - 0.5) * 2 * this.shakeAmp;
         this.shakeAmp *= Math.exp(-dt * 6); // decay ~6/sec
     }
 
