@@ -152,8 +152,14 @@ export interface CanvasConfig {
     clearColor: RGBA;
 }
 
+export interface WorldConfig {
+    width: number;
+    height: number;
+}
+
 export interface SceneConfig {
     canvas: CanvasConfig;
+    world?: WorldConfig;
     hero: HeroConfig;
     zombies: ZombieConfig[];
     props: PropConfig[];

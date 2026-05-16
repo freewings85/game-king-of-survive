@@ -43,6 +43,7 @@ export class BootstrapMain extends Component {
 
     private worldLayer!: Node;
     private fxLayer!: Node;
+    private atmosphereLayer!: Node;
     private hudLayer!: Node;
 
     onLoad() {
@@ -59,6 +60,7 @@ export class BootstrapMain extends Component {
         const layers = this.buildSceneGraph();
         this.worldLayer = layers.worldLayer;
         this.fxLayer = layers.fxLayer;
+        this.atmosphereLayer = layers.atmosphereLayer;
         this.hudLayer = layers.hudLayer;
     }
 
@@ -70,8 +72,10 @@ export class BootstrapMain extends Component {
             console.log('[BootstrapMain] config loaded', { canvas: config.canvas, zombies: config.zombies?.length, props: config.props?.length });
             this.applyClearColor(config);
             const painterlyTile = await preloadTerrainTile();
-            attachWastelandTerrain(this.worldLayer, config.canvas.width, config.canvas.height, painterlyTile);
-            console.log('[BootstrapMain] terrain attached', painterlyTile ? '(painterly)' : '(programmatic)');
+            const worldW = config.world?.width ?? config.canvas.width;
+            const worldH = config.world?.height ?? config.canvas.height;
+            attachWastelandTerrain(this.worldLayer, worldW, worldH, painterlyTile);
+            console.log('[BootstrapMain] terrain attached', painterlyTile ? '(painterly)' : '(programmatic)', { worldW, worldH });
 
             const spawner = this.node.addComponent(ActorSpawner);
             spawner.worldLayer = this.worldLayer;
@@ -123,10 +127,8 @@ export class BootstrapMain extends Component {
         // Stretch beyond canvas so the dark falloff is fully off-screen on edges
         tr.setContentSize(Math.floor(width * 1.3), Math.floor(height * 1.15));
         vignette.setPosition(0, 0, 0);
-        // FX layer renders above world but below HUD
-        this.fxLayer.addChild(vignette);
+        this.atmosphereLayer.addChild(vignette);
 
-        // 2) Bottom haze band: warm-orange dust glow at horizon line for atmosphere
         const haze = new Node('HorizonHaze');
         haze.layer = Layers.Enum.UI_2D;
         const hsp = haze.addComponent(Sprite);
@@ -135,7 +137,7 @@ export class BootstrapMain extends Component {
         const htr = haze.addComponent(UITransform);
         htr.setContentSize(width + 80, 240);
         haze.setPosition(0, -height * 0.30, 0);
-        this.fxLayer.addChild(haze);
+        this.atmosphereLayer.addChild(haze);
     }
 
     private applyClearColor(config: SceneConfig) {
@@ -146,7 +148,7 @@ export class BootstrapMain extends Component {
         }
     }
 
-    private buildSceneGraph(): { worldLayer: Node; fxLayer: Node; hudLayer: Node } {
+    private buildSceneGraph(): { worldLayer: Node; fxLayer: Node; atmosphereLayer: Node; hudLayer: Node } {
         const scene = director.getScene();
         if (!scene) throw new Error('[BootstrapMain] No active scene');
 
@@ -177,17 +179,21 @@ export class BootstrapMain extends Component {
 
         const worldLayer = new Node('World');
         const fxLayer = new Node('FX');
+        const atmosphereLayer = new Node('Atmosphere');
         const hudLayer = new Node('HUD');
         worldLayer.layer = Layers.Enum.UI_2D;
         fxLayer.layer = Layers.Enum.UI_2D;
+        atmosphereLayer.layer = Layers.Enum.UI_2D;
         hudLayer.layer = Layers.Enum.UI_2D;
         worldLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
         fxLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
+        atmosphereLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
         hudLayer.addComponent(UITransform).setContentSize(this.targetWidth, this.targetHeight);
         root.addChild(worldLayer);
         root.addChild(fxLayer);
+        root.addChild(atmosphereLayer);
         root.addChild(hudLayer);
-        return { worldLayer, fxLayer, hudLayer };
+        return { worldLayer, fxLayer, atmosphereLayer, hudLayer };
     }
 }
 

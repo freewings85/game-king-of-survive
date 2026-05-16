@@ -120,8 +120,12 @@ export class ActorSpawner extends Component {
     private readonly HERO_TOUCH_DAMAGE = 12;
     private shakeAmp = 0;                   // current screen shake amplitude
     private readonly HERO_SPEED = 220;        // px/sec
-    private readonly HERO_SCREEN_HALF_W = 195;
-    private readonly HERO_SCREEN_HALF_H = 422;
+    // Half-extents in world coords; defaults to canvas size if config.world missing.
+    private worldHalfW = 1000;
+    private worldHalfH = 1000;
+    // Viewport half-extents used for spawn rings + minimap normalization (design resolution).
+    private readonly VIEWPORT_HALF_W = 195;
+    private readonly VIEWPORT_HALF_H = 422;
     private zombies: ZombieEntity[] = [];
     private bullets: BulletEntity[] = [];
     private joystickDir = new CcVec2(0, 0);     // normalized [-1,1] direction
@@ -182,6 +186,15 @@ export class ActorSpawner extends Component {
             if (!this.config) {
                 throw new Error('[ActorSpawner] config not injected — caller must set .config before adding the component');
             }
+            const world = this.config.world;
+            if (world) {
+                this.worldHalfW = world.width * 0.5;
+                this.worldHalfH = world.height * 0.5;
+            } else {
+                this.worldHalfW = this.config.canvas.width * 0.5;
+                this.worldHalfH = this.config.canvas.height * 0.5;
+            }
+            console.log('[ActorSpawner] world half-extents', this.worldHalfW, this.worldHalfH);
             console.log('[ActorSpawner] loading frames...');
             await this.loadAllFrames();
             console.log('[ActorSpawner] frames loaded, spawning...');
@@ -558,6 +571,7 @@ export class ActorSpawner extends Component {
             this.netClient.sendInput(nx, ny);
             this.tickDeathFadesOnly(dt);
             this.applyYSort();
+            this.applyCameraFollow();
             return;
         }
         this.updateHero(dt);
@@ -569,6 +583,14 @@ export class ActorSpawner extends Component {
         this.updateShake(dt);
         this.updateMinimap();
         this.applyYSort();
+        this.applyCameraFollow();
+    }
+
+    private applyCameraFollow() {
+        if (!this.worldLayer || !this.heroNode) return;
+        const h = this.heroNode.position;
+        this.worldLayer.setPosition(-h.x, -h.y, 0);
+        if (this.fxLayer) this.fxLayer.setPosition(-h.x, -h.y, 0);
     }
 
     private applyYSort() {
@@ -789,7 +811,8 @@ export class ActorSpawner extends Component {
 
     private updateMinimap() {
         if (!this.minimapContainer || !this.heroNode) return;
-        const halfW = this.HERO_SCREEN_HALF_W, halfH = this.HERO_SCREEN_HALF_H;
+        // Show enemies within ~one viewport-radius around hero at the minimap edge.
+        const halfW = this.VIEWPORT_HALF_W * 1.8, halfH = this.VIEWPORT_HALF_H * 1.8;
         const r = this.minimapRadius;
         // Hero dot: always center (camera follows hero in vampire-survivors style)
         if (this.minimapHeroDot) this.minimapHeroDot.setPosition(0, 0, 0);
@@ -903,8 +926,8 @@ export class ActorSpawner extends Component {
             const p = this.heroNode.position;
             let nx = p.x + dx * this.HERO_SPEED * dt;
             let ny = p.y + dy * this.HERO_SPEED * dt;
-            nx = Math.max(-this.HERO_SCREEN_HALF_W + 30, Math.min(this.HERO_SCREEN_HALF_W - 30, nx));
-            ny = Math.max(-this.HERO_SCREEN_HALF_H + 60, Math.min(this.HERO_SCREEN_HALF_H - 60, ny));
+            nx = Math.max(-this.worldHalfW + 30, Math.min(this.worldHalfW - 30, nx));
+            ny = Math.max(-this.worldHalfH + 60, Math.min(this.worldHalfH - 60, ny));
             const resolved = this.resolveBlockers(nx, ny, this.heroCollideR);
             this.heroNode.setPosition(resolved.x, resolved.y, 0);
             // 3/4 view: never rotate sprite (would flip upside down). Face left/right via scale.x.
@@ -1112,17 +1135,21 @@ export class ActorSpawner extends Component {
         this.spawnTimer += dt;
         if (this.spawnTimer < this.SPAWN_INTERVAL) return;
         if (this.zombies.length >= 40) { this.spawnTimer = 0; return; } // soft cap
-        // pick a random zombie config from current scene config as template
         const tpl = this.config.zombies[Math.floor(Math.random() * this.config.zombies.length)];
-        // spawn at random screen edge
+        // Spawn just outside the viewport, relative to hero (who is the camera center).
+        const hp = this.heroNode?.position ?? { x: 0, y: 0 };
+        const W = this.VIEWPORT_HALF_W + 40, H = this.VIEWPORT_HALF_H + 40;
         const edge = Math.floor(Math.random() * 4);
         let sx = 0, sy = 0;
-        // Spawn closer to hero so zombies appear in screen quickly (matches candidate_pics density)
-        const W = this.HERO_SCREEN_HALF_W - 20, H = this.HERO_SCREEN_HALF_H - 60;
         if (edge === 0) { sx = -W + Math.random() * (2 * W); sy = -H; }
         else if (edge === 1) { sx = -W + Math.random() * (2 * W); sy = H; }
         else if (edge === 2) { sx = -W; sy = -H + Math.random() * (2 * H); }
         else { sx = W; sy = -H + Math.random() * (2 * H); }
+        sx += hp.x;
+        sy += hp.y;
+        // Clamp spawn inside world bounds so spawn-on-edge of map doesn't escape.
+        sx = Math.max(-this.worldHalfW + 20, Math.min(this.worldHalfW - 20, sx));
+        sy = Math.max(-this.worldHalfH + 20, Math.min(this.worldHalfH - 20, sy));
 
         const newCfg: ZombieConfig = {
             ...tpl,
